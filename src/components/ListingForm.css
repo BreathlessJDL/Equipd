@@ -1,0 +1,136 @@
+.listing-form {
+  max-width: 32rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.listing-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.listing-form__label {
+  font-weight: 500;
+}
+
+.listing-form__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.listing-form__input,
+.listing-form__select,
+.listing-form__textarea {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.listing-form__textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.listing-form__textarea--compact {
+  min-height: 4.5rem;
+}
+
+.listing-form__fieldset {
+  margin: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.listing-form__checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.listing-form__checkbox input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
+.listing-form__input:focus,
+.listing-form__select:focus,
+.listing-form__textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.listing-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.listing-form__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.listing-form__button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.listing-form__button--primary {
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.listing-form__button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.listing-form__button--secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.listing-form__button--secondary:hover:not(:disabled) {
+  background: var(--color-bg);
+}
+
+.listing-form__message {
+  margin: 0;
+  padding: var(--space-md);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+}
+
+.listing-form__message--error {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, var(--color-border));
+}
+
+.listing-form__message--success {
+  color: #166534;
+  background: color-mix(in srgb, #16a34a 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, #16a34a 25%, var(--color-border));
+}

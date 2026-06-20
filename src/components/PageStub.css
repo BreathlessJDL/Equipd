@@ -1,0 +1,28 @@
+.page-stub {
+  max-width: 40rem;
+}
+
+.page-stub__title {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.page-stub__lead {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-muted);
+}
+
+.page-stub__meta {
+  margin: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.page-stub__meta code {
+  font-size: 0.8125rem;
+}
