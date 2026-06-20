@@ -1,4 +1,5 @@
 import { parsePriceToPence } from './listings'
+import { enrichListingWithImages } from './listingImages'
 import { supabase } from './supabase'
 
 const offerFields = `
@@ -13,6 +14,40 @@ const offerFields = `
   created_at,
   updated_at
 `
+
+const offerListingSelect = `
+  listing:listings(
+    id,
+    slug,
+    title,
+    brand,
+    model,
+    price_pence,
+    condition,
+    location,
+    status,
+    seller_id,
+    category:categories(id, name, slug),
+    listing_images(id, storage_path, sort_order)
+  )
+`
+
+const offerWithListingFields = `${offerFields}, ${offerListingSelect}`
+
+function withPrimaryOfferListingImage(query) {
+  return query
+    .order('sort_order', { ascending: true, foreignTable: 'listings.listing_images' })
+    .limit(1, { foreignTable: 'listings.listing_images' })
+}
+
+function enrichOfferWithListing(offer) {
+  if (!offer) return offer
+
+  return {
+    ...offer,
+    listing: offer.listing ? enrichListingWithImages(offer.listing) : null,
+  }
+}
 
 export function getOfferErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
@@ -160,4 +195,46 @@ async function updateOfferStatus(offerId, status) {
 
 export function hasPendingOffer(offers, buyerId) {
   return offers.some((offer) => offer.buyer_id === buyerId && offer.status === 'pending')
+}
+
+export async function fetchBuyerOffers(userId, status) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const { data, error } = await withPrimaryOfferListingImage(
+    supabase
+      .from('offers')
+      .select(offerWithListingFields)
+      .eq('buyer_id', userId)
+      .eq('status', status)
+      .order('created_at', { ascending: false }),
+  )
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return { data: (data ?? []).map(enrichOfferWithListing), error: null }
+}
+
+export async function fetchSellerOffers(userId, status) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const { data, error } = await withPrimaryOfferListingImage(
+    supabase
+      .from('offers')
+      .select(offerWithListingFields)
+      .eq('seller_id', userId)
+      .eq('status', status)
+      .order('created_at', { ascending: false }),
+  )
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return { data: (data ?? []).map(enrichOfferWithListing), error: null }
 }

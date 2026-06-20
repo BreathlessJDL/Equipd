@@ -21,6 +21,7 @@ UK marketplace for used gym equipment.
 - **Notifications** — In-app alerts for messages and offers at `/notifications`
 - **Saved listings** — Save active listings and view them at `/saved-listings`
 - **Delivery options** — Sellers can mark collection and/or courier availability with optional notes
+- **Hub** — Buyer/seller dashboard at `/hub` (listings, offers, sold and purchased items)
 
 Not implemented yet: payments, email/push notifications, saved-search alerts, AI processing, wanted requests, realtime messaging.
 

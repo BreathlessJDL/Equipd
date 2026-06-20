@@ -8,12 +8,10 @@ import './AppShell.css'
 const publicNavLinks = [
   { to: '/', label: 'Browse', end: true },
   { to: '/listings/new', label: 'Sell' },
-  { to: '/profile', label: 'Profile' },
 ]
 
 const authedNavLinks = [
-  { to: '/saved-listings', label: 'Saved Listings' },
-  { to: '/my-listings', label: 'My Listings' },
+  { to: '/hub', label: 'Hub' },
   { to: '/messages', label: 'Messages' },
 ]
 
@@ -91,6 +89,18 @@ function AppShell() {
               : null}
 
             {!loading && user ? <NotificationBell onNavigate={() => setNavOpen(false)} /> : null}
+
+            {!loading && user ? (
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `app-shell__nav-link${isActive ? ' app-shell__nav-link--active' : ''}`
+                }
+                onClick={() => setNavOpen(false)}
+              >
+                Profile
+              </NavLink>
+            ) : null}
 
             {!loading && user ? (
               <button

@@ -6,6 +6,7 @@ import AddListingPage from './pages/AddListingPage'
 import EditListingPage from './pages/EditListingPage'
 import HomePage from './pages/HomePage'
 import ListingDetailPage from './pages/ListingDetailPage'
+import HubPage from './pages/HubPage'
 import LocationListingsPage from './pages/LocationListingsPage'
 import LoginPage from './pages/LoginPage'
 import MessagesPage from './pages/MessagesPage'
@@ -71,6 +72,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SavedListingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="hub"
+              element={
+                <ProtectedRoute>
+                  <HubPage />
                 </ProtectedRoute>
               }
             />
