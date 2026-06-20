@@ -1,0 +1,55 @@
+.buyer-order-confirmation {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+}
+
+.buyer-order-confirmation--compact {
+  padding: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.buyer-order-confirmation__warning {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.buyer-order-confirmation__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.buyer-order-confirmation__checkbox input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.buyer-order-confirmation__button {
+  justify-self: start;
+  padding: 0.5rem 0.875rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.buyer-order-confirmation__button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.buyer-order-confirmation__error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-danger);
+}

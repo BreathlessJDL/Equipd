@@ -12,6 +12,13 @@ import {
   withdrawOffer,
 } from '../lib/offers'
 import { startConversationForListing } from '../lib/messages'
+import {
+  canPayNow,
+  formatPaymentStatus,
+  isAwaitingSellerSetup,
+  isPaymentExpired,
+} from '../lib/payments'
+import { createCheckoutSession, getStripeApiErrorMessage } from '../lib/stripe-api'
 import '../components/ListingDetail.css'
 
 function ListingOffersSection({
@@ -31,6 +38,8 @@ function ListingOffersSection({
   const [offerFormSuccess, setOfferFormSuccess] = useState('')
   const [updatingOfferId, setUpdatingOfferId] = useState(null)
   const [actionError, setActionError] = useState('')
+  const [payingPaymentId, setPayingPaymentId] = useState(null)
+  const [payError, setPayError] = useState('')
 
   const canMakeOffer = Boolean(user && !isOwner && listing.status === 'active')
   const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
@@ -98,6 +107,21 @@ function ListingOffersSection({
     }
 
     onOffersChange(offers.map((offer) => (offer.id === data.id ? data : offer)))
+  }
+
+  async function handlePayNow(paymentId) {
+    setPayingPaymentId(paymentId)
+    setPayError('')
+
+    const { url, error } = await createCheckoutSession(paymentId)
+
+    if (error) {
+      setPayingPaymentId(null)
+      setPayError(getStripeApiErrorMessage(error))
+      return
+    }
+
+    globalThis.location.assign(url)
   }
 
   if (!showOffersSection) {
@@ -196,6 +220,12 @@ function ListingOffersSection({
         </p>
       ) : null}
 
+      {payError ? (
+        <p className="listing-detail__message listing-detail__message--error" role="alert">
+          {payError}
+        </p>
+      ) : null}
+
       {!loadingOffers && !offersError && offers.length === 0 ? (
         <p className="listing-detail__offers-note">
           {isOwner ? 'No offers yet.' : 'You have not made an offer on this listing yet.'}
@@ -208,6 +238,8 @@ function ListingOffersSection({
             const isBuyer = offer.buyer_id === user?.id
             const isSeller = offer.seller_id === user?.id
             const isPending = offer.status === 'pending'
+            const isAccepted = offer.status === 'accepted'
+            const payment = offer.payment
 
             return (
               <li key={offer.id} className="listing-detail__offer-item">
@@ -219,6 +251,19 @@ function ListingOffersSection({
                 <p className="listing-detail__offer-meta">
                   {isOwner ? 'From buyer' : 'Your offer'} · {formatOfferTimestamp(offer.created_at)}
                 </p>
+
+                {isBuyer && isAccepted && payment ? (
+                  <p className="listing-detail__offer-meta">
+                    {formatPaymentStatus(payment.status)}
+                    {payment.expires_at && !isPaymentExpired(payment)
+                      ? ` · Pay by ${formatOfferTimestamp(payment.expires_at)}`
+                      : ''}
+                    {isPaymentExpired(payment) ? ' · Payment window expired' : ''}
+                    {isAwaitingSellerSetup(payment)
+                      ? ' · Waiting for seller payout setup'
+                      : ''}
+                  </p>
+                ) : null}
 
                 {offer.message ? <p className="listing-detail__offer-message">{offer.message}</p> : null}
 
@@ -258,6 +303,19 @@ function ListingOffersSection({
                       onClick={() => handleOfferAction(offer.id, 'withdraw')}
                     >
                       Withdraw offer
+                    </button>
+                  </div>
+                ) : null}
+
+                {isBuyer && isAccepted && canPayNow(payment) ? (
+                  <div className="listing-detail__offer-actions">
+                    <button
+                      type="button"
+                      className="listing-detail__button listing-detail__button--primary"
+                      disabled={payingPaymentId === payment.id}
+                      onClick={() => handlePayNow(payment.id)}
+                    >
+                      {payingPaymentId === payment.id ? 'Redirecting…' : 'Pay now'}
                     </button>
                   </div>
                 ) : null}

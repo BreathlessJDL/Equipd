@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import '../components/ListingDetail.css'
 import '../components/PageStub.css'
@@ -27,7 +27,9 @@ import {
   unsaveListing,
 } from '../lib/savedListings'
 import { useAuth } from '../hooks/useAuth'
+import BuyerOrderConfirmation from '../components/BuyerOrderConfirmation'
 import ListingOffersSection from '../components/ListingOffersSection'
+import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '../lib/orders'
 
 function ListingDetailPage() {
   const navigate = useNavigate()
@@ -167,7 +169,7 @@ function ListingDetailPage() {
     }
 
     const isOwner = listing.seller_id === user.id
-    const canViewOffers = isOwner || listing.status === 'active'
+    const canViewOffers = isOwner || listing.status === 'active' || listing.status === 'reserved' || listing.status === 'in_progress'
 
     if (!canViewOffers) {
       setOffers([])
@@ -300,6 +302,63 @@ function ListingDetailPage() {
     setIsSaved(true)
   }
 
+  async function reloadOffers() {
+    if (!listing?.id || !slug) return
+
+    const [offersResult, listingResult] = await Promise.all([
+      fetchOffersForListing(listing.id),
+      fetchListingBySlug(slug),
+    ])
+
+    if (!offersResult.error) {
+      setOffers(offersResult.data ?? [])
+    }
+
+    if (!listingResult.error && listingResult.data) {
+      setListing(listingResult.data)
+    }
+  }
+
+  const buyerConfirmableOffer = useMemo(() => {
+    if (!user?.id) return null
+
+    return (
+      offers.find(
+        (offer) =>
+          offer.buyer_id === user.id &&
+          offer.status === 'accepted' &&
+          canBuyerConfirmOrder(offer.order, offer.payment),
+      ) ?? null
+    )
+  }, [offers, user?.id])
+
+  const buyerConfirmedOffer = useMemo(() => {
+    if (!user?.id) return null
+
+    return (
+      offers.find(
+        (offer) =>
+          offer.buyer_id === user.id &&
+          offer.status === 'accepted' &&
+          isOrderBuyerConfirmed(offer.order) &&
+          !isOrderCompleted(offer.order),
+      ) ?? null
+    )
+  }, [offers, user?.id])
+
+  const buyerCompletedOffer = useMemo(() => {
+    if (!user?.id) return null
+
+    return (
+      offers.find(
+        (offer) =>
+          offer.buyer_id === user.id &&
+          offer.status === 'accepted' &&
+          isOrderCompleted(offer.order),
+      ) ?? null
+    )
+  }, [offers, user?.id])
+
   if (loading) {
     return (
       <section className="page-stub">
@@ -420,21 +479,31 @@ function ListingDetailPage() {
 
           <div>
             <p className="listing-detail__label">Change status</p>
-            <div className="listing-detail__status-controls">
-              {LISTING_STATUSES.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  className={`listing-detail__button listing-detail__button--secondary${
-                    listing.status === status ? ' listing-detail__button--active' : ''
-                  }`}
-                  disabled={statusUpdating || listing.status === status}
-                  onClick={() => handleStatusChange(status)}
-                >
-                  {formatListingStatus(status)}
-                </button>
-              ))}
-            </div>
+            {listing.status === 'reserved' ? (
+              <p className="listing-detail__message listing-detail__message--success" role="status">
+                This listing is reserved while a buyer completes payment.
+              </p>
+            ) : listing.status === 'in_progress' ? (
+              <p className="listing-detail__message listing-detail__message--success" role="status">
+                This listing is in progress while the buyer completes collection or delivery.
+              </p>
+            ) : (
+              <div className="listing-detail__status-controls">
+                {LISTING_STATUSES.map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    className={`listing-detail__button listing-detail__button--secondary${
+                      listing.status === status ? ' listing-detail__button--active' : ''
+                    }`}
+                    disabled={statusUpdating || listing.status === status}
+                    onClick={() => handleStatusChange(status)}
+                  >
+                    {formatListingStatus(status)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {statusError ? (
@@ -506,6 +575,35 @@ function ListingDetailPage() {
           >
             Log in to message seller
           </Link>
+        </div>
+      ) : null}
+
+      {!isOwner && buyerConfirmableOffer?.order?.id ? (
+        <div className="listing-detail__owner-actions">
+          <p className="listing-detail__label">Your order</p>
+          <p className="listing-detail__message listing-detail__message--success" role="status">
+            Paid — awaiting collection/delivery confirmation
+          </p>
+          <BuyerOrderConfirmation
+            orderId={buyerConfirmableOffer.order.id}
+            onConfirmed={reloadOffers}
+          />
+        </div>
+      ) : null}
+
+      {!isOwner && !buyerConfirmableOffer && buyerConfirmedOffer ? (
+        <div className="listing-detail__owner-actions">
+          <p className="listing-detail__message listing-detail__message--success" role="status">
+            You confirmed receipt — payout pending
+          </p>
+        </div>
+      ) : null}
+
+      {!isOwner && buyerCompletedOffer ? (
+        <div className="listing-detail__owner-actions">
+          <p className="listing-detail__message listing-detail__message--success" role="status">
+            Purchase completed
+          </p>
         </div>
       ) : null}
 

@@ -136,6 +136,8 @@ export function formatListingStatus(status) {
   const labels = {
     draft: 'Draft',
     active: 'Active',
+    reserved: 'Reserved',
+    in_progress: 'In progress',
     sold: 'Sold',
     archived: 'Archived',
   }

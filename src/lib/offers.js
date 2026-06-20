@@ -1,5 +1,7 @@
 import { parsePriceToPence } from './listings'
 import { enrichListingWithImages } from './listingImages'
+import { enrichOfferWithOrder, fetchOrdersByOfferIds } from './orders'
+import { enrichOfferWithPayment, paymentFields } from './payments'
 import { supabase } from './supabase'
 
 const offerFields = `
@@ -32,7 +34,13 @@ const offerListingSelect = `
   )
 `
 
-const offerWithListingFields = `${offerFields}, ${offerListingSelect}`
+const offerPaymentSelect = `
+  payment:payments(
+    ${paymentFields}
+  )
+`
+
+const offerWithListingFields = `${offerFields}, ${offerPaymentSelect}, ${offerListingSelect}`
 
 function withPrimaryOfferListingImage(query) {
   return query
@@ -40,13 +48,42 @@ function withPrimaryOfferListingImage(query) {
     .limit(1, { foreignTable: 'listings.listing_images' })
 }
 
-function enrichOfferWithListing(offer) {
+function enrichOfferWithListingFields(offer) {
   if (!offer) return offer
 
-  return {
+  return enrichOfferWithPayment({
     ...offer,
     listing: offer.listing ? enrichListingWithImages(offer.listing) : null,
+  })
+}
+
+async function attachOrdersToOffers(offers) {
+  const { data: orders, error } = await fetchOrdersByOfferIds(offers.map((offer) => offer.id))
+
+  if (error) {
+    return { data: null, error }
   }
+
+  const ordersByOfferId = new Map(orders.map((order) => [order.offer_id, order]))
+
+  return {
+    data: offers.map((offer) => ({
+      ...offer,
+      order: ordersByOfferId.get(offer.id) ?? null,
+    })),
+    error: null,
+  }
+}
+
+async function enrichOffersResponse(offers) {
+  const withListingFields = (offers ?? []).map(enrichOfferWithListingFields)
+  const { data: withOrders, error } = await attachOrdersToOffers(withListingFields)
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return { data: (withOrders ?? []).map(enrichOfferWithOrder), error: null }
 }
 
 export function getOfferErrorMessage(error) {
@@ -80,11 +117,15 @@ export async function fetchOffersForListing(listingId) {
 
   const { data, error } = await supabase
     .from('offers')
-    .select(offerFields)
+    .select(`${offerFields}, ${offerPaymentSelect}`)
     .eq('listing_id', listingId)
     .order('created_at', { ascending: false })
 
-  return { data, error }
+  if (error) {
+    return { data: null, error }
+  }
+
+  return enrichOffersResponse(data)
 }
 
 export async function createOffer({
@@ -215,7 +256,7 @@ export async function fetchBuyerOffers(userId, status) {
     return { data: null, error }
   }
 
-  return { data: (data ?? []).map(enrichOfferWithListing), error: null }
+  return enrichOffersResponse(data)
 }
 
 export async function fetchSellerOffers(userId, status) {
@@ -236,5 +277,5 @@ export async function fetchSellerOffers(userId, status) {
     return { data: null, error }
   }
 
-  return { data: (data ?? []).map(enrichOfferWithListing), error: null }
+  return enrichOffersResponse(data)
 }

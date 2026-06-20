@@ -46,7 +46,7 @@ function MyListingsPage() {
     <section className="listing-browse">
       <header className="listing-browse__header">
         <h2 className="listing-browse__title">My listings</h2>
-        <p className="listing-browse__lead">Manage your draft, active, sold, and archived listings.</p>
+        <p className="listing-browse__lead">Manage your draft, active, reserved, sold, and archived listings.</p>
       </header>
 
       {loading ? (

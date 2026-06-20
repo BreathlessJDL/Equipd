@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-const profileFields = 'id, display_name, location'
+const profileFields = 'id, display_name, location, stripe_onboarding_complete'
 
 export async function fetchProfile(userId, { email } = {}) {
   if (!supabase) {

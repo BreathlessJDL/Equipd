@@ -1,0 +1,5 @@
+# Supabase local development config (Edge Functions)
+# See: https://supabase.com/docs/guides/cli/config
+
+[functions.stripe-webhook]
+verify_jwt = false

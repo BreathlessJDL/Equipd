@@ -1,4 +1,4 @@
-export const LISTING_STATUSES = ['draft', 'active', 'sold', 'archived']
+export const LISTING_STATUSES = ['draft', 'active', 'reserved', 'in_progress', 'sold', 'archived']
 
 export const LISTING_SOURCES = ['manual', 'import', 'api']
 
