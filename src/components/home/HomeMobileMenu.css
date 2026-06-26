@@ -1,0 +1,235 @@
+.home-mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--color-surface);
+}
+
+.home-mobile-menu__panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-surface);
+}
+
+.home-mobile-menu__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: var(--space-md);
+  padding: 0.75rem var(--home-gutter, 1rem);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.home-mobile-menu__logo {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.home-mobile-menu__logo .equipd-logo__image {
+  height: clamp(1.75rem, 5vw, 2rem);
+  width: auto;
+}
+
+.home-mobile-menu__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.home-mobile-menu__close svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.home-mobile-menu__close:hover {
+  color: var(--color-navy);
+}
+
+.home-mobile-menu__actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 1rem var(--home-gutter, 1rem) 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.home-mobile-menu__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+
+.home-mobile-menu__cta--primary {
+  border: none;
+  background: var(--color-orange);
+  color: #fff;
+}
+
+.home-mobile-menu__cta--primary:hover {
+  background: var(--color-orange-hover);
+}
+
+.home-mobile-menu__cta--secondary {
+  border: 1.5px solid var(--color-orange);
+  background: var(--color-surface);
+  color: var(--color-orange);
+}
+
+.home-mobile-menu__actions--logged-in {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.home-mobile-menu__cta--secondary:hover {
+  background: #fff4ed;
+}
+
+.home-mobile-menu__menu-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-mobile-menu__menu-list--account {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.home-mobile-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.625rem var(--home-gutter, 1rem);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-navy);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-mobile-menu__row--category {
+  font-weight: 500;
+}
+
+.home-mobile-menu__row:hover {
+  background: color-mix(in srgb, var(--color-bg) 65%, var(--color-surface));
+}
+
+.home-mobile-menu__row--account:hover {
+  color: var(--color-orange);
+}
+
+.home-mobile-menu__menu-list li:last-child .home-mobile-menu__row,
+.home-mobile-menu__menu-list--account li:last-child .home-mobile-menu__row {
+  border-bottom: none;
+}
+
+.home-mobile-menu__icon-slot {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+.home-mobile-menu__icon {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  object-position: center;
+}
+
+.home-mobile-menu__icon--account {
+  /* Navy icons are baked into the PNG/SVG assets. */
+}
+
+.home-mobile-menu__icon--saved {
+  width: 1.5rem;
+  height: 1.5rem;
+  transform: scale(0.82);
+  transform-origin: center;
+}
+
+.home-mobile-menu__icon--category {
+  /* Orange category silhouettes are baked into the PNG assets. */
+}
+
+.home-mobile-menu__row-label {
+  min-width: 0;
+}
+
+.home-mobile-menu__categories {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-mobile-menu__categories-heading {
+  margin: 0;
+  padding: 1rem var(--home-gutter, 1rem) 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-muted);
+}
+
+.home-mobile-menu__footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 0 var(--home-gutter, 1rem) calc(1rem + env(safe-area-inset-bottom, 0));
+  border-top: 1px solid var(--color-border);
+}
+
+.home-mobile-menu__row--logout {
+  padding-inline: var(--home-gutter, 1rem);
+  border-bottom: none;
+}
+
+.home-mobile-menu__loading {
+  margin: 0;
+  padding: 1.5rem var(--home-gutter, 1rem);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 961px) {
+  .home-mobile-menu {
+    display: none;
+  }
+}

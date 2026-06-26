@@ -7,10 +7,27 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:dev": "node scripts/seed-dev.mjs",
+    "seed:dev-reviews": "node scripts/seed-dev-reviews.mjs",
+    "backfill:listing-coords": "node scripts/backfill-dev-listing-coordinates.mjs",
+    "import:bubble-test": "node scripts/import-bubble-listings-test-batch.mjs",
+    "import:bubble": "node scripts/import-bubble-listings.mjs",
+    "import:bubble-images": "node scripts/refresh-bubble-import-images.mjs",
+    "audit:bubble-images": "node scripts/audit-bubble-import-images.mjs",
+    "generate:bubble-image-repair": "node scripts/generate-bubble-image-repair-sheet.mjs",
+    "verify:import-listing-visibility": "node scripts/verify-import-listing-visibility.mjs",
+    "test:browse-pagination": "node scripts/test-browse-pagination.mjs",
+    "test:browse-load-more-ui": "node scripts/test-browse-load-more-ui.mjs",
+    "test:home-load-more-ui": "node scripts/test-home-load-more-ui.mjs",
+    "dry-run:delete-zero-image-imports": "node scripts/dry-run-delete-zero-image-import-listings.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.108.2",
+    "qrcode": "^1.5.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.18.0"
@@ -23,6 +40,7 @@
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "exceljs": "^4.4.0",
     "globals": "^17.6.0",
     "vite": "^8.0.12"
   }

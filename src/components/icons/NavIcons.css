@@ -1,0 +1,11 @@
+.nav-action-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  display: block;
+}
+
+.home-header__nav .nav-action-icon {
+  width: 1.625rem;
+  height: 1.625rem;
+}

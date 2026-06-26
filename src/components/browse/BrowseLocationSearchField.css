@@ -1,0 +1,39 @@
+@import '../shared/googlePlacesPac.css';
+
+.browse-location-search {
+  display: grid;
+  gap: 0.375rem;
+  position: relative;
+  overflow: visible;
+}
+
+.browse-location-search__hint {
+  margin: 0;
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+}
+
+.browse-location-search__error {
+  margin: 0;
+  color: var(--color-danger, #b00020);
+  font-size: 0.875rem;
+}
+
+.listing-browse__filter-item--location {
+  min-width: min(100%, 16rem);
+  position: relative;
+  overflow: visible;
+}
+
+.listing-browse__filter-item--radius {
+  min-width: 9rem;
+  position: relative;
+  z-index: 1;
+}
+
+.listing-card__distance,
+.listing-row__distance {
+  margin: 0.125rem 0 0;
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+}

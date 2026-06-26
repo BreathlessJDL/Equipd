@@ -27,6 +27,14 @@ const savedListingCardSelect = `
 
 export function getSavedListingErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
+
+  if (
+    error.code === '42501' ||
+    /row-level security policy/i.test(error.message ?? '')
+  ) {
+    return "You can't save your own listing."
+  }
+
   return error.message || 'Something went wrong. Please try again.'
 }
 
@@ -51,15 +59,24 @@ export function partitionSavedListings(savedRows = []) {
   return { activeListings, unavailableSaved }
 }
 
-export async function saveListing(userId, listingId) {
+export async function saveListing(_userId, listingId) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { data: null, error: authError ?? new Error('You must be signed in to save listings.') }
   }
 
   const { data, error } = await supabase
     .from('saved_listings')
     .insert({
-      user_id: userId,
+      user_id: user.id,
       listing_id: listingId,
     })
     .select(savedListingFields)
@@ -68,15 +85,24 @@ export async function saveListing(userId, listingId) {
   return { data, error }
 }
 
-export async function unsaveListing(userId, listingId) {
+export async function unsaveListing(_userId, listingId) {
   if (!supabase) {
     return { error: new Error('Supabase is not configured.') }
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: authError ?? new Error('You must be signed in to manage saved listings.') }
   }
 
   const { error } = await supabase
     .from('saved_listings')
     .delete()
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
     .eq('listing_id', listingId)
 
   return { error }
@@ -119,4 +145,25 @@ export async function fetchSavedListings(userId) {
   }
 
   return { data: data ?? [], error: null }
+}
+
+export async function fetchListingSavedCount(listingId) {
+  if (!supabase) {
+    return { count: 0, error: new Error('Supabase is not configured.') }
+  }
+
+  if (!listingId) {
+    return { count: 0, error: null }
+  }
+
+  const { data, error } = await supabase.rpc('get_listing_saved_count', {
+    p_listing_id: listingId,
+  })
+
+  if (error) {
+    return { count: 0, error }
+  }
+
+  const count = Number.isFinite(data) ? Math.max(0, data) : 0
+  return { count, error: null }
 }

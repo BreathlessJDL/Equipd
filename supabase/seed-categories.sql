@@ -1,16 +1,30 @@
 -- Equipd equipment categories seed
 -- Run after storage.sql
+-- Controlled taxonomy — legacy category rows are kept for existing listings.
 
 insert into public.categories (name, slug, sort_order)
 values
-  ('Barbells & Plates', 'barbells-plates', 10),
-  ('Racks & Rigs', 'racks-rigs', 20),
-  ('Cardio', 'cardio', 30),
-  ('Benches', 'benches', 40),
-  ('Dumbbells', 'dumbbells', 50),
-  ('Machines', 'machines', 60),
-  ('Accessories', 'accessories', 70),
-  ('Other', 'other', 80)
+  ('Treadmills', 'treadmill', 10),
+  ('Crosstrainers', 'crosstrainers', 20),
+  ('Upright Bikes', 'upright-bikes', 30),
+  ('Recumbent Bikes', 'recumbent-bikes', 40),
+  ('Spin Bikes', 'spin-bikes', 50),
+  ('Stairclimbers', 'stairclimbers', 60),
+  ('Upper Body Bikes', 'upper-body-bikes', 70),
+  ('Assault Bikes', 'assault-bike', 80),
+  ('Plate Loaded Machines', 'plate-loaded-machine', 90),
+  ('Pin Loaded Machines', 'pin-loaded-machine', 100),
+  ('Multi-gyms', 'multi-gyms', 110),
+  ('Dual Cable Pulley', 'dual-cable-pulley', 120),
+  ('Squat Racks', 'squat-rack', 130),
+  ('Skierg', 'skierg', 140),
+  ('Rowers', 'rowers', 145),
+  ('Functional', 'functional', 150),
+  ('Benches', 'bench', 160),
+  ('Dumbbells', 'dumbbells', 170),
+  ('Weight Plates', 'weight-plates', 180),
+  ('Barbells', 'barbells', 190),
+  ('Other', 'other', 200)
 on conflict (slug) do update
 set
   name = excluded.name,

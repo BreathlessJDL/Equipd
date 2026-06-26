@@ -1,0 +1,60 @@
+.collection-buyer-handover {
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+}
+
+.collection-buyer-handover--compact {
+  padding: 0.75rem 0.85rem;
+}
+
+.collection-buyer-handover__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  color: var(--color-navy);
+}
+
+.collection-buyer-handover__lead {
+  margin: 0 0 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.collection-buyer-handover__steps {
+  margin: 0 0 0.65rem;
+  padding-left: 1.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.collection-buyer-handover__steps li + li {
+  margin-top: 0.25rem;
+}
+
+.collection-buyer-handover__note {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.collection-buyer-handover__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.collection-buyer-handover__action:hover {
+  background: color-mix(in srgb, var(--color-primary) 88%, #000);
+}

@@ -1,46 +1,85 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
 import ListingBrowseResults from '../components/ListingBrowseResults'
-import LocationPageLinks from '../components/LocationPageLinks'
+import HomeHero from '../components/home/HomeHero'
+import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
+import HomeRecentListings from '../components/home/HomeRecentListings'
+import HomeReviewsSection from '../components/home/HomeReviewsSection'
+import '../components/home/HomePage.css'
 import '../components/ListingBrowse.css'
-import { fetchActiveListings, fetchCategories, getListingErrorMessage, parsePriceToPence } from '../lib/listings'
+import '../components/browse/BrowseActiveFilterChips.css'
+import { useBrowseFilters } from '../hooks/useBrowseFilters'
+import { useBrowseListings } from '../hooks/useBrowseListings'
+import { useHomeRecentListings } from '../hooks/useHomeRecentListings'
+import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
+import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
+import { useAuth } from '../hooks/useAuth'
+import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
+import { fetchCategories } from '../lib/listings'
+import { fetchRecentReviews, getReviewErrorMessage } from '../lib/reviews'
 
 function HomePage() {
-  const [listings, setListings] = useState([])
+  const { user } = useAuth()
+  const isLoggedIn = Boolean(user)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [recentReviews, setRecentReviews] = useState([])
+  const [reviewsLoading, setReviewsLoading] = useState(true)
+  const [reviewsError, setReviewsError] = useState('')
+
+  const profileLocation = useProfileBrowseLocation()
+
+  const profileCoordinates = useMemo(
+    () =>
+      profileLocation.hasCoordinates
+        ? { latitude: profileLocation.latitude, longitude: profileLocation.longitude }
+        : null,
+    [profileLocation.hasCoordinates, profileLocation.latitude, profileLocation.longitude],
+  )
+
   const [categories, setCategories] = useState([])
-  const [search, setSearch] = useState('')
-  const [brand, setBrand] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [debouncedBrand, setDebouncedBrand] = useState('')
-  const [debouncedMinPrice, setDebouncedMinPrice] = useState('')
-  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState('')
-  const [categoryId, setCategoryId] = useState('')
-  const [condition, setCondition] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [categoriesReady, setCategoriesReady] = useState(false)
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedSearch(search)
-      setDebouncedBrand(brand)
-      setDebouncedMinPrice(minPrice)
-      setDebouncedMaxPrice(maxPrice)
-    }, 300)
+  const browse = useBrowseFilters(searchParams, setSearchParams, {
+    categories,
+    categoriesReady,
+    profileCoordinates,
+  })
 
-    return () => window.clearTimeout(timeoutId)
-  }, [search, brand, minPrice, maxPrice])
+  const {
+    listings: recentListings,
+    loading: recentLoading,
+    error: recentError,
+  } = useHomeRecentListings({ enabled: !isLoggedIn })
+
+  const {
+    listings,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+  } = useBrowseListings(browse.queryOptions, {
+    sort: browse.queryOptions.sort,
+    search: browse.queryOptions.search,
+    hasLocationSearch: browse.hasLocationForSort,
+    paginate: true,
+  })
 
   useEffect(() => {
     let active = true
 
     async function loadCategories() {
-      const { data, error: categoriesError } = await fetchCategories()
+      const { data, categoriesError } = await fetchCategories()
 
-      if (!active || categoriesError) return
+      if (!active) return
 
-      setCategories(data ?? [])
+      if (!categoriesError) {
+        setCategories(data ?? [])
+      }
+
+      setCategoriesReady(true)
     }
 
     loadCategories()
@@ -50,99 +89,168 @@ function HomePage() {
     }
   }, [])
 
-  const queryOptions = useMemo(() => {
-    const minPricePence = parsePriceToPence(debouncedMinPrice)
-    const maxPricePence = parsePriceToPence(debouncedMaxPrice)
-
-    return {
-      search: debouncedSearch,
-      categoryId,
-      condition,
-      brand: debouncedBrand,
-      minPricePence,
-      maxPricePence,
-    }
-  }, [
-    debouncedSearch,
-    debouncedBrand,
-    debouncedMinPrice,
-    debouncedMaxPrice,
-    categoryId,
-    condition,
-  ])
-
   useEffect(() => {
+    if (isLoggedIn) {
+      setReviewsLoading(false)
+      return undefined
+    }
+
     let active = true
 
-    async function loadListings() {
-      setLoading(true)
-      setError('')
-
-      const { data, error: listingsError } = await fetchActiveListings(queryOptions)
+    async function loadReviews() {
+      const { data, error: reviewsResultError } = await fetchRecentReviews({
+        limit: 12,
+        includeOrderListing: true,
+      })
 
       if (!active) return
 
-      if (listingsError) {
-        setError(getListingErrorMessage(listingsError))
-        setListings([])
-        setLoading(false)
-        return
+      if (reviewsResultError) {
+        setReviewsError(getReviewErrorMessage(reviewsResultError))
+        setRecentReviews([])
+      } else {
+        setRecentReviews(data ?? [])
       }
 
-      setListings(data ?? [])
-      setLoading(false)
+      setReviewsLoading(false)
     }
 
-    loadListings()
+    loadReviews()
 
     return () => {
       active = false
     }
-  }, [queryOptions])
+  }, [isLoggedIn])
 
-  const hasFilters = Boolean(
-    debouncedSearch.trim() ||
-      categoryId ||
-      condition ||
-      debouncedBrand.trim() ||
-      debouncedMinPrice.trim() ||
-      debouncedMaxPrice.trim(),
+  const scrollToBrowseResults = useCallback(() => {
+    requestAnimationFrame(() => {
+      document.getElementById('browse-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [])
+
+  const scrollToBrowse = useCallback(() => {
+    if (isLoggedIn) {
+      scrollToBrowseResults()
+      return
+    }
+
+    document.getElementById('browse')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [isLoggedIn, scrollToBrowseResults])
+
+  const handleNavSelect = useCallback(
+    ({ categoryId, rating, search }) => {
+      browse.applyNavSelection({ categoryId, rating, search })
+      scrollToBrowseResults()
+    },
+    [browse, scrollToBrowseResults],
   )
 
+  const siteHeaderConfig = useMemo(
+    () => ({
+      search: browse.search,
+      onSearchChange: browse.setSearch,
+      onSearchSubmit: scrollToBrowse,
+      categories,
+      activeCategoryId: browse.categoryId,
+      activeRating: browse.rating,
+      activeSearch: browse.search,
+      onNavSelect: handleNavSelect,
+      linkMode: false,
+      categoryNavClassName: 'home-category-text-nav',
+    }),
+    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, scrollToBrowse, handleNavSelect],
+  )
+
+  useRegisterSiteHeader(siteHeaderConfig)
+
   return (
-    <section className="listing-browse">
-      <header className="listing-browse__header">
-        <h2 className="listing-browse__title">Browse listings</h2>
-        <p className="listing-browse__lead">Find used gym equipment from sellers across the UK.</p>
-      </header>
+    <div className={`home-page${isLoggedIn ? ' home-page--feed' : ''}`}>
+      {!isLoggedIn ? <HomeHero /> : null}
 
-      <LocationPageLinks />
+      {!isLoggedIn ? (
+        <HomeRecentListings
+          listings={recentListings}
+          loading={recentLoading}
+          error={recentError}
+        />
+      ) : null}
 
-      <ListingBrowseFilters
-        categories={categories}
-        search={search}
-        onSearchChange={setSearch}
-        categoryId={categoryId}
-        onCategoryChange={setCategoryId}
-        condition={condition}
-        onConditionChange={setCondition}
-        brand={brand}
-        onBrandChange={setBrand}
-        minPrice={minPrice}
-        onMinPriceChange={setMinPrice}
-        maxPrice={maxPrice}
-        onMaxPriceChange={setMaxPrice}
-      />
+      <HomeDiscoverySection />
 
-      <ListingBrowseResults
-        loading={loading}
-        error={error}
-        listings={listings}
-        hasFilters={hasFilters}
-        emptyMessage="No active listings yet. Check back soon or list your own equipment."
-        emptyFilteredMessage="No active listings match your search. Try different keywords or clear the filters."
-      />
-    </section>
+      {!isLoggedIn ? (
+        <HomeReviewsSection
+          reviews={recentReviews}
+          loading={reviewsLoading}
+          error={reviewsError}
+        />
+      ) : null}
+
+      <section id="browse" className={`home-browse${isLoggedIn ? ' home-browse--feed' : ''}`}>
+        <div className="home-section__inner">
+          {!isLoggedIn ? (
+            <header className="home-browse__header">
+              <h2 className="home-browse__title">Browse gym equipment</h2>
+              <p className="home-browse__lead">
+                Explore and search for new and used gym equipment from sellers across the UK.
+              </p>
+            </header>
+          ) : null}
+
+          <ListingBrowseFilters
+            categories={categories}
+            categoryId={browse.categoryId}
+            categoryIds={browse.categoryIds}
+            onCategoryChange={browse.setCategoryId}
+            onToggleCategoryId={browse.toggleCategoryId}
+            onClearCategories={browse.clearCategories}
+            condition={browse.condition}
+            conditions={browse.conditions}
+            onConditionChange={browse.setCondition}
+            onToggleCondition={browse.toggleCondition}
+            onClearConditions={browse.clearConditions}
+            brand={browse.brand}
+            brands={browse.brands}
+            onBrandChange={browse.setBrand}
+            onToggleBrand={browse.toggleBrand}
+            onClearBrands={browse.clearBrands}
+            sort={browse.sort}
+            onSortChange={browse.handleSortChange}
+            minPrice={browse.minPrice}
+            onMinPriceChange={browse.setMinPrice}
+            maxPrice={browse.maxPrice}
+            onMaxPriceChange={browse.setMaxPrice}
+            panelFilterCount={browse.panelFilterCount}
+            sortNotice={browse.sortNotice}
+            idPrefix="home-browse"
+            onApply={scrollToBrowseResults}
+            onReset={browse.resetFilters}
+          />
+
+          <BrowseActiveFilterChips
+            chips={browse.activeChips}
+            onRemove={browse.removeFilterChip}
+            onReset={browse.resetFilters}
+            showReset
+          />
+
+          <div id="browse-results">
+            <ListingBrowseResults
+              loading={loading}
+              loadingMore={loadingMore}
+              hasMore={hasMore}
+              onLoadMore={loadMore}
+              error={error}
+              listings={listings}
+              hasFilters={browse.hasFilters}
+              emptyMessage="No active listings yet. Check back soon or list your own equipment."
+              emptyFilteredMessage={BROWSE_FILTER_EMPTY_MESSAGE}
+              variant="home"
+              showSectionHeader={false}
+            />
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
 

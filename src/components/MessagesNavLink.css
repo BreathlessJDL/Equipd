@@ -1,0 +1,58 @@
+.messages-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--color-navy);
+  font-weight: 600;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.messages-nav-link--icon-only {
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: var(--color-navy);
+}
+
+.messages-nav-link:hover {
+  background: var(--color-bg);
+}
+
+.messages-nav-link--active {
+  color: var(--color-orange);
+  background: color-mix(in srgb, var(--color-orange) 10%, transparent);
+}
+
+.messages-nav-link__icon {
+  flex-shrink: 0;
+}
+
+.messages-nav-link__label {
+  font-size: 0.9375rem;
+}
+
+.messages-nav-link__badge {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--color-orange);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.125rem;
+  text-align: center;
+}
+
+.messages-nav-link--icon-only .messages-nav-link__badge {
+  top: 0.3125rem;
+  right: 0.3125rem;
+}

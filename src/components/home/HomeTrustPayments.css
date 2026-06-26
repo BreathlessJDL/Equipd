@@ -1,0 +1,91 @@
+.home-trust-payments {
+  position: relative;
+  z-index: 2;
+  margin-top: clamp(-3.5rem, -6vw, -2.5rem);
+  padding-bottom: 0.5rem;
+}
+
+.home-trust-payments__inner {
+  width: 100%;
+  max-width: min(100%, 56rem);
+  margin-inline: auto;
+}
+
+.home-trust-payments__grid {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 12px 32px rgba(15, 33, 55, 0.08);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .home-trust-payments__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.home-trust-payments__card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.1rem 1rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .home-trust-payments__card + .home-trust-payments__card {
+    border-left: 1px solid var(--color-border);
+  }
+}
+
+.home-trust-payments__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-inline: auto;
+  color: var(--color-orange);
+}
+
+.home-trust-payments__card-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.home-trust-payments__card-body {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.home-trust-payments__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.home-trust-payments__links a {
+  font-weight: 600;
+  color: var(--color-orange);
+  text-decoration: none;
+}
+
+.home-trust-payments__links a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .home-trust-payments {
+    margin-top: -1.5rem;
+  }
+
+  .home-trust-payments__card + .home-trust-payments__card {
+    border-top: 1px solid var(--color-border);
+  }
+}

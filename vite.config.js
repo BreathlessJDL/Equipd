@@ -7,5 +7,9 @@ export default defineConfig({
     host: true,
     port: 5174,
     open: true,
+    watch: {
+      // Seed-only assets; avoids Windows EBUSY crashes when files are written.
+      ignored: ['**/public/dev-seed-images/**'],
+    },
   },
 })

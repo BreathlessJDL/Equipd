@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import ListingCard from '../components/ListingCard'
 import '../components/ListingBrowse.css'
 import { useAuth } from '../hooks/useAuth'
-import { fetchMyListings, getListingErrorMessage } from '../lib/listings'
+import { fetchMyListings, getListingErrorMessage, isHubManageableListing } from '../lib/listings'
 
 function MyListingsPage() {
   const { user } = useAuth()
@@ -46,7 +46,9 @@ function MyListingsPage() {
     <section className="listing-browse">
       <header className="listing-browse__header">
         <h2 className="listing-browse__title">My listings</h2>
-        <p className="listing-browse__lead">Manage your draft, active, reserved, sold, and archived listings.</p>
+        <p className="listing-browse__lead">
+          Manage your draft, active, and archived listings. Paid sales appear in Hub → Active sales.
+        </p>
       </header>
 
       {loading ? (
@@ -70,8 +72,8 @@ function MyListingsPage() {
 
       {!loading && !error && listings.length > 0 ? (
         <div className="listing-browse__grid">
-          {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} showStatus />
+          {listings.filter(isHubManageableListing).map((listing) => (
+            <ListingCard key={listing.id} listing={listing} variant="home" showStatus />
           ))}
         </div>
       ) : null}

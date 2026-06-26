@@ -1,24 +1,421 @@
 import { supabase } from './supabase'
+import { isValidCoordinate } from './listingDistance'
+import { profileLocationFromRecord } from './listingLocation'
 
-const profileFields = 'id, display_name, location, stripe_onboarding_complete'
+const PROFILE_FIELDS_BASE =
+  'id, display_name, location, latitude, longitude, avatar_url, stripe_onboarding_complete, is_admin'
+
+const PROFILE_FIELDS_WITH_LOCATION_COLUMNS = `${PROFILE_FIELDS_BASE}, city, county, postcode`
+
+const PROFILE_FIELDS_WITH_USERNAME = `${PROFILE_FIELDS_WITH_LOCATION_COLUMNS}, username`
+
+const PUBLIC_PROFILE_FIELDS_BASE = 'id, display_name, location, avatar_url, created_at'
+
+const PUBLIC_PROFILE_FIELDS_WITH_USERNAME = `${PUBLIC_PROFILE_FIELDS_BASE}, username`
+
+/** Cached after first probe — null until checked. */
+let usernameColumnAvailable = null
+let profileLocationColumnsAvailable = null
+
+export const PROFILE_LOCATION_UPDATED_EVENT = 'equipd:profile-location-updated'
+export const PROFILE_UPDATED_EVENT = 'equipd:profile-updated'
+
+export function notifyProfileLocationUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(PROFILE_LOCATION_UPDATED_EVENT))
+  }
+}
+
+export function notifyProfileUpdated(userId) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent(PROFILE_UPDATED_EVENT, {
+        detail: { userId: userId ?? null },
+      }),
+    )
+  }
+}
+
+export const USERNAME_MIN_LENGTH = 3
+export const USERNAME_MAX_LENGTH = 24
+export const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+
+export function normalizeUsername(value) {
+  return value?.trim() ?? ''
+}
+
+function isMissingUsernameColumnError(error) {
+  if (!error) return false
+
+  const message = error.message?.toLowerCase() ?? ''
+  const details = error.details?.toLowerCase() ?? ''
+  const hint = error.hint?.toLowerCase() ?? ''
+  const combined = `${message} ${details} ${hint}`
+
+  return (
+    error.code === '42703'
+    || combined.includes('column profiles.username does not exist')
+    || (combined.includes('username') && combined.includes('does not exist'))
+  )
+}
+
+function withUsernameField(profile, supported) {
+  if (!profile) return profile
+  if (supported || profile.username !== undefined) return profile
+  return { ...profile, username: null }
+}
+
+export async function supportsUsername() {
+  if (usernameColumnAvailable !== null) {
+    return usernameColumnAvailable
+  }
+
+  if (!supabase) {
+    usernameColumnAvailable = false
+    return false
+  }
+
+  const { error } = await supabase.from('profiles_public').select('username').limit(0)
+
+  if (!error) {
+    usernameColumnAvailable = true
+    return true
+  }
+
+  if (isMissingUsernameColumnError(error)) {
+    usernameColumnAvailable = false
+    return false
+  }
+
+  // Unknown error — assume unsupported so reads still work without username.
+  usernameColumnAvailable = false
+  return false
+}
+
+function isMissingProfileLocationColumnError(error) {
+  if (!error) return false
+
+  const combined = `${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`.toLowerCase()
+
+  return (
+    (error.code === '42703' || error.code === 'PGRST204')
+    && (
+      combined.includes('city')
+      || combined.includes('county')
+      || combined.includes('postcode')
+    )
+  )
+}
+
+function isNoProfileRowReturnedError(error) {
+  if (!error) return false
+
+  return (
+    error.code === 'PGRST116'
+    || /cannot coerce the result to a single json object/i.test(error.message ?? '')
+  )
+}
+
+function withProfileLocationFields(profile, supported) {
+  if (!profile) return profile
+  if (supported || profile.city !== undefined) return profile
+  return { ...profile, city: null, county: null, postcode: null }
+}
+
+export async function supportsProfileLocationColumns() {
+  if (profileLocationColumnsAvailable !== null) {
+    return profileLocationColumnsAvailable
+  }
+
+  if (!supabase) {
+    profileLocationColumnsAvailable = false
+    return false
+  }
+
+  const { error } = await supabase.from('profiles').select('city, county, postcode').limit(0)
+
+  if (!error) {
+    profileLocationColumnsAvailable = true
+    return true
+  }
+
+  if (isMissingProfileLocationColumnError(error)) {
+    profileLocationColumnsAvailable = false
+    return false
+  }
+
+  profileLocationColumnsAvailable = false
+  return false
+}
+
+async function profileSelectFields() {
+  const hasUsername = await supportsUsername()
+  const hasLocationColumns = await supportsProfileLocationColumns()
+  const baseFields = hasLocationColumns ? PROFILE_FIELDS_WITH_LOCATION_COLUMNS : PROFILE_FIELDS_BASE
+  return hasUsername ? `${baseFields}, username` : baseFields
+}
+
+async function publicProfileSelectFields() {
+  const supported = await supportsUsername()
+  return supported ? PUBLIC_PROFILE_FIELDS_WITH_USERNAME : PUBLIC_PROFILE_FIELDS_BASE
+}
+
+export function validateUsername(value, { required = true } = {}) {
+  const username = normalizeUsername(value)
+
+  if (!username) {
+    if (!required) {
+      return { valid: true, username: '', error: null }
+    }
+
+    return { valid: false, username, error: 'Username is required.' }
+  }
+
+  if (username.length < USERNAME_MIN_LENGTH) {
+    return {
+      valid: false,
+      username,
+      error: `Username must be at least ${USERNAME_MIN_LENGTH} characters.`,
+    }
+  }
+
+  if (username.length > USERNAME_MAX_LENGTH) {
+    return {
+      valid: false,
+      username,
+      error: `Username must be ${USERNAME_MAX_LENGTH} characters or fewer.`,
+    }
+  }
+
+  if (!USERNAME_PATTERN.test(username)) {
+    return {
+      valid: false,
+      username,
+      error: 'Username can only contain letters, numbers, underscores, and hyphens.',
+    }
+  }
+
+  return { valid: true, username, error: null }
+}
+
+export async function isUsernameAvailable(username, { excludeUserId } = {}) {
+  if (!supabase) {
+    return { available: false, error: new Error('Supabase is not configured.') }
+  }
+
+  if (!(await supportsUsername())) {
+    return {
+      available: false,
+      error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
+    }
+  }
+
+  const validation = validateUsername(username)
+  if (!validation.valid) {
+    return { available: false, error: new Error(validation.error) }
+  }
+
+  const { data, error } = await supabase
+    .from('profiles_public')
+    .select('id')
+    .ilike('username', validation.username)
+    .maybeSingle()
+
+  if (error) {
+    if (isMissingUsernameColumnError(error)) {
+      usernameColumnAvailable = false
+      return {
+        available: false,
+        error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
+      }
+    }
+
+    return { available: false, error }
+  }
+
+  if (data && data.id !== excludeUserId) {
+    return { available: false, error: new Error('That username is already taken.') }
+  }
+
+  return { available: true, username: validation.username, error: null }
+}
+
+export function formatProfileJoinDate(createdAt) {
+  if (!createdAt) return null
+
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(createdAt))
+  } catch {
+    return null
+  }
+}
+
+export function getProfileDisplayName(profile, { email } = {}) {
+  const username = profile?.username?.trim()
+  if (username) return username
+
+  const displayName = profile?.display_name?.trim()
+  if (displayName) return displayName
+
+  const emailPrefix = email?.split('@')[0]?.trim()
+  if (emailPrefix) return emailPrefix
+
+  return 'Equipd member'
+}
+
+function initialsFromDisplayName(displayName) {
+  const words = displayName.split(/\s+/).filter(Boolean)
+
+  if (words.length >= 2) {
+    return `${words[0].charAt(0)}${words[words.length - 1].charAt(0)}`.toUpperCase()
+  }
+
+  if (words.length === 1) {
+    return words[0].charAt(0).toUpperCase()
+  }
+
+  return null
+}
+
+function initialsFromUsername(username) {
+  const normalized = username.trim()
+  if (!normalized) return null
+
+  const separated = normalized.split(/[_.\-\s]+/).filter(Boolean)
+  if (separated.length >= 2) {
+    return `${separated[0].charAt(0)}${separated[1].charAt(0)}`.toUpperCase()
+  }
+
+  const camelParts = normalized
+    .replace(/[0-9]+$/g, '')
+    .match(/[A-Z]?[a-z]+|[A-Z]+(?![a-z])|[0-9]+/g)
+
+  if (camelParts && camelParts.length >= 2) {
+    return `${camelParts[0].charAt(0)}${camelParts[1].charAt(0)}`.toUpperCase()
+  }
+
+  const alpha = normalized.replace(/[^a-zA-Z]/g, '')
+  if (alpha.length >= 6) {
+    const mid = Math.floor(alpha.length / 2)
+    return `${alpha.charAt(0)}${alpha.charAt(mid)}`.toUpperCase()
+  }
+
+  if (alpha.length > 0) {
+    return alpha.charAt(0).toUpperCase()
+  }
+
+  return normalized.charAt(0).toUpperCase()
+}
+
+export function getProfileInitials(profile, { user } = {}) {
+  const displayName = profile?.display_name?.trim()
+  if (displayName) {
+    const fromDisplayName = initialsFromDisplayName(displayName)
+    if (fromDisplayName) return fromDisplayName
+  }
+
+  const username = profile?.username?.trim()
+  if (username) {
+    const fromUsername = initialsFromUsername(username)
+    if (fromUsername) return fromUsername
+  }
+
+  const firstName = user?.user_metadata?.first_name?.trim()
+  const lastName = user?.user_metadata?.last_name?.trim()
+  if (firstName && lastName) {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  }
+
+  if (firstName) {
+    return firstName.charAt(0).toUpperCase()
+  }
+
+  const email = user?.email?.trim()
+  if (email) {
+    return email.charAt(0).toUpperCase()
+  }
+
+  return '?'
+}
+
+export function buildAvatarProfile(profile, user = null) {
+  if (!profile) {
+    if (!user) return null
+
+    return {
+      initial: getProfileInitials(null, { user }),
+    }
+  }
+
+  return {
+    ...profile,
+    initial: getProfileInitials(profile, { user }),
+  }
+}
+
+/** @deprecated Use getProfileInitials */
+export function getUserInitial(profile, user) {
+  return getProfileInitials(profile, { user })
+}
+
+export function getProfileLocationPlace(profile) {
+  return profileLocationFromRecord(profile)
+}
+
+export function getProfileCoordinates(profile) {
+  const latitude = profile?.latitude
+  const longitude = profile?.longitude
+
+  if (!isValidCoordinate(latitude) || !isValidCoordinate(longitude)) {
+    return { latitude: null, longitude: null }
+  }
+
+  return { latitude: Number(latitude), longitude: Number(longitude) }
+}
+
+export function hasProfileCoordinates(profile) {
+  const { latitude, longitude } = getProfileCoordinates(profile)
+  return latitude != null && longitude != null
+}
 
 export async function fetchProfile(userId, { email } = {}) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
-  const { data, error } = await supabase
+  let fields = await profileSelectFields()
+  let { data, error } = await supabase
     .from('profiles')
-    .select(profileFields)
+    .select(fields)
     .eq('id', userId)
     .maybeSingle()
+
+  if (error && isMissingUsernameColumnError(error)) {
+    usernameColumnAvailable = false
+    fields = PROFILE_FIELDS_BASE
+    ;({ data, error } = await supabase
+      .from('profiles')
+      .select(fields)
+      .eq('id', userId)
+      .maybeSingle())
+  }
 
   if (error) {
     return { data: null, error }
   }
 
   if (data) {
-    return { data, error: null }
+    const hasLocationColumns = await supportsProfileLocationColumns()
+    return {
+      data: withProfileLocationFields(
+        withUsernameField(data, usernameColumnAvailable),
+        hasLocationColumns,
+      ),
+      error: null,
+    }
   }
 
   const displayName = email?.split('@')[0] ?? null
@@ -26,31 +423,265 @@ export async function fetchProfile(userId, { email } = {}) {
   const { data: created, error: insertError } = await supabase
     .from('profiles')
     .insert({ id: userId, display_name: displayName })
-    .select(profileFields)
+    .select(fields)
     .single()
 
-  return { data: created, error: insertError }
+  if (insertError) {
+    return { data: null, error: insertError }
+  }
+
+  return {
+    data: withProfileLocationFields(
+      withUsernameField(created, usernameColumnAvailable),
+      await supportsProfileLocationColumns(),
+    ),
+    error: null,
+  }
 }
 
-export async function updateProfile(userId, { display_name, location }) {
+export async function fetchPublicProfilesByIds(userIds) {
+  const ids = [...new Set((userIds ?? []).filter(Boolean))]
+
+  if (!ids.length) {
+    return new Map()
+  }
+
+  if (!supabase) {
+    return new Map()
+  }
+
+  let fields = await publicProfileSelectFields()
+  let { data, error } = await supabase.from('profiles_public').select(fields).in('id', ids)
+
+  if (error && isMissingUsernameColumnError(error)) {
+    usernameColumnAvailable = false
+    fields = PUBLIC_PROFILE_FIELDS_BASE
+    ;({ data, error } = await supabase.from('profiles_public').select(fields).in('id', ids))
+  }
+
+  if (error) {
+    console.error('[profiles] fetchPublicProfilesByIds', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    })
+    return new Map()
+  }
+
+  return new Map(
+    (data ?? []).map((profile) => [
+      profile.id,
+      withUsernameField(profile, usernameColumnAvailable),
+    ]),
+  )
+}
+
+export async function fetchPublicProfile(userId) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({
-      display_name: display_name?.trim() || null,
-      location: location?.trim() || null,
-    })
+  let fields = await publicProfileSelectFields()
+  let { data, error } = await supabase
+    .from('profiles_public')
+    .select(fields)
     .eq('id', userId)
-    .select(profileFields)
-    .single()
+    .maybeSingle()
 
-  return { data, error }
+  if (error && isMissingUsernameColumnError(error)) {
+    usernameColumnAvailable = false
+    fields = PUBLIC_PROFILE_FIELDS_BASE
+    ;({ data, error } = await supabase
+      .from('profiles_public')
+      .select(fields)
+      .eq('id', userId)
+      .maybeSingle())
+  }
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return {
+    data: withUsernameField(data, usernameColumnAvailable),
+    error: null,
+  }
+}
+
+export async function updateProfile(
+  userId,
+  {
+    username,
+    display_name,
+    location,
+    city,
+    county,
+    postcode,
+    latitude,
+    longitude,
+    avatar_url,
+  } = {},
+) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const updates = {}
+  const hasLocationColumns = await supportsProfileLocationColumns()
+
+  if (username !== undefined) {
+    const normalized = normalizeUsername(username)
+
+    if (normalized) {
+      if (!(await supportsUsername())) {
+        return {
+          data: null,
+          error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
+        }
+      }
+    }
+
+    updates.username = normalized || null
+  }
+
+  if (display_name !== undefined) {
+    updates.display_name = display_name?.trim() || null
+  }
+
+  if (location !== undefined) {
+    updates.location = location?.trim() || null
+  }
+
+  if (hasLocationColumns) {
+    if (city !== undefined) updates.city = city?.trim() || null
+    if (county !== undefined) updates.county = county?.trim() || null
+    if (postcode !== undefined) updates.postcode = postcode?.trim() || null
+  }
+
+  if (latitude !== undefined || longitude !== undefined) {
+    const lat = latitude === undefined ? undefined : latitude
+    const lng = longitude === undefined ? undefined : longitude
+
+    if (lat == null && lng == null) {
+      updates.latitude = null
+      updates.longitude = null
+    } else if (isValidCoordinate(lat) && isValidCoordinate(lng)) {
+      updates.latitude = Number(lat)
+      updates.longitude = Number(lng)
+    } else {
+      return {
+        data: null,
+        error: new Error('Location coordinates must be a valid latitude and longitude pair.'),
+      }
+    }
+  }
+
+  if (avatar_url !== undefined) {
+    updates.avatar_url = avatar_url?.trim() || null
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return fetchProfile(userId)
+  }
+
+  let fields = await profileSelectFields()
+  let { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select(fields)
+    .maybeSingle()
+
+  if (!error && !data) {
+    return fetchProfile(userId)
+  }
+
+  if (error && isNoProfileRowReturnedError(error)) {
+    return fetchProfile(userId)
+  }
+
+  if (error && isMissingUsernameColumnError(error) && updates.username !== undefined) {
+    usernameColumnAvailable = false
+    const { username: _username, ...updatesWithoutUsername } = updates
+
+    if (Object.keys(updatesWithoutUsername).length === 0) {
+      return {
+        data: null,
+        error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
+      }
+    }
+
+    fields = await profileSelectFields()
+    ;({ data, error } = await supabase
+      .from('profiles')
+      .update(updatesWithoutUsername)
+      .eq('id', userId)
+      .select(fields)
+      .maybeSingle())
+
+    if (!error && !data) {
+      return fetchProfile(userId)
+    }
+
+    if (error && isNoProfileRowReturnedError(error)) {
+      return fetchProfile(userId)
+    }
+  }
+
+  if (error && isMissingProfileLocationColumnError(error)) {
+    profileLocationColumnsAvailable = false
+    const {
+      city: _city,
+      county: _county,
+      postcode: _postcode,
+      ...updatesWithoutStructuredLocation
+    } = updates
+
+    fields = PROFILE_FIELDS_BASE
+    if (await supportsUsername()) {
+      fields = `${PROFILE_FIELDS_BASE}, username`
+    }
+
+    ;({ data, error } = await supabase
+      .from('profiles')
+      .update(updatesWithoutStructuredLocation)
+      .eq('id', userId)
+      .select(fields)
+      .maybeSingle())
+
+    if (!error && !data) {
+      return fetchProfile(userId)
+    }
+
+    if (error && isNoProfileRowReturnedError(error)) {
+      return fetchProfile(userId)
+    }
+  }
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return {
+    data: withProfileLocationFields(
+      withUsernameField(data, usernameColumnAvailable),
+      await supportsProfileLocationColumns(),
+    ),
+    error: null,
+  }
 }
 
 export function getProfileErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
+
+  if (error.code === '23505') {
+    return 'That username is already taken.'
+  }
+
+  if (error.code === '23514') {
+    return 'Username must be 3–24 characters and use only letters, numbers, underscores, and hyphens.'
+  }
+
   return error.message || 'Something went wrong. Please try again.'
 }

@@ -1,4 +1,5 @@
 import { handleCors, errorResponse, jsonResponse } from '../_shared/cors.ts'
+import { resolveBuyerCheckoutAmounts } from '../_shared/buyer-protection.ts'
 import { checkoutSessionExpiresAt, getAppBaseUrl, getStripe } from '../_shared/stripe.ts'
 import { getAuthenticatedUser, getSupabaseAdmin } from '../_shared/supabase-admin.ts'
 
@@ -43,10 +44,12 @@ Deno.serve(async (req) => {
         seller_id,
         status,
         amount_pence,
+        buyer_protection_fee_pence,
+        buyer_total_pence,
         expires_at,
         stripe_checkout_session_id,
         offer:offers!inner(id, status),
-        listing:listings!inner(id, title, status)
+        listing:listings!inner(id, title, status, collection_available, courier_available, delivery_notes)
       `,
       )
       .eq('id', paymentId)
@@ -77,6 +80,34 @@ Deno.serve(async (req) => {
       return errorResponse('Listing is not reserved for payment', 400)
     }
 
+    const { data: orderRow, error: orderError } = await admin
+      .from('orders')
+      .select('id, order_type, fulfilment_status')
+      .eq('payment_id', paymentId)
+      .maybeSingle()
+
+    if (orderError || !orderRow) {
+      console.error('stripe-create-checkout order lookup failed', orderError?.message, paymentId)
+      return errorResponse(orderError?.message ?? 'Order not found for payment', 404)
+    }
+
+    if (!orderRow.order_type) {
+      return errorResponse('Select a fulfilment method before checkout', 400)
+    }
+
+    const { data: allowedTypes, error: typesError } = await admin.rpc('get_listing_order_types', {
+      p_listing_id: payment.listing_id,
+    })
+
+    if (typesError) {
+      console.error('stripe-create-checkout fulfilment validation failed', typesError.message)
+      return errorResponse(typesError.message, 500)
+    }
+
+    if (!allowedTypes?.includes(orderRow.order_type)) {
+      return errorResponse('Selected fulfilment method is not available for this listing', 400)
+    }
+
     if (payment.stripe_checkout_session_id) {
       const existingSession = await stripe.checkout.sessions.retrieve(
         payment.stripe_checkout_session_id,
@@ -87,6 +118,8 @@ Deno.serve(async (req) => {
       }
     }
 
+    const checkoutAmounts = resolveBuyerCheckoutAmounts(payment)
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       currency: 'gbp',
@@ -95,10 +128,21 @@ Deno.serve(async (req) => {
           quantity: 1,
           price_data: {
             currency: 'gbp',
-            unit_amount: payment.amount_pence,
+            unit_amount: checkoutAmounts.itemPricePence,
             product_data: {
               name: payment.listing.title,
               description: `Accepted offer on ${payment.listing.title}`,
+            },
+          },
+        },
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'gbp',
+            unit_amount: checkoutAmounts.buyerProtectionFeePence,
+            product_data: {
+              name: 'Buyer Protection',
+              description: 'Equipd Buyer Protection for this purchase',
             },
           },
         },
@@ -109,8 +153,9 @@ Deno.serve(async (req) => {
         listing_id: payment.listing_id,
         buyer_id: payment.buyer_id,
         seller_id: payment.seller_id,
+        order_type: orderRow.order_type,
       },
-      success_url: `${appBaseUrl}/hub?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appBaseUrl}/orders/${orderRow.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appBaseUrl}/hub?payment=cancelled`,
       expires_at: checkoutSessionExpiresAt(payment.expires_at),
     })

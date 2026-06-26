@@ -1,0 +1,107 @@
+.collect-order-page {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-xl);
+}
+
+.collect-order-page__title {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-navy);
+}
+
+.collect-order-page__lead {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-muted);
+}
+
+.collect-order-page__card {
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.collect-order-page__summary {
+  margin: 0 0 var(--space-md);
+}
+
+.collect-order-page__summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 0.25rem 0;
+}
+
+.collect-order-page__summary-row dt {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.collect-order-page__summary-row dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.collect-order-page__checks {
+  display: grid;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+
+.collect-order-page__check {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  color: var(--color-navy);
+}
+
+.collect-order-page__check input {
+  margin-top: 0.2rem;
+}
+
+.collect-order-page__button {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-navy);
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.collect-order-page__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.collect-order-page__error {
+  margin: var(--space-sm) 0 0;
+  color: var(--color-danger, #b42318);
+}
+
+.collect-order-page__success {
+  margin: 0;
+  color: var(--color-navy);
+}
+
+.collect-order-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.collect-order-page__link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-navy);
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}

@@ -1,0 +1,14 @@
+-- DEPRECATED — do not run this file as a single script.
+--
+-- PostgreSQL error 55P04: new enum values must be committed before they can be
+-- used in functions. This monolithic script added enum values and then defined
+-- functions referencing those values in the same execution, which fails in the
+-- Supabase SQL Editor.
+--
+-- Run these two scripts separately instead (in order):
+--
+--   1. supabase/buyer-protection-phase1a-enums.sql
+--   2. supabase/buyer-protection-phase1b-columns-functions.sql
+--
+-- Then redeploy:
+--   supabase functions deploy stripe-create-checkout

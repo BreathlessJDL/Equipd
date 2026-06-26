@@ -1,0 +1,230 @@
+.order-dispute {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.order-dispute--compact {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.order-dispute__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.order-dispute__lead {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.order-dispute__hint {
+  margin: 0 0 1rem;
+  color: var(--color-text-muted, #666);
+  font-size: 0.9375rem;
+}
+
+.order-dispute__report-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--color-danger, #b42318);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.order-dispute__report-button:hover {
+  filter: brightness(0.95);
+}
+
+.order-dispute__order-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 0.5rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-navy, #1a1a2e);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.order-dispute__order-link:hover {
+  border-color: color-mix(in srgb, var(--color-orange, #c2410c) 35%, var(--color-border, #e2e2e2));
+  background: color-mix(in srgb, var(--color-orange, #c2410c) 8%, var(--color-surface, #fff));
+}
+
+.order-dispute__message {
+  margin: 0 0 1rem;
+}
+
+.order-dispute__message--buyer,
+.order-dispute__message--seller {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-notice-bg, #fff7ed);
+}
+
+.order-dispute__meta {
+  margin: 0;
+}
+
+.order-dispute__row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) 1fr;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.order-dispute__row--description {
+  display: block;
+}
+
+.order-dispute__row--description .order-dispute__label {
+  margin-bottom: 0.25rem;
+}
+
+.order-dispute__label {
+  margin: 0;
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+}
+
+.order-dispute__value {
+  margin: 0;
+}
+
+.order-dispute__evidence-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.order-dispute__evidence-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-dispute__evidence-thumb {
+  display: block;
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+}
+
+.order-dispute__error {
+  margin: 0 0 1rem;
+  color: var(--color-danger, #b42318);
+}
+
+.order-dispute-modal__dialog {
+  max-width: 32rem;
+}
+
+.order-dispute-modal__title {
+  margin: 0 0 0.5rem;
+}
+
+.order-dispute-modal__lead {
+  margin: 0 0 1rem;
+  color: var(--color-text-muted, #666);
+}
+
+.order-dispute-modal__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.order-dispute-modal__field {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.order-dispute-modal__label {
+  font-weight: 600;
+}
+
+.order-dispute-modal__field textarea,
+.order-dispute-modal__field select,
+.order-dispute-modal__field input[type='file'] {
+  width: 100%;
+  font: inherit;
+}
+
+.order-dispute-modal__hint,
+.order-dispute-modal__file-count,
+.order-dispute-modal__footnote {
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+}
+
+.order-dispute-modal__error {
+  margin: 0;
+  color: var(--color-danger, #b42318);
+}
+
+.order-dispute__admin {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border, #e2e2e2);
+}
+
+.order-dispute__admin-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.order-dispute__admin-lead {
+  margin: 0 0 1rem;
+  color: var(--color-text-muted, #666);
+  font-size: 0.9375rem;
+}
+
+.order-dispute__admin-field {
+  display: grid;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.order-dispute__admin-field textarea {
+  width: 100%;
+  font: inherit;
+}
+
+.order-dispute__admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.order-dispute__admin-success {
+  margin: 1rem 0 0;
+  color: var(--color-success, #027a48);
+}
+
+.order-dispute__message--resolution {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-notice-bg, #fff7ed);
+}
+
+.order-dispute-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}

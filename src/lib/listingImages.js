@@ -64,6 +64,23 @@ export function enrichListingWithImages(listing) {
   }
 }
 
+/** Primary image URL for cards/thumbnails; null when none available. */
+export function getListingPrimaryImageUrl(listing) {
+  if (!listing) return null
+
+  if (listing.primary_image_url) {
+    return listing.primary_image_url
+  }
+
+  const images = listing.listing_images ?? []
+  const first = images[0]
+
+  if (!first) return null
+  if (first.url) return first.url
+
+  return getListingImagePublicUrl(first.storage_path)
+}
+
 export function getImageErrorMessage(error) {
   if (!error) return 'Something went wrong uploading the image.'
   return error.message || 'Something went wrong uploading the image.'
@@ -154,6 +171,25 @@ export async function uploadListingImages({ userId, listingId, files, startSortO
   }
 
   return { data: uploaded, error: null }
+}
+
+export async function updateListingImagesOrder(images) {
+  if (!supabase) {
+    return { error: new Error('Supabase is not configured.') }
+  }
+
+  if (!images?.length) {
+    return { error: null }
+  }
+
+  const results = await Promise.all(
+    images.map((image, index) =>
+      supabase.from('listing_images').update({ sort_order: index }).eq('id', image.id),
+    ),
+  )
+
+  const failed = results.find((result) => result.error)
+  return { error: failed?.error ?? null }
 }
 
 export async function deleteListingImage(image) {

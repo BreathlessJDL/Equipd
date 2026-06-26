@@ -1,48 +1,81 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
+import LocationBrowseSidebar from '../components/browse/LocationBrowseSidebar'
+import LocationListingsResults from '../components/browse/LocationListingsResults'
+import LocationPageHero from '../components/browse/LocationPageHero'
+import LocationSellerSection from '../components/browse/LocationSellerSection'
+import MarketplaceBrowseShell from '../components/browse/MarketplaceBrowseShell'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
-import ListingBrowseResults from '../components/ListingBrowseResults'
 import '../components/ListingBrowse.css'
-import { fetchActiveListings, fetchCategories, getListingErrorMessage, parsePriceToPence } from '../lib/listings'
-import { formatLocationAreas, getLocationPage } from '../lib/locations'
+import '../components/browse/BrowseActiveFilterChips.css'
+import '../components/browse/LocationPage.css'
+import { useBrowseFilters } from '../hooks/useBrowseFilters'
+import { useBrowseListings } from '../hooks/useBrowseListings'
+import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
+import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
+import { fetchCategories } from '../lib/listings'
+import {
+  getLocationPage,
+  LOCATION_AREA_PARAM,
+  parseLocationAreaParam,
+  resolveLocationView,
+} from '../lib/locations'
 
 function LocationListingsPage({ locationSlug }) {
-  const location = getLocationPage(locationSlug)
-  const [listings, setListings] = useState([])
+  const region = getLocationPage(locationSlug)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const resultsRef = useRef(null)
+  const previousAreaRef = useRef(undefined)
   const [categories, setCategories] = useState([])
-  const [search, setSearch] = useState('')
-  const [brand, setBrand] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [debouncedBrand, setDebouncedBrand] = useState('')
-  const [debouncedMinPrice, setDebouncedMinPrice] = useState('')
-  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState('')
-  const [categoryId, setCategoryId] = useState('')
-  const [condition, setCondition] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [categoriesReady, setCategoriesReady] = useState(false)
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedSearch(search)
-      setDebouncedBrand(brand)
-      setDebouncedMinPrice(minPrice)
-      setDebouncedMaxPrice(maxPrice)
-    }, 300)
+  const selectedArea = useMemo(
+    () => (region ? parseLocationAreaParam(searchParams, region) : null),
+    [region, searchParams],
+  )
 
-    return () => window.clearTimeout(timeoutId)
-  }, [search, brand, minPrice, maxPrice])
+  const locationView = useMemo(
+    () => (region ? resolveLocationView(region, selectedArea) : null),
+    [region, selectedArea],
+  )
+
+  const profileLocation = useProfileBrowseLocation()
+
+  const profileCoordinates = useMemo(
+    () =>
+      profileLocation.hasCoordinates
+        ? { latitude: profileLocation.latitude, longitude: profileLocation.longitude }
+        : null,
+    [profileLocation.hasCoordinates, profileLocation.latitude, profileLocation.longitude],
+  )
+
+  const browse = useBrowseFilters(searchParams, setSearchParams, {
+    categories,
+    categoriesReady,
+    locationAreas: locationView?.filterAreas ?? [],
+    profileCoordinates,
+  })
+
+  const { listings, loading, error } = useBrowseListings(browse.queryOptions, {
+    sort: browse.queryOptions.sort,
+    search: browse.queryOptions.search,
+    hasLocationSearch: browse.hasLocationForSort,
+  })
 
   useEffect(() => {
     let active = true
 
     async function loadCategories() {
-      const { data, error: categoriesError } = await fetchCategories()
+      const { data, categoriesError } = await fetchCategories()
 
-      if (!active || categoriesError) return
+      if (!active) return
 
-      setCategories(data ?? [])
+      if (!categoriesError) {
+        setCategories(data ?? [])
+      }
+
+      setCategoriesReady(true)
     }
 
     loadCategories()
@@ -52,118 +85,139 @@ function LocationListingsPage({ locationSlug }) {
     }
   }, [])
 
-  const queryOptions = useMemo(() => {
-    const minPricePence = parsePriceToPence(debouncedMinPrice)
-    const maxPricePence = parsePriceToPence(debouncedMaxPrice)
+  const scrollToResults = useCallback(() => {
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
 
-    return {
-      search: debouncedSearch,
-      categoryId,
-      condition,
-      brand: debouncedBrand,
-      minPricePence,
-      maxPricePence,
-      locationAreas: location?.areas ?? [],
-    }
-  }, [
-    debouncedSearch,
-    debouncedBrand,
-    debouncedMinPrice,
-    debouncedMaxPrice,
-    categoryId,
-    condition,
-    location?.areas,
-  ])
+  const scrollToPageTop = useCallback(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   useEffect(() => {
-    if (!location) return undefined
-
-    let active = true
-
-    async function loadListings() {
-      setLoading(true)
-      setError('')
-
-      const { data, error: listingsError } = await fetchActiveListings(queryOptions)
-
-      if (!active) return
-
-      if (listingsError) {
-        setError(getListingErrorMessage(listingsError))
-        setListings([])
-        setLoading(false)
-        return
-      }
-
-      setListings(data ?? [])
-      setLoading(false)
+    const currentArea = searchParams.get(LOCATION_AREA_PARAM) ?? ''
+    if (previousAreaRef.current !== undefined && previousAreaRef.current !== currentArea) {
+      scrollToPageTop()
     }
+    previousAreaRef.current = currentArea
+  }, [searchParams, scrollToPageTop])
 
-    loadListings()
-
-    return () => {
-      active = false
+  const handleResetFilters = useCallback(() => {
+    const area = searchParams.get(LOCATION_AREA_PARAM)
+    browse.resetFilters()
+    if (area) {
+      setSearchParams(new URLSearchParams({ [LOCATION_AREA_PARAM]: area }))
     }
-  }, [location, queryOptions])
+  }, [browse, searchParams, setSearchParams])
 
-  if (!location) {
+  const handleNavSelect = useCallback(
+    ({ categoryId, rating, search }) => {
+      browse.applyNavSelection({ categoryId, rating, search })
+      scrollToResults()
+    },
+    [browse, scrollToResults],
+  )
+
+  const siteHeaderConfig = useMemo(
+    () => ({
+      search: browse.search,
+      onSearchChange: browse.setSearch,
+      onSearchSubmit: scrollToResults,
+      categories,
+      activeCategoryId: browse.categoryId,
+      activeRating: browse.rating,
+      activeSearch: browse.search,
+      onNavSelect: handleNavSelect,
+      linkMode: false,
+      categoryNavClassName: '',
+    }),
+    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, scrollToResults, handleNavSelect],
+  )
+
+  useRegisterSiteHeader(siteHeaderConfig)
+
+  if (!region || !locationView) {
     return (
       <section className="listing-browse">
-        <header className="listing-browse__header">
-          <h2 className="listing-browse__title">Location not found</h2>
-          <p className="listing-browse__lead">
-            <Link to="/">Back to browse</Link>
-          </p>
-        </header>
+        <div className="listing-browse__shell">
+          <header className="listing-browse__header">
+            <h2 className="listing-browse__title">Location not found</h2>
+            <p className="listing-browse__lead">
+              <Link to="/browse">Back to browse</Link>
+            </p>
+          </header>
+        </div>
       </section>
     )
   }
 
-  const hasFilters = Boolean(
-    debouncedSearch.trim() ||
-      categoryId ||
-      condition ||
-      debouncedBrand.trim() ||
-      debouncedMinPrice.trim() ||
-      debouncedMaxPrice.trim(),
-  )
-
   return (
-    <section className="listing-browse">
-      <header className="listing-browse__header">
-        <h1 className="listing-browse__title">{location.heading}</h1>
-        <p className="listing-browse__lead">{location.intro}</p>
-        <p className="listing-browse__location-note">
-          Showing listings in {formatLocationAreas(location.areas)}.
-        </p>
-      </header>
+    <MarketplaceBrowseShell>
+      <div className="location-page">
+        <LocationPageHero
+          locationView={locationView}
+          listingCount={listings.length}
+          loading={loading}
+        />
 
-      <ListingBrowseFilters
-        idPrefix={`location-${location.slug}`}
-        categories={categories}
-        search={search}
-        onSearchChange={setSearch}
-        categoryId={categoryId}
-        onCategoryChange={setCategoryId}
-        condition={condition}
-        onConditionChange={setCondition}
-        brand={brand}
-        onBrandChange={setBrand}
-        minPrice={minPrice}
-        onMinPriceChange={setMinPrice}
-        maxPrice={maxPrice}
-        onMaxPriceChange={setMaxPrice}
-      />
+        <div className="location-page__shell">
+          <div className="location-page__layout">
+            <div className="location-page__main">
+              <ListingBrowseFilters
+                idPrefix={`location-${region.slug}`}
+                categories={categories}
+                categoryId={browse.categoryId}
+                categoryIds={browse.categoryIds}
+                onCategoryChange={browse.setCategoryId}
+                onToggleCategoryId={browse.toggleCategoryId}
+                onClearCategories={browse.clearCategories}
+                condition={browse.condition}
+                conditions={browse.conditions}
+                onConditionChange={browse.setCondition}
+                onToggleCondition={browse.toggleCondition}
+                onClearConditions={browse.clearConditions}
+                brand={browse.brand}
+                brands={browse.brands}
+                onBrandChange={browse.setBrand}
+                onToggleBrand={browse.toggleBrand}
+                onClearBrands={browse.clearBrands}
+                sort={browse.sort}
+                onSortChange={browse.handleSortChange}
+                minPrice={browse.minPrice}
+                onMinPriceChange={browse.setMinPrice}
+                maxPrice={browse.maxPrice}
+                onMaxPriceChange={browse.setMaxPrice}
+                panelFilterCount={browse.panelFilterCount}
+                sortNotice={browse.sortNotice}
+                onApply={scrollToResults}
+                onReset={handleResetFilters}
+              />
 
-      <ListingBrowseResults
-        loading={loading}
-        error={error}
-        listings={listings}
-        hasFilters={hasFilters}
-        emptyMessage={`No active listings in ${location.name} and nearby areas yet.`}
-        emptyFilteredMessage="No listings match your filters in this area. Try adjusting your search."
-      />
-    </section>
+              <BrowseActiveFilterChips
+                chips={browse.activeChips}
+                onRemove={browse.removeFilterChip}
+                onReset={handleResetFilters}
+                showReset
+              />
+
+              <div ref={resultsRef}>
+                <LocationListingsResults
+                  locationView={locationView}
+                  listings={listings}
+                  loading={loading}
+                  error={error}
+                  hasFilters={browse.hasFilters}
+                  emptyMessage={`No active listings in ${locationView.name} yet.`}
+                />
+              </div>
+            </div>
+
+            <LocationBrowseSidebar locationView={locationView} />
+          </div>
+
+          <LocationSellerSection locationView={locationView} />
+        </div>
+      </div>
+    </MarketplaceBrowseShell>
   )
 }
 

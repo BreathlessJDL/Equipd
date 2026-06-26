@@ -1,0 +1,2203 @@
+{
+  "generatedAt": "2026-06-25T21:12:50.648Z",
+  "activeImportListings": 140,
+  "coverageCounts": {
+    "zeroImages": 86,
+    "oneImage": 15,
+    "twoPlusImages": 39,
+    "totalDbImages": 115,
+    "totalCsvSourceUrls": 341,
+    "missingSourceUrls": 252
+  },
+  "missingByPattern": {
+    "equipd.co.uk/fileupload": 235,
+    "cdn.bubble.io": 17
+  },
+  "listingsWithZeroImages": [
+    {
+      "slug": "body-solid-multi-gym-york",
+      "title": "Body Solid G6B Multi Gym + Leg Press + Attachments",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "bodypower-squat-rack-daventry",
+      "title": "Home Gym - weightlifting rack, weights, Olympic bar, adjustable bench and matting",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "bodypower-treadmills-daventry",
+      "title": "Volta Incline trainer / treadmill",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "bodypower-treadmills-manchester",
+      "title": "Bodypower Treadmill",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "bowflex-crosstrainers-beverley",
+      "title": "MAX Trainer",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "bowflex-crosstrainers-harrogate",
+      "title": "Bowflex Max trainer",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "bowflex-crosstrainers-keighley",
+      "title": "Bowflex Cross Trainers",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "bowflex-crosstrainers-sheffield",
+      "title": "Bowflex max M8 elliptical trainer",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "concept2-rowers-halifax",
+      "title": "Concept 2 Model D Rower / Rowing machine with PM5 monitor (2 Available)",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "concept2-rowers-huddersfield",
+      "title": "Concept 2 rowing machine with PM5 monitor",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "concept2-rowers-sale",
+      "title": "Concept2 rower - 5 months old, barely used",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "concept2-rowers-whitley-bay",
+      "title": "Concept 2 Rower PM5",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "concept2-rowers-wolverhampton",
+      "title": "Concept C2 Rowing machine with PM4 Monitor",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "concept2-skierg-whitley-bay",
+      "title": "Concept 2 Skierg PM5",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "crosstrainers-mansfield",
+      "title": "Life Fitness Whisper E Stride X7 Cross trainer",
+      "count": 0,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "cybex-recumbent-bikes-harrogate",
+      "title": "Cyclone Cybex recumbent bike",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "cybex-upright-bikes-harrogate",
+      "title": "Cyclone Cybex upright bike",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "echelon-treadmills-manchester",
+      "title": "Echelon Stride Auto Fold Treadmill",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "count": 0,
+      "csvUrlCount": 6
+    },
+    {
+      "slug": "life-fitness-crosstrainers-lincoln",
+      "title": "elliptical cross trainer Life Fitness X1 Elliptical Trainer with a Go Console",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-castleford",
+      "title": "Life Fitness G7 Cable Motion Gym - Tower Only",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-nottingham",
+      "title": "Life Fitness Signature Series DAP Adjustable Pulley RRP £12,138",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "count": 0,
+      "csvUrlCount": 6
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-shefford",
+      "title": "Life fitness pro 1 hamstring curl",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "life-fitness-treadmills-bradford",
+      "title": "Life fitness 95ti treadmill",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "count": 0,
+      "csvUrlCount": 6
+    },
+    {
+      "slug": "life-fitness-upright-bikes-stourbridge",
+      "title": "Life Fitness exercise bike",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "matrix-fitness-rowers-harrogate",
+      "title": "Matrix rowing machine x2 available",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "matrix-fitness-stairclimbers-harrogate",
+      "title": "Matrix Climbmill",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "matrix-fitness-treadmills-harrogate",
+      "title": "Matrix treadmills",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "count": 0,
+      "csvUrlCount": 6
+    },
+    {
+      "slug": "nordictrack-spin-bikes-doncaster",
+      "title": "Nordictrack X24,",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "nordictrack-spin-bikes-worksop",
+      "title": "Nordic track S22i indoor studio bike",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "nordictrack-treadmills-doncaster",
+      "title": "NordicTrack EXP 14i Treadmill – Excellent Condition",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "nordictrack-treadmills-louth",
+      "title": "Nordictrack Commercial 1750",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "nordictrack-treadmills-sheffield",
+      "title": "NordicTrack Treadmill",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "nordictrack-treadmills-stafford",
+      "title": "Nordictrack commercial 2450 treadmill",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "nordictrack-treadmills-walsall",
+      "title": "Nordictrack T9.2 Running Machine, Bowflex 4-41Kg Bowflex SelectTech 1090i Dumbbells & Stand & Bench",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "other-assault-bikes-pontefract",
+      "title": "Strongology Assault bike for sale",
+      "count": 0,
+      "csvUrlCount": 5
+    },
+    {
+      "slug": "other-dual-cable-pulley-harrogate",
+      "title": "dual pulley machine",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "other-dumbbells-harrogate",
+      "title": "2.5kg-50kg dumbbells and racks",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "other-dumbbells-leeds",
+      "title": "Adjustable weights and exercise bike",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "other-dumbbells-northwich",
+      "title": "Dumbbells 10kg - 30kg",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "other-pin-loaded-machine-louth",
+      "title": "Star Trac Instinct Dual Leg Extension/Leg Curl",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "other-plate-loaded-machine-ossett-2",
+      "title": "Plate loaded Glute Kickback",
+      "count": 0,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "other-skierg-harrogate",
+      "title": "Ski erg machine",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "other-skierg-willenhall",
+      "title": "SKI ERG",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "other-skierg-wolverhampton",
+      "title": "skiergs Wolverson",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "other-spin-bikes-york",
+      "title": "Watt Bike Trainer",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "other-treadmills-leeds",
+      "title": "JTX Sprint-9 Pro Smart Gym Treadmill – Commercial Quality",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "peloton-spin-bikes-holmfirth",
+      "title": "Peloton Bike + For Sale",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "peloton-spin-bikes-lichfield",
+      "title": "Peloton Bike+",
+      "count": 0,
+      "csvUrlCount": 5
+    },
+    {
+      "slug": "peloton-spin-bikes-welwyn-garden-city",
+      "title": "Peloton 1.2 Bike",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "peloton-treadmills-york",
+      "title": "Peloton treadmill",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "powerblock-dumbbells-leeds",
+      "title": "Powerblock Pro EXP Adjustable Dumbbells  (41kg per hand)",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "powertec-multi-gym-glossop",
+      "title": "Powertec leverage system, Pull up station, Squat Rack",
+      "count": 0,
+      "csvUrlCount": 5
+    },
+    {
+      "slug": "precor-plate-loaded-machine-derby",
+      "title": "Precor chest press",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "primal-bench-harrogate",
+      "title": "Primal Commercial Benches Green And Black",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "primal-fitness-pin-loaded-machine-manchester",
+      "title": "Primal strength multi press",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "pulse-pin-loaded-machine-ossett",
+      "title": "Pulse Gym Resistance Machine bundle",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "recumbent-bikes-harrogate",
+      "title": "Spirit fitness cr800 recumbent bike",
+      "count": 0,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "reebok-fitness-treadmills-bradford",
+      "title": "Reebok Treadmill",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "spirit-fitness-pin-loaded-machine-harrogate",
+      "title": "Spirit of fitness shoulder press",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "spirit-fitness-upright-bikes-harrogate",
+      "title": "Spirit fitness upright bike",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "spirit-fitness-upright-bikes-harrogate-2",
+      "title": "Spirit fitness ce800 cross trainers x2 available",
+      "count": 0,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-leeds",
+      "title": "Stages Spin Bike",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-norwich",
+      "title": "Stages SC3 Spin Bike",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "stairmaster-stairclimbers-harrogate",
+      "title": "Stairmaster",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "taurus-assault-bikes-harrogate",
+      "title": "Taurus ergo assault bike",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "taurus-spin-bikes-barnsley",
+      "title": "Taurus ic50 exercise spin bike",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "taurus-treadmills-doncaster",
+      "title": "Taurus T9.9 commercial treadmill",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "taurus-upright-bikes-pontefract",
+      "title": "Taurus Exercise Bike Brand New",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "count": 0,
+      "csvUrlCount": 6
+    },
+    {
+      "slug": "technogym-crosstrainers-markfield",
+      "title": "Technogym vario excite live black edition",
+      "count": 0,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "technogym-crosstrainers-presteigne",
+      "title": "Technogym wave machine",
+      "count": 0,
+      "csvUrlCount": 5
+    },
+    {
+      "slug": "technogym-crosstrainers-rotherham",
+      "title": "Technogym Excite 700i Wave – Commercial Gym Cardio Machine – Excellent Condition",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-driffield",
+      "title": "Technogym Cable Machine",
+      "count": 0,
+      "csvUrlCount": 5
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-harrogate",
+      "title": "Technogym\tUpright row",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "technogym-recumbent-bikes-worksop",
+      "title": "Exercise bike techno gym",
+      "count": 0,
+      "csvUrlCount": 5
+    },
+    {
+      "slug": "treadmills-bingley",
+      "title": "Treadmill - Cybex Pro +",
+      "count": 0,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "treadmills-glasgow",
+      "title": "Reebok i-Run 4.0 Treadmill - White",
+      "count": 0,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "water-rower-rowers-hyde",
+      "title": "Water Rower A1 Rowing Machine",
+      "count": 0,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "water-rower-rowers-leeds",
+      "title": "WaterRower with S4 Performance Monitor",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "water-rower-rowers-matlock",
+      "title": "Water rowing machine in wood",
+      "count": 0,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "wattbike-spin-bikes-buckshaw-village",
+      "title": "Wattbike pro trainer",
+      "count": 0,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "xterra-fitness-treadmills-leeds",
+      "title": "Xterra fitness trx3500 treadmill",
+      "count": 0,
+      "csvUrlCount": 2
+    }
+  ],
+  "listingsWithOneImage": [
+    {
+      "slug": "life-fitness-pin-loaded-machine-coventry",
+      "title": "145KG LAT PULLDOWN Machine LifeFitness",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-penrith",
+      "title": "Life Fitness Optima Lat Pulldown",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-penrith-2",
+      "title": "Life Fitness Optima Chest Press",
+      "count": 1,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "life-fitness-spin-bikes-middlesbrough",
+      "title": "Life Fitness IC6 Bike",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "nordictrack-crosstrainers-pontefract",
+      "title": "NordicTrack Elliptical Treadmill Stepper FS14i FreeStride 3 in 1 Cross Trainer",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "other-dumbbells-ossett",
+      "title": "TKO Polyurethane Dumbbell Set & Rack",
+      "count": 1,
+      "csvUrlCount": 3
+    },
+    {
+      "slug": "other-pin-loaded-machine-cleckheaton",
+      "title": "Commercial seated hamstring curl machine",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "powertec-plate-loaded-machine-london",
+      "title": "Powertec leverage gym with bench",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "primal-plate-loaded-machine-ossett",
+      "title": "Primal leg press commercial",
+      "count": 1,
+      "csvUrlCount": 2
+    },
+    {
+      "slug": "primal-plate-loaded-machine-ossett-3",
+      "title": "Plate Loaded Leg Extension",
+      "count": 1,
+      "csvUrlCount": 0
+    },
+    {
+      "slug": "sole-fitness-treadmills-sheffield",
+      "title": "Sole F63 folding treadmill",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "technogym-dumbbells-belfast",
+      "title": "Techno gym Dumbells",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-coventry",
+      "title": "TechnoGym LOW ROW BACK Machine",
+      "count": 1,
+      "csvUrlCount": 1
+    },
+    {
+      "slug": "tuffstuff-pin-loaded-machine-castleford",
+      "title": "TuffStuff SPT-6X Six-Pak Trainer – Commercial Gym Quality – Excellent Condition",
+      "count": 1,
+      "csvUrlCount": 4
+    },
+    {
+      "slug": "ziva-weight-plates-ossett",
+      "title": "ZIVA commercial polyurethane weight plates",
+      "count": 1,
+      "csvUrlCount": 1
+    }
+  ],
+  "urlFetchSamples": {
+    "equipd.co.uk/fileupload": {
+      "plain": {
+        "ok": false,
+        "status": 0,
+        "contentType": "",
+        "bytes": 0,
+        "error": "fetch failed"
+      },
+      "browser": {
+        "ok": false,
+        "status": 0,
+        "contentType": "",
+        "bytes": 0,
+        "error": "fetch failed"
+      },
+      "version-live-prefix": {
+        "ok": false,
+        "status": 0,
+        "contentType": "",
+        "bytes": 0,
+        "error": "fetch failed"
+      }
+    },
+    "cdn.bubble.io": {
+      "plain": {
+        "ok": false,
+        "status": 403,
+        "contentType": "application/xml",
+        "bytes": 243,
+        "error": null
+      },
+      "browser": {
+        "ok": false,
+        "status": 403,
+        "contentType": "application/xml",
+        "bytes": 243,
+        "error": null
+      },
+      "version-live-prefix": {
+        "ok": false,
+        "status": 403,
+        "contentType": "application/xml",
+        "bytes": 243,
+        "error": null
+      }
+    }
+  },
+  "recoverability": {
+    "cdn.bubble.io": "Partially recoverable — open CDN URLs work; HTTP 403 means object deleted/private in Bubble S3.",
+    "equipd.co.uk/fileupload": "Not recoverable via script from this environment — TLS/connection failures or server 500; URLs are Bubble-hosted file paths, not public CDN.",
+    "equipd.co.uk/version-live/fileupload": "Same as equipd.co.uk/fileupload."
+  },
+  "repairPlan": {
+    "bubbleExportFields": [
+      "images",
+      "imagestext",
+      "cover_image",
+      "image"
+    ],
+    "recommendation": "Re-export from Bubble with cdn.bubble.io URLs in image columns, or bulk-download from Bubble File Manager / Data > All Equipment, then run a local folder-to-slug upload pass.",
+    "mappingKey": "URL_Slug column matches listings.slug; image hash stored as bubble-{sha1}.ext in listing-images bucket."
+  },
+  "missingUrls": [
+    {
+      "slug": "body-solid-multi-gym-york",
+      "title": "Body Solid G6B Multi Gym + Leg Press + Attachments",
+      "url": "https://equipd.co.uk/fileupload/f1774735610825x292445392679407740/658212406_1553546699042447_5341181038761161415_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "body-solid-multi-gym-york",
+      "title": "Body Solid G6B Multi Gym + Leg Press + Attachments",
+      "url": "https://equipd.co.uk/fileupload/f1774735608892x391546594744230300/660446278_943663254917579_3614438702454795169_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-squat-rack-daventry",
+      "title": "Home Gym - weightlifting rack, weights, Olympic bar, adjustable bench and matting",
+      "url": "https://equipd.co.uk/fileupload/f1773444034846x246988919078328100/IMG_3137.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-squat-rack-daventry",
+      "title": "Home Gym - weightlifting rack, weights, Olympic bar, adjustable bench and matting",
+      "url": "https://equipd.co.uk/fileupload/f1773444036602x696906500361381500/IMG_3136.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-squat-rack-daventry",
+      "title": "Home Gym - weightlifting rack, weights, Olympic bar, adjustable bench and matting",
+      "url": "https://equipd.co.uk/fileupload/f1773444069011x151282767596518720/IMG_3135.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-treadmills-daventry",
+      "title": "Volta Incline trainer / treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773486010980x806723213429691100/650246607_4355444021347016_7372002536154149040_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-treadmills-daventry",
+      "title": "Volta Incline trainer / treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773486007643x210656523512092500/650515312_4429958283907234_2816582852986806487_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-treadmills-manchester",
+      "title": "Bodypower Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774209861223x509563511407213440/653641461_1921005125221839_3728098322645363837_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-treadmills-manchester",
+      "title": "Bodypower Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774209859090x355963205969673340/654269883_2719740508404147_5748369357905371672_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bodypower-treadmills-manchester",
+      "title": "Bodypower Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774209865509x652369956234226000/654860941_1639014204109550_6611388122131533826_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-beverley",
+      "title": "MAX Trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772794919899x833113728503274400/461844437_1567465280831292_3674530791617462462_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-harrogate",
+      "title": "Bowflex Max trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772969984682x260292389904995800/577849597_750459541398039_4871568055344913021_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-harrogate",
+      "title": "Bowflex Max trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772969978372x333761623538369150/577754971_1358740059161734_8088650566801340227_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-harrogate",
+      "title": "Bowflex Max trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772969977459x651523341999034500/576893721_1958728425074664_2602035682745641549_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-keighley",
+      "title": "Bowflex Cross Trainers",
+      "url": "https://equipd.co.uk/fileupload/f1776365542652x932424163997917800/671644288_2575131844170716_4099941457595435641_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-keighley",
+      "title": "Bowflex Cross Trainers",
+      "url": "https://equipd.co.uk/fileupload/f1776365537248x302469336307484400/668946165_2792529334446693_7374584971032377226_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-keighley",
+      "title": "Bowflex Cross Trainers",
+      "url": "https://equipd.co.uk/fileupload/f1776365538541x571693674597532300/666953519_948887501219865_7875120100278334249_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-keighley",
+      "title": "Bowflex Cross Trainers",
+      "url": "https://equipd.co.uk/fileupload/f1776365541391x411968037483461100/667532633_1460966688735983_7829760962062296635_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-sheffield",
+      "title": "Bowflex max M8 elliptical trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772969791513x438738240191200300/567192735_1479447210016126_2297056978085630506_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-sheffield",
+      "title": "Bowflex max M8 elliptical trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772969792563x538177754048214640/567761735_1186001106734575_2955669577249122295_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "bowflex-crosstrainers-sheffield",
+      "title": "Bowflex max M8 elliptical trainer",
+      "url": "https://equipd.co.uk/fileupload/f1772969794706x221979866572094900/558945009_1470319827600727_5321952976525452020_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-halifax",
+      "title": "Concept 2 Model D Rower / Rowing machine with PM5 monitor (2 Available)",
+      "url": "https://equipd.co.uk/fileupload/f1772792558155x393828840519629950/615686051_1231375032424817_5909184147051230035_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-halifax",
+      "title": "Concept 2 Model D Rower / Rowing machine with PM5 monitor (2 Available)",
+      "url": "https://equipd.co.uk/fileupload/f1772792549558x241092263051963840/616167485_1232695092106398_8332414033908003352_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-huddersfield",
+      "title": "Concept 2 rowing machine with PM5 monitor",
+      "url": "https://equipd.co.uk/fileupload/f1778419326568x815587763533847900/IMG_3405.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-huddersfield",
+      "title": "Concept 2 rowing machine with PM5 monitor",
+      "url": "https://equipd.co.uk/fileupload/f1778419332029x810294718422215200/IMG_3406.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-huddersfield",
+      "title": "Concept 2 rowing machine with PM5 monitor",
+      "url": "https://equipd.co.uk/fileupload/f1778419336324x675922938130291000/IMG_3407.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-huddersfield",
+      "title": "Concept 2 rowing machine with PM5 monitor",
+      "url": "https://equipd.co.uk/fileupload/f1778419340616x626065143539213900/IMG_3408.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-sale",
+      "title": "Concept2 rower - 5 months old, barely used",
+      "url": "https://equipd.co.uk/fileupload/f1773096944539x486024176066260700/IMG_3121.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-whitley-bay",
+      "title": "Concept 2 Rower PM5",
+      "url": "https://equipd.co.uk/fileupload/f1774385162735x110666868070304690/IMG_3205.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-whitley-bay",
+      "title": "Concept 2 Rower PM5",
+      "url": "https://equipd.co.uk/fileupload/f1774385155247x596761094500282600/IMG_3206.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-wolverhampton",
+      "title": "Concept C2 Rowing machine with PM4 Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1774804578382x905155747079580400/IMG_3229.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-wolverhampton",
+      "title": "Concept C2 Rowing machine with PM4 Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1774804581564x500142888184662600/IMG_3230.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-wolverhampton",
+      "title": "Concept C2 Rowing machine with PM4 Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1774804587545x480674805672808060/IMG_3231.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-rowers-wolverhampton",
+      "title": "Concept C2 Rowing machine with PM4 Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1774804593697x852325287870975100/IMG_3232.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-skierg-whitley-bay",
+      "title": "Concept 2 Skierg PM5",
+      "url": "https://equipd.co.uk/fileupload/f1774385261461x865504033139947700/IMG_3207.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "concept2-skierg-whitley-bay",
+      "title": "Concept 2 Skierg PM5",
+      "url": "https://equipd.co.uk/fileupload/f1774385257245x702524105465005000/IMG_3208.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "cybex-recumbent-bikes-harrogate",
+      "title": "Cyclone Cybex recumbent bike",
+      "url": "https://equipd.co.uk/fileupload/f1776190351276x282303760541358530/648448373_950809834187338_8080499184073949701_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "cybex-recumbent-bikes-harrogate",
+      "title": "Cyclone Cybex recumbent bike",
+      "url": "https://equipd.co.uk/fileupload/f1776190352713x417170012132873660/651892399_1574222547138628_856577946355707370_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "cybex-upright-bikes-harrogate",
+      "title": "Cyclone Cybex upright bike",
+      "url": "https://equipd.co.uk/fileupload/f1776190389537x441606505169767740/650907941_954049330385411_6641105181123677916_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "cybex-upright-bikes-harrogate",
+      "title": "Cyclone Cybex upright bike",
+      "url": "https://equipd.co.uk/fileupload/f1776190391386x602883995473305000/647266652_857928900590059_1599815271793773567_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "echelon-treadmills-manchester",
+      "title": "Echelon Stride Auto Fold Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1772969705000x401210546724628300/638888685_3880778742227359_545690825315312990_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "echelon-treadmills-manchester",
+      "title": "Echelon Stride Auto Fold Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1772969706302x946452270583051400/639035787_2708152849518525_1923604189393559729_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "echelon-treadmills-manchester",
+      "title": "Echelon Stride Auto Fold Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1772969708966x868125515536315300/641432509_792130400606268_701113709728882148_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "url": "https://equipd.co.uk/fileupload/f1775849671606x846900020676682400/IMG_3315.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "url": "https://equipd.co.uk/fileupload/f1775849666231x590354714390312300/IMG_3320.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "url": "https://equipd.co.uk/fileupload/f1775849667864x940432258113202700/IMG_3319.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "url": "https://equipd.co.uk/fileupload/f1775849672349x470358209749067500/IMG_3318.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "url": "https://equipd.co.uk/fileupload/f1775849676563x482166548069389500/IMG_3317.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "fluidrower-rowers-sheffield",
+      "title": "Fluid rowing machine Neon Plus Fluid Rower (Adjustable Resistance)",
+      "url": "https://equipd.co.uk/fileupload/f1775849674716x495138172990047940/IMG_3316.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-crosstrainers-bradford",
+      "title": "Life fitness commercial cross trainer",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771174288533x852658247041063700/1771174286261.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "life-fitness-crosstrainers-lincoln",
+      "title": "elliptical cross trainer Life Fitness X1 Elliptical Trainer with a Go Console",
+      "url": "https://equipd.co.uk/fileupload/f1773753049869x401935999909965200/653095307_1434562338206372_9215432479351320466_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-crosstrainers-lincoln",
+      "title": "elliptical cross trainer Life Fitness X1 Elliptical Trainer with a Go Console",
+      "url": "https://equipd.co.uk/fileupload/f1773753045274x170294622304800300/651195937_1313168260647929_6373684740021179732_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-crosstrainers-lincoln",
+      "title": "elliptical cross trainer Life Fitness X1 Elliptical Trainer with a Go Console",
+      "url": "https://equipd.co.uk/fileupload/f1773753046750x149630236916493020/650997872_25849394574742582_8835101510560711833_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-castleford",
+      "title": "Life Fitness G7 Cable Motion Gym - Tower Only",
+      "url": "https://equipd.co.uk/fileupload/f1775241824983x403863409092196860/IMG_3250.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-nottingham",
+      "title": "Life Fitness Signature Series DAP Adjustable Pulley RRP £12,138",
+      "url": "https://equipd.co.uk/fileupload/f1773699583946x416123873496741800/IMG_3166.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-nottingham",
+      "title": "Life Fitness Signature Series DAP Adjustable Pulley RRP £12,138",
+      "url": "https://equipd.co.uk/fileupload/f1773699577828x977429536744351100/IMG_3169.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-nottingham",
+      "title": "Life Fitness Signature Series DAP Adjustable Pulley RRP £12,138",
+      "url": "https://equipd.co.uk/fileupload/f1773699579653x843105543816038400/IMG_3170.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-dual-cable-pulley-nottingham",
+      "title": "Life Fitness Signature Series DAP Adjustable Pulley RRP £12,138",
+      "url": "https://equipd.co.uk/fileupload/f1773699584758x167970381838174600/IMG_3168.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "url": "https://equipd.co.uk/fileupload/f1774463440479x274262909348241600/IMG_3219.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "url": "https://equipd.co.uk/fileupload/f1774463443103x248798086375141560/IMG_3218.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "url": "https://equipd.co.uk/fileupload/f1774463448350x900512985802135300/IMG_3217.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "url": "https://equipd.co.uk/fileupload/f1774463450660x532770061287720200/IMG_3216.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "url": "https://equipd.co.uk/fileupload/f1774463453779x312469790564862800/IMG_3215.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-multi-gym-birmingham",
+      "title": "LifeFitness Home Multigym",
+      "url": "https://equipd.co.uk/fileupload/f1774463456649x210913916177151160/IMG_3214.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-penrith",
+      "title": "Life Fitness Optima Lat Pulldown",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1769734667291x937831693682798000/1769734665955.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-shefford",
+      "title": "Life fitness pro 1 hamstring curl",
+      "url": "https://equipd.co.uk/fileupload/f1772969887305x687085976599231900/647916800_10164875045360452_133604657242401430_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-shefford",
+      "title": "Life fitness pro 1 hamstring curl",
+      "url": "https://equipd.co.uk/fileupload/f1772969888401x200363862494095100/648433688_10164875045370452_615483575182705800_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-pin-loaded-machine-shefford",
+      "title": "Life fitness pro 1 hamstring curl",
+      "url": "https://equipd.co.uk/fileupload/f1772969891150x431333891034734660/648288863_10164875045200452_2071707508622659213_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bradford",
+      "title": "Life fitness 95ti treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774210419726x931047494856671900/654213787_814730444369729_8786034572060527361_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bradford",
+      "title": "Life fitness 95ti treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774210413076x981828775996456600/655499732_2156220721789296_5176194601658614693_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bradford",
+      "title": "Life fitness 95ti treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774210415364x298969512496333630/655104246_1294308125934306_1421733278321084091_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bradford",
+      "title": "Life fitness 95ti treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774210420747x995442554541533000/653944367_813867584490970_6285189644391872426_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "url": "https://equipd.co.uk/fileupload/f1773484739117x235699456602883620/651575480_35288254974107316_561136947358179137_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "url": "https://equipd.co.uk/fileupload/f1773484733989x751952622512004300/649591756_1450806486490426_5175834516248681346_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "url": "https://equipd.co.uk/fileupload/f1773484735291x833185354123098200/650406199_26376488695278817_7896468781659417512_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "url": "https://equipd.co.uk/fileupload/f1773484738468x722202372954915600/651135374_699782686493908_5688577719110986466_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "url": "https://equipd.co.uk/fileupload/f1773484742664x290114602430469500/651308137_1953302682218277_5466897285369027297_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-treadmills-bury-st-edmunds",
+      "title": "Life Fitness Professional Home Gym Bundle(F3 Treadmill & X1 Cross-Trainer)",
+      "url": "https://equipd.co.uk/fileupload/f1773484742002x162665366489030750/649591758_936883386184438_3316105121200262171_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-upright-bikes-stourbridge",
+      "title": "Life Fitness exercise bike",
+      "url": "https://equipd.co.uk/fileupload/f1773220332055x342965217043538700/648130938_2308867162946299_318463762735626683_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "life-fitness-upright-bikes-stourbridge",
+      "title": "Life Fitness exercise bike",
+      "url": "https://equipd.co.uk/fileupload/f1773220328651x450214532677033500/647859733_940483328409040_57755408564170949_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "matrix-fitness-rowers-harrogate",
+      "title": "Matrix rowing machine x2 available",
+      "url": "https://equipd.co.uk/fileupload/f1776190138718x641083049571698200/649170621_1122196746694634_446592632322168704_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "matrix-fitness-stairclimbers-harrogate",
+      "title": "Matrix Climbmill",
+      "url": "https://equipd.co.uk/fileupload/f1776189979305x820794583575117300/648876327_1241070497733478_5727346758598296410_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "matrix-fitness-stairclimbers-harrogate",
+      "title": "Matrix Climbmill",
+      "url": "https://equipd.co.uk/fileupload/f1776189977374x326871997501338100/651853574_1451688646682391_1136241894859368073_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "matrix-fitness-treadmills-harrogate",
+      "title": "Matrix treadmills",
+      "url": "https://equipd.co.uk/fileupload/f1776190763573x266631235115353470/647541539_4402051576737103_4669208485934724127_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "matrix-fitness-treadmills-harrogate",
+      "title": "Matrix treadmills",
+      "url": "https://equipd.co.uk/fileupload/f1776190765043x877374539040654000/649524150_2535863876855491_4890916315562670565_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1773846747246x440971751422823940/IMG_4031.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1773846715103x511660541361256060/IMG_4038.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1773846665848x636858106700650000/IMG_4032.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1773846670964x668421180789478900/IMG_4031.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1773846679222x147859571031067070/IMG_4043.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-rowers-ellesmere-port",
+      "title": "NordicTrack RW700 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1773846643351x518026009027502200/IMG_4039.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-doncaster",
+      "title": "Nordictrack X24,",
+      "url": "https://equipd.co.uk/fileupload/f1774771058578x998106637735180200/IMG_3226.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-doncaster",
+      "title": "Nordictrack X24,",
+      "url": "https://equipd.co.uk/fileupload/f1774771050868x711650819298229400/IMG_3225.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-doncaster",
+      "title": "Nordictrack X24,",
+      "url": "https://equipd.co.uk/fileupload/f1774771053293x929772300389612300/IMG_3224.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-worksop",
+      "title": "Nordic track S22i indoor studio bike",
+      "url": "https://equipd.co.uk/fileupload/f1773868077029x200216584981317570/IMG_3177.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-worksop",
+      "title": "Nordic track S22i indoor studio bike",
+      "url": "https://equipd.co.uk/fileupload/f1773868061714x341546548948701300/IMG_3180.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-worksop",
+      "title": "Nordic track S22i indoor studio bike",
+      "url": "https://equipd.co.uk/fileupload/f1773868064041x370745267572836000/IMG_3179.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-spin-bikes-worksop",
+      "title": "Nordic track S22i indoor studio bike",
+      "url": "https://equipd.co.uk/fileupload/f1773868074903x650102490863914400/IMG_3178.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-doncaster",
+      "title": "NordicTrack EXP 14i Treadmill – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1772880402894x349472011722447500/644304361_951634160855924_7670569578629858146_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-doncaster",
+      "title": "NordicTrack EXP 14i Treadmill – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1772880404041x424986674137640900/645456172_1838419944227852_4609834138539942152_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-doncaster",
+      "title": "NordicTrack EXP 14i Treadmill – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1772880405700x348159158913843300/642815941_1291648459534948_8819724732523988569_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-doncaster",
+      "title": "NordicTrack EXP 14i Treadmill – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1772880406702x320315053997608300/646927761_1602492760873826_3652729928671751874_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-louth",
+      "title": "Nordictrack Commercial 1750",
+      "url": "https://equipd.co.uk/fileupload/f1773252587760x510150613530995200/644456818_923569867340425_5420479863024666751_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-louth",
+      "title": "Nordictrack Commercial 1750",
+      "url": "https://equipd.co.uk/fileupload/f1773252584327x900699826331640300/645240258_1311661514130703_3749767859418001801_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-sheffield",
+      "title": "NordicTrack Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1776365837705x692037976168987400/Screenshot%202026-04-16%20195619.png",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-sheffield",
+      "title": "NordicTrack Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1776365839330x385148429374989200/664322438_1604040270833904_2577585261747893026_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-sheffield",
+      "title": "NordicTrack Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1776365841921x412547827576674750/662712849_1322699473242824_1664092292554641068_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-stafford",
+      "title": "Nordictrack commercial 2450 treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773186411764x219483456707967330/IMG_3123.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-walsall",
+      "title": "Nordictrack T9.2 Running Machine, Bowflex 4-41Kg Bowflex SelectTech 1090i Dumbbells & Stand & Bench",
+      "url": "https://equipd.co.uk/fileupload/f1774249956834x667333011202430700/IMG_3193.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-walsall",
+      "title": "Nordictrack T9.2 Running Machine, Bowflex 4-41Kg Bowflex SelectTech 1090i Dumbbells & Stand & Bench",
+      "url": "https://equipd.co.uk/fileupload/f1774249951286x197006507635307600/IMG_3194.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "nordictrack-treadmills-walsall",
+      "title": "Nordictrack T9.2 Running Machine, Bowflex 4-41Kg Bowflex SelectTech 1090i Dumbbells & Stand & Bench",
+      "url": "https://equipd.co.uk/fileupload/f1774249954029x574659779259073300/IMG_3193.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-assault-bikes-pontefract",
+      "title": "Strongology Assault bike for sale",
+      "url": "https://equipd.co.uk/fileupload/f1776003677656x614933717561412240/IMG_3329.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-assault-bikes-pontefract",
+      "title": "Strongology Assault bike for sale",
+      "url": "https://equipd.co.uk/fileupload/f1776003679298x352951665860113700/IMG_3330.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-assault-bikes-pontefract",
+      "title": "Strongology Assault bike for sale",
+      "url": "https://equipd.co.uk/fileupload/f1776003667121x810150079006850000/IMG_3333.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-assault-bikes-pontefract",
+      "title": "Strongology Assault bike for sale",
+      "url": "https://equipd.co.uk/fileupload/f1776003669174x708541477668114400/IMG_3332.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-assault-bikes-pontefract",
+      "title": "Strongology Assault bike for sale",
+      "url": "https://equipd.co.uk/fileupload/f1776003671682x830130694000072100/IMG_3331.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dual-cable-pulley-harrogate",
+      "title": "dual pulley machine",
+      "url": "https://equipd.co.uk/fileupload/f1776190682676x380648253474755100/650343735_1257125006537194_275090819022564767_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dual-cable-pulley-harrogate",
+      "title": "dual pulley machine",
+      "url": "https://equipd.co.uk/fileupload/f1776190684701x207197799011505470/649881299_1294887375894940_1487154929821709799_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-harrogate",
+      "title": "2.5kg-50kg dumbbells and racks",
+      "url": "https://equipd.co.uk/fileupload/f1776190525146x103391702401107500/652510226_1611852799940189_4117889532991302980_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-harrogate",
+      "title": "2.5kg-50kg dumbbells and racks",
+      "url": "https://equipd.co.uk/fileupload/f1776190526683x817726536780101200/649680057_1438482064672609_6882659174060453443_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-leeds",
+      "title": "Adjustable weights and exercise bike",
+      "url": "https://equipd.co.uk/fileupload/f1775760869335x670459751414193900/666582666_1699226364846139_1838876189703612979_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-leeds",
+      "title": "Adjustable weights and exercise bike",
+      "url": "https://equipd.co.uk/fileupload/f1775760862697x657007045259022200/669084323_1260220669555773_8781593747469162383_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-leeds",
+      "title": "Adjustable weights and exercise bike",
+      "url": "https://equipd.co.uk/fileupload/f1775760849543x799039682400900100/664373215_1293315939559129_8279068791575647902_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-northwich",
+      "title": "Dumbbells 10kg - 30kg",
+      "url": "https://equipd.co.uk/fileupload/f1773309135258x504080479389448000/641332457_1252149283523321_263355782405331727_n%20%281%29.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-northwich",
+      "title": "Dumbbells 10kg - 30kg",
+      "url": "https://equipd.co.uk/fileupload/f1773309122742x298486102886340800/639038917_1243346690492531_5971531055155988281_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-northwich",
+      "title": "Dumbbells 10kg - 30kg",
+      "url": "https://equipd.co.uk/fileupload/f1773309124113x536834956500969800/638736244_1240944930813628_3982397039060135458_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-dumbbells-ossett",
+      "title": "TKO Polyurethane Dumbbell Set & Rack",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772028883733x776099953966029800/1772028877629.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "other-dumbbells-ossett",
+      "title": "TKO Polyurethane Dumbbell Set & Rack",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772028887540x188895854208685380/1772028877634.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "other-pin-loaded-machine-louth",
+      "title": "Star Trac Instinct Dual Leg Extension/Leg Curl",
+      "url": "https://equipd.co.uk/fileupload/f1773252674521x264661352071191140/642342273_2359983947807880_8012246911641741455_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-plate-loaded-machine-ossett",
+      "title": "Shoulder Press Leverage Machine",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771875626480x522220422421398000/1771875623680.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "other-plate-loaded-machine-ossett",
+      "title": "Shoulder Press Leverage Machine",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771875630359x440552275170043000/1771875623695.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "other-skierg-harrogate",
+      "title": "Ski erg machine",
+      "url": "https://equipd.co.uk/fileupload/f1776190848640x634474462141502300/591995324_1287969119927077_2872182435571883124_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-skierg-harrogate",
+      "title": "Ski erg machine",
+      "url": "https://equipd.co.uk/fileupload/f1776190850319x130511301261516000/670376752_931802206308348_8942829662459274512_n%20%281%29.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-skierg-willenhall",
+      "title": "SKI ERG",
+      "url": "https://equipd.co.uk/fileupload/f1773353144993x969757163724174200/IMG_3127.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-skierg-wolverhampton",
+      "title": "skiergs Wolverson",
+      "url": "https://equipd.co.uk/fileupload/f1773220171344x837812189035162000/635149646_26464033349867612_2956572157803729532_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-skierg-wolverhampton",
+      "title": "skiergs Wolverson",
+      "url": "https://equipd.co.uk/fileupload/f1773220162179x266257270995567070/637195198_1472479991155946_8829378746127472408_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-skierg-wolverhampton",
+      "title": "skiergs Wolverson",
+      "url": "https://equipd.co.uk/fileupload/f1773220163398x484892221545703400/637909336_1370779415077996_960013449506205669_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-spin-bikes-york",
+      "title": "Watt Bike Trainer",
+      "url": "https://equipd.co.uk/fileupload/f1773096828791x482268100002685800/IMG_3117.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-spin-bikes-york",
+      "title": "Watt Bike Trainer",
+      "url": "https://equipd.co.uk/fileupload/f1773096830573x654807637082495100/IMG_3118.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-spin-bikes-york",
+      "title": "Watt Bike Trainer",
+      "url": "https://equipd.co.uk/fileupload/f1773096834201x222913092859031500/IMG_3119.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-spin-bikes-york",
+      "title": "Watt Bike Trainer",
+      "url": "https://equipd.co.uk/fileupload/f1773096835054x782271072950270200/IMG_3120.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "other-treadmills-leeds",
+      "title": "JTX Sprint-9 Pro Smart Gym Treadmill – Commercial Quality",
+      "url": "https://equipd.co.uk/fileupload/f1775818441955x103211561267382740/660466035_1609566246976045_6306863339019634598_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-holmfirth",
+      "title": "Peloton Bike + For Sale",
+      "url": "https://equipd.co.uk/fileupload/f1775467181629x746214611948494100/661123416_960546796336960_3205528140848921804_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-lichfield",
+      "title": "Peloton Bike+",
+      "url": "https://equipd.co.uk/fileupload/f1773309019398x617028487061802600/649459158_2350561198690029_2664224051066511957_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-lichfield",
+      "title": "Peloton Bike+",
+      "url": "https://equipd.co.uk/fileupload/f1773309015120x599396980892607000/650369699_1351366677018739_1547607693435808553_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-lichfield",
+      "title": "Peloton Bike+",
+      "url": "https://equipd.co.uk/fileupload/f1773309016742x428632479798471940/649986597_1476140014144284_4214652015816006022_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-lichfield",
+      "title": "Peloton Bike+",
+      "url": "https://equipd.co.uk/fileupload/f1773309020241x239102627594969470/650175682_1634019541120106_195208375856220469_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-lichfield",
+      "title": "Peloton Bike+",
+      "url": "https://equipd.co.uk/fileupload/f1773309021668x576040852681025500/649982192_2393434791164585_6911703287215553889_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-welwyn-garden-city",
+      "title": "Peloton 1.2 Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773220544117x721904535033771100/648165236_25496471243361235_308824303732743669_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-welwyn-garden-city",
+      "title": "Peloton 1.2 Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773220545295x779270808243096600/649725488_2068334703958272_3163833735534214791_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-welwyn-garden-city",
+      "title": "Peloton 1.2 Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773220547326x305490035472171700/648495262_1434613351541884_6783595981520579019_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-spin-bikes-welwyn-garden-city",
+      "title": "Peloton 1.2 Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773220549432x493780390131556900/648498152_900869319229374_3281475307747747964_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-treadmills-york",
+      "title": "Peloton treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1775467294761x647651959404796900/665914799_795740626937044_150519125167624666_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-treadmills-york",
+      "title": "Peloton treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1775467284984x969235935752311400/661814098_3219135374934245_9035674228418210645_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-treadmills-york",
+      "title": "Peloton treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1775467286158x437183126952983550/662368963_701591436348861_2581908801509411175_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "peloton-treadmills-york",
+      "title": "Peloton treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1775467288033x419712125433565630/663159228_2381030862414460_2776602480742363056_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powerblock-dumbbells-leeds",
+      "title": "Powerblock Pro EXP Adjustable Dumbbells  (41kg per hand)",
+      "url": "https://equipd.co.uk/fileupload/f1775294240717x865045022912808800/IMG_3260.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powerblock-dumbbells-leeds",
+      "title": "Powerblock Pro EXP Adjustable Dumbbells  (41kg per hand)",
+      "url": "https://equipd.co.uk/fileupload/f1775294242452x301023309791818900/IMG_3261.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powerblock-dumbbells-leeds",
+      "title": "Powerblock Pro EXP Adjustable Dumbbells  (41kg per hand)",
+      "url": "https://equipd.co.uk/fileupload/f1775294245096x365962266688085060/IMG_3262.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powertec-multi-gym-glossop",
+      "title": "Powertec leverage system, Pull up station, Squat Rack",
+      "url": "https://equipd.co.uk/fileupload/f1774210148463x185307407510029150/654196291_2331513567342970_3605630018131222063_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powertec-multi-gym-glossop",
+      "title": "Powertec leverage system, Pull up station, Squat Rack",
+      "url": "https://equipd.co.uk/fileupload/f1774210141826x363574167083495300/654230059_2428143294308757_3450375316485269925_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powertec-multi-gym-glossop",
+      "title": "Powertec leverage system, Pull up station, Squat Rack",
+      "url": "https://equipd.co.uk/fileupload/f1774210144384x132506218283228400/653642805_2226776198152732_598280436809443800_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powertec-multi-gym-glossop",
+      "title": "Powertec leverage system, Pull up station, Squat Rack",
+      "url": "https://equipd.co.uk/fileupload/f1774210149402x711018343492434800/653655215_24776126982085776_5166404593101482884_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "powertec-multi-gym-glossop",
+      "title": "Powertec leverage system, Pull up station, Squat Rack",
+      "url": "https://equipd.co.uk/fileupload/f1774210154082x846149521848980500/654579742_1465027995078459_6620474752851366101_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "precor-plate-loaded-machine-derby",
+      "title": "Precor chest press",
+      "url": "https://equipd.co.uk/fileupload/f1773699764356x328459865268020160/IMG_3171.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "precor-plate-loaded-machine-derby",
+      "title": "Precor chest press",
+      "url": "https://equipd.co.uk/fileupload/f1773699753785x189537852893001400/IMG_3172.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "precor-plate-loaded-machine-derby",
+      "title": "Precor chest press",
+      "url": "https://equipd.co.uk/fileupload/f1773699755854x718793334668092800/IMG_3173.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "precor-plate-loaded-machine-derby",
+      "title": "Precor chest press",
+      "url": "https://equipd.co.uk/fileupload/f1773699762506x567368069438483700/IMG_3174.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "primal-bench-harrogate",
+      "title": "Primal Commercial Benches Green And Black",
+      "url": "https://equipd.co.uk/fileupload/f1776190467525x164265974868073700/650345957_1658052848662325_3052844496582577231_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "primal-bench-harrogate",
+      "title": "Primal Commercial Benches Green And Black",
+      "url": "https://equipd.co.uk/fileupload/f1776190469110x897742006948820200/651503288_894670583536414_1496043404151188927_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "primal-fitness-pin-loaded-machine-manchester",
+      "title": "Primal strength multi press",
+      "url": "https://equipd.co.uk/fileupload/f1772879807863x947508867103114500/640947077_1653321032484958_336276073752665854_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "primal-fitness-pin-loaded-machine-manchester",
+      "title": "Primal strength multi press",
+      "url": "https://equipd.co.uk/fileupload/f1772879809175x147345074037904770/637877343_922757340146849_5171401549163262857_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "primal-fitness-pin-loaded-machine-manchester",
+      "title": "Primal strength multi press",
+      "url": "https://equipd.co.uk/fileupload/f1772879810726x931863054884041200/641648314_783070951518191_3436308487045031739_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "primal-plate-loaded-machine-ossett",
+      "title": "Primal leg press commercial",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771875348949x662341898602497400/1771875343157.png",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "primal-plate-loaded-machine-ossett",
+      "title": "Primal leg press commercial",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771875352437x677626611603794300/1771875343197.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "pulse-pin-loaded-machine-ossett",
+      "title": "Pulse Gym Resistance Machine bundle",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772028380015x559220558698236160/1772028352737.png",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "pulse-pin-loaded-machine-ossett",
+      "title": "Pulse Gym Resistance Machine bundle",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772028384356x692082478942282600/1772028352747.png",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "pulse-pin-loaded-machine-ossett",
+      "title": "Pulse Gym Resistance Machine bundle",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772028389459x341081568948999880/1772028352757.png",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "reebok-fitness-treadmills-bradford",
+      "title": "Reebok Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773309235123x659341664261602800/640278622_924659409920315_6602794436951544950_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "reebok-fitness-treadmills-bradford",
+      "title": "Reebok Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773309236776x953751284401948900/639680408_1227635036104575_3163655879928321170_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "reebok-fitness-treadmills-bradford",
+      "title": "Reebok Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773309238716x105990958404482030/639030425_1961154498615088_1330544190053935484_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "reebok-fitness-treadmills-bradford",
+      "title": "Reebok Treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1773309239953x142924663813150270/638315259_934769525746908_6429174899185043586_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "spirit-fitness-pin-loaded-machine-harrogate",
+      "title": "Spirit of fitness shoulder press",
+      "url": "https://equipd.co.uk/fileupload/f1776190642910x568635915706173600/649477961_3400369916780951_6895091686916745706_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "spirit-fitness-pin-loaded-machine-harrogate",
+      "title": "Spirit of fitness shoulder press",
+      "url": "https://equipd.co.uk/fileupload/f1776190641229x844883755643687400/647174421_2093511394757723_8891874419481329323_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "spirit-fitness-upright-bikes-harrogate",
+      "title": "Spirit fitness upright bike",
+      "url": "https://equipd.co.uk/fileupload/f1776190426657x538701762208370500/649080260_1516968339880423_1870806828703256406_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-leeds",
+      "title": "Stages Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1777104745938x620476528003900400/IMG_3372.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-leeds",
+      "title": "Stages Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1777104736930x237861562054103580/IMG_3373.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-leeds",
+      "title": "Stages Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1777104738791x814944507109226500/IMG_3374.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-norwich",
+      "title": "Stages SC3 Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773443896492x733950330225294600/IMG_3130.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-norwich",
+      "title": "Stages SC3 Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773443890363x620605541328140400/IMG_3133.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-norwich",
+      "title": "Stages SC3 Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773443891972x358653438949666940/IMG_3132.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stages-cycling-spin-bikes-norwich",
+      "title": "Stages SC3 Spin Bike",
+      "url": "https://equipd.co.uk/fileupload/f1773443897173x733838915739009000/IMG_3131.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stairmaster-stairclimbers-harrogate",
+      "title": "Stairmaster",
+      "url": "https://equipd.co.uk/fileupload/f1776190038405x424689683558990600/647138647_943804531438169_6832072635971404378_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "stairmaster-stairclimbers-harrogate",
+      "title": "Stairmaster",
+      "url": "https://equipd.co.uk/fileupload/f1776190039776x539844614608314900/666380898_1490684849318611_472662220933389373_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-assault-bikes-harrogate",
+      "title": "Taurus ergo assault bike",
+      "url": "https://equipd.co.uk/fileupload/f1776190094536x420324278339077250/647138647_1915060556042513_778281115121096871_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-spin-bikes-barnsley",
+      "title": "Taurus ic50 exercise spin bike",
+      "url": "https://equipd.co.uk/fileupload/f1776365658109x413989034583260600/671825823_26756182550739101_3888110061846322107_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-treadmills-doncaster",
+      "title": "Taurus T9.9 commercial treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774609188416x481067878109748350/656078798_26780908701504465_3673413603136401573_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-treadmills-doncaster",
+      "title": "Taurus T9.9 commercial treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774609189759x721823328011813800/657684475_1281649660736023_7959182746714976745_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-treadmills-doncaster",
+      "title": "Taurus T9.9 commercial treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1774609191117x618143158640717000/655963784_972003578590813_8672094878870442349_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-upright-bikes-pontefract",
+      "title": "Taurus Exercise Bike Brand New",
+      "url": "https://equipd.co.uk/fileupload/f1778057357573x340252499546836350/IMG_3392.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-upright-bikes-pontefract",
+      "title": "Taurus Exercise Bike Brand New",
+      "url": "https://equipd.co.uk/fileupload/f1778057359596x305961717765878460/IMG_3393.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-upright-bikes-pontefract",
+      "title": "Taurus Exercise Bike Brand New",
+      "url": "https://equipd.co.uk/fileupload/f1778057361656x907745375698247800/IMG_3394.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "taurus-upright-bikes-pontefract",
+      "title": "Taurus Exercise Bike Brand New",
+      "url": "https://equipd.co.uk/fileupload/f1778057363503x998972838893741800/IMG_3395.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "url": "https://equipd.co.uk/fileupload/f1774210042295x756841568232435200/656701180_1443858134187399_8187055103604952701_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "url": "https://equipd.co.uk/fileupload/f1774210044661x776409488501384600/653660534_1483304493194991_4996810912644363916_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "url": "https://equipd.co.uk/fileupload/f1774210049594x889321120123957500/654620195_4627287664165332_5550821800810083184_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "url": "https://equipd.co.uk/fileupload/f1774210051118x582858612733507200/655111410_1576746326949959_4244680844667419141_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "url": "https://equipd.co.uk/fileupload/f1774210057810x393476808618078000/654269883_25989650184071431_4062603194493704212_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-buckingham",
+      "title": "TechnoGym Cross Forma Elliptical machine",
+      "url": "https://equipd.co.uk/fileupload/f1774210055876x792649806116841600/657364644_2253058495524435_2222879232325429750_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-markfield",
+      "title": "Technogym vario excite live black edition",
+      "url": "https://equipd.co.uk/fileupload/f1773220054868x720261817197262100/605755318_847729621209546_2777773496537084639_n%20%281%29.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-presteigne",
+      "title": "Technogym wave machine",
+      "url": "https://equipd.co.uk/fileupload/f1773222235946x500074604614796800/644157112_826653343792119_6512570106795213691_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-presteigne",
+      "title": "Technogym wave machine",
+      "url": "https://equipd.co.uk/fileupload/f1773222232001x420712553697928800/641037893_942260515128812_5587733730911642480_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-presteigne",
+      "title": "Technogym wave machine",
+      "url": "https://equipd.co.uk/fileupload/f1773222233141x202455438518246200/642760254_4310076202591710_7271259803556153848_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-presteigne",
+      "title": "Technogym wave machine",
+      "url": "https://equipd.co.uk/fileupload/f1773222237079x474779751057597060/644381490_1260719669354053_8147874675940119473_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-presteigne",
+      "title": "Technogym wave machine",
+      "url": "https://equipd.co.uk/fileupload/f1773222238575x996316276769772200/641102857_1578609966587313_3789914336151968442_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-rotherham",
+      "title": "Technogym Excite 700i Wave – Commercial Gym Cardio Machine – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1775293745321x371318635281334700/IMG_3252.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-rotherham",
+      "title": "Technogym Excite 700i Wave – Commercial Gym Cardio Machine – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1775293746903x584717526263136400/IMG_3253.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-rotherham",
+      "title": "Technogym Excite 700i Wave – Commercial Gym Cardio Machine – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1775293751006x435697318507765500/IMG_3254.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-crosstrainers-rotherham",
+      "title": "Technogym Excite 700i Wave – Commercial Gym Cardio Machine – Excellent Condition",
+      "url": "https://equipd.co.uk/fileupload/f1775293751683x205972003664365950/IMG_3255.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-driffield",
+      "title": "Technogym Cable Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772836616442x390829542367475700/IMG_3011.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-driffield",
+      "title": "Technogym Cable Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772836618154x314277923022908000/IMG_3012.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-driffield",
+      "title": "Technogym Cable Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772836622540x310539900242114750/IMG_3013.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-driffield",
+      "title": "Technogym Cable Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772836623251x328555708417043650/IMG_3015.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-driffield",
+      "title": "Technogym Cable Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772836627546x187560050439729020/IMG_3014.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-harrogate",
+      "title": "Technogym\tUpright row",
+      "url": "https://equipd.co.uk/fileupload/f1776190593470x413108116503510400/647138665_915620554410433_5451664525203427600_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-pin-loaded-machine-harrogate",
+      "title": "Technogym\tUpright row",
+      "url": "https://equipd.co.uk/fileupload/f1776190594857x216707382674553150/666545265_2488188331613787_8323069881227417777_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-recumbent-bikes-worksop",
+      "title": "Exercise bike techno gym",
+      "url": "https://equipd.co.uk/fileupload/f1774457350137x244166928746811780/IMG_3209.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-recumbent-bikes-worksop",
+      "title": "Exercise bike techno gym",
+      "url": "https://equipd.co.uk/fileupload/f1774457352937x335734176234539400/IMG_3210.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-recumbent-bikes-worksop",
+      "title": "Exercise bike techno gym",
+      "url": "https://equipd.co.uk/fileupload/f1774457358139x296356657626547260/IMG_3211.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-recumbent-bikes-worksop",
+      "title": "Exercise bike techno gym",
+      "url": "https://equipd.co.uk/fileupload/f1774457365263x586872384902681360/IMG_3212.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-recumbent-bikes-worksop",
+      "title": "Exercise bike techno gym",
+      "url": "https://equipd.co.uk/fileupload/f1774457368573x841972394535623000/IMG_3213.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "technogym-treadmills-leeds",
+      "title": "Techno Gym Excite Commercial Treadmill",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772623584135x244428544435932200/1772623584599.jpg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "technogym-treadmills-leeds",
+      "title": "Techno Gym Excite Commercial Treadmill",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772623585417x266529529401539070/1772623584602.jpg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "technogym-treadmills-leeds",
+      "title": "Techno Gym Excite Commercial Treadmill",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1772623586639x646542412717939700/1772623584602.jpg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "tuffstuff-pin-loaded-machine-castleford",
+      "title": "TuffStuff SPT-6X Six-Pak Trainer – Commercial Gym Quality – Excellent Condition",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771765705506x384588160522160400/1771765702243.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "tuffstuff-pin-loaded-machine-castleford",
+      "title": "TuffStuff SPT-6X Six-Pak Trainer – Commercial Gym Quality – Excellent Condition",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771765710056x462408530869820500/1771765702296.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "tuffstuff-pin-loaded-machine-castleford",
+      "title": "TuffStuff SPT-6X Six-Pak Trainer – Commercial Gym Quality – Excellent Condition",
+      "url": "https://5ead97c147914e5891081ccfd2f7b613.cdn.bubble.io/f1771765713254x598489437324689700/1771765702326.jpeg",
+      "pattern": "cdn.bubble.io"
+    },
+    {
+      "slug": "water-rower-rowers-hyde",
+      "title": "Water Rower A1 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772998316615x836917341532591900/643904131_2139634333449486_6058775279836893138_n%20%281%29.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-hyde",
+      "title": "Water Rower A1 Rowing Machine",
+      "url": "https://equipd.co.uk/fileupload/f1772998317983x885823879685384300/644484450_888843560630654_1044024118042439188_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-leeds",
+      "title": "WaterRower with S4 Performance Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1775293938602x309144865196668160/IMG_3256.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-leeds",
+      "title": "WaterRower with S4 Performance Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1775293940216x288711485282872500/IMG_3257.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-leeds",
+      "title": "WaterRower with S4 Performance Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1775293942718x665810097680673500/IMG_3258.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-leeds",
+      "title": "WaterRower with S4 Performance Monitor",
+      "url": "https://equipd.co.uk/fileupload/f1775293944603x410517386765506560/IMG_3259.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-matlock",
+      "title": "Water rowing machine in wood",
+      "url": "https://equipd.co.uk/fileupload/f1772792275368x378402897588264700/639712704_914393074674727_7005414354433165495_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-matlock",
+      "title": "Water rowing machine in wood",
+      "url": "https://equipd.co.uk/fileupload/f1772792274076x916207604722214000/640920431_911603338126633_4341110945293398100_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-matlock",
+      "title": "Water rowing machine in wood",
+      "url": "https://equipd.co.uk/fileupload/f1772792279047x491684589889807040/640292664_1251684383772507_6445409484008650606_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "water-rower-rowers-matlock",
+      "title": "Water rowing machine in wood",
+      "url": "https://equipd.co.uk/fileupload/f1772792278235x502786608759385300/639016950_1235005701496125_6046415135784150828_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "wattbike-spin-bikes-buckshaw-village",
+      "title": "Wattbike pro trainer",
+      "url": "https://equipd.co.uk/fileupload/f1774209954316x737757539631000000/654200157_1427138789155338_4812774381521589512_n%20%282%29.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "wattbike-spin-bikes-buckshaw-village",
+      "title": "Wattbike pro trainer",
+      "url": "https://equipd.co.uk/fileupload/f1774209956552x349663722852044740/654200157_1427138789155338_4812774381521589512_n%20%281%29.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "wattbike-spin-bikes-buckshaw-village",
+      "title": "Wattbike pro trainer",
+      "url": "https://equipd.co.uk/fileupload/f1774209961359x504682880282429900/654200157_1427138789155338_4812774381521589512_n.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "xterra-fitness-treadmills-leeds",
+      "title": "Xterra fitness trx3500 treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1775856091231x751253872690605300/IMG_3323.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    },
+    {
+      "slug": "xterra-fitness-treadmills-leeds",
+      "title": "Xterra fitness trx3500 treadmill",
+      "url": "https://equipd.co.uk/fileupload/f1775856093135x130191697817325650/IMG_3322.jpg",
+      "pattern": "equipd.co.uk/fileupload"
+    }
+  ]
+}

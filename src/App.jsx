@@ -1,30 +1,63 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import AuthModal from './components/auth/AuthModal'
+import OAuthSessionHandler from './components/auth/OAuthSessionHandler'
+import CookieConsentShell from './components/cookies/CookieConsentShell'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminProtectedRoute from './components/AdminProtectedRoute'
 import AppShell from './components/layout/AppShell'
+import ScrollToTop from './components/routing/ScrollToTop'
 import { AuthProvider } from './hooks/useAuth'
+import { AuthModalProvider } from './hooks/useAuthModal'
+import { CookieConsentProvider } from './hooks/useCookieConsent'
+import AdminOrdersPage from './pages/AdminOrdersPage'
+import AdminSupportPage from './pages/AdminSupportPage'
 import AddListingPage from './pages/AddListingPage'
+import BrowsePage from './pages/BrowsePage'
 import EditListingPage from './pages/EditListingPage'
+import AboutPage from './pages/AboutPage'
+import HelpCentrePage from './pages/HelpCentrePage'
+import HelpArticlePage from './pages/HelpArticlePage'
+import SupportFlowPage from './pages/SupportFlowPage'
 import HomePage from './pages/HomePage'
 import ListingDetailPage from './pages/ListingDetailPage'
 import HubPage from './pages/HubPage'
+import CollectOrderPage from './pages/CollectOrderPage'
+import OrderDetailPage from './pages/OrderDetailPage'
 import LocationListingsPage from './pages/LocationListingsPage'
 import LoginPage from './pages/LoginPage'
 import MessagesPage from './pages/MessagesPage'
 import MyListingsPage from './pages/MyListingsPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ProfilePage from './pages/ProfilePage'
+import SettingsPage from './pages/SettingsPage'
+import ShopRoutePage from './pages/ShopRoutePage'
 import SavedListingsPage from './pages/SavedListingsPage'
 import SignupPage from './pages/SignupPage'
 import { LOCATION_SLUGS } from './lib/locations'
+import { BUYER_PROTECTION_HELP_PATH } from './lib/trustMessaging'
 import './styles/global.css'
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
+        <ScrollToTop />
+        <CookieConsentProvider>
+          <AuthModalProvider>
+            <OAuthSessionHandler />
+            <Routes>
           <Route element={<AppShell />}>
             <Route index element={<HomePage />} />
+            <Route path="browse" element={<BrowsePage />} />
+            <Route
+              path="buyer-protection"
+              element={<Navigate to={BUYER_PROTECTION_HELP_PATH} replace />}
+            />
+            <Route path="how-it-works" element={<Navigate to="/help" replace />} />
+            <Route path="about" element={<AboutPage />} />
+            <Route path="help" element={<HelpCentrePage />} />
+            <Route path="help/:slug" element={<HelpArticlePage />} />
+            <Route path="support" element={<SupportFlowPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route
@@ -36,6 +69,15 @@ function App() {
               }
             />
             <Route
+              path="settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="shop/:userId" element={<ShopRoutePage />} />
+            <Route
               path="my-listings"
               element={
                 <ProtectedRoute>
@@ -45,6 +87,14 @@ function App() {
             />
             <Route
               path="messages"
+              element={
+                <ProtectedRoute>
+                  <MessagesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="messages/draft/:draftListingId"
               element={
                 <ProtectedRoute>
                   <MessagesPage />
@@ -84,6 +134,34 @@ function App() {
               }
             />
             <Route
+              path="orders/collect/:token"
+              element={<CollectOrderPage />}
+            />
+            <Route
+              path="orders/:orderId"
+              element={
+                <ProtectedRoute>
+                  <OrderDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/support"
+              element={
+                <AdminProtectedRoute>
+                  <AdminSupportPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/orders"
+              element={
+                <AdminProtectedRoute>
+                  <AdminOrdersPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
               path="listings/new"
               element={
                 <ProtectedRoute>
@@ -108,7 +186,11 @@ function App() {
             />
             <Route path="listings/:slug" element={<ListingDetailPage />} />
           </Route>
-        </Routes>
+            </Routes>
+            <AuthModal />
+            <CookieConsentShell />
+          </AuthModalProvider>
+        </CookieConsentProvider>
       </BrowserRouter>
     </AuthProvider>
   )

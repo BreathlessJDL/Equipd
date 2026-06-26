@@ -1,0 +1,28 @@
+@import '../shared/googlePlacesPac.css';
+
+.listing-location-autocomplete {
+  display: grid;
+  gap: 0.5rem;
+  position: relative;
+  overflow: visible;
+}
+
+.listing-location-autocomplete__selected {
+  margin: 0;
+  color: var(--color-text, #222);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.listing-location-autocomplete__hint {
+  margin: 0;
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+}
+
+.listing-location-autocomplete__error {
+  margin: 0;
+  color: var(--color-danger, #b00020);
+  font-size: 0.875rem;
+}
+

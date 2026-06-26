@@ -1,0 +1,231 @@
+import {
+  formatOfferStatus,
+  formatOfferTimestamp,
+  isOfferCancelled,
+} from './offers'
+import { formatListingStatus, getConditionLabel } from './listings'
+import { formatListingLocationDetail } from './listingLocation'
+import { isPaymentComplete, isPaymentExpired } from './payments'
+import {
+  getCollectionHubStatusLabel,
+  getCourierDeliveryHubStatusLabel,
+  getCourierHubStatusLabel,
+  getOfferOrder,
+  getSellerDeliveryHubStatusLabel,
+  getSellerPayoutProcessingMessage,
+  isOrderAwaitingFulfilment,
+  isOrderCompleted,
+  isOrderCourierDelivered,
+  isPayoutReleased,
+  isSellerAwaitingPayout,
+  ORDER_FULFILMENT_STATUSES,
+  ORDER_TYPES,
+} from './orders'
+import { isOrderDisputed } from './orderDisputes'
+
+const HUB_FULFILMENT_LABELS = {
+  [ORDER_TYPES.COLLECTION]: 'Collection order',
+  [ORDER_TYPES.BUYER_COURIER]: 'Buyer-arranged courier',
+  [ORDER_TYPES.SELLER_DELIVERY]: 'Seller delivery',
+}
+
+export function getHubFulfilmentLabel(order) {
+  if (!order?.order_type) return null
+
+  return HUB_FULFILMENT_LABELS[order.order_type] ?? null
+}
+
+export function getHubItemStatusBadge(offer, { orderStatusRole = null, showPaymentStatus = false } = {}) {
+  const order = getOfferOrder(offer)
+  const payment = offer.payment
+
+  if (isOfferCancelled(offer)) {
+    return { variant: 'cancelled', label: 'Cancelled' }
+  }
+
+  if (order && isOrderDisputed(order)) {
+    return { variant: 'disputed', label: 'Disputed' }
+  }
+
+  if (orderStatusRole === 'seller' && order && isOrderCompleted(order) && !isPayoutReleased(order)) {
+    return { variant: 'awaiting_payout', label: 'Awaiting payout' }
+  }
+
+  if (orderStatusRole && order && isOrderCompleted(order)) {
+    return { variant: 'completed', label: 'Completed' }
+  }
+
+  if (showPaymentStatus && payment && !isPaymentComplete(payment)) {
+    if (isPaymentExpired(payment)) {
+      return { variant: 'cancelled', label: 'Payment expired' }
+    }
+
+    return { variant: 'awaiting_payment', label: 'Awaiting payment' }
+  }
+
+  if (orderStatusRole && order && isOrderCourierDelivered(order)) {
+    return { variant: 'in_transit', label: 'In transit' }
+  }
+
+  if (orderStatusRole && order && isOrderAwaitingFulfilment(order, payment)) {
+    if (
+      order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_COLLECTION ||
+      (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.PAID &&
+        order.order_type === ORDER_TYPES.COLLECTION)
+    ) {
+      return { variant: 'awaiting_collection', label: 'Awaiting collection' }
+    }
+
+    if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_COURIER_COLLECTION) {
+      return { variant: 'in_transit', label: 'Courier collection pending' }
+    }
+
+    if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_SELLER_DELIVERY) {
+      return { variant: 'in_transit', label: 'Awaiting delivery' }
+    }
+  }
+
+  if (offer.status === 'pending') {
+    return { variant: 'pending', label: 'Pending' }
+  }
+
+  if (offer.status === 'accepted') {
+    return { variant: 'accepted', label: 'Accepted' }
+  }
+
+  if (offer.status === 'rejected') {
+    return { variant: 'cancelled', label: 'Declined' }
+  }
+
+  return {
+    variant: 'pending',
+    label: formatOfferStatus(offer.status) || 'Pending',
+  }
+}
+
+export function formatHubOfferMetadata({
+  partyLabel,
+  partyName,
+  order = null,
+  isOrderContext = false,
+  datePrefix = 'Submitted',
+  date,
+}) {
+  const lines = []
+
+  if (partyLabel && partyName) {
+    lines.push(`${partyLabel}: ${partyName}`)
+  }
+
+  if (isOrderContext && order) {
+    const fulfilment = getHubFulfilmentLabel(order)
+    if (fulfilment) {
+      lines.push(fulfilment)
+    }
+  }
+
+  if (date) {
+    lines.push(`${datePrefix} ${formatOfferTimestamp(date)}`)
+  }
+
+  return lines.join('\n')
+}
+
+/** @deprecated Use formatHubOfferMetadata */
+export function formatHubItemMetadata(args) {
+  return formatHubOfferMetadata(args)
+}
+
+export function getHubOrderStageHint(offer, orderStatusRole) {
+  const order = getOfferOrder(offer)
+  const payment = offer.payment
+
+  if (!orderStatusRole || !order) return null
+
+  if (orderStatusRole === 'seller' && isSellerAwaitingPayout(order)) {
+    return getSellerPayoutProcessingMessage(order)
+  }
+
+  if (orderStatusRole === 'buyer' && isOrderCompleted(order)) {
+    return 'Purchase completed'
+  }
+
+  if (orderStatusRole === 'seller' && isOrderCompleted(order) && isPayoutReleased(order)) {
+    return 'Sale completed'
+  }
+
+  return (
+    getCollectionHubStatusLabel(order, orderStatusRole) ||
+    getSellerDeliveryHubStatusLabel(order, orderStatusRole) ||
+    getCourierHubStatusLabel(order, orderStatusRole, payment) ||
+    getCourierDeliveryHubStatusLabel(order, orderStatusRole) ||
+    null
+  )
+}
+
+export function getHubListingStatusBadge(listing) {
+  const variants = {
+    draft: 'pending',
+    active: 'accepted',
+    reserved: 'awaiting_collection',
+    in_progress: 'in_transit',
+    sold: 'completed',
+  }
+
+  return {
+    variant: variants[listing?.status] ?? 'pending',
+    label: formatListingStatus(listing?.status),
+  }
+}
+
+export function formatHubListingMetadata(listing) {
+  const lines = []
+  const condition = getConditionLabel(listing?.condition)
+
+  if (condition) {
+    lines.push(condition)
+  }
+
+  const location = formatListingLocationDetail(listing)
+  if (location) {
+    lines.push(location)
+  }
+
+  if (listing?.updated_at) {
+    lines.push(`Updated ${formatOfferTimestamp(listing.updated_at)}`)
+  }
+
+  return lines.join('\n')
+}
+
+export function getHubPaymentHint(payment) {
+  if (!payment) return null
+
+  const parts = []
+
+  if (payment.status === 'awaiting_seller_setup') {
+    parts.push('Waiting for seller payout setup')
+  } else if (payment.status === 'pending') {
+    parts.push('Payment due')
+  } else if (payment.status === 'paid') {
+    parts.push('Paid')
+  } else if (payment.status === 'expired') {
+    parts.push('Payment expired')
+  } else if (payment.status === 'cancelled') {
+    parts.push('Payment cancelled')
+  } else if (payment.status === 'refunded') {
+    parts.push('Refunded')
+  }
+
+  if (['awaiting_seller_setup', 'pending'].includes(payment.status) && payment.expires_at) {
+    if (!isPaymentExpired(payment)) {
+      parts.push(`Pay by ${formatOfferTimestamp(payment.expires_at)}`)
+    }
+  }
+
+  if (isPaymentExpired(payment)) {
+    parts.push('Payment window expired')
+  }
+
+  return parts.join(' · ')
+}

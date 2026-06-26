@@ -18,7 +18,10 @@ import {
   isAwaitingSellerSetup,
   isPaymentExpired,
 } from '../lib/payments'
-import { createCheckoutSession, getStripeApiErrorMessage } from '../lib/stripe-api'
+import PayNowWithFulfilment from './PayNowWithFulfilment'
+import BuyerProtectionInfo from './BuyerProtectionInfo'
+import BuyerProtectionOfferSummary from './BuyerProtectionOfferSummary'
+import BuyerProtectionPriceDisplay from './BuyerProtectionPriceDisplay'
 import '../components/ListingDetail.css'
 
 function ListingOffersSection({
@@ -109,19 +112,13 @@ function ListingOffersSection({
     onOffersChange(offers.map((offer) => (offer.id === data.id ? data : offer)))
   }
 
-  async function handlePayNow(paymentId) {
+  async function handlePayStart(paymentId) {
     setPayingPaymentId(paymentId)
     setPayError('')
+  }
 
-    const { url, error } = await createCheckoutSession(paymentId)
-
-    if (error) {
-      setPayingPaymentId(null)
-      setPayError(getStripeApiErrorMessage(error))
-      return
-    }
-
-    globalThis.location.assign(url)
+  function handlePayComplete() {
+    setPayingPaymentId(null)
   }
 
   if (!showOffersSection) {
@@ -244,7 +241,16 @@ function ListingOffersSection({
             return (
               <li key={offer.id} className="listing-detail__offer-item">
                 <div className="listing-detail__offer-header">
-                  <p className="listing-detail__offer-amount">{formatPricePence(offer.amount_pence)}</p>
+                  {isBuyer ? (
+                    <BuyerProtectionPriceDisplay
+                      payment={isAccepted && payment ? payment : null}
+                      itemPricePence={isAccepted && payment ? null : offer.amount_pence}
+                      compact
+                      className="listing-detail__offer-buyer-protection"
+                    />
+                  ) : (
+                    <p className="listing-detail__offer-amount">{formatPricePence(offer.amount_pence)}</p>
+                  )}
                   <span className="listing-detail__offer-status">{formatOfferStatus(offer.status)}</span>
                 </div>
 
@@ -309,14 +315,14 @@ function ListingOffersSection({
 
                 {isBuyer && isAccepted && canPayNow(payment) ? (
                   <div className="listing-detail__offer-actions">
-                    <button
-                      type="button"
-                      className="listing-detail__button listing-detail__button--primary"
-                      disabled={payingPaymentId === payment.id}
-                      onClick={() => handlePayNow(payment.id)}
-                    >
-                      {payingPaymentId === payment.id ? 'Redirecting…' : 'Pay now'}
-                    </button>
+                    <PayNowWithFulfilment
+                      offer={{ ...offer, listing }}
+                      payment={payment}
+                      payingPaymentId={payingPaymentId}
+                      onPayStart={handlePayStart}
+                      onPayComplete={handlePayComplete}
+                    />
+                    <BuyerProtectionInfo variant="payment" compact />
                   </div>
                 ) : null}
               </li>

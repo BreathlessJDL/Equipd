@@ -1,0 +1,7 @@
+/* Buyer Protection trust palette — protection/trust, not success-state green */
+:root {
+  --buyer-protection-trust: #163a5f;
+  --buyer-protection-trust-hover: #1f4d7d;
+  --buyer-protection-trust-soft: color-mix(in srgb, #163a5f 10%, transparent);
+  --buyer-protection-trust-border: color-mix(in srgb, #163a5f 18%, var(--color-border));
+}

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../components/Notifications.css'
+import NotificationsList from '../components/NotificationsList'
 import { useAuth } from '../hooks/useAuth'
 import {
   fetchNotifications,
-  formatNotificationTimestamp,
   getNotificationErrorMessage,
+  getNotificationNavigationPath,
   markAllNotificationsRead,
   markNotificationRead,
 } from '../lib/notifications'
@@ -94,8 +95,10 @@ function NotificationsPage() {
 
     setOpeningId(null)
 
-    if (notification.link_url) {
-      navigate(notification.link_url)
+    const destination = getNotificationNavigationPath(notification)
+
+    if (destination) {
+      navigate(destination)
     }
   }
 
@@ -107,7 +110,7 @@ function NotificationsPage() {
         <div>
           <h2 className="notifications-page__title">Notifications</h2>
           <p className="notifications-page__lead">
-            Updates about messages and offers on your listings.
+            Stay up to date with your offers, orders, payments and support requests.
           </p>
         </div>
 
@@ -118,57 +121,18 @@ function NotificationsPage() {
             disabled={markingAll}
             onClick={handleMarkAllRead}
           >
-            {markingAll ? 'Marking…' : 'Mark all read'}
+            {markingAll ? 'Marking…' : 'Mark all as read'}
           </button>
         ) : null}
       </header>
 
-      {loading ? (
-        <p className="notifications-page__message notifications-page__message--empty">Loading…</p>
-      ) : null}
-
-      {!loading && error ? (
-        <p className="notifications-page__message notifications-page__message--error" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      {!loading && !error && notifications.length === 0 ? (
-        <p className="notifications-page__message notifications-page__message--empty">
-          No notifications yet.
-        </p>
-      ) : null}
-
-      {!loading && !error && notifications.length > 0 ? (
-        <ul className="notifications-page__list">
-          {notifications.map((notification) => (
-            <li key={notification.id} className="notifications-page__item">
-              <button
-                type="button"
-                className={`notifications-page__button${
-                  notification.is_read ? '' : ' notifications-page__button--unread'
-                }`}
-                disabled={openingId === notification.id}
-                onClick={() => handleOpenNotification(notification)}
-              >
-                <span className="notifications-page__item-header">
-                  <span className="notifications-page__item-title">{notification.title}</span>
-                  {!notification.is_read ? (
-                    <span className="notifications-page__unread-dot" aria-hidden="true" />
-                  ) : null}
-                </span>
-                <span className="notifications-page__item-body">{notification.body}</span>
-                <time
-                  className="notifications-page__item-time"
-                  dateTime={notification.created_at}
-                >
-                  {formatNotificationTimestamp(notification.created_at)}
-                </time>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <NotificationsList
+        notifications={notifications}
+        loading={loading}
+        error={error}
+        openingId={openingId}
+        onOpenNotification={handleOpenNotification}
+      />
     </section>
   )
 }

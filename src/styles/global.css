@@ -1,20 +1,51 @@
+@import '../components/BuyerProtectionBrand.css';
+
 :root {
-  --color-bg: #f6f7f9;
+  --color-bg: #f7f8fa;
   --color-surface: #ffffff;
-  --color-text: #1a1d21;
+  --color-text: #0f2137;
   --color-muted: #5c6570;
-  --color-primary: #1d4ed8;
-  --color-primary-hover: #1e40af;
-  --color-border: #d8dee6;
+  --color-navy: #0f2137;
+  --color-navy-soft: #1a334f;
+  --color-orange: #e8622a;
+  --color-orange-hover: #cf5522;
+  --color-primary: var(--color-orange);
+  --color-primary-hover: var(--color-orange-hover);
+  --color-primary-contrast: #ffffff;
+  --color-border: #dde3ea;
   --color-danger: #b91c1c;
+  --color-success: #0f766e;
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
-  --radius: 0.5rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --radius: 0.75rem;
+  --radius-lg: 1rem;
   --max-width: 72rem;
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --home-gutter: clamp(1rem, 2.5vw, 2rem);
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-serif: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  /* Marketplace listing card — matches design-reference/listing cards examples 2.png */
+  --listing-card-width: 11.5rem;
+  --listing-card-width-min: 10rem;
+  --listing-card-grid-gap: 1rem;
+  --listing-card-image-ratio: 1 / 1;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --listing-card-width: 12.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --listing-card-width: 13rem;
+    --listing-card-width-min: 13rem;
+  }
 }
 
 *,
@@ -39,6 +70,8 @@ body {
 
 #root {
   min-height: 100vh;
+  width: 100%;
+  max-width: none;
 }
 
 a {
@@ -56,3 +89,29 @@ select,
 textarea {
   font: inherit;
 }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.equipd-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.equipd-logo__image {
+  display: block;
+  width: auto;
+  height: 2.5rem;
+  max-width: none;
+}
+
+/* Marketplace header logo: sized in HomeHeader.css (variant="header" is HomeHeader-only). */

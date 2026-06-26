@@ -110,7 +110,7 @@ create policy "Active listings are publicly readable"
   on public.listings for select
   to anon, authenticated
   using (
-    status = 'active'::public.listing_status
+    public.listing_is_publicly_visible(listings)
     or seller_id = auth.uid()
     or exists (
       select 1

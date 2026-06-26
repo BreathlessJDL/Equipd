@@ -1,0 +1,130 @@
+.buyer-protection-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.buyer-protection-price__item {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.buyer-protection-price__item--primary {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-orange);
+}
+
+.buyer-protection-price__total {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-muted);
+}
+
+.buyer-protection-price__total--compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.buyer-protection-price__total-amount {
+  font-weight: 500;
+}
+
+.buyer-protection-price__total-incl {
+  font-size: 0.5625rem;
+  font-weight: 500;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-muted) 88%, transparent);
+}
+
+.buyer-protection-price__total-suffix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.buyer-protection-price__shield-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--buyer-protection-trust);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.buyer-protection-price__shield-button:hover {
+  color: var(--buyer-protection-trust-hover);
+}
+
+.buyer-protection-price__shield-button-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+}
+
+.buyer-protection-price__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.125rem 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--buyer-protection-trust);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.buyer-protection-price__link:hover {
+  color: var(--buyer-protection-trust-hover);
+  text-decoration: underline;
+}
+
+.buyer-protection-price__link-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+}
+
+.buyer-protection-price--compact {
+  gap: 0.0625rem;
+}
+
+.buyer-protection-price--compact .buyer-protection-price__item--primary {
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.buyer-protection-price--compact .buyer-protection-price__total {
+  font-size: 0.625rem;
+  line-height: 1.3;
+}
+
+.buyer-protection-price--compact .buyer-protection-price__shield-button-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.buyer-protection-price--detail .buyer-protection-price__item--primary {
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+
+.buyer-protection-price--detail .buyer-protection-price__total {
+  font-size: 0.875rem;
+}
+
+.buyer-protection-price--detail .buyer-protection-price__link {
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}

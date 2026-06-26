@@ -1,0 +1,56 @@
+.leave-listing-modal__dialog {
+  max-width: 26rem;
+  padding: 1.5rem;
+}
+
+.leave-listing-modal__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.leave-listing-modal__body {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.leave-listing-modal__error {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-danger);
+}
+
+.leave-listing-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.leave-listing-modal__button {
+  width: 100%;
+  justify-content: center;
+}
+
+.leave-listing-modal__stay {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.leave-listing-modal__stay:hover:not(:disabled) {
+  color: var(--color-navy);
+}
+
+.leave-listing-modal__stay:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

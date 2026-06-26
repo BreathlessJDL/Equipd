@@ -1,0 +1,123 @@
+.buyer-protection-modal__dialog {
+  width: min(100%, 26rem);
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
+}
+
+.buyer-protection-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: 0 2rem var(--space-lg) 0;
+}
+
+.buyer-protection-modal__shield {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  color: var(--buyer-protection-trust);
+}
+
+.buyer-protection-modal__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.buyer-protection-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.buyer-protection-modal__section-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.buyer-protection-modal__section-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--buyer-protection-trust);
+}
+
+.buyer-protection-modal__section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.buyer-protection-modal__text {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.buyer-protection-modal__text:last-child {
+  margin-bottom: 0;
+}
+
+.buyer-protection-modal__list {
+  margin: 0 0 var(--space-sm);
+  padding-left: 1.15rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.buyer-protection-modal__list li + li {
+  margin-top: 0.25rem;
+}
+
+.buyer-protection-modal__policy-link {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.875rem;
+}
+
+.buyer-protection-modal__policy-link a {
+  color: var(--buyer-protection-trust);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.buyer-protection-modal__policy-link a:hover {
+  color: var(--buyer-protection-trust-hover);
+  text-decoration: underline;
+}
+
+.buyer-protection-modal__footer {
+  margin-top: var(--space-lg);
+}
+
+.buyer-protection-modal__button {
+  width: 100%;
+  padding: 0.8rem var(--space-md);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--buyer-protection-trust);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.buyer-protection-modal__button:hover {
+  background: var(--buyer-protection-trust-hover);
+}
+
+@media (max-width: 30rem) {
+  .buyer-protection-modal__dialog {
+    padding: var(--space-md);
+  }
+
+  .buyer-protection-modal__title {
+    font-size: 1.35rem;
+  }
+}

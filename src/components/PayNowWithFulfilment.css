@@ -1,0 +1,11 @@
+.pay-now-with-fulfilment {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.pay-now-with-fulfilment__error {
+  color: var(--color-error, #b00020);
+  font-size: 0.875rem;
+  margin: 0;
+}

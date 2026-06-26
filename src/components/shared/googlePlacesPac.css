@@ -1,0 +1,66 @@
+/*
+ * Google Places Autocomplete dropdown (.pac-container is appended to document.body).
+ * Keep Google's default row layout — do not use flex on .pac-item.
+ */
+
+.pac-container {
+  z-index: 10050 !important;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+  border: 1px solid var(--color-border, #dde3ea);
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 33 55 / 14%);
+  font-family: inherit;
+  overflow: hidden;
+}
+
+.pac-container:empty,
+.pac-container.equipd-pac-hidden {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.pac-item {
+  padding: 0.5rem 0.75rem;
+  line-height: 1.35;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pac-item:hover,
+.pac-item-selected,
+.pac-item-selected:hover {
+  background: var(--color-bg, #f7f8fa);
+}
+
+.pac-item-query {
+  font-size: 0.8125rem;
+}
+
+.pac-matched {
+  font-weight: 700;
+}
+
+.pac-icon {
+  box-sizing: content-box !important;
+  display: inline-block !important;
+  width: 15px !important;
+  height: 20px !important;
+  min-width: 15px !important;
+  max-width: 15px !important;
+  margin-top: 0.35rem !important;
+  margin-right: 0.35rem !important;
+  vertical-align: top;
+  background-repeat: no-repeat !important;
+  background-size: 34px !important;
+}
+
+.pac-container img,
+.pac-container svg {
+  max-width: none !important;
+  width: auto !important;
+  height: auto !important;
+}

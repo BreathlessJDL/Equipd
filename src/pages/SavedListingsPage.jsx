@@ -105,7 +105,7 @@ function SavedListingsPage() {
       {!loading && !error && activeListings.length > 0 ? (
         <div className="listing-browse__grid">
           {activeListings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
+            <ListingCard key={listing.id} listing={listing} variant="home" />
           ))}
         </div>
       ) : null}

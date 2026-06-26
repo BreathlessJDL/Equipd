@@ -1,0 +1,177 @@
+.message-thread-listing-summary {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.75rem max(var(--space-md), env(safe-area-inset-right, 0px)) 0.7rem
+    max(var(--space-md), env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.message-thread-listing-summary__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.message-thread-listing-summary__thumb {
+  flex-shrink: 0;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: calc(var(--radius-lg) - 2px);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.message-thread-listing-summary__thumb-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.message-thread-listing-summary__thumb-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.message-thread-listing-summary__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.message-thread-listing-summary__title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-navy);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.message-thread-listing-summary__price {
+  margin: 0.15rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-navy);
+}
+
+.message-thread-listing-summary__protected-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.35rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.message-thread-listing-summary__protected-amount {
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.message-thread-listing-summary__protected-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.message-thread-listing-summary__shield {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--buyer-protection-trust, #0f766e);
+}
+
+.message-thread-listing-summary__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.message-thread-listing-summary__actions--single {
+  grid-template-columns: 1fr;
+}
+
+.message-thread-listing-summary__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.message-thread-listing-summary__button--secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-navy);
+}
+
+.message-thread-listing-summary__button--secondary:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  color: var(--color-primary);
+}
+
+.message-thread-listing-summary__button--primary {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.message-thread-listing-summary__button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.message-thread-listing-summary__button--primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  .message-thread-listing-summary {
+    gap: 0.55rem;
+    padding: 0.6rem var(--space-md);
+    background: color-mix(in srgb, var(--color-bg) 60%, var(--color-surface));
+  }
+
+  .message-thread-listing-summary__thumb {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .message-thread-listing-summary__title {
+    font-size: 0.8125rem;
+    -webkit-line-clamp: 1;
+  }
+
+  .message-thread-listing-summary__price {
+    font-size: 0.8125rem;
+  }
+
+  .message-thread-listing-summary__protected-price {
+    font-size: 0.75rem;
+  }
+
+  .message-thread-listing-summary__button {
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+  }
+}

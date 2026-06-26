@@ -7,6 +7,60 @@ export const NOTIFICATION_TYPES = {
   OFFER_RECEIVED: 'offer_received',
   OFFER_ACCEPTED: 'offer_accepted',
   OFFER_REJECTED: 'offer_rejected',
+  OFFER_DECLINED: 'offer_declined',
+  OFFER_COUNTERED: 'offer_countered',
+  COUNTER_OFFER_RECEIVED: 'counter_offer_received',
+  COUNTER_OFFER_ACCEPTED: 'counter_offer_accepted',
+  COUNTER_OFFER_DECLINED: 'counter_offer_declined',
+  OFFER_WITHDRAWN: 'offer_withdrawn',
+  OFFER_CANCELLED: 'offer_cancelled',
+  OFFER_CREATED: 'offer_created',
+  COUNTER_OFFER: 'counter_offer',
+  NEW_OFFER: 'new_offer',
+  SUPPORT_REQUEST_OPENED: 'support_request_opened',
+  REVIEW_RECEIVED: 'review_received',
+  BUYER_REVIEW_REMINDER: 'buyer_review_reminder',
+  SELLER_PAYOUT_COMPLETE: 'seller_payout_complete',
+  BUYER_PAYMENT_RECEIVED: 'buyer_payment_received',
+  COLLECTION_CONFIRMED: 'collection_confirmed',
+  COURIER_COLLECTION_CONFIRMED: 'courier_collection_confirmed',
+  COURIER_EVIDENCE_SUBMITTED: 'courier_evidence_submitted',
+  COURIER_DELIVERY_CONFIRMED: 'courier_delivery_confirmed',
+  SELLER_DELIVERY_CONFIRMED: 'seller_delivery_confirmed',
+  ORDER_DISPUTE_OPENED: 'order_dispute_opened',
+  ORDER_DISPUTE_UNDER_REVIEW: 'order_dispute_under_review',
+  ORDER_DISPUTE_RESOLVED_BUYER: 'order_dispute_resolved_buyer',
+  ORDER_DISPUTE_RESOLVED_SELLER: 'order_dispute_resolved_seller',
+  SUPPORT_REQUEST_OPENED: 'support_request_opened',
+}
+
+const OFFER_NOTIFICATION_TYPES = new Set([
+  NOTIFICATION_TYPES.OFFER_RECEIVED,
+  NOTIFICATION_TYPES.OFFER_ACCEPTED,
+  NOTIFICATION_TYPES.OFFER_REJECTED,
+  NOTIFICATION_TYPES.OFFER_DECLINED,
+  NOTIFICATION_TYPES.OFFER_COUNTERED,
+  NOTIFICATION_TYPES.COUNTER_OFFER_RECEIVED,
+  NOTIFICATION_TYPES.COUNTER_OFFER_ACCEPTED,
+  NOTIFICATION_TYPES.COUNTER_OFFER_DECLINED,
+  NOTIFICATION_TYPES.OFFER_WITHDRAWN,
+  NOTIFICATION_TYPES.OFFER_CANCELLED,
+  NOTIFICATION_TYPES.OFFER_CREATED,
+  NOTIFICATION_TYPES.COUNTER_OFFER,
+  NOTIFICATION_TYPES.NEW_OFFER,
+])
+
+const PRESERVED_NOTIFICATION_PATH_PREFIXES = ['/orders/', '/messages']
+
+// Message unread state is handled by conversation_reads (see messages.js).
+// Bell notifications intentionally exclude messages to avoid duplicating the envelope badge.
+const BELL_EXCLUDED_NOTIFICATION_TYPES = [NOTIFICATION_TYPES.MESSAGE_RECEIVED]
+
+function applyBellNotificationFilter(query) {
+  return BELL_EXCLUDED_NOTIFICATION_TYPES.reduce(
+    (filteredQuery, type) => filteredQuery.neq('type', type),
+    query,
+  )
 }
 
 export function getNotificationErrorMessage(error) {
@@ -23,30 +77,131 @@ export function formatNotificationTimestamp(value) {
   }).format(new Date(value))
 }
 
-export async function fetchNotifications(userId) {
+export function extractOfferIdFromNotificationLink(linkUrl) {
+  if (!linkUrl) return null
+
+  try {
+    const url = linkUrl.startsWith('http')
+      ? new URL(linkUrl)
+      : new URL(linkUrl, 'http://equipd.local')
+
+    return url.searchParams.get('offerId') ?? url.searchParams.get('offer_id')
+  } catch {
+    return null
+  }
+}
+
+export function isOfferNotification(notification) {
+  if (!notification) return false
+
+  const type = (notification.type ?? '').toLowerCase()
+
+  if (OFFER_NOTIFICATION_TYPES.has(type)) {
+    return true
+  }
+
+  if (type.startsWith('offer_')) {
+    return true
+  }
+
+  if (type.includes('offer')) {
+    return true
+  }
+
+  return Boolean(extractOfferIdFromNotificationLink(notification.link_url))
+}
+
+const SELLER_OFFER_NOTIFICATION_TYPES = new Set([
+  NOTIFICATION_TYPES.OFFER_RECEIVED,
+  NOTIFICATION_TYPES.NEW_OFFER,
+])
+
+export function buildHubMyOffersPath(offerId) {
+  const params = new URLSearchParams({ section: 'offers' })
+
+  if (offerId) {
+    params.set('offerId', offerId)
+  }
+
+  return `/hub?${params.toString()}`
+}
+
+export function buildHubSellingOffersPath(offerId) {
+  const params = new URLSearchParams({ section: 'selling', tab: 'offers' })
+
+  if (offerId) {
+    params.set('offerId', offerId)
+  }
+
+  return `/hub?${params.toString()}`
+}
+
+/** @deprecated Use buildHubMyOffersPath or buildHubSellingOffersPath */
+export function buildHubOffersPath(offerId) {
+  return buildHubMyOffersPath(offerId)
+}
+
+export function getNotificationNavigationPath(notification) {
+  if (!notification) return null
+
+  const linkUrl = notification.link_url?.trim() ?? ''
+
+  if (
+    linkUrl &&
+    PRESERVED_NOTIFICATION_PATH_PREFIXES.some((prefix) => linkUrl.startsWith(prefix))
+  ) {
+    return linkUrl
+  }
+
+  if (isOfferNotification(notification)) {
+    const offerId = extractOfferIdFromNotificationLink(linkUrl)
+    const type = (notification.type ?? '').toLowerCase()
+
+    if (SELLER_OFFER_NOTIFICATION_TYPES.has(type)) {
+      return buildHubSellingOffersPath(offerId)
+    }
+
+    return buildHubMyOffersPath(offerId)
+  }
+
+  return linkUrl || null
+}
+
+export async function fetchNotifications(userId, { limit } = {}) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
-  const { data, error } = await supabase
-    .from('notifications')
-    .select(notificationFields)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+  let query = applyBellNotificationFilter(
+    supabase
+      .from('notifications')
+      .select(notificationFields)
+      .eq('user_id', userId),
+  ).order('created_at', { ascending: false })
+
+  if (limit) {
+    query = query.limit(limit)
+  }
+
+  const { data, error } = await query
 
   return { data, error }
 }
+
+export const NOTIFICATION_POPOVER_LIMIT = 10
 
 export async function fetchUnreadNotificationCount(userId) {
   if (!supabase) {
     return { count: 0, error: new Error('Supabase is not configured.') }
   }
 
-  const { count, error } = await supabase
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('is_read', false)
+  const { count, error } = await applyBellNotificationFilter(
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false),
+  )
 
   return { count: count ?? 0, error }
 }
@@ -71,11 +226,13 @@ export async function markAllNotificationsRead(userId) {
     return { error: new Error('Supabase is not configured.') }
   }
 
-  const { error } = await supabase
-    .from('notifications')
-    .update({ is_read: true })
-    .eq('user_id', userId)
-    .eq('is_read', false)
+  const { error } = await applyBellNotificationFilter(
+    supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false),
+  )
 
   return { error }
 }

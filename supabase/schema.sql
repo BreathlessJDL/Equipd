@@ -31,6 +31,7 @@ $$;
 
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
+  username text,
   display_name text,
   location text,
   latitude double precision,
@@ -47,8 +48,20 @@ create table public.profiles (
   constraint profiles_coordinates_pair check (
     (latitude is null and longitude is null)
     or (latitude is not null and longitude is not null)
+  ),
+  constraint profiles_username_format check (
+    username is null
+    or (
+      char_length(username) >= 3
+      and char_length(username) <= 24
+      and username ~ '^[a-zA-Z0-9_-]+$'
+    )
   )
 );
+
+create unique index profiles_username_lower_unique_idx
+  on public.profiles (lower(username))
+  where username is not null;
 
 create trigger profiles_set_updated_at
   before update on public.profiles
@@ -61,11 +74,16 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  raw_username text;
 begin
-  insert into public.profiles (id, display_name)
+  raw_username := nullif(trim(new.raw_user_meta_data ->> 'username'), '');
+
+  insert into public.profiles (id, display_name, username)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1))
+    coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
+    raw_username
   );
   return new;
 end;
@@ -128,6 +146,7 @@ create table public.listings (
   status public.listing_status not null default 'draft',
   source public.listing_source not null default 'manual',
   views_count int not null default 0,
+  saved_count int not null default 0,
   ai_brand text,
   ai_model text,
   ai_confidence numeric(4, 3),
@@ -143,6 +162,7 @@ create table public.listings (
     condition in ('new', 'like_new', 'good', 'fair', 'poor')
   ),
   constraint listings_views_count_non_negative check (views_count >= 0),
+  constraint listings_saved_count_non_negative check (saved_count >= 0),
   constraint listings_latitude_range check (
     latitude is null or (latitude >= -90 and latitude <= 90)
   ),
@@ -307,3 +327,26 @@ end;
 $$;
 
 grant execute on function public.increment_listing_views(text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Saved count RPC (public listing detail; bypasses saved_listings RLS)
+-- ---------------------------------------------------------------------------
+
+create or replace function public.get_listing_saved_count(p_listing_id uuid)
+returns int
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (
+      select l.saved_count
+      from public.listings l
+      where l.id = p_listing_id
+    ),
+    0
+  );
+$$;
+
+grant execute on function public.get_listing_saved_count(uuid) to anon, authenticated;

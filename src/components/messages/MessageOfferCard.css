@@ -1,0 +1,207 @@
+.message-offer-card {
+  max-width: 22rem;
+  margin: 0 auto var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid color-mix(in srgb, var(--color-orange) 25%, var(--color-border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-orange) 4%, var(--color-surface));
+  box-shadow: 0 2px 10px rgba(15, 33, 55, 0.06);
+}
+
+.message-offer-card--mine {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.messages-page__bubble--mine + .message-offer-card--mine,
+.message-offer-card--mine {
+  margin-left: auto;
+}
+
+.message-offer-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.message-offer-card__badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+.message-offer-card__status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.message-offer-card__status--accepted {
+  color: #1f7a45;
+}
+
+.message-offer-card__status--rejected,
+.message-offer-card__status--withdrawn,
+.message-offer-card__status--cancelled {
+  color: var(--color-danger);
+}
+
+.message-offer-card__status--countered {
+  color: var(--color-muted);
+}
+
+.message-offer-card__body {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.message-offer-card__thumb {
+  width: 4.5rem;
+  height: 4.5rem;
+  flex-shrink: 0;
+  border-radius: calc(var(--radius) - 2px);
+  object-fit: cover;
+  background: var(--color-bg);
+}
+
+.message-offer-card__thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-align: center;
+  background: color-mix(in srgb, var(--color-border) 60%, var(--color-bg));
+}
+
+.message-offer-card__copy {
+  min-width: 0;
+}
+
+.message-offer-card__title {
+  display: block;
+  margin: 0 0 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  text-decoration: none;
+}
+
+.message-offer-card__title:hover {
+  color: var(--color-orange);
+}
+
+.message-offer-card__amount-stack {
+  margin-top: 0.15rem;
+}
+
+.message-offer-card__amount {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.message-offer-card__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+  white-space: pre-wrap;
+}
+
+.message-offer-card__time {
+  display: block;
+  margin-top: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.message-offer-card__error {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+}
+
+.message-offer-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: var(--space-md);
+}
+
+.message-offer-card__button {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.message-offer-card__button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.message-offer-card__button--primary {
+  background: var(--color-orange);
+  color: #fff;
+}
+
+.message-offer-card__button--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-navy);
+}
+
+.message-offer-card__link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-orange);
+  text-align: center;
+  text-decoration: none;
+}
+
+.message-offer-card__meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.messages-page__system-message {
+  max-width: 28rem;
+  margin: 0 auto var(--space-md);
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 35%, var(--color-bg));
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.messages-page__safety-note {
+  margin: 0;
+  padding: 0 var(--space-md) var(--space-sm);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+@media (max-width: 767px) {
+  .message-offer-card,
+  .message-offer-card--mine {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

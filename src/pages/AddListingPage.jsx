@@ -1,16 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import LeaveListingDraftModal from '../components/listing/LeaveListingDraftModal'
 import ListingForm, { emptyListingForm } from '../components/ListingForm'
-import '../components/PageStub.css'
+import '../components/ListingForm.css'
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
+import {
+  createListingFormSnapshot,
+  isCreateListingFormChangedSinceSave,
+  isCreateListingFormDirty,
+} from '../lib/createListingForm'
 import {
   getImageErrorMessage,
   uploadListingImages,
 } from '../lib/listingImages'
 import {
+  getListingFulfilmentPrivateErrorMessage,
+  mergeFulfilmentPrivateIntoForm,
+  persistListingFulfilmentPrivate,
+} from '../lib/listingFulfilmentPrivate'
+import {
   createListing,
   fetchCategories,
   getListingErrorMessage,
   prepareListingPayload,
+  updateListing,
   validateListingForPublish,
 } from '../lib/listings'
 import { useAuth } from '../hooks/useAuth'
@@ -28,6 +41,41 @@ function AddListingPage() {
   const [pendingFiles, setPendingFiles] = useState([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [imageError, setImageError] = useState('')
+  const [draftListingId, setDraftListingId] = useState(null)
+  const [uploadedImageCount, setUploadedImageCount] = useState(0)
+  const [savedSnapshot, setSavedSnapshot] = useState(null)
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false)
+  const [leaveModalError, setLeaveModalError] = useState('')
+  const [leaveModalSaving, setLeaveModalSaving] = useState(false)
+  const [bypassGuard, setBypassGuard] = useState(false)
+
+  const hasMeaningfulInput = useMemo(
+    () => isCreateListingFormDirty(form, pendingFiles),
+    [form, pendingFiles],
+  )
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!hasMeaningfulInput) return false
+    if (!savedSnapshot) return true
+    return isCreateListingFormChangedSinceSave(
+      form,
+      pendingFiles,
+      uploadedImageCount,
+      savedSnapshot,
+    )
+  }, [form, pendingFiles, uploadedImageCount, savedSnapshot, hasMeaningfulInput])
+
+  const guardEnabled = hasUnsavedChanges && !bypassGuard
+
+  const handleNavigationBlocked = useCallback(() => {
+    setLeaveModalError('')
+    setLeaveModalOpen(true)
+  }, [])
+
+  const { proceedPendingNavigation, cancelPendingNavigation } = useUnsavedChangesGuard({
+    enabled: guardEnabled,
+    onBlock: handleNavigationBlocked,
+  })
 
   useEffect(() => {
     return () => {
@@ -98,20 +146,27 @@ function AddListingPage() {
     setImageError('')
   }
 
-  async function handleSave(status) {
-    if (!user?.id) return
+  function handleReorderPendingFiles(next) {
+    setPendingFiles(next)
+    setImageError('')
+  }
 
-    setSubmitting(true)
-    setFormError('')
-    setFormSuccess('')
+  function clearPendingFiles(files) {
+    files.forEach((pending) => URL.revokeObjectURL(pending.previewUrl))
+    setPendingFiles([])
+  }
+
+  async function persistListing(status) {
+    if (!user?.id) {
+      return { ok: false, error: 'You must be signed in to save a listing.' }
+    }
 
     if (!form.categoryId) {
-      setSubmitting(false)
-      setFormError('Select a category to save your listing.')
-      return
+      return { ok: false, error: 'Select a category to save your listing.' }
     }
 
     const payload = prepareListingPayload(form, status)
+    const hasPhotos = pendingFiles.length > 0 || uploadedImageCount > 0
 
     if (status === 'active') {
       const validationErrors = validateListingForPublish({
@@ -119,28 +174,84 @@ function AddListingPage() {
         categoryId: form.categoryId,
         pricePence: payload.price_pence,
         condition: payload.condition,
-        location: form.location,
+        form,
+        description: form.description,
+        hasPhotos,
+        deliveryOptions: form.deliveryOptions,
       })
 
       if (validationErrors.length > 0) {
-        setSubmitting(false)
-        setFormError(validationErrors.join(' '))
-        return
+        return { ok: false, error: validationErrors.join(' ') }
       }
     }
 
     if (!payload.price_pence || !payload.condition) {
-      setSubmitting(false)
-      setFormError('Enter a valid price and condition, or save as draft with defaults applied.')
-      return
+      return {
+        ok: false,
+        error: 'Enter a valid price and condition, or save as draft with defaults applied.',
+      }
     }
 
-    const { data, error } = await createListing(user.id, payload)
+    const listingFields = {
+      category_id: payload.category_id,
+      title: payload.title,
+      brand: payload.brand,
+      model: payload.model,
+      rating: payload.rating,
+      description: payload.description,
+      price_pence: payload.price_pence,
+      condition: payload.condition,
+      location: payload.location,
+      location_name: payload.location_name,
+      city: payload.city,
+      county: payload.county,
+      postcode: payload.postcode,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      collection_available: payload.collection_available,
+      courier_available: payload.courier_available,
+      delivery_notes: payload.delivery_notes,
+      seller_delivery_radius_miles: payload.seller_delivery_radius_miles,
+      status,
+    }
 
-    if (error) {
-      setSubmitting(false)
-      setFormError(getListingErrorMessage(error))
-      return
+    let listing
+    let nextUploadedImageCount = uploadedImageCount
+
+    if (status === 'draft' && draftListingId) {
+      const { data, error } = await updateListing(draftListingId, listingFields)
+
+      if (error) {
+        return { ok: false, error: getListingErrorMessage(error) }
+      }
+
+      listing = data
+    } else {
+      const { data, error } = await createListing(user.id, listingFields)
+
+      if (error) {
+        return { ok: false, error: getListingErrorMessage(error) }
+      }
+
+      listing = data
+
+      if (status === 'draft') {
+        setDraftListingId(data.id)
+      }
+    }
+
+    const { error: fulfilmentError } = await persistListingFulfilmentPrivate(listing.id, form)
+
+    if (fulfilmentError) {
+      if (status === 'draft') {
+        setDraftListingId(listing.id)
+      }
+
+      return {
+        ok: false,
+        error: `Listing saved, but private fulfilment details could not be saved: ${getListingFulfilmentPrivateErrorMessage(fulfilmentError)}`,
+        listing,
+      }
     }
 
     if (pendingFiles.length > 0) {
@@ -148,53 +259,115 @@ function AddListingPage() {
 
       const { error: uploadError } = await uploadListingImages({
         userId: user.id,
-        listingId: data.id,
+        listingId: listing.id,
         files: pendingFiles.map((pending) => pending.file),
+        startSortOrder: uploadedImageCount,
       })
 
       setUploadingImages(false)
-      setSubmitting(false)
 
       if (uploadError) {
-        setFormError(
-          `Listing saved, but image upload failed: ${getImageErrorMessage(uploadError)}`,
-        )
-        navigate(`/listings/${data.slug}`, { replace: true })
-        return
+        if (status === 'draft') {
+          setDraftListingId(listing.id)
+        }
+
+        return {
+          ok: false,
+          error: `Listing saved, but image upload failed: ${getImageErrorMessage(uploadError)}`,
+          listing,
+        }
       }
-    } else {
-      setSubmitting(false)
+
+      const uploadedCount = pendingFiles.length
+      clearPendingFiles(pendingFiles)
+      nextUploadedImageCount = uploadedImageCount + uploadedCount
+      setUploadedImageCount(nextUploadedImageCount)
     }
+
+    if (status === 'draft') {
+      setSavedSnapshot(createListingFormSnapshot(form, [], nextUploadedImageCount))
+    }
+
+    return { ok: true, listing }
+  }
+
+  async function handleSave(status) {
+    setSubmitting(true)
+    setFormError('')
+    setFormSuccess('')
+
+    const result = await persistListing(status)
+
+    setSubmitting(false)
+
+    if (!result.ok) {
+      setFormError(result.error)
+      return
+    }
+
+    setBypassGuard(true)
+    setLeaveModalOpen(false)
+    setLeaveModalError('')
 
     const statusLabel = status === 'active' ? 'published' : 'saved as draft'
     setFormSuccess(`Listing ${statusLabel}. Redirecting…`)
-    navigate(`/listings/${data.slug}`, { replace: true })
+    navigate(`/listings/${result.listing.slug}`, { replace: true })
+  }
+
+  async function handleSaveDraftAndLeave() {
+    setLeaveModalSaving(true)
+    setLeaveModalError('')
+
+    const result = await persistListing('draft')
+
+    setLeaveModalSaving(false)
+
+    if (!result.ok) {
+      setLeaveModalError(result.error)
+      return
+    }
+
+    setBypassGuard(true)
+    setLeaveModalOpen(false)
+    proceedPendingNavigation()
+  }
+
+  function handleLeaveWithoutSaving() {
+    setBypassGuard(true)
+    setLeaveModalOpen(false)
+    setLeaveModalError('')
+    proceedPendingNavigation()
+  }
+
+  function handleStayOnPage() {
+    cancelPendingNavigation()
+    setLeaveModalOpen(false)
+    setLeaveModalError('')
   }
 
   if (loadingCategories) {
     return (
-      <section className="page-stub">
-        <h2 className="page-stub__title">Sell equipment</h2>
-        <p className="page-stub__lead">Loading categories…</p>
-      </section>
+      <div className="listing-form-page">
+        <h1 className="listing-form-page__title">Sell equipment</h1>
+        <p className="listing-form__footnote">Loading categories…</p>
+      </div>
     )
   }
 
   if (categoriesError) {
     return (
-      <section className="page-stub">
-        <h2 className="page-stub__title">Sell equipment</h2>
+      <div className="listing-form-page">
+        <h1 className="listing-form-page__title">Sell equipment</h1>
         <p className="listing-form__message listing-form__message--error" role="alert">
           {categoriesError}
         </p>
-      </section>
+      </div>
     )
   }
 
   return (
-    <section className="page-stub">
-      <h2 className="page-stub__title">Sell equipment</h2>
-      <p className="page-stub__lead">Add your equipment details and photos.</p>
+    <div className="listing-form-page">
+      <h1 className="listing-form-page__title">Sell equipment</h1>
 
       <ListingForm
         form={form}
@@ -203,10 +376,11 @@ function AddListingPage() {
         pendingFiles={pendingFiles}
         uploadingImages={uploadingImages}
         imageError={imageError}
-        imageUploadDisabled={submitting}
+        imageUploadDisabled={submitting || leaveModalSaving}
         onFieldChange={updateField}
         onAddPendingFiles={handleAddPendingFiles}
         onRemovePendingFile={handleRemovePendingFile}
+        onReorderPendingFiles={handleReorderPendingFiles}
         formError={formError}
         formSuccess={formSuccess}
         onSubmit={(event) => {
@@ -218,21 +392,30 @@ function AddListingPage() {
           <button
             type="button"
             className="listing-form__button listing-form__button--secondary"
-            disabled={submitting || uploadingImages}
+            disabled={submitting || uploadingImages || leaveModalSaving}
             onClick={() => handleSave('draft')}
           >
-            {submitting || uploadingImages ? 'Saving…' : 'Save as draft'}
+            {submitting || uploadingImages ? 'Saving…' : 'Save draft'}
           </button>
           <button
             type="submit"
             className="listing-form__button listing-form__button--primary"
-            disabled={submitting || uploadingImages}
+            disabled={submitting || uploadingImages || leaveModalSaving}
           >
-            {submitting || uploadingImages ? 'Publishing…' : 'Publish'}
+            {submitting || uploadingImages ? 'Uploading…' : 'Upload'}
           </button>
         </div>
       </ListingForm>
-    </section>
+
+      <LeaveListingDraftModal
+        open={leaveModalOpen}
+        saving={leaveModalSaving}
+        error={leaveModalError}
+        onSaveDraftAndLeave={handleSaveDraftAndLeave}
+        onLeaveWithoutSaving={handleLeaveWithoutSaving}
+        onStay={handleStayOnPage}
+      />
+    </div>
   )
 }
 

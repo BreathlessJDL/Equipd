@@ -1,0 +1,74 @@
+.equipd-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.equipd-type-icon__svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+}
+
+.equipd-type-icon--new-offer,
+.equipd-type-icon--counter-offer,
+.equipd-type-icon--selling-store,
+.equipd-type-icon--my-listings {
+  color: var(--color-orange, #c2410c);
+  background: #fff7ed;
+}
+
+.equipd-type-icon--selling-hand-coins {
+  color: #0f766e;
+  background: #f0fdfa;
+}
+
+.equipd-type-icon--offer-accepted,
+.equipd-type-icon--payout-payment {
+  color: #15803d;
+  background: #f0fdf4;
+}
+
+.equipd-type-icon--offer-declined,
+.equipd-type-icon--support-dispute {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.equipd-type-icon--collection-confirmed {
+  color: #5b21b6;
+  background: #f5f3ff;
+}
+
+.equipd-type-icon--item-dispatched,
+.equipd-type-icon--buying-bag,
+.equipd-type-icon--messages {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.equipd-type-icon--delivery-confirmed {
+  color: #0f766e;
+  background: #f0fdfa;
+}
+
+.equipd-type-icon--review-received {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.equipd-type-icon--saved-heart {
+  color: #be123c;
+  background: #fff1f2;
+}
+
+.equipd-type-icon--default,
+.equipd-type-icon--settings,
+.equipd-type-icon--drafts {
+  color: var(--color-navy, #1e293b);
+  background: #f1f5f9;
+}

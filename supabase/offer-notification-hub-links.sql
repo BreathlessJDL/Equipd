@@ -1,0 +1,3 @@
+-- Point offer notification links at My Hub (with offer highlight when possible).
+-- Superseded by offer-counter-notifications.sql for trigger bodies.
+-- Run offer-counter-notifications.sql on existing databases instead.

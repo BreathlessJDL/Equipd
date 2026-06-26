@@ -1,0 +1,135 @@
+.admin-orders {
+  max-width: 80rem;
+}
+
+.admin-orders__header {
+  margin-bottom: var(--space-lg);
+}
+
+.admin-orders__back {
+  margin: 0 0 var(--space-sm);
+}
+
+.admin-orders__back a,
+.admin-orders__link {
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.admin-orders__back a:hover,
+.admin-orders__link:hover {
+  text-decoration: underline;
+}
+
+.admin-orders__title {
+  margin: 0 0 var(--space-xs);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.admin-orders__lead {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.admin-orders__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.admin-orders__filter {
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-orders__filter--active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  color: var(--color-primary);
+}
+
+.admin-orders__message {
+  margin: 0 0 var(--space-md);
+}
+
+.admin-orders__message--error {
+  color: var(--color-danger);
+}
+
+.admin-orders__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.admin-orders__table {
+  width: 100%;
+  min-width: 64rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-orders__table th,
+.admin-orders__table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-orders__table th {
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-muted) 6%, var(--color-bg));
+}
+
+.admin-orders__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-orders__warnings {
+  display: grid;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-orders__badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.admin-orders__badge--ok {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+  color: var(--color-primary);
+}
+
+.admin-orders__badge--paid_not_completed,
+.admin-orders__badge--confirmed_payout_unpaid,
+.admin-orders__badge--seller_setup_missing {
+  background: color-mix(in srgb, #c77700 12%, var(--color-bg));
+  color: #9a5b00;
+}
+
+.admin-orders__badge--payout_failed {
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg));
+  color: var(--color-danger);
+}
+
+.admin-orders__badge--cancelled {
+  background: color-mix(in srgb, var(--color-muted) 12%, var(--color-bg));
+  color: var(--color-muted);
+}

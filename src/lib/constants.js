@@ -15,3 +15,6 @@ export const WANTED_REQUEST_STATUSES = ['active', 'paused', 'fulfilled', 'archiv
 export const MAX_LISTING_IMAGES = 8
 
 export const DEFAULT_LISTINGS_PAGE_SIZE = 24
+
+/** Initial count for the logged-out home “Recently Added” strip. */
+export const HOME_RECENT_LISTINGS_PAGE_SIZE = 10

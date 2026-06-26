@@ -2,54 +2,53 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import '../components/ListingDetail.css'
 import '../components/PageStub.css'
-import { LISTING_STATUSES } from '../lib/constants'
 import {
   fetchListingBySlug,
-  formatDeliveryOptionsLabel,
-  formatListingStatus,
-  formatPricePence,
-  getConditionLabel,
   getListingErrorMessage,
   incrementListingViews,
   isListingOwner,
-  updateListing,
-  validateListingForPublish,
 } from '../lib/listings'
 import {
   getMessageErrorMessage,
-  startConversationForListing,
+  resolveMessageThreadNavigation,
 } from '../lib/messages'
-import { fetchOffersForListing, getOfferErrorMessage } from '../lib/offers'
-import {
-  getSavedListingErrorMessage,
-  isListingSaved,
-  saveListing,
-  unsaveListing,
-} from '../lib/savedListings'
+import { fetchOffersForListing, hasPendingOffer } from '../lib/offers'
 import { useAuth } from '../hooks/useAuth'
+import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import BuyerOrderConfirmation from '../components/BuyerOrderConfirmation'
-import ListingOffersSection from '../components/ListingOffersSection'
+import ListingImageGallery from '../components/listing/ListingImageGallery'
+import ListingItemSummary from '../components/listing/ListingItemSummary'
+import ListingRecommendations from '../components/listing/ListingRecommendations'
+import ListingSavedCountOverlay from '../components/listing/ListingSavedCountOverlay'
+import MakeOfferModal from '../components/listing/MakeOfferModal'
+import OfferSentConfirmationModal from '../components/listing/OfferSentConfirmationModal'
+import ListingSaveButton from '../components/ListingSaveButton'
+import ReportTrigger from '../components/ReportTrigger'
+import { ErrorState, LoadingState } from '../components/ui/UiState'
 import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '../lib/orders'
+import { useListingRecommendations } from '../hooks/useListingRecommendations'
+import { fetchListingSavedCount } from '../lib/savedListings'
+import { canReportListing, REPORT_TYPES } from '../lib/reports'
 
 function ListingDetailPage() {
   const navigate = useNavigate()
   const { slug } = useParams()
   const { user } = useAuth()
+  const profileLocation = useProfileBrowseLocation()
+  const buyerProfile = {
+    latitude: profileLocation.latitude,
+    longitude: profileLocation.longitude,
+  }
   const [listing, setListing] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  const [statusUpdating, setStatusUpdating] = useState(false)
-  const [statusError, setStatusError] = useState('')
-  const [statusSuccess, setStatusSuccess] = useState('')
   const [startingConversation, setStartingConversation] = useState(false)
   const [messageError, setMessageError] = useState('')
   const [offers, setOffers] = useState([])
-  const [loadingOffers, setLoadingOffers] = useState(false)
-  const [offersError, setOffersError] = useState('')
-  const [isSaved, setIsSaved] = useState(false)
-  const [loadingSavedState, setLoadingSavedState] = useState(false)
-  const [savingListing, setSavingListing] = useState(false)
-  const [saveError, setSaveError] = useState('')
+  const [offerModalOpen, setOfferModalOpen] = useState(false)
+  const [offerConfirmationOpen, setOfferConfirmationOpen] = useState(false)
+  const [submittedConversationId, setSubmittedConversationId] = useState(null)
+  const [savedCount, setSavedCount] = useState(0)
   const incrementedSlugRef = useRef(null)
 
   useEffect(() => {
@@ -91,6 +90,40 @@ function ListingDetailPage() {
   }, [slug])
 
   useEffect(() => {
+    if (!listing?.id) {
+      setSavedCount(0)
+      return undefined
+    }
+
+    let active = true
+
+    async function loadSavedCount() {
+      const initialCount =
+        typeof listing.saved_count === 'number' ? Math.max(0, listing.saved_count) : null
+
+      if (initialCount != null) {
+        setSavedCount(initialCount)
+      }
+
+      const { count, error } = await fetchListingSavedCount(listing.id)
+
+      if (!active) return
+
+      if (!error) {
+        setSavedCount(count)
+      } else if (initialCount == null) {
+        setSavedCount(0)
+      }
+    }
+
+    loadSavedCount()
+
+    return () => {
+      active = false
+    }
+  }, [listing?.id, listing?.saved_count])
+
+  useEffect(() => {
     if (loading || !slug || !listing || listing.status !== 'active') return undefined
     if (incrementedSlugRef.current === slug) return undefined
 
@@ -123,47 +156,6 @@ function ListingDetailPage() {
 
   useEffect(() => {
     if (!listing?.id || !user?.id) {
-      setIsSaved(false)
-      setLoadingSavedState(false)
-      return undefined
-    }
-
-    if (isListingOwner(listing, user.id)) {
-      setIsSaved(false)
-      setLoadingSavedState(false)
-      return undefined
-    }
-
-    let active = true
-
-    async function loadSavedState() {
-      setLoadingSavedState(true)
-      setSaveError('')
-
-      const { saved, error } = await isListingSaved(user.id, listing.id)
-
-      if (!active) return
-
-      if (error) {
-        setSaveError(getSavedListingErrorMessage(error))
-        setIsSaved(false)
-        setLoadingSavedState(false)
-        return
-      }
-
-      setIsSaved(saved)
-      setLoadingSavedState(false)
-    }
-
-    loadSavedState()
-
-    return () => {
-      active = false
-    }
-  }, [listing?.id, listing?.seller_id, user?.id])
-
-  useEffect(() => {
-    if (!listing?.id || !user?.id) {
       setOffers([])
       return undefined
     }
@@ -179,22 +171,16 @@ function ListingDetailPage() {
     let active = true
 
     async function loadOffers() {
-      setLoadingOffers(true)
-      setOffersError('')
-
       const { data, error } = await fetchOffersForListing(listing.id)
 
       if (!active) return
 
       if (error) {
-        setOffersError(getOfferErrorMessage(error))
         setOffers([])
-        setLoadingOffers(false)
         return
       }
 
       setOffers(data ?? [])
-      setLoadingOffers(false)
     }
 
     loadOffers()
@@ -204,57 +190,13 @@ function ListingDetailPage() {
     }
   }, [listing?.id, listing?.seller_id, listing?.status, user?.id])
 
-  async function handleStatusChange(nextStatus) {
-    if (!listing || listing.status === nextStatus) return
-
-    setStatusUpdating(true)
-    setStatusError('')
-    setStatusSuccess('')
-
-    if (nextStatus === 'active') {
-      const validationErrors = validateListingForPublish({
-        title: listing.title,
-        categoryId: listing.category_id,
-        pricePence: listing.price_pence,
-        condition: listing.condition,
-        location: listing.location,
-      })
-
-      if (validationErrors.length > 0) {
-        setStatusUpdating(false)
-        setStatusError(validationErrors.join(' '))
-        return
-      }
-    }
-
-    const { error } = await updateListing(listing.id, { status: nextStatus })
-
-    if (error) {
-      setStatusUpdating(false)
-      setStatusError(getListingErrorMessage(error))
-      return
-    }
-
-    const { data: refreshed, error: refreshError } = await fetchListingBySlug(slug)
-
-    setStatusUpdating(false)
-
-    if (refreshError || !refreshed) {
-      setStatusError(getListingErrorMessage(refreshError ?? new Error('Failed to refresh listing.')))
-      return
-    }
-
-    setListing(refreshed)
-    setStatusSuccess(`Status updated to ${formatListingStatus(nextStatus)}.`)
-  }
-
   async function handleMessageSeller() {
     if (!listing || !user?.id) return
 
     setStartingConversation(true)
     setMessageError('')
 
-    const { data, error } = await startConversationForListing({
+    const { path, error } = await resolveMessageThreadNavigation({
       listingId: listing.id,
       buyerId: user.id,
       sellerId: listing.seller_id,
@@ -267,39 +209,7 @@ function ListingDetailPage() {
       return
     }
 
-    navigate(`/messages/${data.id}`)
-  }
-
-  async function handleToggleSavedListing() {
-    if (!listing || !user?.id || isListingOwner(listing, user.id) || savingListing) return
-
-    setSavingListing(true)
-    setSaveError('')
-
-    if (isSaved) {
-      const { error } = await unsaveListing(user.id, listing.id)
-
-      setSavingListing(false)
-
-      if (error) {
-        setSaveError(getSavedListingErrorMessage(error))
-        return
-      }
-
-      setIsSaved(false)
-      return
-    }
-
-    const { error } = await saveListing(user.id, listing.id)
-
-    setSavingListing(false)
-
-    if (error) {
-      setSaveError(getSavedListingErrorMessage(error))
-      return
-    }
-
-    setIsSaved(true)
+    navigate(path)
   }
 
   async function reloadOffers() {
@@ -359,10 +269,12 @@ function ListingDetailPage() {
     )
   }, [offers, user?.id])
 
+  const { recommendations, loading: loadingRecommendations } = useListingRecommendations(listing)
+
   if (loading) {
     return (
       <section className="page-stub">
-        <p className="page-stub__lead">Loading listing…</p>
+        <LoadingState>Loading listing…</LoadingState>
       </section>
     )
   }
@@ -371,9 +283,7 @@ function ListingDetailPage() {
     return (
       <section className="page-stub">
         <h2 className="page-stub__title">Listing not found</h2>
-        <p className="listing-detail__message listing-detail__message--error" role="alert">
-          {loadError || 'This listing could not be found.'}
-        </p>
+        <ErrorState>{loadError || 'This listing could not be found.'}</ErrorState>
         <p className="page-stub__lead">
           <Link to="/">Back to browse</Link>
         </p>
@@ -383,204 +293,116 @@ function ListingDetailPage() {
 
   const isOwner = isListingOwner(listing, user?.id)
   const canMessageSeller = Boolean(user && !isOwner && listing.status === 'active')
-  const canSaveListing = Boolean(user && !isOwner && listing.status === 'active')
+  const canMakeOffer = canMessageSeller
+  const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
 
-  return (
-    <article className="listing-detail">
-      {listing.listing_images?.length > 0 ? (
-        <section className="listing-detail__gallery" aria-label="Listing photos">
-          <img
-            src={listing.primary_image_url}
-            alt={listing.title}
-            className="listing-detail__gallery-main"
-          />
-          {listing.listing_images.length > 1 ? (
-            <div className="listing-detail__gallery-grid">
-              {listing.listing_images.map((image) => (
-                <img
-                  key={image.id}
-                  src={image.url}
-                  alt=""
-                  className="listing-detail__gallery-thumb"
-                />
-              ))}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+  function handleSavedChange(saved) {
+    setSavedCount((current) => (saved ? current + 1 : Math.max(0, current - 1)))
+  }
 
-      <div className="listing-detail__header">
-        <div>
-          <span className="listing-detail__status">{formatListingStatus(listing.status)}</span>
-          <h1 className="listing-detail__title">{listing.title}</h1>
-          <p className="listing-detail__price">{formatPricePence(listing.price_pence)}</p>
-        </div>
-      </div>
+  function handleOfferSubmitted(result) {
+    setOfferModalOpen(false)
+    setOffers((current) => [result.offer, ...current])
+    setSubmittedConversationId(result.conversation?.id ?? null)
+    setOfferConfirmationOpen(true)
+  }
 
-      <dl className="listing-detail__meta">
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Brand</dt>
-          <dd className="listing-detail__value">{listing.brand || '—'}</dd>
-        </div>
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Model</dt>
-          <dd className="listing-detail__value">{listing.model || '—'}</dd>
-        </div>
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Category</dt>
-          <dd className="listing-detail__value">{listing.category?.name || '—'}</dd>
-        </div>
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Condition</dt>
-          <dd className="listing-detail__value">{getConditionLabel(listing.condition)}</dd>
-        </div>
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Location</dt>
-          <dd className="listing-detail__value">{listing.location || '—'}</dd>
-        </div>
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Collection &amp; delivery</dt>
-          <dd className="listing-detail__value">{formatDeliveryOptionsLabel(listing)}</dd>
-        </div>
-        {listing.delivery_notes ? (
-          <div className="listing-detail__row">
-            <dt className="listing-detail__label">Delivery notes</dt>
-            <dd className="listing-detail__value listing-detail__description">
-              {listing.delivery_notes}
-            </dd>
-          </div>
-        ) : null}
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Description</dt>
-          <dd className="listing-detail__value listing-detail__description">
-            {listing.description || '—'}
-          </dd>
-        </div>
-        <div className="listing-detail__row">
-          <dt className="listing-detail__label">Status</dt>
-          <dd className="listing-detail__value">{formatListingStatus(listing.status)}</dd>
-        </div>
-        {isOwner ? (
-          <div className="listing-detail__row">
-            <dt className="listing-detail__label">Views</dt>
-            <dd className="listing-detail__value">{listing.views_count ?? 0}</dd>
-          </div>
-        ) : null}
-      </dl>
-
+  const summaryActions = (
+    <>
       {isOwner ? (
-        <div className="listing-detail__owner-actions">
-          <Link
-            to={`/listings/${listing.slug}/edit`}
-            className="listing-detail__button listing-detail__button--primary"
-          >
-            Edit listing
-          </Link>
-
-          <div>
-            <p className="listing-detail__label">Change status</p>
-            {listing.status === 'reserved' ? (
-              <p className="listing-detail__message listing-detail__message--success" role="status">
-                This listing is reserved while a buyer completes payment.
-              </p>
-            ) : listing.status === 'in_progress' ? (
-              <p className="listing-detail__message listing-detail__message--success" role="status">
-                This listing is in progress while the buyer completes collection or delivery.
-              </p>
-            ) : (
-              <div className="listing-detail__status-controls">
-                {LISTING_STATUSES.map((status) => (
-                  <button
-                    key={status}
-                    type="button"
-                    className={`listing-detail__button listing-detail__button--secondary${
-                      listing.status === status ? ' listing-detail__button--active' : ''
-                    }`}
-                    disabled={statusUpdating || listing.status === status}
-                    onClick={() => handleStatusChange(status)}
-                  >
-                    {formatListingStatus(status)}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {statusError ? (
-            <p className="listing-detail__message listing-detail__message--error" role="alert">
-              {statusError}
-            </p>
-          ) : null}
-
-          {statusSuccess ? (
-            <p className="listing-detail__message listing-detail__message--success" role="status">
-              {statusSuccess}
-            </p>
-          ) : null}
-        </div>
+        <Link
+          to={`/listings/${listing.slug}/edit`}
+          className="listing-detail__button listing-detail__button--primary"
+        >
+          Edit listing
+        </Link>
       ) : null}
 
       {canMessageSeller ? (
-        <div className="listing-detail__owner-actions">
-          <button
-            type="button"
-            className="listing-detail__button listing-detail__button--primary"
-            disabled={startingConversation}
-            onClick={handleMessageSeller}
-          >
-            {startingConversation ? 'Opening conversation…' : 'Message seller'}
-          </button>
-
-          {messageError ? (
-            <p className="listing-detail__message listing-detail__message--error" role="alert">
-              {messageError}
-            </p>
-          ) : null}
-        </div>
+        <button
+          type="button"
+          className="listing-detail__button listing-detail__button--primary"
+          disabled={startingConversation}
+          onClick={handleMessageSeller}
+        >
+          {startingConversation ? 'Opening conversation…' : 'Message seller'}
+        </button>
       ) : null}
 
-      {canSaveListing ? (
-        <div className="listing-detail__owner-actions">
-          <button
-            type="button"
-            className={`listing-detail__button listing-detail__button--secondary${
-              isSaved ? ' listing-detail__button--active' : ''
-            }`}
-            disabled={loadingSavedState || savingListing}
-            onClick={handleToggleSavedListing}
-          >
-            {savingListing
-              ? isSaved
-                ? 'Removing…'
-                : 'Saving…'
-              : isSaved
-                ? 'Saved'
-                : 'Save listing'}
-          </button>
-
-          {saveError ? (
-            <p className="listing-detail__message listing-detail__message--error" role="alert">
-              {saveError}
-            </p>
-          ) : null}
-        </div>
+      {canMakeOffer ? (
+        <button
+          type="button"
+          className="listing-detail__button listing-detail__button--secondary"
+          onClick={() => setOfferModalOpen(true)}
+        >
+          Make an offer
+        </button>
       ) : null}
 
       {!user && listing.status === 'active' ? (
-        <div className="listing-detail__owner-actions">
-          <Link
-            to="/login"
-            state={{ from: `/listings/${listing.slug}` }}
-            className="listing-detail__button listing-detail__button--primary"
-          >
-            Log in to message seller
-          </Link>
-        </div>
+        <Link
+          to="/login"
+          state={{ from: `/listings/${listing.slug}` }}
+          className="listing-detail__button listing-detail__button--primary"
+        >
+          Log in to message seller
+        </Link>
       ) : null}
 
+      {messageError ? (
+        <p className="listing-detail__message listing-detail__message--error" role="alert">
+          {messageError}
+        </p>
+      ) : null}
+    </>
+  )
+
+  return (
+    <article className="listing-detail">
+      <div className="listing-detail__hero">
+        <div className="listing-detail__gallery-column">
+          <ListingImageGallery
+            images={listing.listing_images ?? []}
+            title={listing.title}
+            savedCountOverlay={<ListingSavedCountOverlay count={savedCount} />}
+            saveButton={
+              !isOwner && listing.status === 'active' ? (
+                <ListingSaveButton
+                  listing={listing}
+                  className="listing-save-button--detail"
+                  onSavedChange={handleSavedChange}
+                />
+              ) : null
+            }
+          />
+          <ListingRecommendations
+            recommendations={recommendations}
+            loading={loadingRecommendations}
+            placement="desktop"
+          />
+        </div>
+
+        <ListingItemSummary
+          listing={listing}
+          buyerProfile={buyerProfile}
+          viewerUserId={user?.id ?? null}
+          actions={summaryActions}
+          reportListing={
+            canReportListing(listing, user?.id) ? (
+              <ReportTrigger
+                reportType={REPORT_TYPES.LISTING}
+                listingId={listing.id}
+                label="Report listing"
+                className="report-trigger listing-summary__report"
+              />
+            ) : null
+          }
+        />
+      </div>
+
       {!isOwner && buyerConfirmableOffer?.order?.id ? (
-        <div className="listing-detail__owner-actions">
-          <p className="listing-detail__label">Your order</p>
+        <section className="listing-detail__section listing-detail__panel">
+          <h2 className="listing-detail__section-title">Your order</h2>
           <p className="listing-detail__message listing-detail__message--success" role="status">
             Paid — awaiting collection/delivery confirmation
           </p>
@@ -588,38 +410,46 @@ function ListingDetailPage() {
             orderId={buyerConfirmableOffer.order.id}
             onConfirmed={reloadOffers}
           />
-        </div>
+        </section>
       ) : null}
 
       {!isOwner && !buyerConfirmableOffer && buyerConfirmedOffer ? (
-        <div className="listing-detail__owner-actions">
+        <section className="listing-detail__section">
           <p className="listing-detail__message listing-detail__message--success" role="status">
             You confirmed receipt — payout pending
           </p>
-        </div>
+        </section>
       ) : null}
 
       {!isOwner && buyerCompletedOffer ? (
-        <div className="listing-detail__owner-actions">
+        <section className="listing-detail__section">
           <p className="listing-detail__message listing-detail__message--success" role="status">
             Purchase completed
           </p>
-        </div>
+        </section>
       ) : null}
 
-      <ListingOffersSection
+      <ListingRecommendations
+        recommendations={recommendations}
+        loading={loadingRecommendations}
+        placement="mobile"
+      />
+
+      <MakeOfferModal
+        open={offerModalOpen}
         listing={listing}
         user={user}
-        isOwner={isOwner}
-        offers={offers}
-        loadingOffers={loadingOffers}
-        offersError={offersError}
-        onOffersChange={setOffers}
-        onOfferAccepted={async () => {
-          const { data } = await fetchListingBySlug(slug)
-          if (data) {
-            setListing(data)
-          }
+        buyerHasPendingOffer={buyerHasPendingOffer}
+        onClose={() => setOfferModalOpen(false)}
+        onSubmitted={handleOfferSubmitted}
+      />
+
+      <OfferSentConfirmationModal
+        open={offerConfirmationOpen}
+        conversationId={submittedConversationId}
+        onClose={() => {
+          setOfferConfirmationOpen(false)
+          setSubmittedConversationId(null)
         }}
       />
     </article>

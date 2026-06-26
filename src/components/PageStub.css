@@ -26,29 +26,3 @@
 .page-stub__meta code {
   font-size: 0.8125rem;
 }
-
-.profile-payout {
-  margin-bottom: var(--space-xl);
-  padding: var(--space-lg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-}
-
-.profile-payout__title {
-  margin: 0 0 var(--space-xs);
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.profile-payout__lead {
-  margin: 0 0 var(--space-md);
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-}
-
-.profile-payout__status {
-  margin: 0 0 var(--space-md);
-  font-size: 0.9375rem;
-  color: var(--color-muted);
-}

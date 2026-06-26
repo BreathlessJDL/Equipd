@@ -1,0 +1,32 @@
+.offer-sent-modal__dialog {
+  max-width: 24rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.offer-sent-modal__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.offer-sent-modal__body {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.offer-sent-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.offer-sent-modal__button {
+  width: 100%;
+  justify-content: center;
+  text-decoration: none;
+}

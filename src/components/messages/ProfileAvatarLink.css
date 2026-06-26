@@ -1,0 +1,22 @@
+.profile-avatar-link {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 50%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.profile-avatar-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.profile-avatar-link:hover .user-avatar--image {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-orange) 35%, transparent);
+}
+
+.profile-avatar-link:hover .user-avatar--initial {
+  background: color-mix(in srgb, var(--color-navy) 88%, white);
+}

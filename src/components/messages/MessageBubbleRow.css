@@ -1,0 +1,49 @@
+.message-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.35rem;
+}
+
+.message-bubble-row--mine {
+  justify-content: flex-end;
+}
+
+.message-bubble-row--theirs {
+  justify-content: flex-start;
+}
+
+.message-bubble-row__avatar {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+}
+
+.message-bubble-row--continued {
+  margin-top: -0.15rem;
+}
+
+.message-bubble-row--continued .message-bubble-row__avatar {
+  visibility: hidden;
+}
+
+.message-bubble-row .message-bubble {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.message-bubble-row--mine .message-bubble {
+  margin-left: 0;
+}
+
+@media (max-width: 767px) {
+  .message-bubble-row {
+    gap: 0.45rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .message-bubble-row--continued {
+    margin-top: -0.1rem;
+  }
+}

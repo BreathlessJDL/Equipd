@@ -36,8 +36,11 @@ begin
     return v_order;
   end if;
 
-  if v_order.fulfilment_status <> 'buyer_confirmed'::public.order_fulfilment_status then
-    raise exception 'Buyer must confirm receipt before payout can be released';
+  if v_order.fulfilment_status not in (
+    'buyer_confirmed'::public.order_fulfilment_status,
+    'completed'::public.order_fulfilment_status
+  ) then
+    raise exception 'Order must be complete before payout can be released';
   end if;
 
   if v_order.payout_status not in (
@@ -65,9 +68,12 @@ begin
     select 1
     from public.listings l
     where l.id = v_order.listing_id
-      and l.status = 'in_progress'::public.listing_status
+      and l.status in (
+        'in_progress'::public.listing_status,
+        'sold'::public.listing_status
+      )
   ) then
-    raise exception 'Listing must be in progress before payout can be released';
+    raise exception 'Listing must be sold or in progress before payout can be released';
   end if;
 
   if not exists (
@@ -137,7 +143,11 @@ begin
     payout_status = 'paid'::public.payout_status,
     payout_released_at = now(),
     stripe_transfer_id = p_stripe_transfer_id,
-    fulfilment_status = 'completed'::public.order_fulfilment_status
+    fulfilment_status = case
+      when fulfilment_status = 'completed'::public.order_fulfilment_status
+        then fulfilment_status
+      else 'completed'::public.order_fulfilment_status
+    end
   where id = p_order_id;
 
   update public.listings

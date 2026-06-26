@@ -1,0 +1,11 @@
+-- DEPRECATED — DO NOT RUN THIS FILE AS A SINGLE SCRIPT
+--
+-- This migration was split into two files because PostgreSQL cannot use newly
+-- added enum values in the same transaction/script before commit (error 55P04).
+--
+-- Run these in order instead:
+--   1. supabase/buyer-protection-fulfilment-method-selection-a-enums.sql
+--   2. supabase/buyer-protection-fulfilment-method-selection-b-functions.sql
+--   3. Redeploy stripe-create-checkout
+--
+-- See README.md migration steps 44–45.

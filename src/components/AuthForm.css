@@ -5,6 +5,25 @@
   gap: var(--space-md);
 }
 
+.auth-form--modal {
+  max-width: none;
+  width: 100%;
+}
+
+.auth-form__heading {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.auth-form__lead {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
 .auth-form__field {
   display: flex;
   flex-direction: column;
@@ -13,6 +32,13 @@
 
 .auth-form__label {
   font-weight: 500;
+}
+
+.auth-form__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
 }
 
 .auth-form__input {
@@ -84,4 +110,74 @@
 
 .auth-form__footer a {
   font-weight: 500;
+}
+
+.auth-form__switch-link {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-orange);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.auth-form__switch-link:hover {
+  color: var(--color-orange-hover);
+}
+
+.auth-form__oauth {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.auth-form__google-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-form__google-button:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: color-mix(in srgb, var(--color-navy) 18%, var(--color-border));
+}
+
+.auth-form__google-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.auth-form__google-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.auth-form__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-xs) 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.auth-form__divider::before,
+.auth-form__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }

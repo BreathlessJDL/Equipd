@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ListingForm from '../components/ListingForm'
+import ListingManageSection from '../components/listing/ListingManageSection'
+import '../components/ListingForm.css'
 import '../components/PageStub.css'
+import {
+  getListingFulfilmentPrivateErrorMessage,
+  fetchListingFulfilmentPrivate,
+  mergeFulfilmentPrivateIntoForm,
+  persistListingFulfilmentPrivate,
+} from '../lib/listingFulfilmentPrivate'
 import {
   deleteListingImage,
   getImageErrorMessage,
+  updateListingImagesOrder,
   uploadListingImages,
 } from '../lib/listingImages'
 import {
@@ -70,7 +79,26 @@ function EditListingPage() {
       }
 
       setListing(listingResult.data)
-      setForm(listingToForm(listingResult.data))
+
+      const { data: privateFulfilment, error: privateError } = await fetchListingFulfilmentPrivate(
+        listingResult.data.id,
+      )
+
+      if (!active) return
+
+      if (privateError) {
+        console.warn(
+          '[EditListingPage] Private fulfilment details unavailable; continuing with empty fields.',
+          privateError,
+        )
+      }
+
+      setForm(
+        mergeFulfilmentPrivateIntoForm(
+          listingToForm(listingResult.data),
+          privateFulfilment,
+        ),
+      )
       setExistingImages(listingResult.data.listing_images ?? [])
       setCategories(categoriesResult.data ?? [])
       setLoading(false)
@@ -136,6 +164,11 @@ function EditListingPage() {
     setExistingImages((current) => current.filter((item) => item.id !== image.id))
   }
 
+  function handleReorderExistingImages(next) {
+    setExistingImages(next)
+    setImageError('')
+  }
+
   async function handleSave() {
     if (!listing || !form || !user?.id) return
 
@@ -154,7 +187,7 @@ function EditListingPage() {
       return
     }
 
-    const payload = prepareListingPayload(form, listing.status)
+    const payload = prepareListingPayload(form, listing.status, listing)
 
     if (listing.status === 'active') {
       const validationErrors = validateListingForPublish({
@@ -162,7 +195,11 @@ function EditListingPage() {
         categoryId: form.categoryId,
         pricePence: payload.price_pence,
         condition: payload.condition,
-        location: form.location,
+        form,
+        existingListing: listing,
+        description: form.description,
+        hasPhotos: existingImages.length > 0,
+        deliveryOptions: form.deliveryOptions,
       })
 
       if (validationErrors.length > 0) {
@@ -183,21 +220,50 @@ function EditListingPage() {
       title: payload.title,
       brand: payload.brand,
       model: payload.model,
+      rating: payload.rating,
       description: payload.description,
       price_pence: payload.price_pence,
       condition: payload.condition,
       location: payload.location,
+      location_name: payload.location_name,
+      city: payload.city,
+      county: payload.county,
+      postcode: payload.postcode,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
       collection_available: payload.collection_available,
       courier_available: payload.courier_available,
       delivery_notes: payload.delivery_notes,
+      seller_delivery_radius_miles: payload.seller_delivery_radius_miles,
     })
 
-    setSubmitting(false)
-
     if (error) {
+      setSubmitting(false)
       setFormError(getListingErrorMessage(error))
       return
     }
+
+    const { error: fulfilmentError } = await persistListingFulfilmentPrivate(listing.id, form)
+
+    if (fulfilmentError) {
+      setSubmitting(false)
+      setFormError(
+        `Listing saved, but private fulfilment details could not be saved: ${getListingFulfilmentPrivateErrorMessage(fulfilmentError)}`,
+      )
+      return
+    }
+
+    if (existingImages.length > 0) {
+      const { error: orderError } = await updateListingImagesOrder(existingImages)
+
+      if (orderError) {
+        setSubmitting(false)
+        setFormError(`Listing saved, but photo order could not be updated: ${getImageErrorMessage(orderError)}`)
+        return
+      }
+    }
+
+    setSubmitting(false)
 
     setFormSuccess('Listing updated. Redirecting…')
     navigate(`/listings/${listing.slug}`, { replace: true })
@@ -241,9 +307,8 @@ function EditListingPage() {
   }
 
   return (
-    <section className="page-stub">
-      <h2 className="page-stub__title">Edit listing</h2>
-      <p className="page-stub__lead">Update your listing details and photos.</p>
+    <div className="listing-form-page">
+      <h1 className="listing-form-page__title">Edit listing</h1>
 
       <ListingForm
         form={form}
@@ -256,6 +321,7 @@ function EditListingPage() {
         onFieldChange={updateField}
         onAddPendingFiles={handleAddImages}
         onRemoveExistingImage={handleRemoveExistingImage}
+        onReorderExistingImages={handleReorderExistingImages}
         formError={formError}
         formSuccess={formSuccess}
         onSubmit={(event) => {
@@ -276,7 +342,14 @@ function EditListingPage() {
           </button>
         </div>
       </ListingForm>
-    </section>
+
+      <ListingManageSection
+        listing={listing}
+        userId={user?.id}
+        onListingChange={setListing}
+        onDeleted={() => navigate('/my-listings', { replace: true })}
+      />
+    </div>
   )
 }
 

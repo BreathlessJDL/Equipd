@@ -3,3 +3,9 @@
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.stripe-release-due-payouts]
+verify_jwt = false
+
+[functions.send-support-email]
+verify_jwt = false

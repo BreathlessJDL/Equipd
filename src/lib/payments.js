@@ -18,6 +18,8 @@ const paymentFields = `
   stripe_charge_id,
   status,
   amount_pence,
+  buyer_protection_fee_pence,
+  buyer_total_pence,
   platform_fee_pence,
   seller_net_pence,
   expires_at,

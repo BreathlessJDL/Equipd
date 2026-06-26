@@ -1,0 +1,118 @@
+.courier-evidence-form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.courier-evidence-form__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-navy);
+}
+
+.courier-evidence-form__lead {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.courier-evidence-form__field {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.courier-evidence-form__label {
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.courier-evidence-form__input,
+.courier-evidence-form__file {
+  width: 100%;
+}
+
+.courier-evidence-form__hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.courier-evidence-form__button {
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-navy);
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.courier-evidence-form__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.courier-evidence-form__error {
+  margin: 0;
+  color: var(--color-danger, #b42318);
+}
+
+.courier-evidence-form__success {
+  margin: 0;
+  color: var(--color-navy);
+  font-weight: 600;
+}
+
+.courier-evidence-summary {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.courier-evidence-summary__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-navy);
+}
+
+.courier-evidence-summary__status {
+  margin: 0;
+  color: var(--color-navy);
+  font-weight: 600;
+}
+
+.courier-evidence-summary__meta {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.courier-evidence-summary__grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.courier-evidence-summary__media {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.courier-evidence-summary__media img,
+.courier-evidence-summary__media video {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.courier-evidence-summary__signature {
+  max-width: 320px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.courier-evidence-summary__error {
+  margin: 0;
+  color: var(--color-danger, #b42318);
+  font-size: 0.875rem;
+}

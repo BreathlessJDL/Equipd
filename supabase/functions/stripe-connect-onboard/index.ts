@@ -68,8 +68,8 @@ Deno.serve(async (req) => {
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
       type: 'account_onboarding',
-      refresh_url: `${appBaseUrl}/profile?stripe=refresh`,
-      return_url: `${appBaseUrl}/profile?stripe=return`,
+      refresh_url: `${appBaseUrl}/settings?stripe=refresh`,
+      return_url: `${appBaseUrl}/settings?stripe=return`,
     })
 
     if (!accountLink.url) {
