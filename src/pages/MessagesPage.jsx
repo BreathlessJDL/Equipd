@@ -13,6 +13,7 @@ import MessageThreadSafetyBanner from '../components/messages/MessageThreadSafet
 import MessageThreadHeader from '../components/messages/MessageThreadHeader'
 import ReportTrigger from '../components/ReportTrigger'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { notifyUnreadMessagesChanged } from '../hooks/useUnreadMessageCount'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -74,6 +75,7 @@ function shouldGroupMessageWithPrevious(previousMessage, message) {
 }
 
 function MessagesPage() {
+  usePageTitle('Messages')
   const { conversationId, draftListingId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()

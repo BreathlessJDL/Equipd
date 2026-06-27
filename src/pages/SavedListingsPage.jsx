@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ListingCard from '../components/ListingCard'
 import '../components/ListingBrowse.css'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 import {
   fetchSavedListings,
   getSavedListingErrorMessage,
@@ -11,6 +12,7 @@ import {
 } from '../lib/savedListings'
 
 function SavedListingsPage() {
+  usePageTitle('Saved Listings')
   const { user } = useAuth()
   const [activeListings, setActiveListings] = useState([])
   const [unavailableSaved, setUnavailableSaved] = useState([])

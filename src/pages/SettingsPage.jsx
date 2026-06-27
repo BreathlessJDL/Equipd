@@ -4,6 +4,7 @@ import ProfileImageUpload from '../components/settings/ProfileImageUpload'
 import UserAvatar from '../components/UserAvatar'
 import ListingLocationAutocomplete from '../components/listing/ListingLocationAutocomplete'
 import { useCookieConsent } from '../hooks/useCookieConsent'
+import { usePageTitle } from '../hooks/usePageTitle'
 import '../components/AuthForm.css'
 import '../components/listing/ListingLocationAutocomplete.css'
 import { useAuth } from '../hooks/useAuth'
@@ -39,6 +40,7 @@ import {
 import './SettingsPage.css'
 
 function SettingsPage() {
+  usePageTitle('Settings')
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

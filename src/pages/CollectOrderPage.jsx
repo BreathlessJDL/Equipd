@@ -7,6 +7,7 @@ import { ShieldCheckIcon } from '../components/icons/NotificationIcons'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthModal } from '../hooks/useAuthModal'
+import { usePageTitle } from '../hooks/usePageTitle'
 import {
   buildCollectionConfirmationChecks,
   confirmCollectionByQr,
@@ -200,6 +201,7 @@ function CollectOrderSuccessView({ preview, orderDetails, sellerDelivery }) {
 }
 
 function CollectOrderPage() {
+  usePageTitle('Collect Order')
   const { token } = useParams()
   const location = useLocation()
   const { user, loading: authLoading } = useAuth()

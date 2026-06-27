@@ -28,6 +28,7 @@ import ReportTrigger from '../components/ReportTrigger'
 import { ErrorState, LoadingState } from '../components/ui/UiState'
 import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '../lib/orders'
 import { useListingRecommendations } from '../hooks/useListingRecommendations'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { fetchListingSavedCount } from '../lib/savedListings'
 import { canReportListing, REPORT_TYPES } from '../lib/reports'
 
@@ -52,6 +53,8 @@ function ListingDetailPage() {
   const [submittedConversationId, setSubmittedConversationId] = useState(null)
   const [savedCount, setSavedCount] = useState(0)
   const incrementedSlugRef = useRef(null)
+
+  usePageTitle(listing?.title ?? (loading ? null : 'Listing Not Found'))
 
   useEffect(() => {
     if (!slug) return undefined

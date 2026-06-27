@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../components/Notifications.css'
 import NotificationsList from '../components/NotificationsList'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 import {
   confirmClearAllNotifications,
   fetchNotifications,
@@ -14,6 +15,7 @@ import {
 } from '../lib/notifications'
 
 function NotificationsPage() {
+  usePageTitle('Notifications')
   const navigate = useNavigate()
   const { user } = useAuth()
   const [notifications, setNotifications] = useState([])

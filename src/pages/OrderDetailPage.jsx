@@ -61,6 +61,7 @@ import {
   isOrderParticipant,
 } from '../lib/orders'
 import { formatBuyerProtectionStatus, isBuyerProtectionWindowActive, isOrderDisputed } from '../lib/orderDisputes'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { canShowOrderFulfilmentDetails } from '../lib/orderDeliveryDetails'
 import {
   canRaiseSupportRequest,
@@ -72,42 +73,10 @@ import {
   getReviewErrorMessage,
   isOrderReviewable,
 } from '../lib/reviews'
+import { getStatusBadgeFromOrderLifecycleStage } from '../lib/orderLifecycleStatus'
 
 function formatOrderNumber(orderId) {
   return formatOrderReference(orderId)
-}
-
-function getStatusBadgeFromStage(stage) {
-  if (!stage) {
-    return { variant: 'pending', label: 'In progress' }
-  }
-
-  const variantByKey = {
-    cancelled: 'cancelled',
-    completed: 'completed',
-    order_completed: 'completed',
-    payout_released: 'accepted',
-    awaiting_payment: 'awaiting_payment',
-    awaiting_collection: 'awaiting_collection',
-    awaiting_seller_delivery: 'awaiting_collection',
-    awaiting_courier_collection: 'in_transit',
-    in_transit: 'in_transit',
-    courier_evidence_submitted: 'in_transit',
-    delivery_confirmed: 'completed',
-    collection_confirmed: 'completed',
-    buyer_protection_active: 'awaiting_collection',
-    buyer_protection_completed: 'accepted',
-    disputed: 'disputed',
-    dispute_opened: 'disputed',
-    dispute_under_review: 'disputed',
-    support_open: 'pending',
-    awaiting_payout: 'awaiting_payout',
-  }
-
-  return {
-    variant: variantByKey[stage.key] ?? 'pending',
-    label: stage.label,
-  }
 }
 
 function OrderDetailInfoRow({ label, children }) {
@@ -185,6 +154,7 @@ function OrderDetailCompactSupport() {
 }
 
 function OrderDetailPage() {
+  usePageTitle('Order Details')
   const { orderId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user } = useAuth()
@@ -395,7 +365,9 @@ function OrderDetailPage() {
   const offer = order.offer
   const listingUrl = listing?.slug ? `/listings/${listing.slug}` : null
   const conversationUrl = offer?.conversation_id ? `/messages/${offer.conversation_id}` : null
-  const statusBadge = getStatusBadgeFromStage(timeline?.currentStage)
+  const statusBadge = getStatusBadgeFromOrderLifecycleStage(timeline?.currentStage, {
+    viewerRole,
+  })
   const deliveryMethodLabel = getOrderDeliveryMethodLabel(order)
   const deliveryMethodDescription = getOrderDeliveryMethodDescription(order)
   const orderReference = formatOrderNumber(order.id)

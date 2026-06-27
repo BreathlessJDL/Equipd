@@ -17,8 +17,10 @@ import {
   getAdminErrorMessage,
   getAdminOrderWarnings,
 } from '../lib/admin'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function AdminOrdersPage() {
+  usePageTitle('Admin Orders')
   const [filter, setFilter] = useState('all')
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)

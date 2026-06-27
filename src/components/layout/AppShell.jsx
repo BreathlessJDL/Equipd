@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCategories } from '../../lib/listings'
+import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
 import { isBrowseShellRoute, isMessagesThreadRoute } from '../../lib/siteHeaderRoutes'
 import GlobalSiteHeader from './GlobalSiteHeader'
 import SiteFooter from './SiteFooter'
@@ -46,8 +47,7 @@ function AppShell() {
       search: fallbackSearch,
       onSearchChange: setFallbackSearch,
       onSearchSubmit: () => {
-        const query = fallbackSearch.trim()
-        navigate(query ? `/browse?search=${encodeURIComponent(query)}` : '/browse')
+        navigate(buildBrowseSearchPath(fallbackSearch))
       },
       categories,
       activeCategoryId: '',

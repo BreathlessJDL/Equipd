@@ -11,10 +11,12 @@ import { useBrowseListings } from '../hooks/useBrowseListings'
 import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
 import { fetchCategories } from '../lib/listings'
 
 function BrowsePage() {
+  usePageTitle('Browse Gym Equipment')
   const [searchParams, setSearchParams] = useSearchParams()
   const resultsRef = useRef(null)
   const [categories, setCategories] = useState([])
@@ -90,11 +92,16 @@ function BrowsePage() {
     [browse, requestBrowseScroll],
   )
 
+  const handleSearchSubmit = useCallback(() => {
+    browse.flushFilters()
+    requestBrowseScroll()
+  }, [browse, requestBrowseScroll])
+
   const siteHeaderConfig = useMemo(
     () => ({
       search: browse.search,
       onSearchChange: browse.setSearch,
-      onSearchSubmit: requestBrowseScroll,
+      onSearchSubmit: handleSearchSubmit,
       categories,
       activeCategoryId: browse.categoryId,
       activeRating: browse.rating,
@@ -103,7 +110,7 @@ function BrowsePage() {
       linkMode: false,
       categoryNavClassName: '',
     }),
-    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, requestBrowseScroll, handleNavSelect],
+    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, handleSearchSubmit, handleNavSelect],
   )
 
   useRegisterSiteHeader(siteHeaderConfig)

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import ListingCard from '../components/ListingCard'
 import '../components/ListingBrowse.css'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { fetchMyListings, getListingErrorMessage, isHubManageableListing } from '../lib/listings'
 
 function MyListingsPage() {
+  usePageTitle('My Listings')
   const { user } = useAuth()
   const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)

@@ -4,6 +4,7 @@ import ListingForm from '../components/ListingForm'
 import ListingManageSection from '../components/listing/ListingManageSection'
 import '../components/ListingForm.css'
 import '../components/PageStub.css'
+import { usePageTitle } from '../hooks/usePageTitle'
 import {
   getListingFulfilmentPrivateErrorMessage,
   fetchListingFulfilmentPrivate,
@@ -29,6 +30,7 @@ import {
 import { useAuth } from '../hooks/useAuth'
 
 function EditListingPage() {
+  usePageTitle('Edit Listing')
   const navigate = useNavigate()
   const { slug } = useParams()
   const { user } = useAuth()

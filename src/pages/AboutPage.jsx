@@ -7,6 +7,7 @@ import {
   CreditCardIcon,
 } from '../components/icons/NavIcons'
 import { useInViewOnce } from '../hooks/useInViewOnce'
+import { usePageTitle } from '../hooks/usePageTitle'
 import './AboutPage.css'
 
 const SUPPORT_EMAIL = 'support@equipd.co.uk'
@@ -235,10 +236,9 @@ function AboutFeatureSection({ id, title, cards }) {
 }
 
 function AboutPage() {
-  useEffect(() => {
-    const previousTitle = document.title
-    document.title = 'About Equipd — Used gym equipment marketplace'
+  usePageTitle('About Equipd')
 
+  useEffect(() => {
     const metaDescription = document.querySelector('meta[name="description"]')
     const createdMeta = !metaDescription
     const meta = metaDescription ?? document.createElement('meta')
@@ -255,7 +255,6 @@ function AboutPage() {
     )
 
     return () => {
-      document.title = previousTitle
       if (createdMeta) {
         meta.remove()
       } else {

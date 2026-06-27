@@ -6,6 +6,8 @@ import {
 import { formatListingStatus, getConditionLabel } from './listings'
 import { formatListingLocationDetail } from './listingLocation'
 import { isPaymentComplete, isPaymentExpired } from './payments'
+import { getOrderTimelineCurrentStage } from './orderTimeline'
+import { getStatusBadgeFromOrderLifecycleStage } from './orderLifecycleStatus'
 import {
   getCollectionHubStatusLabel,
   getCourierDeliveryHubStatusLabel,
@@ -13,15 +15,11 @@ import {
   getOfferOrder,
   getSellerDeliveryHubStatusLabel,
   getSellerPayoutProcessingMessage,
-  isOrderAwaitingFulfilment,
   isOrderCompleted,
-  isOrderCourierDelivered,
   isPayoutReleased,
   isSellerAwaitingPayout,
-  ORDER_FULFILMENT_STATUSES,
   ORDER_TYPES,
 } from './orders'
-import { isOrderDisputed } from './orderDisputes'
 
 const HUB_FULFILMENT_LABELS = {
   [ORDER_TYPES.COLLECTION]: 'Collection order',
@@ -43,16 +41,22 @@ export function getHubItemStatusBadge(offer, { orderStatusRole = null, showPayme
     return { variant: 'cancelled', label: 'Cancelled' }
   }
 
-  if (order && isOrderDisputed(order)) {
-    return { variant: 'disputed', label: 'Disputed' }
-  }
+  if (order && (orderStatusRole || (showPaymentStatus && payment))) {
+    const stage = getOrderTimelineCurrentStage({
+      order,
+      payment,
+      offer,
+      supportRequests: null,
+      viewerRole: orderStatusRole ?? 'buyer',
+    })
 
-  if (orderStatusRole === 'seller' && order && isOrderCompleted(order) && !isPayoutReleased(order)) {
-    return { variant: 'awaiting_payout', label: 'Awaiting payout' }
-  }
+    if (stage) {
+      return getStatusBadgeFromOrderLifecycleStage(stage, { viewerRole: orderStatusRole })
+    }
 
-  if (orderStatusRole && order && isOrderCompleted(order)) {
-    return { variant: 'completed', label: 'Completed' }
+    if (payment && isPaymentComplete(payment)) {
+      return { variant: 'buyer_protection', label: 'In progress' }
+    }
   }
 
   if (showPaymentStatus && payment && !isPaymentComplete(payment)) {
@@ -60,29 +64,7 @@ export function getHubItemStatusBadge(offer, { orderStatusRole = null, showPayme
       return { variant: 'cancelled', label: 'Payment expired' }
     }
 
-    return { variant: 'awaiting_payment', label: 'Awaiting payment' }
-  }
-
-  if (orderStatusRole && order && isOrderCourierDelivered(order)) {
-    return { variant: 'in_transit', label: 'In transit' }
-  }
-
-  if (orderStatusRole && order && isOrderAwaitingFulfilment(order, payment)) {
-    if (
-      order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_COLLECTION ||
-      (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.PAID &&
-        order.order_type === ORDER_TYPES.COLLECTION)
-    ) {
-      return { variant: 'awaiting_collection', label: 'Awaiting collection' }
-    }
-
-    if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_COURIER_COLLECTION) {
-      return { variant: 'in_transit', label: 'Courier collection pending' }
-    }
-
-    if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_SELLER_DELIVERY) {
-      return { variant: 'in_transit', label: 'Awaiting delivery' }
-    }
+    return { variant: 'awaiting_payment', label: 'Awaiting Payment' }
   }
 
   if (offer.status === 'pending') {

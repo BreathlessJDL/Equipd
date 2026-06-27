@@ -8,6 +8,7 @@ import '../components/Reviews.css'
 import './UserShop.css'
 import { useAuth } from '../hooks/useAuth'
 import { useRequireAuth } from '../hooks/useRequireAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 import ReportTrigger from '../components/ReportTrigger'
 import { canReportUser, REPORT_TYPES } from '../lib/reports'
 import {
@@ -50,6 +51,8 @@ function UserShopPage({ userId }) {
   const [startingConversation, setStartingConversation] = useState(false)
   const [messageError, setMessageError] = useState('')
   const [profileRefreshNonce, setProfileRefreshNonce] = useState(0)
+
+  usePageTitle(profile ? getProfileDisplayName(profile) : null)
 
   useEffect(() => {
     function handleProfileUpdated(event) {

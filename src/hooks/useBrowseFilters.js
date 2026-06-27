@@ -474,6 +474,7 @@ export function useBrowseFilters(
     resetFilters,
     removeFilterChip,
     applyNavSelection,
+    flushFilters: flushDraftUpdate,
     setSearch: (value) => updateField('search', value),
     setBrand,
     setBrands,

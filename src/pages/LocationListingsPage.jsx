@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
 import LocationBrowseSidebar from '../components/browse/LocationBrowseSidebar'
 import LocationListingsResults from '../components/browse/LocationListingsResults'
@@ -15,6 +15,8 @@ import { useBrowseListings } from '../hooks/useBrowseListings'
 import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
+import { usePageTitle } from '../hooks/usePageTitle'
+import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
 import {
   getLocationPage,
@@ -25,6 +27,7 @@ import {
 
 function LocationListingsPage({ locationSlug }) {
   const region = getLocationPage(locationSlug)
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const resultsRef = useRef(null)
   const previousAreaRef = useRef(undefined)
@@ -39,6 +42,10 @@ function LocationListingsPage({ locationSlug }) {
   const locationView = useMemo(
     () => (region ? resolveLocationView(region, selectedArea) : null),
     [region, selectedArea],
+  )
+
+  usePageTitle(
+    locationView?.name ? `${locationView.name} Gym Equipment` : region?.name ? `${region.name} Gym Equipment` : null,
   )
 
   const profileLocation = useProfileBrowseLocation()
@@ -118,28 +125,24 @@ function LocationListingsPage({ locationSlug }) {
     [browse, requestBrowseScroll],
   )
 
-  const handleNavSelect = useCallback(
-    ({ categoryId, rating, search }) => {
-      browse.applyNavSelection({ categoryId, rating, search })
-      requestBrowseScroll()
-    },
-    [browse, requestBrowseScroll],
-  )
+  const handleSearchSubmit = useCallback(() => {
+    navigate(buildBrowseSearchPath(browse.search))
+  }, [browse.search, navigate])
 
   const siteHeaderConfig = useMemo(
     () => ({
       search: browse.search,
       onSearchChange: browse.setSearch,
-      onSearchSubmit: requestBrowseScroll,
+      onSearchSubmit: handleSearchSubmit,
       categories,
       activeCategoryId: browse.categoryId,
       activeRating: browse.rating,
       activeSearch: browse.search,
-      onNavSelect: handleNavSelect,
-      linkMode: false,
+      onNavSelect: null,
+      linkMode: true,
       categoryNavClassName: '',
     }),
-    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, requestBrowseScroll, handleNavSelect],
+    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, handleSearchSubmit],
   )
 
   useRegisterSiteHeader(siteHeaderConfig)

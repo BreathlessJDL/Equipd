@@ -2,8 +2,10 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import LoginForm from '../components/auth/LoginForm'
 import '../components/AuthForm.css'
 import '../components/PageStub.css'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function LoginPage() {
+  usePageTitle('Log In')
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()

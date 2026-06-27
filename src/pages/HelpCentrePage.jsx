@@ -4,8 +4,10 @@ import HelpHero from '../components/help/HelpHero'
 import HelpSearchResults from '../components/help/HelpSearchResults'
 import '../components/help/HelpCentre.css'
 import { useHelpCentreSearch } from '../hooks/useHelpCentreSearch'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function HelpCentrePage() {
+  usePageTitle('Help Centre')
   const { searchQuery, setSearchQuery, searchResults, isSearching, emptySearchMessage, categories } =
     useHelpCentreSearch()
 

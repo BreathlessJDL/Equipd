@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { OAUTH_PENDING_KEY } from '../lib/auth'
 import { LoadingState } from '../components/ui/UiState'
 import '../components/PageStub.css'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function AuthCallbackPage() {
+  usePageTitle('Signing In')
   const navigate = useNavigate()
   const [timedOut, setTimedOut] = useState(false)
 

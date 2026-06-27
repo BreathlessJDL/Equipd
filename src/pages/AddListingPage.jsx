@@ -4,6 +4,7 @@ import LeaveListingDraftModal from '../components/listing/LeaveListingDraftModal
 import ListingForm, { emptyListingForm } from '../components/ListingForm'
 import '../components/ListingForm.css'
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
+import { usePageTitle } from '../hooks/usePageTitle'
 import {
   createListingFormSnapshot,
   isCreateListingFormChangedSinceSave,
@@ -29,6 +30,7 @@ import {
 import { useAuth } from '../hooks/useAuth'
 
 function AddListingPage() {
+  usePageTitle('Create Listing')
   const navigate = useNavigate()
   const { user } = useAuth()
   const [form, setForm] = useState(emptyListingForm)

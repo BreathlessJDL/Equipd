@@ -59,8 +59,10 @@ import {
 } from '../lib/savedListings'
 import { ErrorState, LoadingState } from '../components/ui/UiState'
 import { LeaveReviewModal } from '../components/Reviews'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function HubPage() {
+  usePageTitle('My Hub')
   const navigate = useNavigate()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()

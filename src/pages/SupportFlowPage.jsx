@@ -16,10 +16,12 @@ import {
   getSupportFlowIssue,
 } from '../data/supportFlow'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { getGeneralSupportErrorMessage, submitGeneralSupportInquiry } from '../lib/generalSupport'
 import { fetchProfile } from '../lib/profiles'
 
 function SupportFlowPage() {
+  usePageTitle('Support')
   const { user } = useAuth()
   const [step, setStep] = useState(1)
   const [categoryId, setCategoryId] = useState('')

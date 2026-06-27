@@ -237,6 +237,32 @@
   cursor: pointer;
 }
 
+.browse-filter-option-list__option--multi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.browse-filter-option-list__label {
+  min-width: 0;
+}
+
+.browse-filter-option-list__check {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border: 1.5px solid color-mix(in srgb, var(--color-navy) 24%, var(--color-border));
+  border-radius: 0.25rem;
+  background: var(--color-surface);
+}
+
+.browse-filter-option-list__check--selected {
+  border-color: var(--color-orange);
+  background: color-mix(in srgb, var(--color-orange) 88%, #fff);
+  box-shadow: inset 0 0 0 2px var(--color-surface);
+}
+
 .browse-filter-sort-list__option:hover,
 .browse-filter-option-list__option:hover {
   background: color-mix(in srgb, var(--color-navy) 5%, var(--color-surface));

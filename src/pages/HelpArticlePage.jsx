@@ -7,10 +7,12 @@ import HelpSidebar from '../components/help/HelpSidebar'
 import '../components/help/HelpCentre.css'
 import { getHelpArticleBySlug } from '../data/helpArticles'
 import { useHelpCentreSearch } from '../hooks/useHelpCentreSearch'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function HelpArticlePage() {
   const { slug } = useParams()
   const article = getHelpArticleBySlug(slug)
+  usePageTitle(article?.title ?? 'Help Article')
   const { searchQuery, setSearchQuery, searchResults, isSearching, emptySearchMessage } =
     useHelpCentreSearch()
 

@@ -15,8 +15,10 @@ import {
   getSupportRequestErrorMessage,
   updateAdminSupportRequest,
 } from '../lib/admin'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 function AdminSupportPage() {
+  usePageTitle('Admin Support')
   const [statusFilter, setStatusFilter] = useState('all')
   const [requests, setRequests] = useState([])
   const [selectedRequestId, setSelectedRequestId] = useState(null)

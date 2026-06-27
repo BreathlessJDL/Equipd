@@ -111,27 +111,6 @@ const HUB_SUMMARY_CARDS = [
     countKey: 'offersMade',
   },
   {
-    key: 'orders-in-progress',
-    label: 'Orders in progress',
-    shortLabel: 'Purchase orders',
-    hint: 'Purchases in progress',
-    section: 'orders',
-    tab: 'purchases',
-    countKey: 'ordersInProgress',
-    desktopGridOnly: true,
-  },
-  {
-    key: 'sales-in-progress',
-    label: 'Sales in progress',
-    shortLabel: 'Sales orders',
-    hint: 'Sales in progress',
-    section: 'orders',
-    tab: 'sales',
-    subTab: 'in_progress',
-    countKey: 'salesInProgress',
-    desktopGridOnly: true,
-  },
-  {
     key: 'saved-listings',
     label: 'Saved listings',
     shortLabel: 'Saved',
@@ -237,9 +216,7 @@ function HubSummarySection({ counts, needsAttention, onNavigate }) {
               type="button"
               className={`hub-summary-card${
                 card.mobileOnly ? ' hub-summary-card--mobile-only' : ''
-              }${card.desktopGridOnly ? ' hub-summary-card--desktop-grid-only' : ''}${
-                card.hideCount ? ' hub-summary-card--no-count' : ''
-              }`}
+              }${card.hideCount ? ' hub-summary-card--no-count' : ''}`}
               onClick={() => onNavigate(card.section, card.tab, undefined, card.subTab)}
             >
               <EquipdTypeIcon

@@ -6,27 +6,68 @@ import { LISTING_CONDITIONS } from '../lib/constants'
 import { buildBrandSelectOptions, buildCategoryFilterOptions } from '../lib/listingOptions'
 import { BROWSE_SORT_OPTIONS } from '../lib/listingSort'
 
-function FilterOptionList({ options, selectedValue, onSelect, ariaLabel, onChoose }) {
+function FilterOptionList({
+  options,
+  selectedValue,
+  selectedValues = [],
+  multiSelect = false,
+  onSelect,
+  onToggle,
+  ariaLabel,
+  onChoose,
+}) {
+  const selectedList = multiSelect
+    ? selectedValues
+    : selectedValue != null && selectedValue !== ''
+      ? [selectedValue]
+      : []
+
   return (
-    <ul className="browse-filter-option-list" role="listbox" aria-label={ariaLabel}>
-      {options.map((option) => (
-        <li key={option.value}>
-          <button
-            type="button"
-            role="option"
-            aria-selected={selectedValue === option.value}
-            className={`browse-filter-option-list__option${
-              selectedValue === option.value ? ' browse-filter-option-list__option--selected' : ''
-            }`}
-            onClick={() => {
-              onSelect(option.value)
-              onChoose?.()
-            }}
-          >
-            {option.label}
-          </button>
-        </li>
-      ))}
+    <ul
+      className="browse-filter-option-list"
+      role="listbox"
+      aria-label={ariaLabel}
+      aria-multiselectable={multiSelect || undefined}
+    >
+      {options.map((option) => {
+        const selected = multiSelect
+          ? option.value === ''
+            ? selectedList.length === 0
+            : selectedList.includes(option.value)
+          : selectedValue === option.value
+
+        return (
+          <li key={option.value || '__all__'}>
+            <button
+              type="button"
+              role="option"
+              aria-selected={selected}
+              className={`browse-filter-option-list__option${
+                selected ? ' browse-filter-option-list__option--selected' : ''
+              }${multiSelect ? ' browse-filter-option-list__option--multi' : ''}`}
+              onClick={() => {
+                if (multiSelect) {
+                  onToggle?.(option.value)
+                  return
+                }
+
+                onSelect?.(option.value)
+                onChoose?.()
+              }}
+            >
+              <span className="browse-filter-option-list__label">{option.label}</span>
+              {multiSelect ? (
+                <span
+                  className={`browse-filter-option-list__check${
+                    selected ? ' browse-filter-option-list__check--selected' : ''
+                  }`}
+                  aria-hidden="true"
+                />
+              ) : null}
+            </button>
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -241,38 +282,38 @@ function ListingBrowseFilters({
     setMobileOpen(false)
   }
 
-  function renderCategoryMenu(onChoose) {
+  function renderCategoryMenu() {
     return (
       <FilterOptionList
         ariaLabel="Category"
         options={categoryMenuOptions}
-        selectedValue={categoryIds[0] ?? categoryId}
-        onSelect={onCategoryChange}
-        onChoose={onChoose}
+        multiSelect
+        selectedValues={categoryIds}
+        onToggle={onToggleCategoryId}
       />
     )
   }
 
-  function renderBrandMenu(onChoose) {
+  function renderBrandMenu() {
     return (
       <FilterOptionList
         ariaLabel="Brand"
         options={brandMenuOptions}
-        selectedValue={brands[0] ?? brand}
-        onSelect={onBrandChange}
-        onChoose={onChoose}
+        multiSelect
+        selectedValues={brands}
+        onToggle={onToggleBrand}
       />
     )
   }
 
-  function renderConditionMenu(onChoose) {
+  function renderConditionMenu() {
     return (
       <FilterOptionList
         ariaLabel="Condition"
         options={conditionMenuOptions}
-        selectedValue={conditions[0] ?? condition}
-        onSelect={onConditionChange}
-        onChoose={onChoose}
+        multiSelect
+        selectedValues={conditions}
+        onToggle={onToggleCondition}
       />
     )
   }
@@ -364,7 +405,7 @@ function ListingBrowseFilters({
             open={openMenu === 'category'}
             onToggle={() => toggleMenu('category')}
           >
-            {renderCategoryMenu(handleApplyFilters)}
+            {renderCategoryMenu()}
           </FilterPill>
 
           <FilterPill
@@ -374,7 +415,7 @@ function ListingBrowseFilters({
             open={openMenu === 'brand'}
             onToggle={() => toggleMenu('brand')}
           >
-            {renderBrandMenu(handleApplyFilters)}
+            {renderBrandMenu()}
           </FilterPill>
 
           <FilterPill
@@ -384,7 +425,7 @@ function ListingBrowseFilters({
             open={openMenu === 'condition'}
             onToggle={() => toggleMenu('condition')}
           >
-            {renderConditionMenu(handleApplyFilters)}
+            {renderConditionMenu()}
           </FilterPill>
 
           <FilterPill

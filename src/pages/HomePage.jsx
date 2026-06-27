@@ -17,16 +17,14 @@ import { useHomeRecentListings } from '../hooks/useHomeRecentListings'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { useAuth } from '../hooks/useAuth'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
-import {
-  buildBrowseSearchPath,
-  isMobileSearchViewport,
-  shouldNavigateToBrowseOnMobileSearch,
-} from '../lib/browseSearchNavigation'
+import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
 import { fetchRecentReviews, getReviewErrorMessage } from '../lib/reviews'
 
 function HomePage() {
+  usePageTitle()
   const { user } = useAuth()
   const isLoggedIn = Boolean(user)
   const navigate = useNavigate()
@@ -134,25 +132,12 @@ function HomePage() {
   }, [isLoggedIn])
 
   const handleSearchSubmit = useCallback(() => {
-    if (shouldNavigateToBrowseOnMobileSearch(pathname) && isMobileSearchViewport()) {
-      navigate(buildBrowseSearchPath(browse.search))
-      return
-    }
-
-    requestBrowseScroll()
-  }, [browse.search, navigate, pathname, requestBrowseScroll])
+    navigate(buildBrowseSearchPath(browse.search))
+  }, [browse.search, navigate])
 
   const handleRemoveFilterChip = useCallback(
     (removeKey, removeValue) => {
       browse.removeFilterChip(removeKey, removeValue)
-      requestBrowseScroll()
-    },
-    [browse, requestBrowseScroll],
-  )
-
-  const handleNavSelect = useCallback(
-    ({ categoryId, rating, search }) => {
-      browse.applyNavSelection({ categoryId, rating, search })
       requestBrowseScroll()
     },
     [browse, requestBrowseScroll],
@@ -183,23 +168,19 @@ function HomePage() {
       activeCategoryId: browse.categoryId,
       activeRating: browse.rating,
       activeSearch: browse.search,
-      onNavSelect: handleNavSelect,
+      onNavSelect: null,
       onHomeBrandClick: handleHomeBrandClick,
-      linkMode: false,
+      linkMode: true,
       categoryNavClassName: 'home-category-text-nav',
     }),
     [
       browse.search,
       browse.categoryId,
       browse.rating,
-      browse.hasFilters,
-      browse.resetFilters,
       browse.setSearch,
       categories,
-      cancelBrowseScrollRequest,
       handleHomeBrandClick,
       handleSearchSubmit,
-      handleNavSelect,
     ],
   )
 
