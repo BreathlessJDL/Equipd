@@ -36,7 +36,10 @@ export async function startCheckoutForAcceptedOffer({
     }
   }
 
-  if (!isValidFulfilmentMethodForListing(listing, orderType, { buyerProfile })) {
+  if (!isValidFulfilmentMethodForListing(listing, orderType, {
+    buyerProfile,
+    persistedOrderType,
+  })) {
     return {
       url: null,
       error: new Error('Selected fulfilment method is not available for this listing.'),

@@ -30,8 +30,8 @@ export function evaluateSellerDeliveryAvailability(listing, buyerProfile) {
   if (radiusMiles == null || radiusMiles <= 0) {
     return {
       offered: true,
-      available: false,
-      reason: 'invalid_radius',
+      available: true,
+      reason: null,
       distanceMiles: null,
       radiusMiles,
     }

@@ -43,6 +43,9 @@ const offerListingSelect = `
     collection_available,
     courier_available,
     delivery_notes,
+    seller_delivery_radius_miles,
+    latitude,
+    longitude,
     category:categories(id, name, slug),
     listing_images(id, storage_path, sort_order)
   )
@@ -235,6 +238,9 @@ async function attachListingsToOffers(offers) {
     collection_available,
     courier_available,
     delivery_notes,
+    seller_delivery_radius_miles,
+    latitude,
+    longitude,
     category:categories(id, name, slug),
     listing_images(id, storage_path, sort_order)
   `
@@ -248,7 +254,7 @@ async function attachListingsToOffers(offers) {
     logSupabaseError('attachListingsToOffers (full)', error)
     ;({ data: listings, error } = await supabase
       .from('listings')
-      .select('id, slug, title, brand, model, price_pence, condition, location, status, seller_id, collection_available, courier_available, delivery_notes')
+      .select('id, slug, title, brand, model, price_pence, condition, location, status, seller_id, collection_available, courier_available, delivery_notes, seller_delivery_radius_miles, latitude, longitude')
       .in('id', listingIds))
   }
 

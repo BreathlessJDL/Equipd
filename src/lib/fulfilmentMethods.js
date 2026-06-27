@@ -148,12 +148,36 @@ export function getAutoFulfilmentMethod(listing, context = {}) {
 }
 
 export function isValidFulfilmentMethodForListing(listing, orderType, context = {}) {
-  if (!orderType) return false
+  if (!orderType || !listing) return false
 
-  return getAvailableFulfilmentMethods(listing, {
-    ...context,
-    forBuyerSelection: true,
-  }).includes(orderType)
+  const offeredOrderTypes = inferDeliveryOptionsFromListing(listing)
+    .map((optionId) => FULFILMENT_OPTION_TO_ORDER_TYPE[optionId])
+    .filter(Boolean)
+
+  if (!offeredOrderTypes.includes(orderType)) {
+    return false
+  }
+
+  if (orderType !== ORDER_TYPES.SELLER_DELIVERY) {
+    return true
+  }
+
+  if (!listingOffersSellerDelivery(listing)) {
+    return false
+  }
+
+  const { buyerProfile, persistedOrderType = null } = context
+
+  if (persistedOrderType === ORDER_TYPES.SELLER_DELIVERY) {
+    return true
+  }
+
+  try {
+    return evaluateSellerDeliveryAvailability(listing, buyerProfile).available
+  } catch (error) {
+    console.error('[fulfilment] isValidFulfilmentMethodForListing seller delivery check failed', error)
+    return true
+  }
 }
 
 export function orderNeedsFulfilmentSelection(order, listing, context = {}) {

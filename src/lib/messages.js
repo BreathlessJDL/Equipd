@@ -41,6 +41,9 @@ const messageOfferSelect = `
       collection_available,
       courier_available,
       delivery_notes,
+      seller_delivery_radius_miles,
+      latitude,
+      longitude,
       listing_images(id, storage_path, sort_order)
     )
   )
@@ -71,6 +74,9 @@ const conversationListingSelect = `
     collection_available,
     courier_available,
     delivery_notes,
+    seller_delivery_radius_miles,
+    latitude,
+    longitude,
     listing_images(id, storage_path, sort_order)
   )
 `
@@ -239,6 +245,9 @@ async function fetchListingsByIdsForMessages(listingIds) {
     collection_available,
     courier_available,
     delivery_notes,
+    seller_delivery_radius_miles,
+    latitude,
+    longitude,
     listing_images(id, storage_path, sort_order)
   `
 
@@ -578,6 +587,9 @@ const draftListingSelect = `
   collection_available,
   courier_available,
   delivery_notes,
+  seller_delivery_radius_miles,
+  latitude,
+  longitude,
   listing_images(id, storage_path, sort_order)
 `
 

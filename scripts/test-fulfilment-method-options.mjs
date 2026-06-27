@@ -69,6 +69,7 @@ try {
   const {
     getAvailableFulfilmentMethodOptions,
     getAvailableFulfilmentMethods,
+    isValidFulfilmentMethodForListing,
   } = await server.ssrLoadModule('/src/lib/fulfilmentMethods.js')
 
   function optionTypes(listing, buyerProfile) {
@@ -142,6 +143,87 @@ try {
     'getAvailableFulfilmentMethods returns methods',
   )
   console.log('PASS: getAvailableFulfilmentMethods')
+
+  assert(
+    isValidFulfilmentMethodForListing(LISTINGS.collectionOnly, 'collection'),
+    'checkout: collection only',
+  )
+  console.log('PASS: checkout validation — collection only')
+
+  assert(
+    isValidFulfilmentMethodForListing(LISTINGS.buyerCourierOnly, 'buyer_courier'),
+    'checkout: buyer courier only',
+  )
+  console.log('PASS: checkout validation — buyer courier only')
+
+  assert(
+    isValidFulfilmentMethodForListing(LISTINGS.sellerOnly, 'seller_delivery', {
+      buyerProfile: NEARBY_BUYER,
+    }),
+    'checkout: seller delivery with buyer location',
+  )
+  console.log('PASS: checkout validation — seller delivery with location')
+
+  const strippedSellerListing = {
+    ...LISTINGS.sellerOnly,
+    seller_delivery_radius_miles: undefined,
+    latitude: undefined,
+    longitude: undefined,
+  }
+  assert(
+    isValidFulfilmentMethodForListing(strippedSellerListing, 'seller_delivery', {
+      buyerProfile: NO_LOCATION_BUYER,
+      persistedOrderType: 'seller_delivery',
+    }),
+    'checkout: persisted seller delivery survives missing embed fields',
+  )
+  console.log('PASS: checkout validation — persisted seller delivery without embed coords')
+
+  assert(
+    isValidFulfilmentMethodForListing(strippedSellerListing, 'seller_delivery', {
+      buyerProfile: NO_LOCATION_BUYER,
+    }),
+    'checkout: seller delivery without radius does not block payment',
+  )
+  console.log('PASS: checkout validation — missing radius does not block seller delivery')
+
+  const embedMissingCoords = {
+    ...LISTINGS.sellerOnly,
+    latitude: undefined,
+    longitude: undefined,
+  }
+  assert(
+    isValidFulfilmentMethodForListing(embedMissingCoords, 'seller_delivery', {
+      buyerProfile: NEARBY_BUYER,
+      persistedOrderType: 'seller_delivery',
+    }),
+    'checkout: persisted seller delivery when embed lacks listing coords',
+  )
+  console.log('PASS: checkout validation — persisted seller delivery with radius but missing embed coords')
+
+  assert(
+    isValidFulfilmentMethodForListing(LISTINGS.collectionSeller, 'collection'),
+    'checkout: collection in combo listing',
+  )
+  assert(
+    isValidFulfilmentMethodForListing(LISTINGS.collectionSeller, 'seller_delivery', {
+      buyerProfile: NEARBY_BUYER,
+    }),
+    'checkout: seller delivery in combo listing',
+  )
+  console.log('PASS: checkout validation — collection + seller delivery')
+
+  assert(
+    isValidFulfilmentMethodForListing(LISTINGS.allThree, 'buyer_courier'),
+    'checkout: buyer courier in all-three listing',
+  )
+  console.log('PASS: checkout validation — all three methods')
+
+  assert(
+    !isValidFulfilmentMethodForListing(LISTINGS.collectionOnly, 'seller_delivery'),
+    'checkout rejects unavailable method',
+  )
+  console.log('PASS: checkout validation — rejects genuinely unavailable method')
 
   console.log('\nAll fulfilment method option checks passed.')
 } catch (error) {
