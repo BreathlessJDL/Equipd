@@ -6,6 +6,7 @@ import {
   ORDER_FULFILMENT_STATUSES,
   ORDER_TYPES,
   PAYOUT_STATUSES,
+  getCourierDeliveryTimelineTrackingDetail,
 } from './orders'
 import { PAYMENT_STATUSES } from './payments'
 import {
@@ -385,12 +386,24 @@ function buildTransactionStepDefinitions({ order, payment, offer, viewerRole, ca
 
   if (order && payment?.status === PAYMENT_STATUSES.PAID) {
     for (const step of getFulfilmentSteps(order)) {
-      definitions.push({
+      const definition = {
         key: step.key,
         label: step.label,
         timestamp: step.timestamp,
         isCurrent: step.isCurrent,
-      })
+      }
+
+      if (
+        step.key === 'delivery_confirmed' &&
+        isFulfilmentTimelineStepComplete('delivery_confirmed', order)
+      ) {
+        const trackingDetail = getCourierDeliveryTimelineTrackingDetail(order)
+        if (trackingDetail) {
+          definition.detail = trackingDetail
+        }
+      }
+
+      definitions.push(definition)
     }
 
     for (const step of getDisputeSteps(order)) {

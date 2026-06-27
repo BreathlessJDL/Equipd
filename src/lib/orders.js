@@ -86,6 +86,8 @@ const orderFields = `
   courier_name,
   courier_company,
   courier_tracking_reference,
+  courier_buyer_tracking_reference,
+  courier_evidence_notes,
   courier_collected_at,
   courier_evidence_submitted_at,
   courier_delivered_at,
@@ -115,6 +117,7 @@ const courierEvidenceDetailFields = `
   courier_evidence_video_url,
   courier_pre_collection_photo_url,
   courier_handover_photo_url,
+  courier_evidence_notes,
   courier_signature_name,
   courier_signature_data,
   courier_signed_at,
@@ -123,6 +126,24 @@ const courierEvidenceDetailFields = `
   courier_delivery_confirmation_checks,
   courier_delivery_confirmation_user_agent
 `
+
+export function getCourierTrackingDisplayReference(order) {
+  const buyerTracking = order?.courier_buyer_tracking_reference?.trim()
+  if (buyerTracking) return buyerTracking
+
+  return order?.courier_tracking_reference?.trim() || ''
+}
+
+export function getCourierDeliveryTimelineTrackingDetail(order) {
+  const buyerTracking = order?.courier_buyer_tracking_reference?.trim()
+  if (buyerTracking) return `Tracking number: ${buyerTracking}`
+
+  if (order?.courier_delivered_at || order?.delivered_at) {
+    return 'No tracking number provided'
+  }
+
+  return null
+}
 
 const orderDetailSelect = `
   ${orderFields},
@@ -335,10 +356,10 @@ export function getOrderDeliveryMethodDescription(order) {
   }
 
   if (orderType === ORDER_TYPES.BUYER_COURIER) {
-    const trackingReference = order?.courier_tracking_reference?.trim()
+    const trackingReference = getCourierTrackingDisplayReference(order)
     const courierCompany = order?.courier_company?.trim()
 
-    if (trackingReference || courierCompany) {
+    if (trackingReference) {
       const trackingLabel = [courierCompany, trackingReference].filter(Boolean).join(' · ')
       return `Buyer-arranged courier selected. Tracking: ${trackingLabel}.`
     }

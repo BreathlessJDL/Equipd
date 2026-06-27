@@ -7,6 +7,19 @@ import {
   getCourierDeliveryErrorMessage,
 } from '../lib/courierDelivery'
 import './CourierDeliveryConfirmation.css'
+import './BuyerProtectionInfo.css'
+
+function CourierTrackingGuidancePanel() {
+  return (
+    <aside className="trust-info courier-delivery-confirmation__tracking-info" aria-label="Courier tracking">
+      <h4 className="trust-info__title">Courier tracking</h4>
+      <p className="courier-delivery-confirmation__tracking-copy">
+        Providing a tracking number is optional, but it can help us investigate delivery disputes
+        more quickly should a Buyer Protection claim be opened.
+      </p>
+    </aside>
+  )
+}
 
 function CourierDeliveryConfirmation({ order, payment, onConfirmed, compact = false }) {
   const [checks, setChecks] = useState({
@@ -14,6 +27,7 @@ function CourierDeliveryConfirmation({ order, payment, onConfirmed, compact = fa
     handover_evidence_reviewed: false,
     protection_window_acknowledged: false,
   })
+  const [trackingReference, setTrackingReference] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -37,6 +51,7 @@ function CourierDeliveryConfirmation({ order, payment, onConfirmed, compact = fa
         handoverEvidenceReviewed: checks.handover_evidence_reviewed,
         protectionWindowAcknowledged: checks.protection_window_acknowledged,
       }),
+      trackingReference,
     )
 
     setSubmitting(false)
@@ -85,6 +100,30 @@ function CourierDeliveryConfirmation({ order, payment, onConfirmed, compact = fa
       <PaymentCheckoutSummary payment={payment} order={order} compact />
 
       <CourierEvidenceSummary order={order} role="buyer" />
+
+      <CourierTrackingGuidancePanel />
+
+      <div className="courier-delivery-confirmation__field">
+        <label
+          className="courier-delivery-confirmation__label"
+          htmlFor={`courier-buyer-tracking-${order?.id ?? 'order'}`}
+        >
+          Tracking number <span className="courier-delivery-confirmation__optional">(optional)</span>
+        </label>
+        <input
+          id={`courier-buyer-tracking-${order?.id ?? 'order'}`}
+          className="courier-delivery-confirmation__input"
+          type="text"
+          value={trackingReference}
+          disabled={submitting}
+          onChange={(event) => setTrackingReference(event.target.value)}
+          autoComplete="off"
+        />
+        <p className="courier-delivery-confirmation__hint">
+          If you have a tracking number, please provide it. It may help us resolve Buyer Protection
+          claims more quickly if an issue arises.
+        </p>
+      </div>
 
       <div className="courier-delivery-confirmation__checks">
         <label className="courier-delivery-confirmation__check">

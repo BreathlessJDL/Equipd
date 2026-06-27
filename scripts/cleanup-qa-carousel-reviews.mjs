@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
- * Remove QA CAROUSEL SEED reviews and synthetic marketplace rows.
+ * QA REVIEW SEED DATA ONLY — DO NOT RUN FOR REAL PRODUCTION REVIEWS
+ *
+ * Remove QA CAROUSEL SEED reviews, synthetic orders, and sold stub listings.
  *
  * Usage:
  *   QA_CAROUSEL_SEED_CONFIRM=true node scripts/cleanup-qa-carousel-reviews.mjs
  *
- * Does not delete real reviews, listings, or admin accounts.
+ * Does not delete real reviews, real listings, or admin accounts.
  */
 
 import { existsSync, readFileSync } from 'fs'
@@ -47,7 +49,7 @@ async function main() {
   console.log(`Requires ${QA_CAROUSEL_SEED_CONFIRM_ENV}=true\n`)
 
   await resetQaCarouselReviews(supabase)
-  console.log('\nQA carousel cleanup complete.')
+  console.log('\nQA REVIEW SEED DATA cleanup complete.')
 }
 
 main().catch((error) => {

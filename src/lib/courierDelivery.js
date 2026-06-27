@@ -31,7 +31,7 @@ export function getCourierDeliveryErrorMessage(error) {
   return error.message || 'Something went wrong. Please try again.'
 }
 
-export async function confirmCourierDelivery(orderId, checks) {
+export async function confirmCourierDelivery(orderId, checks, buyerTrackingReference = '') {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -41,10 +41,13 @@ export async function confirmCourierDelivery(orderId, checks) {
       ? navigator.userAgent.slice(0, 512)
       : null
 
+  const trimmedTracking = buyerTrackingReference?.trim() || null
+
   const { data, error } = await supabase.rpc('confirm_courier_delivery', {
     p_order_id: orderId,
     p_checks: checks,
     p_user_agent: userAgent,
+    p_buyer_tracking_reference: trimmedTracking,
   })
 
   return { data, error }

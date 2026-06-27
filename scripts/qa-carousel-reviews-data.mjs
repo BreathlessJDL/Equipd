@@ -1,20 +1,26 @@
 /**
- * QA CAROUSEL SEED DATA — homepage review carousel (live-domain / staging QA only).
+ * QA REVIEW SEED DATA ONLY — DO NOT RUN FOR REAL PRODUCTION REVIEWS
  *
+ * Homepage review carousel test data (live-domain / staging QA only).
  * Fixed UUID namespace for idempotent upserts and targeted cleanup.
- * Not a Supabase migration. Do not deploy automatically.
+ * Not a Supabase migration. Do not deploy or run automatically in CI.
  */
 
 export const QA_CAROUSEL_REVIEW_SEED_MARKER = 'f4f4f4f4'
 
+export const QA_CAROUSEL_LISTING_SLUG_PREFIX = 'qa-carousel-seed-'
+
 export const QA_CAROUSEL_OFFER_MESSAGE =
-  'QA CAROUSEL SEED — synthetic completed order for homepage carousel testing. Not a real transaction.'
+  'QA REVIEW SEED DATA ONLY — synthetic completed order for homepage carousel testing. Not a real transaction.'
 
 export const QA_CAROUSEL_REVIEW_PASSWORD = 'EquipdQaCarouselSeed123!'
 
 export const QA_CAROUSEL_DEFAULT_ADMIN_EMAIL = 'jlinnell95@gmail.com'
 
-/** Twenty QA-only buyers with believable UK display names. */
+export const QA_CAROUSEL_LISTING_DESCRIPTION =
+  'QA REVIEW SEED DATA ONLY — synthetic sold listing for homepage carousel testing. Not visible in browse.'
+
+/** Twenty QA-only buyers with believable UK display names (not shown on homepage). */
 export const QA_CAROUSEL_REVIEW_BUYERS = [
   { id: `${QA_CAROUSEL_REVIEW_SEED_MARKER}-0001-4001-8001-000000000001`, email: 'qa-carousel-review-01@equipd.dev', displayName: 'Hannah Mitchell', location: 'Leeds, UK' },
   { id: `${QA_CAROUSEL_REVIEW_SEED_MARKER}-0001-4001-8001-000000000002`, email: 'qa-carousel-review-02@equipd.dev', displayName: 'Oliver Bennett', location: 'Manchester, UK' },
@@ -43,6 +49,15 @@ function seedUuid(second, third, fourth, index) {
   return `${QA_CAROUSEL_REVIEW_SEED_MARKER}-${second}-${third}-${fourth}-${suffix}`
 }
 
+function qaListingSlug(index, title) {
+  const slugBody = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48)
+  return `${QA_CAROUSEL_LISTING_SLUG_PREFIX}${String(index + 1).padStart(2, '0')}-${slugBody}`
+}
+
 /** Spread across the last ~4 months (deterministic on re-run). */
 export function qaReviewCreatedAtForIndex(index) {
   const daysAgo = [
@@ -65,191 +80,195 @@ export function qaReviewCreatedAtForIndex(index) {
 
 const FOUR_STAR_INDICES = new Set([2, 6, 9, 12, 15, 18])
 
-/** 20 homepage QA reviews: 14× five-star, 6× four-star. */
-export const QA_CAROUSEL_REVIEWS = [
+/** 20 homepage QA reviews: 14× five-star, 6× four-star. Titles are QA-only stub listings. */
+const QA_CAROUSEL_REVIEW_ROWS = [
   {
     index: 0,
-    reviewText:
-      'Exactly as described. Collection was straightforward and the seller helped load it into the van. Really pleased with the purchase.',
-    preferredTitlePatterns: ['%Life Fitness Treadmill%SE Console%', '%Treadmill with SE Console%'],
-    looseTitlePatterns: ['%Life Fitness%Treadmill%'],
-    preferAdminSeller: true,
+    listingTitle: 'Technogym Skillmill',
+    categorySlug: 'treadmill',
+    pricePence: 420000,
     purchaseType: 'commercial',
+    reviewText:
+      'Collected from a gym that was closing down. Belt felt smooth straight away and the seller had it running before I left. Heavier than I expected, but proper kit.',
   },
   {
     index: 1,
-    reviewText:
-      'Great communication from start to finish. Machine was in excellent condition and everything worked perfectly.',
-    preferredTitlePatterns: ['%Concept 2 rowing machine with PM5%', '%Concept%rowing%PM5%', '%Concept2%rower%PM5%'],
-    looseTitlePatterns: ['%Rowing Machine%', '%rower%PM5%', '%Concept%row%'],
-    preferAdminSeller: true,
+    listingTitle: 'Hammer Strength Iso-Lateral Chest Press',
+    categorySlug: 'plate-loaded-machine',
+    pricePence: 185000,
     purchaseType: 'commercial',
+    reviewText:
+      'Exactly as photographed. Plates loaded fine and both arms move evenly — no wobble on the frame at all.',
   },
   {
     index: 2,
+    listingTitle: 'Concept2 SkiErg',
+    categorySlug: 'skierg',
+    pricePence: 65000,
+    purchaseType: 'home',
     reviewText:
-      "Very happy overall. A couple of small cosmetic marks that weren't obvious in the photos, but nothing unexpected for used commercial equipment.",
-    preferredTitlePatterns: ['%Technogym%Crossover%', '%Technogym Commercial Crossover%'],
-    looseTitlePatterns: ['%Technogym%Crossover%', '%Crossover%'],
-    preferAdminSeller: true,
-    purchaseType: 'commercial',
+      'Really pleased with it. Monitor cable was a bit frayed near the plug but works fine, and the fan resistance is spot on.',
   },
   {
     index: 3,
-    reviewText:
-      'Collected the treadmill over the weekend. Seller was friendly, had it ready to go and even showed it working before I left.',
-    preferredTitlePatterns: ['%Sole F63%folding%treadmill%', '%Sole F63%'],
-    looseTitlePatterns: ['%Sole%treadmill%', '%F63%'],
-    preferAdminSeller: true,
+    listingTitle: 'Rogue Echo Bike',
+    categorySlug: 'assault-bike',
+    pricePence: 55000,
     purchaseType: 'home',
+    reviewText:
+      'Turned up on time and the seller helped me wheel it to the car. Console battery was flat but they’d warned me — sorted in two minutes.',
   },
   {
     index: 4,
-    reviewText:
-      "Couldn't have asked for a smoother transaction. Equipment was spotless and exactly as listed.",
-    preferredTitlePatterns: ['%Gymgear%Multi Gym%', '%GymGear%Multi%'],
-    looseTitlePatterns: ['%Multi Gym%', '%multi-gym%'],
-    preferAdminSeller: false,
+    listingTitle: 'AssaultRunner Pro',
+    categorySlug: 'treadmill',
+    pricePence: 310000,
     purchaseType: 'commercial',
+    reviewText:
+      'Mint condition for ex-commercial use. Took a proper workout on collection day and it’s as brutal as everyone says.',
   },
   {
     index: 5,
+    listingTitle: 'Nautilus Nitro Leg Press',
+    categorySlug: 'pin-loaded-machine',
+    pricePence: 220000,
+    purchaseType: 'commercial',
     reviewText:
-      'Excellent seller. Quick responses, easy collection and the rower feels almost new.',
-    preferredTitlePatterns: ['%Concept C2 Rowing machine with PM4%', '%Concept%rower%PM4%', '%Concept 2 rowing machine with PM5 monitor%'],
-    looseTitlePatterns: ['%rower%', '%Rowing Machine%'],
-    preferAdminSeller: true,
-    purchaseType: 'home',
+      'Smooth transaction. Machine was already partially stripped which made loading easier than I feared.',
   },
   {
     index: 6,
-    reviewText:
-      'Good experience overall. Delivery was arranged quickly and the machine arrived exactly when agreed.',
-    preferredTitlePatterns: ['%WaterRower%S4%', '%WaterRower%Performance Monitor%'],
-    looseTitlePatterns: ['%WaterRower%', '%delivery%', '%Pallet%'],
-    preferAdminSeller: false,
+    listingTitle: 'Eleiko Competition Bar',
+    categorySlug: 'barbells',
+    pricePence: 32000,
     purchaseType: 'home',
+    reviewText:
+      'Bar spins well and the knurling is still sharp. Tiny rust spot on one sleeve — came off with a quick wire brush.',
   },
   {
     index: 7,
+    listingTitle: 'Watson Dumbbell Rack',
+    categorySlug: 'dumbbells',
+    pricePence: 48000,
+    purchaseType: 'commercial',
     reviewText:
-      'Really impressed with the quality considering the price. Would happily buy through Equipd again.',
-    preferredTitlePatterns: ['%Pulse Fitness%U-Cycle%', '%U-Cycle%'],
-    looseTitlePatterns: ['%Pulse Fitness%', '%Indoor Cycle%', '%spin bike%'],
-    preferAdminSeller: false,
-    purchaseType: 'home',
+      'Rack is sturdy and all the labels were still readable. Collection from a storage unit; seller was dead helpful.',
   },
   {
     index: 8,
-    reviewText:
-      'Everything went exactly as expected. Secure payment, simple collection and a great piece of kit.',
-    preferredTitlePatterns: ['%Nautilus Nitro%Leg Press%', '%Nautilus%Leg Press%'],
-    looseTitlePatterns: ['%Nautilus%', '%Leg Press%'],
-    preferAdminSeller: true,
+    listingTitle: 'Life Fitness Integrity Treadmill',
+    categorySlug: 'treadmill',
+    pricePence: 275000,
     purchaseType: 'commercial',
+    reviewText:
+      'Console fired up first go. Deck had clearly been cleaned recently — you can tell it was looked after.',
   },
   {
     index: 9,
+    listingTitle: 'Precor AMT',
+    categorySlug: 'crosstrainers',
+    pricePence: 195000,
+    purchaseType: 'commercial',
     reviewText:
-      'Seller answered all my questions before purchase. Very straightforward process and happy with the equipment.',
-    preferredTitlePatterns: ['%Powertec%Leverage%', '%Powertec Leverage%'],
-    looseTitlePatterns: ['%Powertec%', '%Leverage Gym%'],
-    preferAdminSeller: false,
-    purchaseType: 'home',
+      'Happy with the buy overall. Left pedal had a squeak that vanished after a spray of silicone. Otherwise brilliant.',
   },
   {
     index: 10,
+    listingTitle: 'Matrix Magnum Leg Press',
+    categorySlug: 'plate-loaded-machine',
+    pricePence: 240000,
+    purchaseType: 'commercial',
     reviewText:
-      'Spin bike was well packaged for collection and ran smoothly on first test. Seller was helpful and punctual.',
-    preferredTitlePatterns: ['%Keiser%M3%', '%Keiser%spin%', '%spin bike%'],
-    looseTitlePatterns: ['%Keiser%', '%Indoor Cycle%'],
-    preferAdminSeller: false,
-    purchaseType: 'home',
+      'Commercial leg press at a fair price. Seller knew their stuff and talked me through the safety catches before handover.',
   },
   {
     index: 11,
+    listingTitle: 'Cybex Eagle Chest Press',
+    categorySlug: 'pin-loaded-machine',
+    pricePence: 165000,
+    purchaseType: 'commercial',
     reviewText:
-      'Solid squat rack — sturdy, clean and exactly what I needed for my garage gym. Collection was quick and easy.',
-    preferredTitlePatterns: ['%squat rack%', '%power rack%', '%Rack%'],
-    looseTitlePatterns: ['%squat%', '%rack%'],
-    preferAdminSeller: true,
-    purchaseType: 'home',
+      'Pads are tired cosmetically but the movement is silky. Would happily buy from this seller again.',
   },
   {
     index: 12,
-    reviewText:
-      'Happy with the dumbbell set. A little wear on the rubber as expected for used kit, but weights are accurate and balanced.',
-    preferredTitlePatterns: ['%dumbbell%', '%Dumbbells%'],
-    looseTitlePatterns: ['%dumbbell%', '%hex%'],
-    preferAdminSeller: false,
+    listingTitle: 'Wattbike AtomX',
+    categorySlug: 'spin-bikes',
+    pricePence: 72000,
     purchaseType: 'home',
+    reviewText:
+      'Good comms throughout. One cradle bolt was missing but they posted it out next day without any fuss.',
   },
   {
     index: 13,
-    reviewText:
-      'Brilliant experience. Seller demonstrated the cable machine before handover and it has been flawless since.',
-    preferredTitlePatterns: ['%cable%pulley%', '%dual cable%', '%functional trainer%'],
-    looseTitlePatterns: ['%cable%', '%pulley%'],
-    preferAdminSeller: false,
+    listingTitle: 'StairMaster Gauntlet',
+    categorySlug: 'stairclimbers',
+    pricePence: 350000,
     purchaseType: 'commercial',
+    reviewText:
+      'Beast of a machine. Seller demoed it working and even had spare drive belts in the van, just in case.',
   },
   {
     index: 14,
-    reviewText:
-      'Plate-loaded kit arrived as described. Great value for commercial-grade equipment and very professional seller.',
-    preferredTitlePatterns: ['%plate loaded%', '%Plate Loaded%', '%hammer strength%'],
-    looseTitlePatterns: ['%plate loaded%', '%leg press%'],
-    preferAdminSeller: true,
+    listingTitle: 'Life Fitness IC7 Bike',
+    categorySlug: 'spin-bikes',
+    pricePence: 89000,
     purchaseType: 'commercial',
+    reviewText:
+      'IC7 console paired with my app no bother. Collection was quick — in and out in about twenty minutes.',
   },
   {
     index: 15,
-    reviewText:
-      'Overall a positive purchase. Treadmill belt and deck are in good shape; just needed a quick wipe down after collection.',
-    preferredTitlePatterns: ['%treadmill%', '%Treadmill%'],
-    looseTitlePatterns: ['%treadmill%', '%running machine%'],
-    preferAdminSeller: false,
+    listingTitle: 'Technogym Skillrow',
+    categorySlug: 'rowers',
+    pricePence: 78000,
     purchaseType: 'home',
+    reviewText:
+      'Rowing feels great. Seat rail had a small scratch that wasn’t obvious in the photos, but nothing that affects use.',
   },
   {
     index: 16,
-    reviewText:
-      'Multi-gym was already partially dismantled which made loading easier. Clear instructions from the seller throughout.',
-    preferredTitlePatterns: ['%multi gym%', '%Multi Gym%', '%home gym%'],
-    looseTitlePatterns: ['%multi%', '%gym station%'],
-    preferAdminSeller: false,
+    listingTitle: 'Rogue Monster Lite Rack',
+    categorySlug: 'squat-rack',
+    pricePence: 52000,
     purchaseType: 'home',
+    reviewText:
+      'All hardware accounted for and the uprights had no dents. Built it the same evening without any missing parts.',
   },
   {
     index: 17,
-    reviewText:
-      'Top service. Bench was in great nick and the seller even lent a hand getting it into my car. Would recommend.',
-    preferredTitlePatterns: ['%bench%', '%Bench%'],
-    looseTitlePatterns: ['%adjustable bench%', '%utility bench%'],
-    preferAdminSeller: true,
+    listingTitle: 'Jordan Urethane Dumbbell Set',
+    categorySlug: 'dumbbells',
+    pricePence: 95000,
     purchaseType: 'home',
+    reviewText:
+      'Weights match the listing. A couple of dumbbells have scuffs on the urethane — expected at this price, to be fair.',
   },
   {
     index: 18,
+    listingTitle: 'Matrix Connexus Rig',
+    categorySlug: 'multi-gyms',
+    pricePence: 410000,
+    purchaseType: 'commercial',
     reviewText:
-      'Good deal on a used upright bike. Console works fine and the frame is solid — minor scuffs only.',
-    preferredTitlePatterns: ['%upright bike%', '%Upright Bike%', '%Lifecycle%'],
-    looseTitlePatterns: ['%upright%', '%bike%'],
-    preferAdminSeller: false,
-    purchaseType: 'home',
+      'Big item but the seller had it broken down already. Labelling on the parts saved me a headache rebuilding it.',
   },
   {
     index: 19,
-    reviewText:
-      'Smooth from offer to collection. Weight plates matched the listing and the seller had everything ready at the agreed time.',
-    preferredTitlePatterns: ['%weight plate%', '%Weight Plates%', '%bumper%'],
-    looseTitlePatterns: ['%plates%', '%olympic%'],
-    preferAdminSeller: false,
+    listingTitle: 'Concept2 BikeErg',
+    categorySlug: 'upright-bikes',
+    pricePence: 68000,
     purchaseType: 'home',
+    reviewText:
+      'Paid on Tuesday, collected Thursday. Flywheel is quiet and resistance feels crisp. Proper chuffed.',
   },
-].map((row) => ({
+]
+
+export const QA_CAROUSEL_REVIEWS = QA_CAROUSEL_REVIEW_ROWS.map((row) => ({
   ...row,
   rating: FOUR_STAR_INDICES.has(row.index) ? 4 : 5,
+  listingId: seedUuid('0006', '4006', '8006', row.index),
+  listingSlug: qaListingSlug(row.index, row.listingTitle),
   reviewId: seedUuid('0005', '4005', '8005', row.index),
   orderId: seedUuid('0004', '4004', '8004', row.index),
   paymentId: seedUuid('0003', '4003', '8003', row.index),
@@ -263,11 +282,9 @@ export const QA_CAROUSEL_REVIEW_IDS = {
   orderIds: QA_CAROUSEL_REVIEWS.map((r) => r.orderId),
   paymentIds: QA_CAROUSEL_REVIEWS.map((r) => r.paymentId),
   offerIds: QA_CAROUSEL_REVIEWS.map((r) => r.offerId),
+  listingIds: QA_CAROUSEL_REVIEWS.map((r) => r.listingId),
   buyerIds: QA_CAROUSEL_REVIEW_BUYERS.map((b) => b.id),
 }
 
-/** Claim specialised listings before broader pattern matches. */
-export const QA_CAROUSEL_REVIEW_SEED_ORDER = [
-  0, 5, 6, 1, 2, 3, 4, 7, 8, 9,
-  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-]
+/** Seed in index order — each review uses its own QA stub listing. */
+export const QA_CAROUSEL_REVIEW_SEED_ORDER = QA_CAROUSEL_REVIEWS.map((row) => row.index)

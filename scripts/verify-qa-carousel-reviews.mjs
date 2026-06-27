@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * QA REVIEW SEED DATA ONLY — DO NOT RUN FOR REAL PRODUCTION REVIEWS
+ *
  * Verify QA CAROUSEL SEED reviews for homepage carousel testing.
  *
  *   node scripts/verify-qa-carousel-reviews.mjs
@@ -9,8 +11,9 @@ import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import {
-  QA_CAROUSEL_REVIEW_IDS,
+  QA_CAROUSEL_LISTING_SLUG_PREFIX,
   QA_CAROUSEL_REVIEWS,
+  QA_CAROUSEL_REVIEW_IDS,
 } from './qa-carousel-reviews-data.mjs'
 import {
   assertQaCarouselServiceRole,
@@ -55,7 +58,7 @@ async function main() {
 
   const { data: reviews, error: reviewsError } = await supabase
     .from('reviews')
-    .select('id, rating, created_at, order_id')
+    .select('id, rating, created_at, order_id, review_text')
     .in('id', QA_CAROUSEL_REVIEW_IDS.reviewIds)
 
   if (reviewsError) throw reviewsError
@@ -76,6 +79,8 @@ async function main() {
     'Rating mix is 14×5-star and 6×4-star',
   )
 
+  const expectedTitles = new Set(QA_CAROUSEL_REVIEWS.map((row) => row.listingTitle))
+
   const { data: orders, error: ordersError } = await supabase
     .from('orders')
     .select('id, listing_id, fulfilment_status, payout_status')
@@ -94,21 +99,41 @@ async function main() {
     'QA orders are completed with paid payout (no live Stripe dependency)',
   )
 
-  const listingIds = [...new Set((orders ?? []).map((row) => row.listing_id))]
   const { data: listings, error: listingsError } = await supabase
     .from('listings')
-    .select('id, status, title')
-    .in('id', listingIds)
+    .select('id, status, title, slug')
+    .in('id', QA_CAROUSEL_REVIEW_IDS.listingIds)
 
   if (listingsError) throw listingsError
 
   assert(
-    (listings ?? []).length === listingIds.length,
-    'All linked listings still exist',
+    (listings ?? []).length === QA_CAROUSEL_REVIEW_IDS.listingIds.length,
+    'All QA stub listings present',
   )
   assert(
-    (listings ?? []).every((row) => row.status === 'active'),
-    'Linked listings remain active (not sold/reserved)',
+    (listings ?? []).every((row) => row.status === 'sold'),
+    'QA stub listings are sold (not active in browse)',
+  )
+  assert(
+    (listings ?? []).every((row) => row.slug.startsWith(QA_CAROUSEL_LISTING_SLUG_PREFIX)),
+    `QA stub listing slugs use ${QA_CAROUSEL_LISTING_SLUG_PREFIX} prefix`,
+  )
+  assert(
+    (listings ?? []).every((row) => expectedTitles.has(row.title)),
+    'QA stub listing titles match seeded equipment names',
+  )
+
+  const { data: activeMarketplace, error: activeError } = await supabase
+    .from('listings')
+    .select('id, title')
+    .eq('status', 'active')
+    .in('title', [...expectedTitles])
+
+  if (activeError) throw activeError
+
+  assert(
+    (activeMarketplace ?? []).length === 0,
+    'Seeded equipment titles do not appear as active marketplace listings',
   )
 
   const { data: homepageReviews, error: rpcError } = await supabase.rpc(
@@ -123,15 +148,27 @@ async function main() {
     'Homepage RPC returns at least 12 reviews for carousel',
   )
   assert(
-    (homepageReviews ?? []).length >= 5,
+    (homepageReviews ?? []).length > 4,
     'Enough reviews for interactive carousel (>4 threshold)',
   )
 
   const qaOnHomepage = (homepageReviews ?? []).filter((row) =>
     QA_CAROUSEL_REVIEW_IDS.reviewIds.includes(row.id),
-  ).length
+  )
 
-  console.log(`INFO: ${qaOnHomepage} QA reviews in top ${(homepageReviews ?? []).length} homepage results`)
+  assert(
+    qaOnHomepage.length >= Math.min(QA_CAROUSEL_REVIEWS.length, 20),
+    'QA reviews appear in homepage RPC results',
+  )
+
+  assert(
+    qaOnHomepage.every((row) => expectedTitles.has(row.listing_title)),
+    'Homepage review cards show QA equipment titles (anonymous — no buyer names in RPC)',
+  )
+
+  console.log(
+    `INFO: ${qaOnHomepage.length} QA reviews in top ${(homepageReviews ?? []).length} homepage results`,
+  )
 
   if (failures > 0) {
     console.error(`\n${failures} verification check(s) failed`)

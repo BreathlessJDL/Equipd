@@ -154,17 +154,24 @@ export function buildCourierEvidencePayload({
   handoverPhotoPath,
   courierName,
   courierCompany,
-  trackingReference,
+  dispatchDate,
+  evidenceNotes,
   signatureName,
   signatureData,
 }) {
+  const dispatchAt =
+    dispatchDate && /^\d{4}-\d{2}-\d{2}$/.test(dispatchDate)
+      ? new Date(`${dispatchDate}T12:00:00`).toISOString()
+      : null
+
   return {
     courier_evidence_video_url: videoPath,
     courier_pre_collection_photo_url: preCollectionPhotoPath,
     courier_handover_photo_url: handoverPhotoPath,
     courier_name: courierName?.trim() || null,
     courier_company: courierCompany?.trim() || null,
-    courier_tracking_reference: trackingReference?.trim() || null,
+    courier_collected_at: dispatchAt,
+    courier_evidence_notes: evidenceNotes?.trim() || null,
     courier_signature_name: signatureName?.trim() || null,
     courier_signature_data: signatureData || null,
   }

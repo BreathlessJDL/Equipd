@@ -358,7 +358,6 @@ function buildEvidencePayload(orderId) {
     courier_handover_photo_url: `${orderId}/photos/handover/regression.jpg`,
     courier_name: 'Regression Courier',
     courier_company: 'Equipd Test Freight',
-    courier_tracking_reference: `REG-${orderId.slice(0, 8)}`,
     courier_signature_name: 'Regression Courier',
     courier_signature_data:
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
@@ -393,6 +392,7 @@ async function confirmCourierDelivery(authed, orderId) {
     p_order_id: orderId,
     p_checks: DELIVERY_CHECKS,
     p_user_agent: 'regression-test',
+    p_buyer_tracking_reference: `REG-BUYER-${orderId.slice(0, 8)}`,
   })
 
   if (error) {

@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
+ * QA REVIEW SEED DATA ONLY — DO NOT RUN FOR REAL PRODUCTION REVIEWS
+ *
  * QA CAROUSEL SEED — homepage review carousel test data (live-domain / staging QA).
  *
- * Creates 20 synthetic completed-order reviews for carousel QA on equipd.co.uk.
+ * Creates 20 synthetic completed-order reviews backed by QA-only sold stub listings.
+ * Does not modify, reserve, or sell any real active marketplace listings.
+ *
  * This is NOT a Supabase migration and must not run automatically in CI/deploy.
  *
  * Usage:
@@ -23,6 +27,8 @@ import { dirname, join } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import {
   QA_CAROUSEL_DEFAULT_ADMIN_EMAIL,
+  QA_CAROUSEL_LISTING_DESCRIPTION,
+  QA_CAROUSEL_LISTING_SLUG_PREFIX,
   QA_CAROUSEL_OFFER_MESSAGE,
   QA_CAROUSEL_REVIEW_BUYERS,
   QA_CAROUSEL_REVIEW_IDS,
@@ -54,7 +60,7 @@ export function assertQaCarouselServiceRole({ requireConfirm = true } = {}) {
   if (requireConfirm && process.env[QA_CAROUSEL_SEED_CONFIRM_ENV] !== 'true') {
     throw new Error(
       `Refusing to run: set ${QA_CAROUSEL_SEED_CONFIRM_ENV}=true.\n` +
-        'This script writes synthetic marketplace rows via the service role.',
+        'QA REVIEW SEED DATA ONLY — this script writes synthetic marketplace rows via the service role.',
     )
   }
 
@@ -139,63 +145,93 @@ async function ensureReviewBuyers(supabase) {
   }
 }
 
-async function queryActiveListings(supabase, { sellerId = null, pattern = null, limit = 30 } = {}) {
-  let query = supabase
-    .from('listings')
-    .select('id, title, seller_id, price_pence, status, slug')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(limit)
+async function loadCategoryIdMap(supabase) {
+  const slugs = [...new Set(QA_CAROUSEL_REVIEWS.map((row) => row.categorySlug))]
 
-  if (sellerId) query = query.eq('seller_id', sellerId)
-  if (pattern) query = query.ilike('title', pattern)
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id, slug')
+    .in('slug', slugs)
 
-  const { data, error } = await query
   if (error) throw error
-  return data ?? []
-}
 
-export async function findListingForQaReview(supabase, reviewDef, usedListingIds, adminId) {
-  const patterns = [
-    ...reviewDef.preferredTitlePatterns,
-    ...(reviewDef.looseTitlePatterns ?? []),
-  ]
+  const map = new Map((data ?? []).map((row) => [row.slug, row.id]))
+  const missing = slugs.filter((slug) => !map.has(slug))
 
-  const sellerFilter = reviewDef.preferAdminSeller ? adminId : null
-
-  for (const pattern of patterns) {
-    const rows = await queryActiveListings(supabase, { sellerId: sellerFilter, pattern, limit: 30 })
-    const listing = rows.find((row) => !usedListingIds.has(row.id))
-    if (listing) return { listing, source: reviewDef.preferAdminSeller ? 'admin-active' : 'active', pattern }
+  if (missing.length > 0) {
+    throw new Error(`Missing category slugs for QA listings: ${missing.join(', ')}`)
   }
 
-  if (reviewDef.preferAdminSeller) {
-    const adminRows = await queryActiveListings(supabase, { sellerId: adminId, limit: 50 })
-    const spare = adminRows.find((row) => !usedListingIds.has(row.id))
-    if (spare) return { listing: spare, source: 'admin-any-active', pattern: '(admin spare)' }
+  return map
+}
+
+async function ensureQaCarouselListings(supabase, adminId, categoryIdBySlug) {
+  console.log('Ensuring QA-only sold stub listings…')
+
+  for (const reviewDef of QA_CAROUSEL_REVIEWS) {
+    const categoryId = categoryIdBySlug.get(reviewDef.categorySlug)
+
+    const { error } = await supabase.from('listings').upsert(
+      {
+        id: reviewDef.listingId,
+        seller_id: adminId,
+        category_id: categoryId,
+        slug: reviewDef.listingSlug,
+        title: reviewDef.listingTitle,
+        description: QA_CAROUSEL_LISTING_DESCRIPTION,
+        price_pence: reviewDef.pricePence,
+        condition: 'good',
+        location: 'Leeds, UK',
+        status: 'sold',
+        source: 'manual',
+        created_at: reviewDef.createdAt,
+        updated_at: reviewDef.createdAt,
+        published_at: reviewDef.createdAt,
+      },
+      { onConflict: 'id' },
+    )
+
+    if (error) {
+      throw new Error(`Upsert QA listing "${reviewDef.listingTitle}": ${error.message}`)
+    }
   }
 
-  const anyRows = await queryActiveListings(supabase, { limit: 80 })
-  const spare = anyRows.find((row) => !usedListingIds.has(row.id) && row.seller_id !== reviewDef.buyerId)
-  if (spare) return { listing: spare, source: 'any-active', pattern: '(unused active listing)' }
-
-  return null
+  console.log(`  Upserted ${QA_CAROUSEL_REVIEWS.length} sold stub listings (${QA_CAROUSEL_LISTING_SLUG_PREFIX}* slugs).`)
 }
 
-function resolveAmountPence(listing) {
-  const price = Number(listing.price_pence)
-  if (Number.isFinite(price) && price > 0) return price
-  return 50000
+async function assertNoQaListingsActive(supabase) {
+  const { data, error } = await supabase
+    .from('listings')
+    .select('id, title, status, slug')
+    .in('id', QA_CAROUSEL_REVIEW_IDS.listingIds)
+
+  if (error) throw error
+
+  const activeRows = (data ?? []).filter((row) => row.status !== 'sold')
+  if (activeRows.length > 0) {
+    throw new Error(
+      `QA stub listings must stay sold: ${activeRows.map((row) => `${row.title} (${row.status})`).join(', ')}`,
+    )
+  }
 }
 
-async function upsertCompletedOrderReview(supabase, reviewDef, listing) {
-  const amountPence = resolveAmountPence(listing)
-  const sellerId = listing.seller_id
+async function logActiveMarketplaceCount(supabase) {
+  const { count, error } = await supabase
+    .from('listings')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
+
+  if (error) throw error
+  console.log(`INFO: ${count ?? 0} active listings remain in marketplace browse.`)
+}
+
+async function upsertCompletedOrderReview(supabase, reviewDef, sellerId) {
+  const amountPence = reviewDef.pricePence
   const buyerId = reviewDef.buyerId
 
   if (buyerId === sellerId) {
     throw new Error(
-      `Review #${reviewDef.index + 1}: buyer and seller are the same for listing "${listing.title}".`,
+      `Review #${reviewDef.index + 1}: buyer and seller are the same for "${reviewDef.listingTitle}".`,
     )
   }
 
@@ -205,7 +241,7 @@ async function upsertCompletedOrderReview(supabase, reviewDef, listing) {
   const { error: offerError } = await supabase.from('offers').upsert(
     {
       id: reviewDef.offerId,
-      listing_id: listing.id,
+      listing_id: reviewDef.listingId,
       buyer_id: buyerId,
       seller_id: sellerId,
       amount_pence: amountPence,
@@ -222,7 +258,7 @@ async function upsertCompletedOrderReview(supabase, reviewDef, listing) {
     {
       id: reviewDef.paymentId,
       offer_id: reviewDef.offerId,
-      listing_id: listing.id,
+      listing_id: reviewDef.listingId,
       buyer_id: buyerId,
       seller_id: sellerId,
       amount_pence: amountPence,
@@ -250,7 +286,7 @@ async function upsertCompletedOrderReview(supabase, reviewDef, listing) {
       id: reviewDef.orderId,
       offer_id: reviewDef.offerId,
       payment_id: reviewDef.paymentId,
-      listing_id: listing.id,
+      listing_id: reviewDef.listingId,
       buyer_id: buyerId,
       seller_id: sellerId,
       amount_pence: amountPence,
@@ -284,12 +320,10 @@ async function upsertCompletedOrderReview(supabase, reviewDef, listing) {
     { onConflict: 'id' },
   )
   if (reviewError) throw reviewError
-
-  return listing.id
 }
 
 export async function resetQaCarouselReviews(supabase) {
-  console.log('Removing QA CAROUSEL SEED reviews and synthetic marketplace rows…')
+  console.log('Removing QA REVIEW SEED DATA reviews, orders, payments, offers, and stub listings…')
 
   const { error: reviewsError } = await supabase
     .from('reviews')
@@ -315,109 +349,80 @@ export async function resetQaCarouselReviews(supabase) {
     .in('id', QA_CAROUSEL_REVIEW_IDS.offerIds)
   if (offersError) throw offersError
 
+  const { error: listingsError } = await supabase
+    .from('listings')
+    .delete()
+    .in('id', QA_CAROUSEL_REVIEW_IDS.listingIds)
+  if (listingsError) throw listingsError
+
   for (const buyer of QA_CAROUSEL_REVIEW_BUYERS) {
     await supabase.auth.admin.deleteUser(buyer.id).catch(() => {})
   }
 
-  console.log('  Removed QA carousel reviews, orders, payments, offers, and buyer accounts.')
+  console.log('  Removed QA reviews, synthetic orders, sold stub listings, and buyer accounts.')
 }
 
 async function dryRunQaCarouselReviews(supabase) {
   const admin = await resolveAdminProfile(supabase)
-  console.log(`Admin: ${admin.email} (${admin.id})`)
-  console.log(`Would seed ${QA_CAROUSEL_REVIEWS.length} QA carousel reviews.\n`)
+  await loadCategoryIdMap(supabase)
 
-  const usedListingIds = new Set()
+  console.log(`Admin seller: ${admin.email} (${admin.id})`)
+  console.log(`Would seed ${QA_CAROUSEL_REVIEWS.length} QA carousel reviews.\n`)
+  console.log('Each review uses a dedicated sold stub listing (not real active inventory).\n')
+
   let fiveStar = 0
   let fourStar = 0
-  let adminSellerCount = 0
 
   for (const reviewIndex of QA_CAROUSEL_REVIEW_SEED_ORDER) {
     const reviewDef = QA_CAROUSEL_REVIEWS[reviewIndex]
-    const match = await findListingForQaReview(supabase, reviewDef, usedListingIds, admin.id)
-
-    if (!match) {
-      throw new Error(
-        `Review #${reviewDef.index + 1}: no active listing found.\n` +
-          `  Patterns: ${[...reviewDef.preferredTitlePatterns, ...(reviewDef.looseTitlePatterns ?? [])].join(', ')}`,
-      )
-    }
-
-    usedListingIds.add(match.listing.id)
-    if (match.listing.seller_id === admin.id) adminSellerCount += 1
     if (reviewDef.rating === 5) fiveStar += 1
     if (reviewDef.rating === 4) fourStar += 1
 
     const stars = '★'.repeat(reviewDef.rating) + (reviewDef.rating < 5 ? '☆' : '')
     console.log(
-      `  ${stars} ${match.listing.title} [${match.listing.status}] (${match.source}) — ${QA_CAROUSEL_REVIEW_BUYERS[reviewDef.index].displayName}`,
+      `  ${stars} ${reviewDef.listingTitle} [sold stub] — ${QA_CAROUSEL_REVIEW_BUYERS[reviewDef.index].displayName}`,
     )
   }
 
   console.log(
-    `\nDry run OK: ${QA_CAROUSEL_REVIEWS.length} reviews (${fiveStar}×5-star, ${fourStar}×4-star), ${adminSellerCount} on admin listings.`,
+    `\nDry run OK: ${QA_CAROUSEL_REVIEWS.length} reviews (${fiveStar}×5-star, ${fourStar}×4-star).`,
   )
-  console.log('Listings would remain active — seed does not modify listing status.')
+  console.log('Real active listings would not be matched or modified.')
 }
 
 export async function seedQaCarouselReviews(supabase) {
-  console.log('Seeding QA CAROUSEL SEED homepage reviews…')
+  console.log('Seeding QA REVIEW SEED DATA homepage reviews…')
 
   const admin = await resolveAdminProfile(supabase)
-  console.log(`Admin: ${admin.email}`)
+  console.log(`Admin seller: ${admin.email}`)
 
+  const categoryIdBySlug = await loadCategoryIdMap(supabase)
   await ensureReviewBuyers(supabase)
+  await ensureQaCarouselListings(supabase, admin.id, categoryIdBySlug)
 
-  const usedListingIds = new Set()
-  const listingStatusBefore = new Map()
   let fiveStar = 0
   let fourStar = 0
-  let adminSellerCount = 0
 
   for (const reviewIndex of QA_CAROUSEL_REVIEW_SEED_ORDER) {
     const reviewDef = QA_CAROUSEL_REVIEWS[reviewIndex]
-    const match = await findListingForQaReview(supabase, reviewDef, usedListingIds, admin.id)
+    await upsertCompletedOrderReview(supabase, reviewDef, admin.id)
 
-    if (!match) {
-      throw new Error(`Review #${reviewDef.index + 1}: no active listing found.`)
-    }
-
-    if (!listingStatusBefore.has(match.listing.id)) {
-      listingStatusBefore.set(match.listing.id, match.listing.status)
-    }
-
-    usedListingIds.add(match.listing.id)
-    await upsertCompletedOrderReview(supabase, reviewDef, match.listing)
-
-    if (match.listing.seller_id === admin.id) adminSellerCount += 1
     if (reviewDef.rating === 5) fiveStar += 1
     if (reviewDef.rating === 4) fourStar += 1
 
     const stars = '★'.repeat(reviewDef.rating) + (reviewDef.rating < 5 ? '☆' : '')
     console.log(
-      `  ${stars} ${match.listing.title} (${match.source}) — ${QA_CAROUSEL_REVIEW_BUYERS[reviewDef.index].displayName}`,
+      `  ${stars} ${reviewDef.listingTitle} — ${QA_CAROUSEL_REVIEW_BUYERS[reviewDef.index].displayName}`,
     )
   }
 
-  const listingIds = [...listingStatusBefore.keys()]
-  const { data: afterListings, error: listingCheckError } = await supabase
-    .from('listings')
-    .select('id, status, title')
-    .in('id', listingIds)
-
-  if (listingCheckError) throw listingCheckError
-
-  const notActive = (afterListings ?? []).filter((row) => row.status !== 'active')
-  if (notActive.length > 0) {
-    throw new Error(
-      `Listing status changed after seed (expected all active): ${notActive.map((r) => r.title).join(', ')}`,
-    )
-  }
+  await assertNoQaListingsActive(supabase)
+  await logActiveMarketplaceCount(supabase)
 
   console.log(
     `\nDone: ${QA_CAROUSEL_REVIEWS.length} QA reviews (${fiveStar}×5-star, ${fourStar}×4-star).`,
   )
-  console.log(`${adminSellerCount} reviews on admin listings; ${listingIds.length} listings verified active.`)
+  console.log('Stub listings remain sold — they do not appear in browse.')
   console.log('Homepage carousel reads from get_recent_reviews_for_homepage().')
 }
 

@@ -10,13 +10,22 @@ import {
 } from '../lib/orderEvidence'
 import './CourierEvidence.css'
 
+function todayDateInputValue() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function CourierEvidenceForm({ orderId, onSubmitted }) {
   const [videoFile, setVideoFile] = useState(null)
   const [prePhotoFile, setPrePhotoFile] = useState(null)
   const [handoverPhotoFile, setHandoverPhotoFile] = useState(null)
   const [courierName, setCourierName] = useState('')
   const [courierCompany, setCourierCompany] = useState('')
-  const [trackingReference, setTrackingReference] = useState('')
+  const [dispatchDate, setDispatchDate] = useState(todayDateInputValue)
+  const [evidenceNotes, setEvidenceNotes] = useState('')
   const [signatureName, setSignatureName] = useState('')
   const [signatureData, setSignatureData] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -57,8 +66,8 @@ function CourierEvidenceForm({ orderId, onSubmitted }) {
       return
     }
 
-    if (!trackingReference.trim()) {
-      setError('Tracking reference is required.')
+    if (!dispatchDate) {
+      setError('Collection/dispatch date is required.')
       return
     }
 
@@ -104,7 +113,8 @@ function CourierEvidenceForm({ orderId, onSubmitted }) {
       handoverPhotoPath: uploadedPaths['photos/handover'],
       courierName,
       courierCompany,
-      trackingReference,
+      dispatchDate,
+      evidenceNotes,
       signatureName,
       signatureData,
     })
@@ -184,6 +194,21 @@ function CourierEvidenceForm({ orderId, onSubmitted }) {
       </div>
 
       <div className="courier-evidence-form__field">
+        <label className="courier-evidence-form__label" htmlFor={`courier-company-${orderId}`}>
+          Courier company
+        </label>
+        <input
+          id={`courier-company-${orderId}`}
+          className="courier-evidence-form__input"
+          type="text"
+          value={courierCompany}
+          disabled={submitting}
+          onChange={(event) => setCourierCompany(event.target.value)}
+        />
+        <p className="courier-evidence-form__hint">Provide a courier company or courier name (or both).</p>
+      </div>
+
+      <div className="courier-evidence-form__field">
         <label className="courier-evidence-form__label" htmlFor={`courier-name-${orderId}`}>
           Courier name
         </label>
@@ -198,31 +223,31 @@ function CourierEvidenceForm({ orderId, onSubmitted }) {
       </div>
 
       <div className="courier-evidence-form__field">
-        <label className="courier-evidence-form__label" htmlFor={`courier-company-${orderId}`}>
-          Courier company
+        <label className="courier-evidence-form__label" htmlFor={`courier-dispatch-${orderId}`}>
+          Collection / dispatch date
         </label>
         <input
-          id={`courier-company-${orderId}`}
+          id={`courier-dispatch-${orderId}`}
           className="courier-evidence-form__input"
-          type="text"
-          value={courierCompany}
+          type="date"
+          value={dispatchDate}
           disabled={submitting}
-          onChange={(event) => setCourierCompany(event.target.value)}
+          onChange={(event) => setDispatchDate(event.target.value)}
         />
-        <p className="courier-evidence-form__hint">Provide a courier name or company (or both).</p>
       </div>
 
       <div className="courier-evidence-form__field">
-        <label className="courier-evidence-form__label" htmlFor={`courier-tracking-${orderId}`}>
-          Tracking reference
+        <label className="courier-evidence-form__label" htmlFor={`courier-notes-${orderId}`}>
+          Notes <span className="courier-evidence-form__optional">(optional)</span>
         </label>
-        <input
-          id={`courier-tracking-${orderId}`}
-          className="courier-evidence-form__input"
-          type="text"
-          value={trackingReference}
+        <textarea
+          id={`courier-notes-${orderId}`}
+          className="courier-evidence-form__textarea"
+          rows={3}
+          maxLength={500}
+          value={evidenceNotes}
           disabled={submitting}
-          onChange={(event) => setTrackingReference(event.target.value)}
+          onChange={(event) => setEvidenceNotes(event.target.value)}
         />
       </div>
 

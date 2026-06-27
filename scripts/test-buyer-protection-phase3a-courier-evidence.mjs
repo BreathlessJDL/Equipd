@@ -69,7 +69,7 @@ function buildEvidencePayload(orderId) {
     courier_handover_photo_url: `${orderId}/photos/handover/test.jpg`,
     courier_name: 'Alex Courier',
     courier_company: 'FastFreight Ltd',
-    courier_tracking_reference: 'FF-PHASE3A-TEST',
+    courier_evidence_notes: 'Loaded onto pallet at unit 4.',
     courier_signature_name: 'Alex Courier',
     courier_signature_data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   }
@@ -238,7 +238,8 @@ async function main() {
   assert(updatedOrder.courier_collected_at, 'Expected courier_collected_at')
   assert(updatedOrder.courier_evidence_submitted_at, 'Expected courier_evidence_submitted_at')
   assert(updatedOrder.courier_evidence_submitted_by === SELLER.id, 'Expected seller as submitter')
-  assert(updatedOrder.courier_tracking_reference === 'FF-PHASE3A-TEST', 'Tracking should be saved')
+  assert(!updatedOrder.courier_tracking_reference, 'Seller tracking should not be saved')
+  assert(updatedOrder.courier_evidence_notes === 'Loaded onto pallet at unit 4.', 'Notes should be saved')
   assert(updatedOrder.payout_status === 'not_due', 'Payout should remain not_due')
   assert(updatedOrder.payout_release_at === null, 'payout_release_at should remain null')
   assert(!updatedOrder.stripe_transfer_id, 'No Stripe transfer should exist')

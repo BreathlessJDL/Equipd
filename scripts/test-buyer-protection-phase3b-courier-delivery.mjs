@@ -149,6 +149,7 @@ async function main() {
     p_order_id: order.id,
     p_checks: buildDeliveryChecks(),
     p_user_agent: 'phase3b-test-script',
+    p_buyer_tracking_reference: 'FF-BUYER-TRACK-3B',
   })
 
   if (confirmError) {
@@ -159,6 +160,10 @@ async function main() {
   assert(updatedOrder.delivered_at, 'Expected delivered_at')
   assert(updatedOrder.courier_delivered_at, 'Expected courier_delivered_at')
   assert(updatedOrder.courier_delivery_confirmed_by === BUYER.id, 'Expected buyer as confirmer')
+  assert(
+    updatedOrder.courier_buyer_tracking_reference === 'FF-BUYER-TRACK-3B',
+    'Expected buyer tracking reference',
+  )
   assert(updatedOrder.payout_status === 'not_due', 'Payout should remain not_due')
   assert(updatedOrder.payout_release_at, 'Expected payout_release_at')
   assert(!updatedOrder.stripe_transfer_id, 'No Stripe transfer should exist')

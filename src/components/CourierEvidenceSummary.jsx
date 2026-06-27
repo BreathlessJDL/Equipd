@@ -51,6 +51,8 @@ function CourierEvidenceSummary({ order, role = 'buyer' }) {
   if (!order) return null
 
   const courierLabel = [order.courier_company, order.courier_name].filter(Boolean).join(' · ')
+  const buyerTracking = order.courier_buyer_tracking_reference?.trim()
+  const isDelivered = Boolean(order.courier_delivered_at || order.delivered_at)
 
   return (
     <section className="courier-evidence-summary">
@@ -68,15 +70,21 @@ function CourierEvidenceSummary({ order, role = 'buyer' }) {
         </p>
       ) : null}
 
-      {order.courier_tracking_reference ? (
+      {order.courier_collected_at ? (
         <p className="courier-evidence-summary__meta">
-          Tracking reference: {order.courier_tracking_reference}
+          Dispatched {formatOrderTimestamp(order.courier_collected_at)}
         </p>
       ) : null}
 
-      {order.courier_collected_at ? (
+      {order.courier_evidence_notes ? (
+        <p className="courier-evidence-summary__meta">Seller notes: {order.courier_evidence_notes}</p>
+      ) : null}
+
+      {isDelivered ? (
         <p className="courier-evidence-summary__meta">
-          Collected {formatOrderTimestamp(order.courier_collected_at)}
+          {buyerTracking
+            ? `Tracking number: ${buyerTracking}`
+            : 'No tracking number provided'}
         </p>
       ) : null}
 
