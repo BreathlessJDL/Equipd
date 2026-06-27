@@ -32,6 +32,17 @@ declare
 begin
   raw_username := nullif(trim(new.raw_user_meta_data ->> 'username'), '');
 
+  if raw_username is not null then
+    if exists (
+      select 1
+      from public.profiles p
+      where lower(p.username) = lower(raw_username)
+    ) then
+      raise exception 'That username is already taken.'
+        using errcode = '23505';
+    end if;
+  end if;
+
   insert into public.profiles (id, display_name, username)
   values (
     new.id,
@@ -40,5 +51,9 @@ begin
   );
 
   return new;
+exception
+  when unique_violation then
+    raise exception 'That username is already taken.'
+      using errcode = '23505';
 end;
 $$;

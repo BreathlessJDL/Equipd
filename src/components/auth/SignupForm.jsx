@@ -28,11 +28,13 @@ function SignupForm({
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [usernameError, setUsernameError] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
+    setUsernameError('')
     setError('')
     setSuccess('')
 
@@ -43,7 +45,7 @@ function SignupForm({
 
     const validation = validateUsername(username)
     if (!validation.valid) {
-      setError(validation.error)
+      setUsernameError(validation.error)
       return
     }
 
@@ -52,7 +54,7 @@ function SignupForm({
     const availability = await isUsernameAvailable(validation.username)
     if (!availability.available) {
       setSubmitting(false)
-      setError(getProfileErrorMessage(availability.error))
+      setUsernameError(getProfileErrorMessage(availability.error))
       return
     }
 
@@ -83,7 +85,20 @@ function SignupForm({
 
     if (signUpError) {
       setSubmitting(false)
-      setError(getAuthErrorMessage(signUpError))
+
+      const authMessage = getAuthErrorMessage(signUpError)
+      if (authMessage === 'That username is already taken.') {
+        setUsernameError(authMessage)
+        return
+      }
+
+      const recheck = await isUsernameAvailable(validation.username)
+      if (!recheck.available) {
+        setUsernameError('That username is already taken.')
+        return
+      }
+
+      setError(authMessage)
       return
     }
 
@@ -94,7 +109,12 @@ function SignupForm({
 
       if (profileError) {
         setSubmitting(false)
-        setError(getProfileErrorMessage(profileError))
+        const profileMessage = getProfileErrorMessage(profileError)
+        if (profileMessage === 'That username is already taken.') {
+          setUsernameError(profileMessage)
+        } else {
+          setError(profileMessage)
+        }
         return
       }
     }
@@ -143,10 +163,22 @@ function SignupForm({
             value={username}
             onChange={(event) => {
               setUsername(event.target.value)
+              setUsernameError('')
               setError('')
             }}
+            aria-invalid={usernameError ? 'true' : undefined}
+            aria-describedby={usernameError ? `${idPrefix}-username-error` : `${idPrefix}-username-hint`}
           />
-          <p className="auth-form__hint">
+          {usernameError ? (
+            <p
+              id={`${idPrefix}-username-error`}
+              className="auth-form__message auth-form__message--error auth-form__field-error"
+              role="alert"
+            >
+              {usernameError}
+            </p>
+          ) : null}
+          <p className="auth-form__hint" id={`${idPrefix}-username-hint`}>
             {USERNAME_MIN_LENGTH}–{USERNAME_MAX_LENGTH} characters. Letters, numbers, underscores, and
             hyphens only.
           </p>

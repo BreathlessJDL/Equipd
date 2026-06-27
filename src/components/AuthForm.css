@@ -96,6 +96,11 @@
   border: 1px solid color-mix(in srgb, var(--color-danger) 25%, var(--color-border));
 }
 
+.auth-form__field-error {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.8125rem;
+}
+
 .auth-form__message--success {
   color: #166534;
   background: color-mix(in srgb, #16a34a 8%, var(--color-surface));

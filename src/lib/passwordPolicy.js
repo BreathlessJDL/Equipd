@@ -102,8 +102,20 @@ export function isPasswordPolicyValid(password) {
   return validatePassword(password).valid
 }
 
+function isMissingPasswordValidationRpcError(error) {
+  if (!error) return false
+
+  const message = `${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`.toLowerCase()
+
+  return (
+    error.code === '42883'
+    || error.code === 'PGRST202'
+    || (message.includes('validate_signup_password') && message.includes('does not exist'))
+  )
+}
+
 /**
- * Server-side validation via Supabase Edge Function (cannot be bypassed from the app UI).
+ * Server-side validation via Postgres RPC (same rules as client checks).
  */
 export async function validatePasswordWithServer(supabaseClient, password) {
   const clientResult = validatePassword(password)
@@ -112,15 +124,19 @@ export async function validatePasswordWithServer(supabaseClient, password) {
     return clientResult
   }
 
-  if (!supabaseClient?.functions?.invoke) {
+  if (!supabaseClient?.rpc) {
     return clientResult
   }
 
-  const { data, error } = await supabaseClient.functions.invoke('validate-password', {
-    body: { password },
+  const { data, error } = await supabaseClient.rpc('validate_signup_password', {
+    p_password: password,
   })
 
   if (error) {
+    if (isMissingPasswordValidationRpcError(error)) {
+      return clientResult
+    }
+
     return {
       valid: false,
       error: 'Could not verify password requirements. Please try again.',

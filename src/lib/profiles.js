@@ -198,23 +198,40 @@ export function validateUsername(value, { required = true } = {}) {
   return { valid: true, username, error: null }
 }
 
-export async function isUsernameAvailable(username, { excludeUserId } = {}) {
-  if (!supabase) {
-    return { available: false, error: new Error('Supabase is not configured.') }
-  }
+function isMissingUsernameAvailabilityRpcError(error) {
+  if (!error) return false
 
-  if (!(await supportsUsername())) {
-    return {
-      available: false,
-      error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
+  const message = `${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`.toLowerCase()
+
+  return (
+    error.code === '42883'
+    || error.code === 'PGRST202'
+    || (message.includes('is_username_available') && message.includes('does not exist'))
+  )
+}
+
+async function isUsernameAvailableViaRpc(validation, excludeUserId) {
+  const { data, error } = await supabase.rpc('is_username_available', {
+    p_username: validation.username,
+    p_exclude_user_id: excludeUserId ?? null,
+  })
+
+  if (error) {
+    if (isMissingUsernameAvailabilityRpcError(error)) {
+      return null
     }
+
+    return { available: false, error }
   }
 
-  const validation = validateUsername(username)
-  if (!validation.valid) {
-    return { available: false, error: new Error(validation.error) }
+  if (data === true) {
+    return { available: true, username: validation.username, error: null }
   }
 
+  return { available: false, error: new Error('That username is already taken.') }
+}
+
+async function isUsernameAvailableViaView(validation, excludeUserId) {
   const { data, error } = await supabase
     .from('profiles_public')
     .select('id')
@@ -238,6 +255,31 @@ export async function isUsernameAvailable(username, { excludeUserId } = {}) {
   }
 
   return { available: true, username: validation.username, error: null }
+}
+
+export async function isUsernameAvailable(username, { excludeUserId } = {}) {
+  if (!supabase) {
+    return { available: false, error: new Error('Supabase is not configured.') }
+  }
+
+  if (!(await supportsUsername())) {
+    return {
+      available: false,
+      error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
+    }
+  }
+
+  const validation = validateUsername(username)
+  if (!validation.valid) {
+    return { available: false, error: new Error(validation.error) }
+  }
+
+  const rpcResult = await isUsernameAvailableViaRpc(validation, excludeUserId)
+  if (rpcResult) {
+    return rpcResult
+  }
+
+  return isUsernameAvailableViaView(validation, excludeUserId)
 }
 
 export function formatProfileJoinDate(createdAt) {

@@ -11,6 +11,14 @@ export function getAuthErrorMessage(error) {
 
   const message = error.message ?? ''
 
+  if (
+    error.code === '23505'
+    || /username is already taken/i.test(message)
+    || (/username/i.test(message) && /(unique|duplicate|already)/i.test(message))
+  ) {
+    return 'That username is already taken.'
+  }
+
   if (/provider is not enabled/i.test(message)) {
     return 'Google sign-in is not enabled yet. Please try email and password, or contact support.'
   }
