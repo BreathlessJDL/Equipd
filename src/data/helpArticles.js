@@ -341,7 +341,7 @@ export const HELP_ARTICLES = [
         items: [
           'The buyer inspects the equipment at handover.',
           'The seller shows their Equipd QR code.',
-          'The buyer scans the QR code while logged in and confirms handover.',
+          'The buyer should scan the QR code and log in to confirm handover.',
         ],
       },
       {
@@ -600,7 +600,7 @@ export const HELP_ARTICLES = [
       },
       {
         type: 'paragraph',
-        text: 'The seller shows the QR code. The buyer scans it while logged in, completes the inspection checks, and confirms handover.',
+        text: 'The seller shows the QR code. The buyer should scan the QR code and log in, complete the inspection checks, and confirm handover.',
       },
       {
         type: 'paragraph',

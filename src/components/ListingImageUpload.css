@@ -146,6 +146,15 @@
   cursor: not-allowed;
 }
 
+.listing-image-upload__item--draggable {
+  cursor: grab;
+  touch-action: manipulation;
+}
+
+.listing-image-upload__item--dragging {
+  cursor: grabbing;
+}
+
 .listing-image-upload__drag-handle {
   position: absolute;
   inset-inline: 0;
@@ -159,7 +168,7 @@
   border-radius: 0;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
   color: #fff;
-  cursor: grab;
+  pointer-events: none;
   touch-action: none;
 }
 

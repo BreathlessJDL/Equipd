@@ -124,8 +124,8 @@ function CollectionQrPanel({ orderId, compact = false, orderType = ORDER_TYPES.C
       </h3>
       <p className="collection-qr-panel__lead">
         {isSellerDelivery
-          ? 'Show this QR code to the buyer after you have delivered and unloaded the equipment. They must inspect the item and scan while logged in as the buyer for this order.'
-          : 'Show this QR code to the buyer at collection. They must scan it while logged in as the buyer for this order.'}
+          ? 'Show this QR code to the buyer after you have delivered and unloaded the equipment. The buyer should scan the QR code and log in to confirm handover.'
+          : 'Show this QR code to the buyer at collection. The buyer should scan the QR code and log in to confirm collection.'}
       </p>
 
       {qrDataUrl ? (

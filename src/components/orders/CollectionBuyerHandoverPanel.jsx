@@ -28,14 +28,14 @@ function CollectionBuyerHandoverPanel({
           <>
             <li>Inspect and test the equipment once it has been delivered.</li>
             <li>Ask the seller to open this order and show their handover QR code.</li>
-            <li>Scan the QR code while logged in as the buyer for this order.</li>
+            <li>The buyer should scan the QR code and log in to confirm handover.</li>
             <li>Complete the inspection checks and confirm handover.</li>
           </>
         ) : (
           <>
             <li>Inspect and test the equipment at collection.</li>
             <li>Ask the seller to open this order and show their collection QR code.</li>
-            <li>Scan the QR code while logged in as the buyer for this order.</li>
+            <li>The buyer should scan the QR code and log in to confirm collection.</li>
             <li>Complete the inspection checks and confirm collection.</li>
           </>
         )}

@@ -800,6 +800,23 @@
     text-align: center;
   }
 
+  .home-discovery-card--locations .home-discovery-card__header {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .home-discovery-card--locations .home-discovery-card__heading {
+    justify-content: flex-start;
+  }
+
+  .home-discovery-card--locations .home-discovery-card__subtitle {
+    text-align: left;
+  }
+
+  .home-discovery-card--locations .home-discovery-card__footer {
+    text-align: left;
+  }
+
   .home-discovery-card--locations .home-discovery-card__chips {
     display: flex;
     flex-wrap: wrap;

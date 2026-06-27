@@ -2,6 +2,7 @@ import { formatPricePence, parsePriceToPence } from '../lib/listings'
 import {
   BUYER_PROTECTION_FEE_NOTE,
   calculateBuyerCheckoutTotals,
+  formatBuyerProtectionPricePence,
   resolveOrderCheckoutTotals,
   resolvePaymentCheckoutTotals,
 } from '../lib/buyerProtection'
@@ -84,11 +85,11 @@ function BuyerProtectionOfferSummary({
           </div>
           <div className="buyer-protection-offer-summary__row">
             <dt>Buyer Protection</dt>
-            <dd>{formatPricePence(totals.buyerProtectionFeePence)}</dd>
+            <dd>{formatBuyerProtectionPricePence(totals.buyerProtectionFeePence)}</dd>
           </div>
           <div className="buyer-protection-offer-summary__row buyer-protection-offer-summary__row--total">
             <dt>{totalLabel}</dt>
-            <dd>{formatPricePence(totals.buyerTotalPence)}</dd>
+            <dd>{formatBuyerProtectionPricePence(totals.buyerTotalPence)}</dd>
           </div>
         </dl>
       ) : null}

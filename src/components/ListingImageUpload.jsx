@@ -21,8 +21,10 @@ import { getRemainingImageSlots, validateImageSelection } from '../lib/listingIm
 import './ListingImageUpload.css'
 
 function SortableImageTile({ id, disabled, className, label, children }) {
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
-    useSortable({ id, disabled })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -34,22 +36,18 @@ function SortableImageTile({ id, disabled, className, label, children }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`${className}${isDragging ? ' listing-image-upload__item--dragging' : ''}`}
+      className={`${className}${isDragging ? ' listing-image-upload__item--dragging' : ''}${
+        disabled ? '' : ' listing-image-upload__item--draggable'
+      }`}
+      aria-label={disabled ? undefined : `Drag to reorder: ${label}`}
+      {...(!disabled ? listeners : {})}
+      {...(!disabled ? attributes : {})}
     >
       {children}
       {!disabled ? (
-        <button
-          type="button"
-          ref={setActivatorNodeRef}
-          className="listing-image-upload__drag-handle"
-          aria-label={`Drag to reorder: ${label}`}
-          {...listeners}
-          {...attributes}
-        >
-          <span className="listing-image-upload__drag-handle-icon" aria-hidden="true">
-            ⋮⋮
-          </span>
-        </button>
+        <span className="listing-image-upload__drag-handle" aria-hidden="true">
+          <span className="listing-image-upload__drag-handle-icon">⋮⋮</span>
+        </span>
       ) : null}
     </div>
   )
@@ -191,6 +189,7 @@ function ListingImageUpload({
               className="listing-image-upload__remove"
               aria-label="Remove image"
               disabled={reorderDisabled}
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={() => onRemoveExistingImage(image)}
             >
               ×
@@ -211,6 +210,7 @@ function ListingImageUpload({
           className="listing-image-upload__remove"
           aria-label="Remove image"
           disabled={reorderDisabled}
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={() => onRemovePendingFile(pending.id)}
         >
           ×

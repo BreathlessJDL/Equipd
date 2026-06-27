@@ -296,7 +296,6 @@ function ListingForm({
             inputId={fieldId('location')}
             value={form.locationSearch}
             selectedPlace={form.locationPlace}
-            disabled={imageUploadDisabled}
             onSearchChange={(value) => onFieldChange('locationSearch', value)}
             onPlaceSelected={(value) => onFieldChange('locationPlace', value)}
           />

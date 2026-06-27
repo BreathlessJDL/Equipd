@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { parsePriceToPence } from '../lib/listings'
+import { formatPricePence, parsePriceToPence } from '../lib/listings'
 import {
   calculateBuyerCheckoutTotals,
   formatBuyerProtectionPricePence,
@@ -106,7 +106,7 @@ function BuyerProtectionPriceDisplay({
         }${className ? ` ${className}` : ''}`}
       >
         <p className="buyer-protection-price__item buyer-protection-price__item--primary">
-          {formatBuyerProtectionPricePence(normalizeListingPricePence(itemPricePence))}
+          {formatPricePence(normalizeListingPricePence(itemPricePence))}
         </p>
       </div>
     )
@@ -120,7 +120,7 @@ function BuyerProtectionPriceDisplay({
         }${className ? ` ${className}` : ''}`}
       >
         <p className="buyer-protection-price__item buyer-protection-price__item--primary">
-          {formatBuyerProtectionPricePence(totals.itemPricePence)}
+          {formatPricePence(totals.itemPricePence)}
         </p>
         {compact ? (
           <p className="buyer-protection-price__total buyer-protection-price__total--compact">

@@ -43,6 +43,10 @@ function ListingLocationAutocomplete({
   }, [value])
 
   useEffect(() => {
+    if (disabled) {
+      return undefined
+    }
+
     if (!isGoogleMapsConfigured()) {
       setPlacesStatus('unconfigured')
       setLoadError('Location search is unavailable until VITE_GOOGLE_MAPS_API_KEY is configured.')
@@ -58,7 +62,7 @@ function ListingLocationAutocomplete({
 
       try {
         const google = await loadGoogleMapsPlaces()
-        if (cancelled || !inputRef.current) return
+        if (cancelled || !inputRef.current || disabled) return
 
         let autocomplete = inputRef.current._equipdPlacesAutocomplete
 
@@ -93,6 +97,7 @@ function ListingLocationAutocomplete({
         })
 
         autocompleteRef.current = autocomplete
+        resetGooglePlacesAutocompleteDropdownVisibility()
         setPlacesStatus('ready')
         setLoadError('')
       } catch (error) {
@@ -113,7 +118,7 @@ function ListingLocationAutocomplete({
 
       autocompleteRef.current = null
     }
-  }, [])
+  }, [disabled])
 
   function handleInputChange(event) {
     resetGooglePlacesAutocompleteDropdownVisibility()

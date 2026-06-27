@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { CollectionPinIcon, TagIcon } from '../icons/NavIcons'
+import { CollectionPinIcon } from '../icons/NavIcons'
+import { NewOfferTagIcon } from '../icons/NotificationIcons'
 import '../icons/NavIcons.css'
 import {
   getBrowseBrandHref,
@@ -72,7 +73,7 @@ function HomeDiscoverySection() {
             aria-labelledby="home-discovery-brands-title"
           >
             <HomeDiscoveryCardHeader
-              icon={TagIcon}
+              icon={NewOfferTagIcon}
               title="Popular Brands"
               subtitle="Browse equipment from trusted fitness manufacturers."
               titleId="home-discovery-brands-title"
