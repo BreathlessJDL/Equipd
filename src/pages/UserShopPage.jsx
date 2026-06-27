@@ -7,6 +7,7 @@ import '../components/ListingBrowse.css'
 import '../components/Reviews.css'
 import './UserShop.css'
 import { useAuth } from '../hooks/useAuth'
+import { useRequireAuth } from '../hooks/useRequireAuth'
 import ReportTrigger from '../components/ReportTrigger'
 import { canReportUser, REPORT_TYPES } from '../lib/reports'
 import {
@@ -36,6 +37,7 @@ import { TRUST_LINKS } from '../lib/trustMessaging'
 
 function UserShopPage({ userId }) {
   const { user } = useAuth()
+  const { requireAuth } = useRequireAuth()
   const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
   const [listings, setListings] = useState([])
@@ -126,7 +128,9 @@ function UserShopPage({ userId }) {
 
   async function handleMessageSeller() {
     const firstListing = listings[0]
-    if (!firstListing || !user?.id) return
+    if (!firstListing) return
+    if (!requireAuth(`/shop/${userId}`)) return
+    if (!user?.id) return
 
     setStartingConversation(true)
     setMessageError('')
@@ -224,7 +228,7 @@ function UserShopPage({ userId }) {
               </Link>
             ) : (
               <>
-                {canMessageSeller && user ? (
+                {canMessageSeller ? (
                   <button
                     type="button"
                     className="user-shop__button user-shop__button--primary"
@@ -233,16 +237,6 @@ function UserShopPage({ userId }) {
                   >
                     {startingConversation ? 'Opening conversation…' : 'Message seller'}
                   </button>
-                ) : null}
-
-                {!user && listings.length > 0 ? (
-                  <Link
-                    to="/login"
-                    state={{ from: `/shop/${userId}` }}
-                    className="user-shop__button user-shop__button--primary"
-                  >
-                    Log in to message seller
-                  </Link>
                 ) : null}
 
                 {canReportUser(userId, user?.id) ? (

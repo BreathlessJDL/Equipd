@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import ProtectedLink from '../auth/ProtectedLink'
 
 function LocationSellerSection({ locationView }) {
   const nearbyAreas = locationView.selectedArea
@@ -23,9 +23,9 @@ function LocationSellerSection({ locationView }) {
           . Create a listing in minutes, set your price, and choose how buyers can collect or
           receive delivery.
         </p>
-        <Link to="/listings/new" className="location-page__seller-cta">
+        <ProtectedLink to="/listings/new" className="location-page__seller-cta">
           Create Listing
-        </Link>
+        </ProtectedLink>
       </div>
     </section>
   )

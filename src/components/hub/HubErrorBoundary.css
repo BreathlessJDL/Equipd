@@ -1,0 +1,13 @@
+.hub-error-boundary__stack {
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
+  overflow: auto;
+  max-height: 12rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: color-mix(in srgb, var(--color-navy) 4%, var(--color-bg));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}

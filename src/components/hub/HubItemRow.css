@@ -577,6 +577,16 @@
   .hub-item-row {
     --hub-col-image: 6.25rem;
     --hub-col-actions: 100%;
+    border-color: color-mix(in srgb, var(--color-border) 88%, #d4d4d8);
+    border-radius: calc(var(--radius) + 2px);
+    background: #fcfcfd;
+    box-shadow:
+      0 1px 2px color-mix(in srgb, var(--color-navy) 4%, transparent),
+      0 3px 10px color-mix(in srgb, var(--color-navy) 4%, transparent);
+  }
+
+  .hub-item-list {
+    gap: 0.625rem;
   }
 
   .hub-item-row__main {
@@ -585,10 +595,10 @@
       'media'
       'info'
       'actions';
-    gap: 0.5rem;
+    gap: 0.625rem;
     align-items: stretch;
     min-height: 0;
-    padding: 0.7rem 0.75rem;
+    padding: 0.75rem 0.8125rem;
   }
 
   .hub-item-row__media {

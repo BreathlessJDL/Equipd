@@ -8,6 +8,7 @@ export async function submitListingOffer({
   sellerId,
   amountInput,
   message,
+  listingPricePence,
 }) {
   const messageValidation = validateOptionalMarketplaceMessage(message)
 
@@ -35,6 +36,7 @@ export async function submitListingOffer({
     amountInput,
     message: messageValidation.sanitizedBody,
     conversationId: conversation.id,
+    listingPricePence,
   })
 
   if (offerError || !offer) {

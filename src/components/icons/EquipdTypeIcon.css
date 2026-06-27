@@ -22,7 +22,8 @@
   background: #fff7ed;
 }
 
-.equipd-type-icon--selling-hand-coins {
+.equipd-type-icon--selling-hand-coins,
+.equipd-type-icon--selling-stall {
   color: #0f766e;
   background: #f0fdfa;
 }

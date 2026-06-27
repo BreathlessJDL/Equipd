@@ -13,7 +13,7 @@ import HomeMobileMenu from './HomeMobileMenu'
 import './HomeHeader.css'
 import './HomeMobileMenu.css'
 
-function HomeHeader({ search, onSearchChange, onSearchSubmit }) {
+function HomeHeader({ search, onSearchChange, onSearchSubmit, onHomeBrandClick }) {
   const { user, loading } = useAuth()
   const [navOpen, setNavOpen] = useState(false)
   const isLoggedIn = !loading && Boolean(user)
@@ -27,12 +27,17 @@ function HomeHeader({ search, onSearchChange, onSearchSubmit }) {
     setNavOpen(false)
   }
 
+  function handleBrandClick(event) {
+    closeMenu()
+    onHomeBrandClick?.(event)
+  }
+
   return (
     <header className={`home-header${isLoggedIn ? ' home-header--logged-in' : ''}`}>
       <div className="home-header__inner">
         <div className="home-header__bar">
           <div className="home-header__toolbar">
-            <Link to="/" className="home-header__brand" onClick={closeMenu}>
+            <Link to="/" className="home-header__brand" onClick={handleBrandClick}>
               <EquipdLogo variant="header" className="home-header__logo--full" />
               {isLoggedIn ? (
                 <EquipdLogo variant="headerMobile" className="home-header__logo--mobile" />
@@ -106,7 +111,7 @@ function HomeHeader({ search, onSearchChange, onSearchSubmit }) {
         </div>
       </div>
 
-      <HomeMobileMenu open={navOpen} onClose={closeMenu} />
+      <HomeMobileMenu open={navOpen} onClose={closeMenu} onHomeBrandClick={onHomeBrandClick} />
     </header>
   )
 }

@@ -58,6 +58,11 @@
   width: 100%;
   min-width: 0;
   overflow: visible;
+  scroll-margin-top: 5rem;
+}
+
+#browse-results {
+  scroll-margin-top: 5rem;
 }
 
 .listing-browse__filter-bar {

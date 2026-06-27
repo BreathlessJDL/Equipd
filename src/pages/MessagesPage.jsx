@@ -768,18 +768,20 @@ function MessagesPage() {
                 )}
               </div>
 
-              <MessageThreadSafetyBanner conversationId={safetyBannerKey} />
+              <div className="messages-page__composer-dock">
+                <MessageThreadSafetyBanner conversationId={safetyBannerKey} />
 
-              <MessageThreadComposer
-                messageBody={messageBody}
-                onMessageBodyChange={handleMessageBodyChange}
-                pendingImages={pendingImages}
-                onPendingImagesChange={handlePendingImagesChange}
-                onSubmit={handleSendMessage}
-                sending={sending}
-                sendError={sendError}
-                selectionError={selectionError}
-              />
+                <MessageThreadComposer
+                  messageBody={messageBody}
+                  onMessageBodyChange={handleMessageBodyChange}
+                  pendingImages={pendingImages}
+                  onPendingImagesChange={handlePendingImagesChange}
+                  onSubmit={handleSendMessage}
+                  sending={sending}
+                  sendError={sendError}
+                  selectionError={selectionError}
+                />
+              </div>
 
               <MakeOfferModal
                 open={offerModalOpen}

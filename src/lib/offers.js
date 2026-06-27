@@ -379,6 +379,21 @@ export function canBuyerRespondToCounterOffer(offer) {
   return isSellerCounterOffer(offer) && offer?.status === 'pending'
 }
 
+export const OFFER_EXCEEDS_ASKING_PRICE_ERROR =
+  'Offers cannot be higher than the asking price.'
+
+export function validateBuyerOfferAmount(amountPence, listingPricePence) {
+  if (
+    listingPricePence != null &&
+    Number.isFinite(listingPricePence) &&
+    amountPence > listingPricePence
+  ) {
+    return OFFER_EXCEEDS_ASKING_PRICE_ERROR
+  }
+
+  return null
+}
+
 export function canBuyerWithdrawOffer(offer, userId) {
   return (
     Boolean(userId) &&
@@ -466,6 +481,8 @@ export async function createOffer({
   amountPence,
   message,
   conversationId,
+  listingPricePence,
+  direction = 'buyer_to_seller',
 }) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
@@ -479,6 +496,13 @@ export async function createOffer({
     return { data: null, error: new Error('Enter a valid offer amount greater than zero.') }
   }
 
+  if (direction === 'buyer_to_seller') {
+    const amountError = validateBuyerOfferAmount(amountPence, listingPricePence)
+    if (amountError) {
+      return { data: null, error: new Error(amountError) }
+    }
+  }
+
   const { data, error } = await insertOfferRow({
     listing_id: listingId,
     buyer_id: buyerId,
@@ -487,7 +511,7 @@ export async function createOffer({
     amount_pence: amountPence,
     message: message?.trim() || null,
     status: 'pending',
-    direction: 'buyer_to_seller',
+    direction,
   })
 
   return { data, error }
@@ -500,6 +524,7 @@ export async function createOfferFromForm({
   amountInput,
   message,
   conversationId,
+  listingPricePence,
 }) {
   const amountPence = parsePriceToPence(amountInput)
 
@@ -514,6 +539,7 @@ export async function createOfferFromForm({
     amountPence,
     message,
     conversationId,
+    listingPricePence,
   })
 }
 

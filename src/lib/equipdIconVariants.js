@@ -11,6 +11,7 @@ export const EQUIPD_ICON_VARIANT = {
   SUPPORT_DISPUTE: 'support-dispute',
   REVIEW_RECEIVED: 'review-received',
   SELLING_STORE: 'selling-store',
+  SELLING_STALL: 'selling-stall',
   SELLING_HAND_COINS: 'selling-hand-coins',
   MY_LISTINGS: 'my-listings',
   BUYING_BAG: 'buying-bag',
@@ -23,7 +24,7 @@ export const EQUIPD_ICON_VARIANT = {
 
 export const HUB_SUMMARY_ICON_VARIANT = {
   buying: EQUIPD_ICON_VARIANT.BUYING_BAG,
-  selling: EQUIPD_ICON_VARIANT.SELLING_HAND_COINS,
+  selling: EQUIPD_ICON_VARIANT.SELLING_STALL,
   'active-listings': EQUIPD_ICON_VARIANT.MY_LISTINGS,
   'offers-received': EQUIPD_ICON_VARIANT.NEW_OFFER,
   'offers-made': EQUIPD_ICON_VARIANT.COUNTER_OFFER,

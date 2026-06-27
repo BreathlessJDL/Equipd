@@ -9,8 +9,8 @@ import {
   formatReviewTimestamp,
   getReviewErrorMessage,
   getRevieweeLabel,
-  getReviewerRoleLabel,
   getReviewText,
+  getReviewVerifierLabel,
   getUserReviewForOrder,
   isDuplicateReviewError,
   isOrderReviewable,
@@ -45,16 +45,18 @@ function StarRatingInput({ value, onChange, disabled = false }) {
   )
 }
 
-function ReviewCard({ review, order }) {
+function ReviewCard({ review }) {
   const reviewText = getReviewText(review)
 
   return (
     <article className="reviews__card">
       <div className="reviews__card-header">
         <p className="reviews__card-title">
-          {getReviewerRoleLabel(review, order)} · {renderStarRating(review.rating)}
+          {renderStarRating(review.rating)}
         </p>
-        <p className="reviews__card-meta">{formatReviewTimestamp(review.created_at)}</p>
+        <p className="reviews__card-meta">
+          {getReviewVerifierLabel(review)} · {formatReviewTimestamp(review.created_at)}
+        </p>
       </div>
       {reviewText ? <p className="reviews__card-comment">{reviewText}</p> : null}
     </article>
@@ -340,7 +342,7 @@ function OrderReviewSection({ order, reviews, userId, onSubmitted }) {
         <ul className="reviews__list">
           {reviews.map((review) => (
             <li key={review.id}>
-              <ReviewCard review={review} order={order} />
+              <ReviewCard review={review} />
             </li>
           ))}
         </ul>

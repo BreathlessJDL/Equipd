@@ -62,9 +62,9 @@ declare
   v_notes text;
   v_notes_lower text;
   v_structured_radius integer;
+  v_has_collection_marker boolean;
   v_has_buyer_courier boolean;
   v_has_seller_delivery boolean;
-  v_seller_only boolean;
   v_types public.order_type[] := array[]::public.order_type[];
 begin
   select
@@ -81,6 +81,7 @@ begin
   end if;
 
   v_notes_lower := lower(v_notes);
+  v_has_collection_marker := v_notes_lower like '%in-person collection available%';
   v_has_buyer_courier := v_notes_lower like '%buyer can arrange%';
   v_has_seller_delivery :=
     v_notes_lower like '%seller delivery%'
@@ -95,10 +96,12 @@ begin
     v_types := array_append(v_types, 'seller_delivery'::public.order_type);
   end if;
 
-  if v_collection_available then
-    v_seller_only := v_has_seller_delivery and not v_has_buyer_courier;
-
-    if not v_seller_only then
+  if v_has_collection_marker then
+    v_types := array_append(v_types, 'collection'::public.order_type);
+  elsif v_collection_available then
+    if not v_courier_available then
+      v_types := array_append(v_types, 'collection'::public.order_type);
+    elsif v_courier_available and v_has_seller_delivery and not v_has_buyer_courier then
       v_types := array_append(v_types, 'collection'::public.order_type);
     end if;
   end if;

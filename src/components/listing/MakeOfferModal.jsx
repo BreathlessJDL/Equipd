@@ -1,6 +1,9 @@
 import { useEffect, useId, useState } from 'react'
 import { formatPricePence } from '../../lib/listings'
-import { getOfferErrorMessage } from '../../lib/offers'
+import {
+  getOfferErrorMessage,
+  validateBuyerOfferAmount,
+} from '../../lib/offers'
 import { submitListingOffer } from '../../lib/offerMessaging'
 import BuyerProtectionOfferSummary from '../BuyerProtectionOfferSummary'
 import '../auth/AuthModal.css'
@@ -57,12 +60,21 @@ function MakeOfferModal({
     setSubmitting(true)
     setError('')
 
+    const amountPence = Math.round(Number.parseFloat(offerAmount) * 100)
+    const amountError = validateBuyerOfferAmount(amountPence, listing.price_pence)
+    if (amountError) {
+      setSubmitting(false)
+      setError(amountError)
+      return
+    }
+
     const { data, error: submitError } = await submitListingOffer({
       listingId: listing.id,
       buyerId: user.id,
       sellerId: listing.seller_id,
       amountInput: offerAmount,
       message: offerMessage,
+      listingPricePence: listing.price_pence,
     })
 
     setSubmitting(false)
@@ -97,7 +109,7 @@ function MakeOfferModal({
           Make an offer
         </h2>
         <p className="make-offer-modal__lead">
-          Enter an offer below the asking price of {formatPricePence(listing.price_pence)}.
+          Enter an offer up to the asking price of {formatPricePence(listing.price_pence)}.
         </p>
 
         {buyerHasPendingOffer ? (
@@ -125,6 +137,7 @@ function MakeOfferModal({
                 className="make-offer-modal__input"
                 type="number"
                 min="0.01"
+                max={(listing.price_pence / 100).toFixed(2)}
                 step="0.01"
                 inputMode="decimal"
                 placeholder="150.00"

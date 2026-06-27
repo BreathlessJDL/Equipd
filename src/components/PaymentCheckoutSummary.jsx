@@ -6,6 +6,8 @@ function PaymentCheckoutSummary({
   compact = false,
   className = '',
   showNote = true,
+  offerAmountLabel = 'Item price',
+  totalLabel = 'Total',
 }) {
   return (
     <BuyerProtectionOfferSummary
@@ -13,8 +15,8 @@ function PaymentCheckoutSummary({
       order={order}
       compact={compact}
       showNote={showNote}
-      offerAmountLabel="Item price"
-      totalLabel="Total"
+      offerAmountLabel={offerAmountLabel}
+      totalLabel={totalLabel}
       className={className}
     />
   )

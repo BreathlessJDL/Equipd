@@ -3,6 +3,7 @@ import {
   formatReviewTimestamp,
   getReviewListingTitle,
   getReviewText,
+  getReviewVerifierLabel,
   renderStarRating,
 } from '../lib/reviews'
 import './Reviews.css'
@@ -59,11 +60,10 @@ function SellerReviewsSummary({
                   <article className="reviews__card">
                     <div className="reviews__card-header">
                       <p className="reviews__card-title">
-                        {review.reviewer?.display_name?.trim() || 'Equipd member'} ·{' '}
                         {renderStarRating(review.rating)}
                       </p>
                       <p className="reviews__card-meta">
-                        {formatReviewTimestamp(review.created_at)}
+                        {getReviewVerifierLabel(review)} · {formatReviewTimestamp(review.created_at)}
                         {listingTitle ? ` · ${listingTitle}` : ''}
                       </p>
                     </div>

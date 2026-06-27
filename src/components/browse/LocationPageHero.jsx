@@ -13,6 +13,8 @@ function LocationPageHero({ locationView, listingCount, loading }) {
     ? `from sellers in ${locationView.selectedArea}`
     : `from sellers across ${locationView.areaScopeText}`
 
+  const seoTail = ` Browse pre-owned treadmills, spin bikes, rowers, weights, racks and commercial gym kit ${scopeCopy} — with collection, seller delivery, or buyer-arranged courier options.`
+
   return (
     <section id="location-page-hero" className="location-page__hero" aria-labelledby="location-page-title">
       <div className="location-page__hero-glow" aria-hidden="true" />
@@ -21,10 +23,12 @@ function LocationPageHero({ locationView, listingCount, loading }) {
         <h1 id="location-page-title" className="location-page__title">
           {locationView.heading}
         </h1>
-        <p className="location-page__subtitle">
-          {locationView.intro} Browse pre-owned treadmills, spin bikes, rowers, weights, racks and
-          commercial gym kit {scopeCopy} — with collection, seller delivery, or buyer-arranged
-          courier options.
+        <p className="location-page__subtitle location-page__subtitle--short">
+          {locationView.intro}
+        </p>
+        <p className="location-page__subtitle location-page__subtitle--seo">
+          {locationView.intro}
+          {seoTail}
         </p>
 
         <div className="location-page__hero-meta">

@@ -58,7 +58,20 @@
 }
 
 @media (max-width: 767px) {
-  .app-shell__main.app-shell__main--messages {
+  .app-shell:has(.messages-page--thread-open) {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-shell:has(.messages-page--thread-open) .app-shell__main--messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     padding-bottom: 0;
   }
 }

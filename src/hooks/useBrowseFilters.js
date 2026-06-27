@@ -59,6 +59,7 @@ export function useBrowseFilters(
   } = {},
 ) {
   const searchParamsKey = searchParams.toString()
+  const urlSyncGenerationRef = useRef(0)
 
   const urlFilters = useMemo(
     () => parseBrowseFiltersFromSearchParams(searchParams, categories),
@@ -73,6 +74,7 @@ export function useBrowseFilters(
   useEffect(() => {
     if (!categoriesReady) return
 
+    urlSyncGenerationRef.current += 1
     const parsed = parseBrowseFiltersFromSearchParams(searchParams, categories)
 
     setDraft((current) => (filtersEqual(parsed, current) ? current : parsed))
@@ -80,7 +82,10 @@ export function useBrowseFilters(
   }, [searchParamsKey, categoriesReady, categories, searchParams])
 
   useEffect(() => {
+    const syncGeneration = urlSyncGenerationRef.current
+
     const timeoutId = window.setTimeout(() => {
+      if (syncGeneration !== urlSyncGenerationRef.current) return
       setDebouncedDraft(draft)
     }, 300)
 
@@ -113,11 +118,14 @@ export function useBrowseFilters(
     if (!categoriesReady) return
     if (filtersEqual(urlDraft, urlFilters)) return
 
-    setSearchParams((params) => {
-      const next = new URLSearchParams(params)
-      applyBrowseFiltersToSearchParams(next, urlDraft, categories, { profileCoordinates })
-      return next
-    })
+    setSearchParams(
+      (params) => {
+        const next = new URLSearchParams(params)
+        applyBrowseFiltersToSearchParams(next, urlDraft, categories, { profileCoordinates })
+        return next
+      },
+      { preventScrollReset: true },
+    )
   }, [urlDraft, categories, categoriesReady, setSearchParams, urlFilters, profileCoordinates])
 
   const syncDraft = useCallback((updater) => {
@@ -231,7 +239,7 @@ export function useBrowseFilters(
     const cleared = parseBrowseFiltersFromSearchParams(new URLSearchParams(), categories)
     setDraft(cleared)
     setDebouncedDraft(cleared)
-    setSearchParams(new URLSearchParams())
+    setSearchParams(new URLSearchParams(), { preventScrollReset: true })
   }, [categories, setSearchParams])
 
   const flushDraftUpdate = useCallback((updater) => {

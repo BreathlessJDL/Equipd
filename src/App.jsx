@@ -21,10 +21,12 @@ import SupportFlowPage from './pages/SupportFlowPage'
 import HomePage from './pages/HomePage'
 import ListingDetailPage from './pages/ListingDetailPage'
 import HubPage from './pages/HubPage'
+import HubErrorBoundary from './components/hub/HubErrorBoundary'
 import CollectOrderPage from './pages/CollectOrderPage'
 import OrderDetailPage from './pages/OrderDetailPage'
 import LocationListingsPage from './pages/LocationListingsPage'
 import LoginPage from './pages/LoginPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 import MessagesPage from './pages/MessagesPage'
 import MyListingsPage from './pages/MyListingsPage'
 import NotificationsPage from './pages/NotificationsPage'
@@ -60,6 +62,7 @@ function App() {
             <Route path="support" element={<SupportFlowPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
+            <Route path="auth/callback" element={<AuthCallbackPage />} />
             <Route
               path="profile"
               element={
@@ -129,7 +132,9 @@ function App() {
               path="hub"
               element={
                 <ProtectedRoute>
-                  <HubPage />
+                  <HubErrorBoundary>
+                    <HubPage />
+                  </HubErrorBoundary>
                 </ProtectedRoute>
               }
             />

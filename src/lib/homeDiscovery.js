@@ -40,3 +40,6 @@ export const HOME_DISCOVERY_BRANDS = [
 export function getBrowseBrandHref(brand) {
   return `/browse?brand=${encodeURIComponent(brand)}`
 }
+
+export const HOME_DISCOVERY_VIEW_ALL_LOCATIONS_PATH = '/browse'
+export const HOME_DISCOVERY_VIEW_ALL_BRANDS_PATH = '/browse'

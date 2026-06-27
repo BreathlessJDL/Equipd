@@ -10,6 +10,17 @@ export const HUB_SECTIONS = {
   settings: { id: 'settings', label: 'Settings', href: '/settings' },
 }
 
+export const HUB_SECTION_LEADS = {
+  summary: 'Your listings, offers, and orders in one place.',
+  buying: 'Offers you have made and purchases in progress.',
+  selling: 'Offers on your listings and sales in progress.',
+  listings: 'Manage the equipment you are selling on Equipd.',
+  offers: 'Offers you have made as a buyer. Respond to incoming offers in Selling.',
+  orders: 'Purchases and sales — track in progress and completed orders.',
+  saved: 'Equipment you have saved for later.',
+  reviews: 'Feedback from completed transactions.',
+}
+
 export const HUB_BUYING_TABS = {
   offers: { id: 'offers', label: 'Offers' },
   awaiting_payment: { id: 'awaiting_payment', label: 'Awaiting payment' },
@@ -145,4 +156,8 @@ export function buildHubSearchParams({ section, tab, subTab, preserve = new URLS
 
 export function getHubSectionMeta(sectionId) {
   return Object.values(HUB_SECTIONS).find((entry) => entry.id === sectionId) ?? HUB_SECTIONS.summary
+}
+
+export function getHubSectionLead(sectionId) {
+  return HUB_SECTION_LEADS[sectionId] ?? ''
 }

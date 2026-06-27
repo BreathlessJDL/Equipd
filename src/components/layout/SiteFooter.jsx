@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import EquipdLogo from '../EquipdLogo'
+import ProtectedLink from '../auth/ProtectedLink'
 import { useCookieConsent } from '../../hooks/useCookieConsent'
 import { BUYER_PROTECTION_HELP_PATH } from '../../lib/trustMessaging'
 import {
@@ -68,7 +69,11 @@ function SiteFooter() {
                 <ul className="site-footer__links">
                   {column.links.map((link) => (
                     <li key={link.label}>
-                      <Link to={link.to}>{link.label}</Link>
+                      {link.to === '/listings/new' ? (
+                        <ProtectedLink to={link.to}>{link.label}</ProtectedLink>
+                      ) : (
+                        <Link to={link.to}>{link.label}</Link>
+                      )}
                     </li>
                   ))}
                 </ul>

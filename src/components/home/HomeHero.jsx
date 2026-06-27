@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import ProtectedLink from '../auth/ProtectedLink'
 
 const HERO_BANNER = {
   desktopSrc: '/design-reference/New%20main%20hero%20banner%20main.png',
@@ -20,7 +20,7 @@ function HomeHero() {
     <section className="home-hero" aria-label="Equipd hero banner">
       <div className="home-hero__frame">
         <div className="home-hero__banner">
-          <Link
+          <ProtectedLink
             to={HERO_BANNER.href}
             className="home-hero__link"
             aria-label={HERO_BANNER.label}
@@ -43,7 +43,7 @@ function HomeHero() {
                 </picture>
               )}
             </div>
-          </Link>
+          </ProtectedLink>
         </div>
       </div>
     </section>

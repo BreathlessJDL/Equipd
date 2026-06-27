@@ -4,11 +4,13 @@ import '../components/Notifications.css'
 import NotificationsList from '../components/NotificationsList'
 import { useAuth } from '../hooks/useAuth'
 import {
+  confirmClearAllNotifications,
   fetchNotifications,
   getNotificationErrorMessage,
   getNotificationNavigationPath,
   markAllNotificationsRead,
   markNotificationRead,
+  NOTIFICATIONS_CHANGED_EVENT,
 } from '../lib/notifications'
 
 function NotificationsPage() {
@@ -19,6 +21,23 @@ function NotificationsPage() {
   const [error, setError] = useState('')
   const [markingAll, setMarkingAll] = useState(false)
   const [openingId, setOpeningId] = useState(null)
+
+  useEffect(() => {
+    if (!user?.id) return undefined
+
+    function handleNotificationsChanged(event) {
+      if (event.detail?.scope !== 'all') return
+
+      setNotifications((current) =>
+        current.map((notification) => ({ ...notification, is_read: true })),
+      )
+    }
+
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, handleNotificationsChanged)
+    return () => {
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, handleNotificationsChanged)
+    }
+  }, [user?.id])
 
   useEffect(() => {
     if (!user?.id) return undefined
@@ -51,13 +70,14 @@ function NotificationsPage() {
     }
   }, [user?.id])
 
-  async function handleMarkAllRead() {
+  async function handleClearAll() {
     if (!user?.id || notifications.every((notification) => notification.is_read)) return
+    if (!confirmClearAllNotifications()) return
 
     setMarkingAll(true)
     setError('')
 
-    const { error: markError } = await markAllNotificationsRead(user.id)
+    const { error: markError } = await markAllNotificationsRead()
 
     setMarkingAll(false)
 
@@ -117,11 +137,11 @@ function NotificationsPage() {
         {!loading && notifications.length > 0 && unreadCount > 0 ? (
           <button
             type="button"
-            className="notifications-page__mark-all"
+            className="notifications-page__clear-all"
             disabled={markingAll}
-            onClick={handleMarkAllRead}
+            onClick={handleClearAll}
           >
-            {markingAll ? 'Marking…' : 'Mark all as read'}
+            {markingAll ? 'Clearing…' : 'Clear all'}
           </button>
         ) : null}
       </header>

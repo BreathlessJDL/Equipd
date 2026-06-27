@@ -1,8 +1,9 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthModal } from '../hooks/useAuthModal'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { getAuthRedirectPath, navigateAwayFromProtectedRoute } from '../lib/authReturnNavigation'
 import { LoadingState } from './ui/UiState'
 import '../components/PageStub.css'
 
@@ -11,6 +12,7 @@ function AdminProtectedRoute({ children }) {
   const { isAdmin, loading: adminLoading } = useIsAdmin()
   const { openLoginModal } = useAuthModal()
   const location = useLocation()
+  const navigate = useNavigate()
   const hasPromptedRef = useRef(false)
   const loading = authLoading || adminLoading
 
@@ -26,9 +28,10 @@ function AdminProtectedRoute({ children }) {
 
     hasPromptedRef.current = true
     openLoginModal({
-      redirectTo: `${location.pathname}${location.search}${location.hash}`,
+      redirectTo: getAuthRedirectPath(location),
     })
-  }, [loading, user, location.pathname, location.search, location.hash, openLoginModal])
+    navigateAwayFromProtectedRoute(navigate)
+  }, [loading, user, location, openLoginModal, navigate])
 
   if (loading) {
     return (
@@ -39,11 +42,7 @@ function AdminProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return (
-      <section className="page-stub">
-        <p className="page-stub__lead">Sign in to access this page.</p>
-      </section>
-    )
+    return null
   }
 
   if (!isAdmin) {

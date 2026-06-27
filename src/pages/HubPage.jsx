@@ -11,8 +11,8 @@ import {
   HubSavedSection,
   HubSellingSection,
   HubSummarySection,
-  buildHubCounts,
   buildHubAttentionBadges,
+  buildHubCounts,
   buildHubNeedsAttention,
   filterHubPurchasesInProgressOffers,
   groupListingsByTab,
@@ -21,7 +21,7 @@ import '../components/Hub.css'
 import '../components/ListingBrowse.css'
 import { useHubScrollRestoration, scrollHubToTop } from '../hooks/useHubScrollRestoration'
 import { useAuth } from '../hooks/useAuth'
-import { buildHubSearchParams, parseHubNavigation, HUB_ORDERS_SUB_TABS } from '../lib/hubNavigation'
+import { buildHubSearchParams, getHubSectionLead, getHubSectionMeta, parseHubNavigation, HUB_ORDERS_SUB_TABS } from '../lib/hubNavigation'
 import { fetchMyListings, getListingErrorMessage } from '../lib/listings'
 import {
   fetchBuyerOffers,
@@ -685,6 +685,19 @@ function HubPage() {
     )
   }
 
+  function handleBackToHub() {
+    scrollHubToTop()
+
+    setSearchParams(
+      buildHubSearchParams({
+        section: 'summary',
+        tab: undefined,
+        preserve: searchParams,
+      }),
+      { replace: true },
+    )
+  }
+
   function handleTabChange(nextTab) {
     scrollHubToTop()
 
@@ -868,15 +881,20 @@ function HubPage() {
     )
   }
 
+  const sectionMeta = getHubSectionMeta(section)
+
   return (
     <HubLayout
       section={section}
       tab={tab}
       onSectionChange={handleSectionChange}
       onTabChange={handleTabChange}
+      onBackToHub={handleBackToHub}
       sectionBadges={sectionBadges}
       title="Hub"
       lead="Your listings, offers, and orders in one place."
+      sectionTitle={section !== 'summary' ? sectionMeta.label : undefined}
+      sectionLead={section !== 'summary' ? getHubSectionLead(section) : undefined}
     >
       {paymentNotice ? (
         <p className="hub-page__message hub-page__message--success" role="status">

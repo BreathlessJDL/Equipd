@@ -11,6 +11,7 @@ import {
   MOBILE_MENU_CATEGORIES,
 } from '../../lib/mobileMenuCategories'
 import { useAuth } from '../../hooks/useAuth'
+import { useAuthModal } from '../../hooks/useAuthModal'
 
 function useMobileMenuEffects(open, onClose) {
   useEffect(() => {
@@ -42,10 +43,15 @@ function MenuIconSlot({ variant, children }) {
   )
 }
 
-function HomeMobileMenuHeader({ onClose }) {
+function HomeMobileMenuHeader({ onClose, onHomeBrandClick }) {
+  function handleLogoClick(event) {
+    onHomeBrandClick?.(event)
+    onClose()
+  }
+
   return (
     <header className="home-mobile-menu__header">
-      <Link to="/" className="home-mobile-menu__logo" onClick={onClose}>
+      <Link to="/" className="home-mobile-menu__logo" onClick={handleLogoClick}>
         <EquipdLogo variant="header" />
       </Link>
       <button
@@ -91,33 +97,44 @@ function MobileMenuCategorySection({ onClose, headingId = 'home-mobile-menu-cate
   )
 }
 
-function LoggedOutMobileMenu({ onClose }) {
+function LoggedOutMobileMenu({ onClose, onHomeBrandClick }) {
+  const { openLoginModal, openSignupModal } = useAuthModal()
+
   return (
     <>
-      <HomeMobileMenuHeader onClose={onClose} />
+      <HomeMobileMenuHeader onClose={onClose} onHomeBrandClick={onHomeBrandClick} />
 
       <div className="home-mobile-menu__actions">
-        <Link
-          to="/login"
+        <button
+          type="button"
           className="home-mobile-menu__cta home-mobile-menu__cta--primary"
-          onClick={onClose}
+          onClick={() => {
+            openLoginModal({ redirectTo: '/listings/new' })
+            onClose()
+          }}
         >
           Sell now
-        </Link>
-        <Link
-          to="/signup"
+        </button>
+        <button
+          type="button"
           className="home-mobile-menu__cta home-mobile-menu__cta--secondary"
-          onClick={onClose}
+          onClick={() => {
+            openSignupModal({ redirectTo: '/settings' })
+            onClose()
+          }}
         >
           Sign up
-        </Link>
-        <Link
-          to="/login"
+        </button>
+        <button
+          type="button"
           className="home-mobile-menu__cta home-mobile-menu__cta--secondary"
-          onClick={onClose}
+          onClick={() => {
+            openLoginModal({ redirectTo: '/' })
+            onClose()
+          }}
         >
           Log in
-        </Link>
+        </button>
       </div>
 
       <MobileMenuCategorySection onClose={onClose} />
@@ -125,7 +142,7 @@ function LoggedOutMobileMenu({ onClose }) {
   )
 }
 
-function LoggedInMobileMenu({ user, onClose, onSignOut }) {
+function LoggedInMobileMenu({ user, onClose, onSignOut, onHomeBrandClick }) {
   const accountLinks = [
     { to: `/shop/${user.id}`, label: 'Profile', icon: 'profile' },
     { to: '/settings', label: 'Settings', icon: 'settings' },
@@ -135,7 +152,7 @@ function LoggedInMobileMenu({ user, onClose, onSignOut }) {
 
   return (
     <>
-      <HomeMobileMenuHeader onClose={onClose} />
+      <HomeMobileMenuHeader onClose={onClose} onHomeBrandClick={onHomeBrandClick} />
 
       <div className="home-mobile-menu__actions home-mobile-menu__actions--logged-in">
         <Link
@@ -193,7 +210,7 @@ function LoggedInMobileMenu({ user, onClose, onSignOut }) {
   )
 }
 
-function HomeMobileMenu({ open, onClose }) {
+function HomeMobileMenu({ open, onClose, onHomeBrandClick }) {
   const { user, loading, signOut } = useAuth()
 
   useMobileMenuEffects(open, onClose)
@@ -220,13 +237,18 @@ function HomeMobileMenu({ open, onClose }) {
       >
         {loading ? (
           <>
-            <HomeMobileMenuHeader onClose={onClose} />
+            <HomeMobileMenuHeader onClose={onClose} onHomeBrandClick={onHomeBrandClick} />
             <p className="home-mobile-menu__loading">Loading…</p>
           </>
         ) : !user ? (
-          <LoggedOutMobileMenu onClose={onClose} />
+          <LoggedOutMobileMenu onClose={onClose} onHomeBrandClick={onHomeBrandClick} />
         ) : (
-          <LoggedInMobileMenu user={user} onClose={onClose} onSignOut={handleSignOut} />
+          <LoggedInMobileMenu
+            user={user}
+            onClose={onClose}
+            onSignOut={handleSignOut}
+            onHomeBrandClick={onHomeBrandClick}
+          />
         )}
       </div>
     </div>

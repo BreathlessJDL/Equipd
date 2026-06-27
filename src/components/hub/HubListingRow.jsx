@@ -14,6 +14,8 @@ import {
   HubItemTitle,
 } from './HubItemRow'
 import './HubItemRow.css'
+import { HubEmptyState } from './HubEmptyState'
+import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
 import { formatPricePence } from '../../lib/listings'
 import {
   formatHubListingMetadata,
@@ -58,9 +60,18 @@ function HubListingRow({
   )
 }
 
-function HubListingList({ listings, emptyMessage, statusLabel, statusVariant }) {
+function HubListingList({ listings, emptyState = null, emptyMessage = '', statusLabel, statusVariant }) {
   if (listings.length === 0) {
-    return emptyMessage ? <p className="hub-section__empty">{emptyMessage}</p> : null
+    if (emptyState) return <HubEmptyState {...emptyState} />
+    if (emptyMessage) {
+      return (
+        <HubEmptyState
+          variant={EQUIPD_ICON_VARIANT.MY_LISTINGS}
+          title={emptyMessage}
+        />
+      )
+    }
+    return null
   }
 
   return (

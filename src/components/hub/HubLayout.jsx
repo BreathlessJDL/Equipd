@@ -127,12 +127,16 @@ function HubLayout({
   tab,
   onSectionChange,
   onTabChange,
+  onBackToHub,
   sectionBadges = {},
   title,
   lead,
+  sectionTitle,
+  sectionLead,
   children,
 }) {
   const navItems = Object.values(HUB_SECTIONS)
+  const showMobileBack = section !== 'summary'
 
   return (
     <section className="hub-page hub-dashboard">
@@ -143,26 +147,30 @@ function HubLayout({
         </div>
       </header>
 
-      <div className="hub-dashboard__mobile-nav">
-        <label className="hub-dashboard__mobile-label" htmlFor="hub-section-select">
-          Section
-        </label>
-        <select
-          id="hub-section-select"
-          className="hub-dashboard__mobile-select"
-          value={section}
-          onChange={(event) => onSectionChange(event.target.value)}
-        >
-          {navItems
-            .filter((item) => !item.href)
-            .map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-                {sectionBadges[item.id] ? ` (${sectionBadges[item.id]})` : ''}
-              </option>
-            ))}
-        </select>
-      </div>
+      {showMobileBack ? (
+        <>
+          <div className="hub-dashboard__mobile-back">
+            <button
+              type="button"
+              className="hub-dashboard__back-button"
+              onClick={onBackToHub}
+            >
+              <span className="hub-dashboard__back-icon" aria-hidden="true">
+                ←
+              </span>
+              Back to My Hub
+            </button>
+          </div>
+          {sectionTitle ? (
+            <header className="hub-dashboard__section-header">
+              <h3 className="hub-dashboard__section-title">{sectionTitle}</h3>
+              {sectionLead ? (
+                <p className="hub-dashboard__section-lead">{sectionLead}</p>
+              ) : null}
+            </header>
+          ) : null}
+        </>
+      ) : null}
 
       <div className="hub-dashboard__body">
         <aside className="hub-dashboard__sidebar" aria-label="Hub navigation">

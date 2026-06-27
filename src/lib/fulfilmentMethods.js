@@ -1,5 +1,11 @@
 import { inferDeliveryOptionsFromListing } from './listings'
 import { ORDER_TYPES } from './orders'
+import {
+  evaluateSellerDeliveryAvailability,
+  getSellerDeliveryDisabledReason,
+  listingOffersSellerDelivery,
+  SELLER_DELIVERY_UNAVAILABLE_COPY,
+} from './sellerDeliveryRadius'
 
 export const FULFILMENT_OPTION_TO_ORDER_TYPE = {
   collection: ORDER_TYPES.COLLECTION,
@@ -18,7 +24,24 @@ function isListingOwner(listing, viewerUserId) {
 }
 
 function buildSellerDeliveryOption(listing, buyerProfile, { forBuyerSelection = false } = {}) {
-  const evaluation = evaluateSellerDeliveryAvailability(listing, buyerProfile)
+  let evaluation
+
+  try {
+    evaluation = evaluateSellerDeliveryAvailability(listing, buyerProfile)
+  } catch (error) {
+    console.error('[fulfilment] evaluateSellerDeliveryAvailability failed', error)
+
+    if (!listingOffersSellerDelivery(listing)) {
+      return null
+    }
+
+    return {
+      orderType: ORDER_TYPES.SELLER_DELIVERY,
+      label: FULFILMENT_METHOD_LABELS[ORDER_TYPES.SELLER_DELIVERY],
+      disabled: true,
+      disabledReason: SELLER_DELIVERY_UNAVAILABLE_COPY,
+    }
+  }
 
   if (!evaluation.offered) {
     return null
@@ -51,44 +74,59 @@ function buildSellerDeliveryOption(listing, buyerProfile, { forBuyerSelection = 
 export function getAvailableFulfilmentMethods(listing, context = {}) {
   if (!listing) return []
 
-  const optionIds = inferDeliveryOptionsFromListing(listing)
-  const { buyerProfile, viewerUserId, forBuyerSelection = false } = context
-  const ownerViewingListing = isListingOwner(listing, viewerUserId) && !forBuyerSelection
+  try {
+    const optionIds = inferDeliveryOptionsFromListing(listing)
+    const { buyerProfile, viewerUserId, forBuyerSelection = false } = context
+    const ownerViewingListing = isListingOwner(listing, viewerUserId) && !forBuyerSelection
 
-  return optionIds
-    .map((optionId) => FULFILMENT_OPTION_TO_ORDER_TYPE[optionId])
-    .filter(Boolean)
-    .filter((orderType) => {
-      if (orderType !== ORDER_TYPES.SELLER_DELIVERY) return true
-      if (ownerViewingListing) return true
-      if (!forBuyerSelection) return listingOffersSellerDelivery(listing)
+    return optionIds
+      .map((optionId) => FULFILMENT_OPTION_TO_ORDER_TYPE[optionId])
+      .filter(Boolean)
+      .filter((orderType) => {
+        if (orderType !== ORDER_TYPES.SELLER_DELIVERY) return true
+        if (ownerViewingListing) return true
+        if (!forBuyerSelection) return listingOffersSellerDelivery(listing)
 
-      return evaluateSellerDeliveryAvailability(listing, buyerProfile).available
-    })
+        try {
+          return evaluateSellerDeliveryAvailability(listing, buyerProfile).available
+        } catch (error) {
+          console.error('[fulfilment] seller delivery availability check failed', error)
+          return false
+        }
+      })
+  } catch (error) {
+    console.error('[fulfilment] getAvailableFulfilmentMethods failed', error)
+    return []
+  }
 }
 
 export function getAvailableFulfilmentMethodOptions(listing, context = {}) {
   if (!listing) return []
 
-  const optionIds = inferDeliveryOptionsFromListing(listing)
-  const { buyerProfile, forBuyerSelection = false } = context
+  try {
+    const optionIds = inferDeliveryOptionsFromListing(listing)
+    const { buyerProfile, forBuyerSelection = false } = context
 
-  return optionIds
-    .map((optionId) => {
-      const orderType = FULFILMENT_OPTION_TO_ORDER_TYPE[optionId]
-      if (!orderType) return null
+    return optionIds
+      .map((optionId) => {
+        const orderType = FULFILMENT_OPTION_TO_ORDER_TYPE[optionId]
+        if (!orderType) return null
 
-      if (orderType === ORDER_TYPES.SELLER_DELIVERY) {
-        return buildSellerDeliveryOption(listing, buyerProfile, { forBuyerSelection })
-      }
+        if (orderType === ORDER_TYPES.SELLER_DELIVERY) {
+          return buildSellerDeliveryOption(listing, buyerProfile, { forBuyerSelection })
+        }
 
-      return {
-        orderType,
-        label: FULFILMENT_METHOD_LABELS[orderType] ?? orderType,
-        disabled: false,
-      }
-    })
-    .filter(Boolean)
+        return {
+          orderType,
+          label: FULFILMENT_METHOD_LABELS[orderType] ?? orderType,
+          disabled: false,
+        }
+      })
+      .filter(Boolean)
+  } catch (error) {
+    console.error('[fulfilment] getAvailableFulfilmentMethodOptions failed', error)
+    return []
+  }
 }
 
 export function listingRequiresFulfilmentSelection(listing, context = {}) {

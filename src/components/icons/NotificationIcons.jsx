@@ -193,6 +193,27 @@ export function ListChecksIcon({ className = '' }) {
   )
 }
 
+/** Market stall — Hub selling summary (design reference: selling icon example) */
+export function SellingStallIcon({ className = '' }) {
+  return (
+    <NotificationSvg className={className}>
+      <path d="M4 6.5h16" />
+      <path d="M4 6.5v2" />
+      <path d="M8 6.5v2" />
+      <path d="M12 6.5v2" />
+      <path d="M16 6.5v2" />
+      <path d="M20 6.5v2" />
+      <path d="M4 8.5c0 0 1.75 1.25 3.5 1.25S11 8.5 11 8.5s1.75 1.25 3.5 1.25S18 8.5 18 8.5s1.75 1.25 3.5 1.25" />
+      <path d="M6 8.75V18" />
+      <path d="M18 8.75V18" />
+      <path d="M7.5 14.5h9" />
+      <circle cx="12" cy="11.75" r="1.15" />
+      <path d="M10.4 13.35a1.75 1.75 0 0 1 3.2 0" />
+      <path d="M6 18h12" />
+    </NotificationSvg>
+  )
+}
+
 /** Lucide-style hand with coins — seller earnings / marketplace selling */
 export function HandCoinsIcon({ className = '' }) {
   return (

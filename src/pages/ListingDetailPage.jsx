@@ -14,6 +14,7 @@ import {
 } from '../lib/messages'
 import { fetchOffersForListing, hasPendingOffer } from '../lib/offers'
 import { useAuth } from '../hooks/useAuth'
+import { useRequireAuth } from '../hooks/useRequireAuth'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import BuyerOrderConfirmation from '../components/BuyerOrderConfirmation'
 import ListingImageGallery from '../components/listing/ListingImageGallery'
@@ -34,6 +35,7 @@ function ListingDetailPage() {
   const navigate = useNavigate()
   const { slug } = useParams()
   const { user } = useAuth()
+  const { requireAuth } = useRequireAuth()
   const profileLocation = useProfileBrowseLocation()
   const buyerProfile = {
     latitude: profileLocation.latitude,
@@ -191,7 +193,9 @@ function ListingDetailPage() {
   }, [listing?.id, listing?.seller_id, listing?.status, user?.id])
 
   async function handleMessageSeller() {
-    if (!listing || !user?.id) return
+    if (!listing) return
+    if (!requireAuth(`/listings/${listing.slug}`)) return
+    if (!user?.id) return
 
     setStartingConversation(true)
     setMessageError('')
@@ -292,8 +296,9 @@ function ListingDetailPage() {
   }
 
   const isOwner = isListingOwner(listing, user?.id)
-  const canMessageSeller = Boolean(user && !isOwner && listing.status === 'active')
-  const canMakeOffer = canMessageSeller
+  const isActiveListing = listing.status === 'active'
+  const canContactSeller = isActiveListing && !isOwner
+  const canMessageSeller = Boolean(user && canContactSeller)
   const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
 
   function handleSavedChange(saved) {
@@ -318,7 +323,7 @@ function ListingDetailPage() {
         </Link>
       ) : null}
 
-      {canMessageSeller ? (
+      {canContactSeller ? (
         <button
           type="button"
           className="listing-detail__button listing-detail__button--primary"
@@ -329,24 +334,17 @@ function ListingDetailPage() {
         </button>
       ) : null}
 
-      {canMakeOffer ? (
+      {canContactSeller ? (
         <button
           type="button"
           className="listing-detail__button listing-detail__button--secondary"
-          onClick={() => setOfferModalOpen(true)}
+          onClick={() => {
+            if (!requireAuth(`/listings/${listing.slug}`)) return
+            setOfferModalOpen(true)
+          }}
         >
           Make an offer
         </button>
-      ) : null}
-
-      {!user && listing.status === 'active' ? (
-        <Link
-          to="/login"
-          state={{ from: `/listings/${listing.slug}` }}
-          className="listing-detail__button listing-detail__button--primary"
-        >
-          Log in to message seller
-        </Link>
       ) : null}
 
       {messageError ? (

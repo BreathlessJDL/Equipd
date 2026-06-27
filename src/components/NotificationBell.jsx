@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
+  confirmClearAllNotifications,
   fetchNotifications,
   fetchUnreadNotificationCount,
   getNotificationErrorMessage,
   getNotificationNavigationPath,
+  markAllNotificationsRead,
   markNotificationRead,
+  NOTIFICATIONS_CHANGED_EVENT,
   NOTIFICATION_POPOVER_LIMIT,
 } from '../lib/notifications'
 import { BellIcon } from './icons/NavIcons'
@@ -25,6 +28,7 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [openingId, setOpeningId] = useState(null)
+  const [clearingAll, setClearingAll] = useState(false)
 
   const refreshUnreadCount = useCallback(async () => {
     if (!user?.id) {
@@ -44,6 +48,7 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
 
     const { data, error: notificationsError } = await fetchNotifications(user.id, {
       limit: NOTIFICATION_POPOVER_LIMIT,
+      unreadOnly: true,
     })
 
     if (notificationsError) {
@@ -63,15 +68,36 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
   useEffect(() => {
     if (!user?.id) return undefined
 
+    function handleNotificationsChanged(event) {
+      refreshUnreadCount()
+
+      if (!open) return
+
+      if (event.detail?.scope === 'all') {
+        setNotifications([])
+        setUnreadCount(0)
+        return
+      }
+
+      if (event.detail?.scope === 'single' && event.detail.notificationId) {
+        setNotifications((current) =>
+          current.filter((item) => item.id !== event.detail.notificationId),
+        )
+      }
+    }
+
     function handleFocus() {
       refreshUnreadCount()
     }
 
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, handleNotificationsChanged)
     window.addEventListener('focus', handleFocus)
+
     return () => {
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, handleNotificationsChanged)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [user?.id, refreshUnreadCount])
+  }, [user?.id, refreshUnreadCount, open, loadNotifications])
 
   useEffect(() => {
     if (!open || !user?.id) return
@@ -127,9 +153,7 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
       }
 
       setNotifications((current) =>
-        current.map((item) =>
-          item.id === notification.id ? { ...item, is_read: true } : item,
-        ),
+        current.filter((item) => item.id !== notification.id),
       )
       await refreshUnreadCount()
     }
@@ -148,6 +172,26 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
   function handleViewAllClick() {
     closePopover()
     onNavigate?.()
+  }
+
+  async function handleClearAll() {
+    if (clearingAll || unreadCount === 0) return
+    if (!confirmClearAllNotifications()) return
+
+    setClearingAll(true)
+    setError('')
+
+    const { error: markError } = await markAllNotificationsRead()
+
+    setClearingAll(false)
+
+    if (markError) {
+      setError(getNotificationErrorMessage(markError))
+      return
+    }
+
+    setNotifications([])
+    setUnreadCount(0)
   }
 
   if (!user) return null
@@ -192,11 +236,23 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
             aria-label="Notifications"
           >
             <div className="notification-popover__header">
-              <h2 className="notification-popover__title">Notifications</h2>
+              <div className="notification-popover__header-main">
+                <h2 className="notification-popover__title">Notifications</h2>
+                {unreadCount > 0 ? (
+                  <span className="notification-popover__unread-count">
+                    {unreadCount} unread
+                  </span>
+                ) : null}
+              </div>
               {unreadCount > 0 ? (
-                <span className="notification-popover__unread-count">
-                  {unreadCount} unread
-                </span>
+                <button
+                  type="button"
+                  className="notification-popover__clear-all"
+                  disabled={clearingAll}
+                  onClick={handleClearAll}
+                >
+                  {clearingAll ? 'Clearing…' : 'Clear all'}
+                </button>
               ) : null}
             </div>
 
@@ -207,6 +263,7 @@ function NotificationBell({ onNavigate, iconOnly = false }) {
                 error={error}
                 openingId={openingId}
                 onOpenNotification={handleOpenNotification}
+                emptyMessage="No new notifications."
                 compact
               />
             </div>

@@ -8,6 +8,7 @@ import '../components/ListingBrowse.css'
 import '../components/browse/BrowseActiveFilterChips.css'
 import { useBrowseFilters } from '../hooks/useBrowseFilters'
 import { useBrowseListings } from '../hooks/useBrowseListings'
+import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
@@ -34,6 +35,8 @@ function BrowsePage() {
     categoriesReady,
     profileCoordinates,
   })
+
+  const { requestBrowseScroll } = useBrowseScrollAfterFilterChange(searchParams.toString())
 
   const {
     listings,
@@ -71,23 +74,27 @@ function BrowsePage() {
     }
   }, [])
 
-  const scrollToResults = useCallback(() => {
-    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [])
+  const handleRemoveFilterChip = useCallback(
+    (removeKey, removeValue) => {
+      browse.removeFilterChip(removeKey, removeValue)
+      requestBrowseScroll()
+    },
+    [browse, requestBrowseScroll],
+  )
 
   const handleNavSelect = useCallback(
     ({ categoryId, rating, search }) => {
       browse.applyNavSelection({ categoryId, rating, search })
-      scrollToResults()
+      requestBrowseScroll()
     },
-    [browse, scrollToResults],
+    [browse, requestBrowseScroll],
   )
 
   const siteHeaderConfig = useMemo(
     () => ({
       search: browse.search,
       onSearchChange: browse.setSearch,
-      onSearchSubmit: scrollToResults,
+      onSearchSubmit: requestBrowseScroll,
       categories,
       activeCategoryId: browse.categoryId,
       activeRating: browse.rating,
@@ -96,7 +103,7 @@ function BrowsePage() {
       linkMode: false,
       categoryNavClassName: '',
     }),
-    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, scrollToResults, handleNavSelect],
+    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, requestBrowseScroll, handleNavSelect],
   )
 
   useRegisterSiteHeader(siteHeaderConfig)
@@ -133,13 +140,13 @@ function BrowsePage() {
             onMaxPriceChange={browse.setMaxPrice}
             panelFilterCount={browse.panelFilterCount}
             sortNotice={browse.sortNotice}
-            onApply={scrollToResults}
+            onApply={requestBrowseScroll}
             onReset={browse.resetFilters}
           />
 
           <BrowseActiveFilterChips
             chips={browse.activeChips}
-            onRemove={browse.removeFilterChip}
+            onRemove={handleRemoveFilterChip}
             onReset={browse.resetFilters}
             showReset
           />

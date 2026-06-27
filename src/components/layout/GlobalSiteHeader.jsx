@@ -15,6 +15,7 @@ function GlobalSiteHeader({
   activeRating = '',
   activeSearch = '',
   onNavSelect,
+  onHomeBrandClick,
   linkMode = false,
   categoryNavClassName = '',
 }) {
@@ -33,6 +34,7 @@ function GlobalSiteHeader({
         search={search}
         onSearchChange={onSearchChange}
         onSearchSubmit={onSearchSubmit}
+        onHomeBrandClick={onHomeBrandClick}
       />
       <CategoryTextNav
         categories={categories}

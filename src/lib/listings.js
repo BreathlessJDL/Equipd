@@ -13,6 +13,10 @@ import {
 import { getRatingLabel, LISTING_CATEGORY_OPTIONS } from './listingOptions'
 import { DEFAULT_LISTING_SORT, getFetchListingSort, getSortDbOrder, parseListingSort } from './listingSort'
 import {
+  buildDeliveryFields,
+  inferDeliveryOptionsFromListing,
+} from './listingFulfilmentOptions'
+import {
   needsSellerDeliveryRadius,
   parseSellerDeliveryRadiusInput,
   validateListingFulfilmentDetails,
@@ -20,6 +24,13 @@ import {
 import { supabase } from './supabase'
 
 export { getCategoryDisplayName, getRatingLabel } from './listingOptions'
+export {
+  FULFILMENT_BUYER_COURIER_MARKER,
+  FULFILMENT_COLLECTION_MARKER,
+  FULFILMENT_SELLER_DELIVERY_MARKER,
+  inferDeliveryOptionsFromListing,
+  LISTING_DELIVERY_OPTION_IDS,
+} from './listingFulfilmentOptions'
 
 /**
  * Generate a URL-safe slug from a listing title.
@@ -134,69 +145,6 @@ function appendOptionalItemDetails(description, form) {
   const block = details.join('\n')
   const base = description?.trim() ?? ''
   return base ? `${base}\n\n${block}` : block
-}
-
-function buildDeliveryFields(form) {
-  const options = form.deliveryOptions ?? []
-  const hasCollection = options.includes('collection')
-  const hasSellerDelivery = options.includes('seller_delivery')
-  const hasBuyerCourier = options.includes('buyer_courier')
-  const notes = []
-
-  if (hasSellerDelivery) {
-    notes.push('Seller can personally deliver')
-  }
-
-  if (hasBuyerCourier) {
-    notes.push('Buyer can arrange a courier or collection service')
-  }
-
-  if (form.deliveryNotes?.trim()) {
-    notes.push(form.deliveryNotes.trim())
-  }
-
-  return {
-    collection_available: hasCollection || hasBuyerCourier,
-    courier_available: hasSellerDelivery || hasBuyerCourier,
-    delivery_notes: notes.length ? notes.join('. ') : null,
-  }
-}
-
-export function inferDeliveryOptionsFromListing(listing) {
-  const opts = []
-  const notes = listing.delivery_notes?.toLowerCase() ?? ''
-
-  if (notes.includes('buyer can arrange')) {
-    opts.push('buyer_courier')
-  }
-
-  if (notes.includes('seller delivery') || notes.includes('seller can personally')) {
-    opts.push('seller_delivery')
-  }
-
-  if (
-    listing.seller_delivery_radius_miles != null
-    && Number(listing.seller_delivery_radius_miles) > 0
-  ) {
-    opts.push('seller_delivery')
-  }
-
-  if (listing.collection_available !== false) {
-    const sellerOnly =
-      opts.includes('seller_delivery') &&
-      !opts.includes('buyer_courier') &&
-      (notes.includes('seller delivery') || notes.includes('seller can personally'))
-
-    if (!sellerOnly) {
-      opts.push('collection')
-    }
-  }
-
-  if (opts.length === 0 && listing.courier_available) {
-    opts.push('buyer_courier')
-  }
-
-  return [...new Set(opts)]
 }
 
 function inferDeliveryRangeMiles(notes = '') {

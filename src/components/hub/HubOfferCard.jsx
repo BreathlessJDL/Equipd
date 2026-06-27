@@ -27,6 +27,8 @@ import {
   HubItemTitle,
 } from './HubItemRow'
 import './HubItemRow.css'
+import { HubEmptyState } from './HubEmptyState'
+import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
 import { formatPricePence } from '../../lib/listings'
 import { getProfileDisplayName } from '../../lib/profiles'
 import {
@@ -450,7 +452,8 @@ function HubOfferCard({
 
 function HubOfferList({
   offers,
-  emptyMessage,
+  emptyState = null,
+  emptyMessage = '',
   loadError = '',
   highlightOfferId = null,
   userId = null,
@@ -486,7 +489,16 @@ function HubOfferList({
   const safeOffers = offers ?? []
 
   if (safeOffers.length === 0) {
-    return emptyMessage ? <p className="hub-section__empty">{emptyMessage}</p> : null
+    if (emptyState) return <HubEmptyState {...emptyState} />
+    if (emptyMessage) {
+      return (
+        <HubEmptyState
+          variant={EQUIPD_ICON_VARIANT.NEW_OFFER}
+          title={emptyMessage}
+        />
+      )
+    }
+    return null
   }
 
   async function runOfferAction(offerId, action) {

@@ -70,6 +70,11 @@
   line-height: 1.5;
 }
 
+.auth-modal__content .auth-form__footer {
+  margin-top: 1.125rem;
+  text-align: center;
+}
+
 @media (max-width: 480px) {
   .auth-modal {
     padding: var(--space-sm);

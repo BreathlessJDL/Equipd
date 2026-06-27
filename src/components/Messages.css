@@ -240,6 +240,27 @@
   .app-shell:has(.messages-page--thread-open) .site-footer {
     display: none;
   }
+
+  .messages-page--thread-open .messages-page__composer-dock {
+    flex-shrink: 0;
+    margin-top: auto;
+    z-index: 2;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -1px 8px color-mix(in srgb, var(--color-navy) 4%, transparent);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .messages-page--thread-open .messages-page__composer-dock .messages-page__composer {
+    margin: 0;
+    border-top: none;
+    box-shadow: none;
+  }
+
+  .messages-page--thread-open .messages-page__composer-dock .messages-page__safety-note {
+    padding: 0.35rem max(var(--space-md), env(safe-area-inset-right, 0px)) 0
+      max(var(--space-md), env(safe-area-inset-left, 0px));
+  }
 }
 
 @media (min-width: 768px) {

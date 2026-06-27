@@ -3,6 +3,8 @@ import ListingCard from '../ListingCard'
 import BuyerProtectionInfo from '../BuyerProtectionInfo'
 import EquipdTypeIcon from '../icons/EquipdTypeIcon'
 import '../icons/EquipdTypeIcon.css'
+import { ArrowRightIcon } from '../icons/NavIcons'
+import '../icons/NavIcons.css'
 import {
   EQUIPD_ICON_VARIANT,
   HUB_ATTENTION_ICON_VARIANT,
@@ -21,7 +23,8 @@ import {
 import { HubItemReviewButton } from './HubItemActions'
 import './HubItemRow.css'
 import { HubSectionTabs } from './HubLayout'
-import { EmptyState } from '../ui/UiState'
+import { HubEmptyState } from './HubEmptyState'
+import { HUB_EMPTY_STATES } from '../../lib/hubEmptyStates'
 import {
   HUB_BUYING_TABS,
   HUB_LISTINGS_TABS,
@@ -214,15 +217,7 @@ const HUB_ATTENTION_DISPLAY = {
 function HubAttentionChevron() {
   return (
     <span className="hub-attention__chevron" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path
-          d="M9 6.5 15.5 12 9 17.5"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <ArrowRightIcon />
     </span>
   )
 }
@@ -366,9 +361,7 @@ function HubSummarySection({ counts, needsAttention, onNavigate }) {
             </ul>
           </section>
         ) : (
-          <p className="hub-section__empty hub-summary__empty">
-            Nothing needs your attention right now.
-          </p>
+          <HubEmptyState {...HUB_EMPTY_STATES.summaryAttention} />
         )}
       </div>
     </HubPanel>
@@ -411,7 +404,7 @@ function HubBuyingSection({
           showWithdraw
           onOfferUpdated={handlers.onOfferUpdated}
           loadError={buyerOffersLoadError}
-          emptyMessage="You do not have any pending offers."
+          emptyState={HUB_EMPTY_STATES.buyingOffers}
         />
       ) : null}
 
@@ -429,7 +422,7 @@ function HubBuyingSection({
             payingPaymentId={payState.payingPaymentId}
             payError={payState.payError}
             loadError={buyerOffersLoadError}
-            emptyMessage="You do not have any accepted offers awaiting payment."
+            emptyState={HUB_EMPTY_STATES.buyingAwaitingPayment}
           />
         </>
       ) : null}
@@ -451,7 +444,7 @@ function HubBuyingSection({
             onConfirmOrder={handlers.onConfirmOrder}
             onOfferUpdated={handlers.onOfferUpdated}
             loadError={buyerOffersLoadError}
-            emptyMessage="You do not have any purchases in progress."
+            emptyState={HUB_EMPTY_STATES.buyingInProgress}
           />
         </>
       ) : null}
@@ -465,7 +458,7 @@ function HubBuyingSection({
           userReviews={userReviews}
           onOpenLeaveReview={handlers.onOpenLeaveReview}
           loadError={buyerOffersLoadError}
-          emptyMessage="You do not have any completed purchases yet."
+          emptyState={HUB_EMPTY_STATES.buyingCompleted}
         />
       ) : null}
 
@@ -474,7 +467,7 @@ function HubBuyingSection({
           highlightOfferId={highlightOfferId}
           offers={cancelledOffersMade}
           loadError={buyerOffersLoadError}
-          emptyMessage="You do not have any cancelled purchases."
+          emptyState={HUB_EMPTY_STATES.buyingCancelled}
         />
       ) : null}
     </HubPanel>
@@ -516,7 +509,7 @@ function HubSellingSection({
           showSellerRespondActions
           onOfferUpdated={handlers.onOfferUpdated}
           loadError={sellerOffersLoadError}
-          emptyMessage="You have not received any pending offers."
+          emptyState={HUB_EMPTY_STATES.sellingOffers}
         />
       ) : null}
 
@@ -527,7 +520,7 @@ function HubSellingSection({
           showSellerCancel
           onCancelOffer={handlers.onCancelOffer}
           loadError={sellerOffersLoadError}
-          emptyMessage="You do not have any accepted sales awaiting payment."
+          emptyState={HUB_EMPTY_STATES.sellingAwaitingPayment}
         />
       ) : null}
 
@@ -542,7 +535,7 @@ function HubSellingSection({
             orderStatusRole="seller"
             onOfferUpdated={handlers.onOfferUpdated}
             loadError={sellerOffersLoadError}
-            emptyMessage="You do not have any active sales in progress."
+            emptyState={HUB_EMPTY_STATES.sellingActive}
           />
         </>
       ) : null}
@@ -565,7 +558,7 @@ function HubSellingSection({
           {listingsLoadError ? (
             <p className="hub-page__message hub-page__message--error">{listingsLoadError}</p>
           ) : soldListings.length === 0 && completedSellerOrders.length === 0 ? (
-            <p className="hub-section__empty">You have not completed any sales yet.</p>
+            <HubEmptyState {...HUB_EMPTY_STATES.sellingSold} />
           ) : soldListings.length > 0 ? (
             <>
               {completedSellerOrders.length > 0 ? (
@@ -585,7 +578,7 @@ function HubSellingSection({
           highlightOfferId={highlightOfferId}
           offers={cancelledOffersReceived}
           loadError={sellerOffersLoadError}
-          emptyMessage="You do not have any cancelled sales."
+          emptyState={HUB_EMPTY_STATES.sellingCancelled}
         />
       ) : null}
     </HubPanel>
@@ -620,15 +613,15 @@ function HubListingsSection({ tab, onTabChange, tabBadges = {}, listingsByTab, l
       {listingsLoadError ? (
         <p className="hub-page__message hub-page__message--error">{listingsLoadError}</p>
       ) : current.length === 0 ? (
-        <EmptyState compact>
-          {tab === HUB_LISTINGS_TABS.draft.id ? (
-            <>
-              No draft listings. <Link to="/listings/new">Create a listing</Link>
-            </>
-          ) : (
-            'Nothing in this listings view yet.'
-          )}
-        </EmptyState>
+        <HubEmptyState
+          {...(tab === HUB_LISTINGS_TABS.draft.id
+            ? HUB_EMPTY_STATES.listingsDraft
+            : tab === HUB_LISTINGS_TABS.active.id
+              ? HUB_EMPTY_STATES.listingsActive
+              : tab === HUB_LISTINGS_TABS.reserved.id
+                ? HUB_EMPTY_STATES.listingsReserved
+                : HUB_EMPTY_STATES.listingsSold)}
+        />
       ) : (
         <HubListingList listings={current} />
       )}
@@ -655,9 +648,7 @@ function HubOffersSection({
       lead="Offers you have made as a buyer. Respond to incoming offers in Selling."
     >
       {isEmpty ? (
-        <EmptyState compact>
-          You have not made any offers yet. <Link to="/browse">Browse equipment</Link>
-        </EmptyState>
+        <HubEmptyState {...HUB_EMPTY_STATES.myOffers} />
       ) : (
         <>
           {hasAwaitingPayment ? (
@@ -673,7 +664,7 @@ function HubOffersSection({
                 payingPaymentId={payState.payingPaymentId}
                 payError={payState.payError}
                 loadError={buyerOffersLoadError}
-                emptyMessage="You do not have any accepted offers awaiting payment."
+                emptyState={HUB_EMPTY_STATES.buyingAwaitingPayment}
               />
             </div>
           ) : null}
@@ -689,7 +680,7 @@ function HubOffersSection({
                 showWithdraw
                 onOfferUpdated={handlers.onOfferUpdated}
                 loadError={buyerOffersLoadError}
-                emptyMessage="You do not have any pending offers."
+                emptyState={HUB_EMPTY_STATES.buyingOffers}
               />
             </div>
           ) : null}
@@ -770,7 +761,7 @@ function HubOrdersSection({
                 onConfirmOrder={handlers.onConfirmOrder}
                 onOfferUpdated={handlers.onOfferUpdated}
                 loadError={buyerOffersLoadError}
-                emptyMessage="You do not have any purchases in progress."
+                emptyState={HUB_EMPTY_STATES.ordersPurchasesInProgress}
               />
             </>
           ) : (
@@ -783,7 +774,7 @@ function HubOrdersSection({
               onOpenLeaveReview={handlers.onOpenLeaveReview}
               onOfferUpdated={handlers.onOfferUpdated}
               loadError={buyerOffersLoadError}
-              emptyMessage="You have no completed purchases."
+              emptyState={HUB_EMPTY_STATES.ordersPurchasesCompleted}
             />
           )}
         </>
@@ -803,7 +794,7 @@ function HubOrdersSection({
               orderStatusRole="seller"
               onOfferUpdated={handlers.onOfferUpdated}
               loadError={sellerOffersLoadError}
-              emptyMessage="You do not have any sales in progress."
+              emptyState={HUB_EMPTY_STATES.ordersSalesInProgress}
             />
           ) : (
             <HubOfferList
@@ -815,7 +806,7 @@ function HubOrdersSection({
               onOpenLeaveReview={handlers.onOpenLeaveReview}
               onOfferUpdated={handlers.onOfferUpdated}
               loadError={sellerOffersLoadError}
-              emptyMessage="You do not have any completed sales yet."
+              emptyState={HUB_EMPTY_STATES.ordersSalesCompleted}
             />
           )}
         </>
@@ -842,9 +833,7 @@ function HubSavedSection({ savedListings, savedLoading, savedError }) {
       {savedError ? (
         <p className="hub-page__message hub-page__message--error">{savedError}</p>
       ) : savedListings.length === 0 ? (
-        <EmptyState compact>
-          You have not saved any listings yet. <Link to="/browse">Browse equipment</Link>
-        </EmptyState>
+        <HubEmptyState {...HUB_EMPTY_STATES.saved} />
       ) : (
         <div className="hub-listings-grid">
           {savedListings.map((listing) => (
@@ -909,7 +898,7 @@ function HubReviewsSection({
 
       {!reviewsLoading && !reviewsError && tab === HUB_REVIEWS_TABS.received.id ? (
         reviewsReceived.length === 0 ? (
-          <EmptyState compact>You have not received any reviews yet.</EmptyState>
+          <HubEmptyState {...HUB_EMPTY_STATES.reviewsReceived} />
         ) : (
           <ul className="hub-review-list">
             {reviewsReceived.map((review) => (
@@ -930,7 +919,7 @@ function HubReviewsSection({
 
       {!reviewsLoading && !reviewsError && tab === HUB_REVIEWS_TABS.left.id ? (
         reviewsLeft.length === 0 ? (
-          <EmptyState compact>You have not left any reviews yet.</EmptyState>
+          <HubEmptyState {...HUB_EMPTY_STATES.reviewsLeft} />
         ) : (
           <ul className="hub-review-list">
             {reviewsLeft.map((review) => (
@@ -950,7 +939,7 @@ function HubReviewsSection({
 
       {!reviewsLoading && !reviewsError && tab === HUB_REVIEWS_TABS.pending.id ? (
         pendingReviewOrders.length === 0 ? (
-          <EmptyState compact>No orders are waiting for your review.</EmptyState>
+          <HubEmptyState {...HUB_EMPTY_STATES.reviewsPending} />
         ) : (
           <HubItemList>
             {pendingReviewOrders.map((entry) => (

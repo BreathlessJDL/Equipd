@@ -167,7 +167,7 @@ export function getNotificationNavigationPath(notification) {
   return linkUrl || null
 }
 
-export async function fetchNotifications(userId, { limit } = {}) {
+export async function fetchNotifications(userId, { limit, unreadOnly = false } = {}) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -179,6 +179,10 @@ export async function fetchNotifications(userId, { limit } = {}) {
       .eq('user_id', userId),
   ).order('created_at', { ascending: false })
 
+  if (unreadOnly) {
+    query = query.eq('is_read', false)
+  }
+
   if (limit) {
     query = query.limit(limit)
   }
@@ -189,6 +193,20 @@ export async function fetchNotifications(userId, { limit } = {}) {
 }
 
 export const NOTIFICATION_POPOVER_LIMIT = 10
+
+export const CLEAR_ALL_NOTIFICATIONS_CONFIRM = 'Mark all notifications as read?'
+
+export const NOTIFICATIONS_CHANGED_EVENT = 'equipd:notifications-changed'
+
+export function dispatchNotificationsChanged(detail = {}) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(NOTIFICATIONS_CHANGED_EVENT, { detail }))
+}
+
+export function confirmClearAllNotifications() {
+  if (typeof window === 'undefined') return false
+  return window.confirm(CLEAR_ALL_NOTIFICATIONS_CONFIRM)
+}
 
 export async function fetchUnreadNotificationCount(userId) {
   if (!supabase) {
@@ -218,23 +236,25 @@ export async function markNotificationRead(notificationId) {
     .select(notificationFields)
     .single()
 
+  if (!error) {
+    dispatchNotificationsChanged({ scope: 'single', notificationId })
+  }
+
   return { data, error }
 }
 
-export async function markAllNotificationsRead(userId) {
+export async function markAllNotificationsRead() {
   if (!supabase) {
-    return { error: new Error('Supabase is not configured.') }
+    return { count: 0, error: new Error('Supabase is not configured.') }
   }
 
-  const { error } = await applyBellNotificationFilter(
-    supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', userId)
-      .eq('is_read', false),
-  )
+  const { data, error } = await supabase.rpc('mark_all_notifications_read')
 
-  return { error }
+  if (!error) {
+    dispatchNotificationsChanged({ scope: 'all' })
+  }
+
+  return { count: data ?? 0, error }
 }
 
 export async function createNotification({ userId, type, title, body, linkUrl }) {

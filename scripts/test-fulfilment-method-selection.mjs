@@ -14,29 +14,7 @@ import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-
-function inferDeliveryOptionsFromListing(listing) {
-  const opts = []
-  const notes = listing.delivery_notes?.toLowerCase() ?? ''
-
-  if (notes.includes('buyer can arrange')) opts.push('buyer_courier')
-  if (notes.includes('seller delivery') || notes.includes('seller can personally')) {
-    opts.push('seller_delivery')
-  }
-
-  if (listing.collection_available !== false) {
-    const sellerOnly =
-      opts.includes('seller_delivery') &&
-      !opts.includes('buyer_courier') &&
-      (notes.includes('seller delivery') || notes.includes('seller can personally'))
-
-    if (!sellerOnly) opts.push('collection')
-  }
-
-  if (opts.length === 0 && listing.courier_available) opts.push('buyer_courier')
-
-  return [...new Set(opts)]
-}
+import { inferDeliveryOptionsFromListing } from '../src/lib/listingFulfilmentOptions.js'
 
 function getAvailableFulfilmentMethods(listing) {
   const map = {

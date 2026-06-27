@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../AuthForm.css'
-import { getAuthErrorMessage } from '../../lib/auth'
+import { getAuthErrorMessage, getEmailAuthRedirectUrl } from '../../lib/auth'
 import {
   getProfileErrorMessage,
   isUsernameAvailable,
@@ -10,8 +10,11 @@ import {
   USERNAME_MIN_LENGTH,
   validateUsername,
 } from '../../lib/profiles'
+import { validatePassword, validatePasswordWithServer } from '../../lib/passwordPolicy'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import GoogleAuthButton from './GoogleAuthButton'
+import PasswordField from './PasswordField'
+import './PasswordField.css'
 
 function SignupForm({
   idPrefix = 'signup',
@@ -53,10 +56,25 @@ function SignupForm({
       return
     }
 
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
+      setSubmitting(false)
+      setError(passwordValidation.error)
+      return
+    }
+
+    const serverPasswordValidation = await validatePasswordWithServer(supabase, password)
+    if (!serverPasswordValidation.valid) {
+      setSubmitting(false)
+      setError(serverPasswordValidation.error)
+      return
+    }
+
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
+        emailRedirectTo: getEmailAuthRedirectUrl(),
         data: {
           username: validation.username,
         },
@@ -150,18 +168,14 @@ function SignupForm({
         </div>
 
         <div className="auth-form__field">
-          <label className="auth-form__label" htmlFor={`${idPrefix}-password`}>
-            Password
-          </label>
-          <input
+          <PasswordField
             id={`${idPrefix}-password`}
-            className="auth-form__input"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            disabled={submitting}
+            onChange={(event) => {
+              setPassword(event.target.value)
+              setError('')
+            }}
           />
         </div>
 

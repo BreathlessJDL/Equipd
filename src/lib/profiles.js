@@ -266,77 +266,24 @@ export function getProfileDisplayName(profile, { email } = {}) {
   return 'Equipd member'
 }
 
-function initialsFromDisplayName(displayName) {
-  const words = displayName.split(/\s+/).filter(Boolean)
-
-  if (words.length >= 2) {
-    return `${words[0].charAt(0)}${words[words.length - 1].charAt(0)}`.toUpperCase()
-  }
-
-  if (words.length === 1) {
-    return words[0].charAt(0).toUpperCase()
-  }
-
-  return null
-}
-
-function initialsFromUsername(username) {
-  const normalized = username.trim()
-  if (!normalized) return null
-
-  const separated = normalized.split(/[_.\-\s]+/).filter(Boolean)
-  if (separated.length >= 2) {
-    return `${separated[0].charAt(0)}${separated[1].charAt(0)}`.toUpperCase()
-  }
-
-  const camelParts = normalized
-    .replace(/[0-9]+$/g, '')
-    .match(/[A-Z]?[a-z]+|[A-Z]+(?![a-z])|[0-9]+/g)
-
-  if (camelParts && camelParts.length >= 2) {
-    return `${camelParts[0].charAt(0)}${camelParts[1].charAt(0)}`.toUpperCase()
-  }
-
-  const alpha = normalized.replace(/[^a-zA-Z]/g, '')
-  if (alpha.length >= 6) {
-    const mid = Math.floor(alpha.length / 2)
-    return `${alpha.charAt(0)}${alpha.charAt(mid)}`.toUpperCase()
-  }
-
-  if (alpha.length > 0) {
-    return alpha.charAt(0).toUpperCase()
-  }
-
-  return normalized.charAt(0).toUpperCase()
+function avatarLetter(value) {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  return trimmed.charAt(0).toUpperCase()
 }
 
 export function getProfileInitials(profile, { user } = {}) {
-  const displayName = profile?.display_name?.trim()
-  if (displayName) {
-    const fromDisplayName = initialsFromDisplayName(displayName)
-    if (fromDisplayName) return fromDisplayName
-  }
+  const fromUsername = avatarLetter(profile?.username)
+  if (fromUsername) return fromUsername
 
-  const username = profile?.username?.trim()
-  if (username) {
-    const fromUsername = initialsFromUsername(username)
-    if (fromUsername) return fromUsername
-  }
+  const fromDisplayName = avatarLetter(profile?.display_name)
+  if (fromDisplayName) return fromDisplayName
 
-  const firstName = user?.user_metadata?.first_name?.trim()
-  const lastName = user?.user_metadata?.last_name?.trim()
-  if (firstName && lastName) {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-  }
+  const fromEmail = avatarLetter(user?.email)
+  if (fromEmail) return fromEmail
 
-  if (firstName) {
-    return firstName.charAt(0).toUpperCase()
-  }
-
-  const email = user?.email?.trim()
-  if (email) {
-    return email.charAt(0).toUpperCase()
-  }
+  const fromFirstName = avatarLetter(user?.user_metadata?.first_name)
+  if (fromFirstName) return fromFirstName
 
   return '?'
 }

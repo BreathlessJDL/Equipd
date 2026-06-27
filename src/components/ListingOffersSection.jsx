@@ -9,6 +9,7 @@ import {
   getOfferErrorMessage,
   hasPendingOffer,
   rejectOffer,
+  validateBuyerOfferAmount,
   withdrawOffer,
 } from '../lib/offers'
 import { startConversationForListing } from '../lib/messages'
@@ -56,6 +57,14 @@ function ListingOffersSection({
     setOfferFormError('')
     setOfferFormSuccess('')
 
+    const amountPence = Math.round(Number.parseFloat(offerAmount) * 100)
+    const amountError = validateBuyerOfferAmount(amountPence, listing.price_pence)
+    if (amountError) {
+      setSubmittingOffer(false)
+      setOfferFormError(amountError)
+      return
+    }
+
     const { data: conversation } = await startConversationForListing({
       listingId: listing.id,
       buyerId: user.id,
@@ -69,6 +78,7 @@ function ListingOffersSection({
       amountInput: offerAmount,
       message: offerMessage,
       conversationId: conversation?.id ?? null,
+      listingPricePence: listing.price_pence,
     })
 
     setSubmittingOffer(false)
@@ -132,7 +142,7 @@ function ListingOffersSection({
       {canMakeOffer ? (
         <form className="listing-detail__offer-form" onSubmit={handleCreateOffer}>
           <p className="listing-detail__offers-lead">
-            Make an offer below the asking price of {formatPricePence(listing.price_pence)}.
+            Make an offer up to the asking price of {formatPricePence(listing.price_pence)}.
           </p>
 
           <div className="listing-detail__offer-field">
@@ -144,6 +154,7 @@ function ListingOffersSection({
               className="listing-detail__offer-input"
               type="number"
               min="0.01"
+              max={(listing.price_pence / 100).toFixed(2)}
               step="0.01"
               inputMode="decimal"
               placeholder="150.00"

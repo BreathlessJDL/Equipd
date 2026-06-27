@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
 import ListingBrowseResults from '../components/ListingBrowseResults'
@@ -12,17 +12,25 @@ import '../components/ListingBrowse.css'
 import '../components/browse/BrowseActiveFilterChips.css'
 import { useBrowseFilters } from '../hooks/useBrowseFilters'
 import { useBrowseListings } from '../hooks/useBrowseListings'
+import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useHomeRecentListings } from '../hooks/useHomeRecentListings'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { useAuth } from '../hooks/useAuth'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
+import {
+  buildBrowseSearchPath,
+  isMobileSearchViewport,
+  shouldNavigateToBrowseOnMobileSearch,
+} from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
 import { fetchRecentReviews, getReviewErrorMessage } from '../lib/reviews'
 
 function HomePage() {
   const { user } = useAuth()
   const isLoggedIn = Boolean(user)
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [recentReviews, setRecentReviews] = useState([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
@@ -46,6 +54,9 @@ function HomePage() {
     categoriesReady,
     profileCoordinates,
   })
+
+  const { requestBrowseScroll, cancelBrowseScrollRequest } =
+    useBrowseScrollAfterFilterChange(searchParams.toString())
 
   const {
     listings: recentListings,
@@ -122,43 +133,74 @@ function HomePage() {
     }
   }, [isLoggedIn])
 
-  const scrollToBrowseResults = useCallback(() => {
-    requestAnimationFrame(() => {
-      document.getElementById('browse-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }, [])
-
-  const scrollToBrowse = useCallback(() => {
-    if (isLoggedIn) {
-      scrollToBrowseResults()
+  const handleSearchSubmit = useCallback(() => {
+    if (shouldNavigateToBrowseOnMobileSearch(pathname) && isMobileSearchViewport()) {
+      navigate(buildBrowseSearchPath(browse.search))
       return
     }
 
-    document.getElementById('browse')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [isLoggedIn, scrollToBrowseResults])
+    requestBrowseScroll()
+  }, [browse.search, navigate, pathname, requestBrowseScroll])
+
+  const handleRemoveFilterChip = useCallback(
+    (removeKey, removeValue) => {
+      browse.removeFilterChip(removeKey, removeValue)
+      requestBrowseScroll()
+    },
+    [browse, requestBrowseScroll],
+  )
 
   const handleNavSelect = useCallback(
     ({ categoryId, rating, search }) => {
       browse.applyNavSelection({ categoryId, rating, search })
-      scrollToBrowseResults()
+      requestBrowseScroll()
     },
-    [browse, scrollToBrowseResults],
+    [browse, requestBrowseScroll],
+  )
+
+  const handleHomeBrandClick = useCallback(
+    (event) => {
+      if (pathname !== '/') return
+
+      event.preventDefault()
+      cancelBrowseScrollRequest()
+
+      if (browse.hasFilters) {
+        browse.resetFilters()
+      }
+
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    },
+    [browse, cancelBrowseScrollRequest, pathname],
   )
 
   const siteHeaderConfig = useMemo(
     () => ({
       search: browse.search,
       onSearchChange: browse.setSearch,
-      onSearchSubmit: scrollToBrowse,
+      onSearchSubmit: handleSearchSubmit,
       categories,
       activeCategoryId: browse.categoryId,
       activeRating: browse.rating,
       activeSearch: browse.search,
       onNavSelect: handleNavSelect,
+      onHomeBrandClick: handleHomeBrandClick,
       linkMode: false,
       categoryNavClassName: 'home-category-text-nav',
     }),
-    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, scrollToBrowse, handleNavSelect],
+    [
+      browse.search,
+      browse.categoryId,
+      browse.rating,
+      browse.hasFilters,
+      browse.resetFilters,
+      browse.setSearch,
+      categories,
+      cancelBrowseScrollRequest,
+      handleHomeBrandClick,
+      handleSearchSubmit,
+      handleNavSelect,
+    ],
   )
 
   useRegisterSiteHeader(siteHeaderConfig)
@@ -222,13 +264,13 @@ function HomePage() {
             panelFilterCount={browse.panelFilterCount}
             sortNotice={browse.sortNotice}
             idPrefix="home-browse"
-            onApply={scrollToBrowseResults}
+            onApply={requestBrowseScroll}
             onReset={browse.resetFilters}
           />
 
           <BrowseActiveFilterChips
             chips={browse.activeChips}
-            onRemove={browse.removeFilterChip}
+            onRemove={handleRemoveFilterChip}
             onReset={browse.resetFilters}
             showReset
           />

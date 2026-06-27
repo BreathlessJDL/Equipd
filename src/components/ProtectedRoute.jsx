@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthModal } from '../hooks/useAuthModal'
+import { getAuthRedirectPath, navigateAwayFromProtectedRoute } from '../lib/authReturnNavigation'
 import '../components/PageStub.css'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   const { openLoginModal } = useAuthModal()
   const location = useLocation()
+  const navigate = useNavigate()
   const hasPromptedRef = useRef(false)
 
   useEffect(() => {
@@ -22,9 +24,10 @@ function ProtectedRoute({ children }) {
 
     hasPromptedRef.current = true
     openLoginModal({
-      redirectTo: `${location.pathname}${location.search}${location.hash}`,
+      redirectTo: getAuthRedirectPath(location),
     })
-  }, [loading, user, location.pathname, location.search, location.hash, openLoginModal])
+    navigateAwayFromProtectedRoute(navigate)
+  }, [loading, user, location, openLoginModal, navigate])
 
   if (loading) {
     return (
@@ -35,11 +38,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return (
-      <section className="page-stub">
-        <p className="page-stub__lead">Sign in to access this page.</p>
-      </section>
-    )
+    return null
   }
 
   return children

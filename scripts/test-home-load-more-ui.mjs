@@ -51,10 +51,13 @@ async function browseSectionState() {
 
 async function categoryScrollState() {
   return page.evaluate(() => {
-    const browseResults = document.getElementById('browse-results')
-    const rect = browseResults?.getBoundingClientRect()
-  return {
-      browseResultsTop: rect ? Math.round(rect.top) : null,
+    const header = document.querySelector('.global-site-header')
+    const browseFilters = document.getElementById('browse-filters-anchor')
+    const headerBottom = header ? Math.round(header.getBoundingClientRect().bottom) : 0
+    const filtersTop = browseFilters ? Math.round(browseFilters.getBoundingClientRect().top) : null
+    return {
+      filtersTop,
+      headerBottom,
       scrollY: Math.round(window.scrollY),
     }
   })
@@ -109,10 +112,13 @@ await mobileTreadmill.click()
 await mobilePage.waitForTimeout(800)
 
 const mobileCategoryScroll = await mobilePage.evaluate(() => {
-  const browseResults = document.getElementById('browse-results')
-  const rect = browseResults?.getBoundingClientRect()
+  const header = document.querySelector('.global-site-header')
+  const browseFilters = document.getElementById('browse-filters-anchor')
+  const headerBottom = header ? Math.round(header.getBoundingClientRect().bottom) : 0
+  const filtersTop = browseFilters ? Math.round(browseFilters.getBoundingClientRect().top) : null
   return {
-    browseResultsTop: rect ? Math.round(rect.top) : null,
+    filtersTop,
+    headerBottom,
     scrollY: Math.round(window.scrollY),
   }
 })
@@ -148,14 +154,16 @@ const browseOk =
   !browse3.hasButton
 
 const categoryScrollOk =
-  desktopCategoryScroll.browseResultsTop !== null &&
-  desktopCategoryScroll.browseResultsTop <= 120 &&
-  mobileCategoryScroll.browseResultsTop !== null &&
-  mobileCategoryScroll.browseResultsTop <= 120
+  desktopCategoryScroll.filtersTop !== null &&
+  desktopCategoryScroll.filtersTop >= desktopCategoryScroll.headerBottom - 4 &&
+  desktopCategoryScroll.filtersTop <= desktopCategoryScroll.headerBottom + 24 &&
+  mobileCategoryScroll.filtersTop !== null &&
+  mobileCategoryScroll.filtersTop >= mobileCategoryScroll.headerBottom - 4 &&
+  mobileCategoryScroll.filtersTop <= mobileCategoryScroll.headerBottom + 24
 
 if (!recentOk || !browseOk || !categoryScrollOk) process.exitCode = 1
 else {
   console.log(
-    'PASS: Home recent has no load more (10 cards); browse load more works; category nav scrolls to results',
+    'PASS: Home recent has no load more (10 cards); browse load more works; category nav scrolls to filters',
   )
 }

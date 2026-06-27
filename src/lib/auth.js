@@ -1,4 +1,7 @@
 import { supabase } from './supabase'
+import { getOAuthCallbackUrl, validateOAuthRedirectUrl } from './siteUrl'
+
+export { getAuthRedirectUrl, getEmailAuthRedirectUrl, getOAuthCallbackUrl, OAUTH_CALLBACK_PATH, EMAIL_AUTH_CALLBACK_PATH } from './siteUrl'
 
 export const OAUTH_REDIRECT_KEY = 'equipd:oauth-redirect'
 export const OAUTH_PENDING_KEY = 'equipd:oauth-pending'
@@ -16,15 +19,11 @@ export function getAuthErrorMessage(error) {
     return 'Sign-in redirect is not configured for this site. Please contact support.'
   }
 
+  if (/password/i.test(message) && /(weak|short|least|character|requirement)/i.test(message)) {
+    return 'Password does not meet the Equipd requirements. Use at least 10 characters with uppercase, lowercase, a number, and a special character.'
+  }
+
   return message || 'Something went wrong. Please try again.'
-}
-
-/** Full URL for Supabase OAuth callback — works on localhost and production. */
-export function getAuthRedirectUrl(pathname = '/') {
-  if (typeof window === 'undefined') return ''
-
-  const path = pathname.startsWith('/') ? pathname : `/${pathname}`
-  return `${window.location.origin}${path}`
 }
 
 export function clearOAuthSessionFlags() {
@@ -45,12 +44,18 @@ export async function signInWithGoogle({ postAuthRedirect = '/' } = {}) {
   sessionStorage.setItem(OAUTH_REDIRECT_KEY, postAuthRedirect)
   sessionStorage.setItem(OAUTH_PENDING_KEY, '1')
 
-  const callbackPath = `${window.location.pathname}${window.location.search}`
+  const redirectTo = getOAuthCallbackUrl()
+  const redirectError = validateOAuthRedirectUrl(redirectTo)
+
+  if (redirectError) {
+    return { error: new Error(redirectError) }
+  }
 
   const result = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: getAuthRedirectUrl(callbackPath),
+      redirectTo,
+      skipBrowserRedirect: false,
     },
   })
 

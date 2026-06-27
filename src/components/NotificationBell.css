@@ -99,11 +99,18 @@
 
 .notification-popover__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--color-border);
+}
+
+.notification-popover__header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
 }
 
 .notification-popover__title {
@@ -117,6 +124,35 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-orange);
+}
+
+.notification-popover__clear-all {
+  flex-shrink: 0;
+  padding: 0.35rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.notification-popover__clear-all:hover:not(:disabled) {
+  color: var(--color-navy);
+  border-color: color-mix(in srgb, var(--color-orange) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-orange) 4%, var(--color-surface));
+}
+
+.notification-popover__clear-all:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .notification-popover__body {

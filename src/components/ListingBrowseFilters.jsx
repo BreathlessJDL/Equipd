@@ -364,7 +364,7 @@ function ListingBrowseFilters({
             open={openMenu === 'category'}
             onToggle={() => toggleMenu('category')}
           >
-            {renderCategoryMenu(closeMenus)}
+            {renderCategoryMenu(handleApplyFilters)}
           </FilterPill>
 
           <FilterPill
@@ -374,7 +374,7 @@ function ListingBrowseFilters({
             open={openMenu === 'brand'}
             onToggle={() => toggleMenu('brand')}
           >
-            {renderBrandMenu(closeMenus)}
+            {renderBrandMenu(handleApplyFilters)}
           </FilterPill>
 
           <FilterPill
@@ -384,7 +384,7 @@ function ListingBrowseFilters({
             open={openMenu === 'condition'}
             onToggle={() => toggleMenu('condition')}
           >
-            {renderConditionMenu(closeMenus)}
+            {renderConditionMenu(handleApplyFilters)}
           </FilterPill>
 
           <FilterPill
@@ -407,7 +407,7 @@ function ListingBrowseFilters({
           className="listing-browse__filter-sort"
           align="right"
         >
-          {renderSortMenu(closeMenus)}
+          {renderSortMenu(handleApplyFilters)}
         </FilterPill>
       </div>
     )
@@ -465,7 +465,11 @@ function ListingBrowseFilters({
   }
 
   return (
-    <div ref={rootRef} className="listing-browse__filters">
+    <div
+      ref={rootRef}
+      id="browse-filters-anchor"
+      className="listing-browse__filters"
+    >
       {renderDesktopBar()}
       {renderMobileBar()}
       {renderMobileDrawer()}

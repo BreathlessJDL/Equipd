@@ -5,6 +5,8 @@
  * Usage: node scripts/test-seller-delivery-radius-gating.mjs
  */
 
+import { inferDeliveryOptionsFromListing } from '../src/lib/listingFulfilmentOptions.js'
+
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message)
@@ -22,30 +24,6 @@ function haversineDistanceMiles(lat1, lon1, lat2, lon2) {
     + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2
 
   return EARTH_RADIUS_MILES * 2 * Math.asin(Math.min(1, Math.sqrt(a)))
-}
-
-function inferDeliveryOptionsFromListing(listing) {
-  const opts = []
-  const notes = listing.delivery_notes?.toLowerCase() ?? ''
-
-  if (notes.includes('buyer can arrange')) opts.push('buyer_courier')
-  if (notes.includes('seller delivery') || notes.includes('seller can personally')) {
-    opts.push('seller_delivery')
-  }
-  if (listing.seller_delivery_radius_miles != null && listing.seller_delivery_radius_miles > 0) {
-    opts.push('seller_delivery')
-  }
-  if (listing.collection_available !== false) {
-    const sellerOnly =
-      opts.includes('seller_delivery')
-      && !opts.includes('buyer_courier')
-      && (notes.includes('seller delivery') || notes.includes('seller can personally'))
-
-    if (!sellerOnly) opts.push('collection')
-  }
-  if (opts.length === 0 && listing.courier_available) opts.push('buyer_courier')
-
-  return [...new Set(opts)]
 }
 
 function evaluateSellerDeliveryAvailability(listing, buyerProfile) {

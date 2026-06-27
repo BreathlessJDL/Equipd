@@ -12,6 +12,7 @@ import '../components/browse/BrowseActiveFilterChips.css'
 import '../components/browse/LocationPage.css'
 import { useBrowseFilters } from '../hooks/useBrowseFilters'
 import { useBrowseListings } from '../hooks/useBrowseListings'
+import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { fetchCategories } from '../lib/listings'
@@ -57,6 +58,8 @@ function LocationListingsPage({ locationSlug }) {
     profileCoordinates,
   })
 
+  const { requestBrowseScroll } = useBrowseScrollAfterFilterChange(searchParams.toString())
+
   const { listings, loading, error } = useBrowseListings(browse.queryOptions, {
     sort: browse.queryOptions.sort,
     search: browse.queryOptions.search,
@@ -85,10 +88,6 @@ function LocationListingsPage({ locationSlug }) {
     }
   }, [])
 
-  const scrollToResults = useCallback(() => {
-    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [])
-
   const scrollToPageTop = useCallback(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [])
@@ -105,23 +104,33 @@ function LocationListingsPage({ locationSlug }) {
     const area = searchParams.get(LOCATION_AREA_PARAM)
     browse.resetFilters()
     if (area) {
-      setSearchParams(new URLSearchParams({ [LOCATION_AREA_PARAM]: area }))
+      setSearchParams(new URLSearchParams({ [LOCATION_AREA_PARAM]: area }), {
+        preventScrollReset: true,
+      })
     }
   }, [browse, searchParams, setSearchParams])
+
+  const handleRemoveFilterChip = useCallback(
+    (removeKey, removeValue) => {
+      browse.removeFilterChip(removeKey, removeValue)
+      requestBrowseScroll()
+    },
+    [browse, requestBrowseScroll],
+  )
 
   const handleNavSelect = useCallback(
     ({ categoryId, rating, search }) => {
       browse.applyNavSelection({ categoryId, rating, search })
-      scrollToResults()
+      requestBrowseScroll()
     },
-    [browse, scrollToResults],
+    [browse, requestBrowseScroll],
   )
 
   const siteHeaderConfig = useMemo(
     () => ({
       search: browse.search,
       onSearchChange: browse.setSearch,
-      onSearchSubmit: scrollToResults,
+      onSearchSubmit: requestBrowseScroll,
       categories,
       activeCategoryId: browse.categoryId,
       activeRating: browse.rating,
@@ -130,7 +139,7 @@ function LocationListingsPage({ locationSlug }) {
       linkMode: false,
       categoryNavClassName: '',
     }),
-    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, scrollToResults, handleNavSelect],
+    [browse.search, browse.categoryId, browse.rating, browse.setSearch, categories, requestBrowseScroll, handleNavSelect],
   )
 
   useRegisterSiteHeader(siteHeaderConfig)
@@ -188,13 +197,13 @@ function LocationListingsPage({ locationSlug }) {
                 onMaxPriceChange={browse.setMaxPrice}
                 panelFilterCount={browse.panelFilterCount}
                 sortNotice={browse.sortNotice}
-                onApply={scrollToResults}
+                onApply={requestBrowseScroll}
                 onReset={handleResetFilters}
               />
 
               <BrowseActiveFilterChips
                 chips={browse.activeChips}
-                onRemove={browse.removeFilterChip}
+                onRemove={handleRemoveFilterChip}
                 onReset={handleResetFilters}
                 showReset
               />
