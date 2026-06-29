@@ -99,6 +99,7 @@ function ListingForm({
   formError = '',
   formSuccess = '',
   onSubmit,
+  formId,
   children,
 }) {
   function fieldId(name) {
@@ -157,7 +158,7 @@ function ListingForm({
   )
 
   return (
-    <form className="listing-form" onSubmit={onSubmit} noValidate>
+    <form id={formId} className="listing-form" onSubmit={onSubmit} noValidate>
       <ListingFormSection title="Photos">
         <ListingImageUpload
           variant="dropzone"

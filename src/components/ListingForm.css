@@ -5,6 +5,28 @@
   padding-block: var(--space-lg) var(--space-2xl);
 }
 
+.listing-form-page--pinned-actions {
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.listing-form-page__actions-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  padding: var(--space-sm) var(--space-lg) calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.1);
+}
+
+.listing-form-page__actions-bar .listing-form__actions {
+  max-width: 40rem;
+  margin-inline: auto;
+  padding-top: 0;
+}
+
 .listing-form-page__title {
   margin: 0 0 var(--space-xl);
   font-size: 1.5rem;

@@ -367,9 +367,10 @@ function EditListingPage() {
   }
 
   const isDraft = listing.status === 'draft'
+  const formId = 'edit-listing-form'
 
   return (
-    <div className="listing-form-page">
+    <div className="listing-form-page listing-form-page--pinned-actions">
       <h1 className="listing-form-page__title">{isDraft ? 'Edit draft listing' : 'Edit listing'}</h1>
 
       {isDraft ? (
@@ -382,6 +383,7 @@ function EditListingPage() {
         form={form}
         categories={categories}
         idPrefix="edit-listing"
+        formId={formId}
         existingImages={existingImages}
         uploadingImages={uploadingImages}
         imageError={imageError}
@@ -400,7 +402,9 @@ function EditListingPage() {
           }
           handleSaveChanges()
         }}
-      >
+      />
+
+      <div className="listing-form-page__actions-bar" aria-label="Listing actions">
         <div className="listing-form__actions">
           <Link to={isDraft ? '/my-listings' : `/listings/${listing.slug}`} className="listing-form__button listing-form__button--secondary">
             Cancel
@@ -417,13 +421,14 @@ function EditListingPage() {
           ) : null}
           <button
             type="submit"
+            form={formId}
             className="listing-form__button listing-form__button--primary"
             disabled={submitting || uploadingImages}
           >
             {submitting ? (isDraft ? 'Publishing…' : 'Saving…') : isDraft ? 'Publish listing' : 'Save changes'}
           </button>
         </div>
-      </ListingForm>
+      </div>
 
       <ListingManageSection
         listing={listing}
