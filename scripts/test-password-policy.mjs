@@ -26,16 +26,17 @@ function assert(condition, label) {
   console.error(`FAIL ${label}`)
 }
 
-const validPassword = 'EquipdTest1!'
+const validPassword = 'Equipd1!'
 
 assert(validatePassword(validPassword).valid, 'valid password accepted')
-assert(!validatePassword('short1!A').valid, 'short password rejected')
-assert(!validatePassword('equipdtest1!').valid, 'missing uppercase rejected')
-assert(!validatePassword('EQUIPDTEST1!').valid, 'missing lowercase rejected')
-assert(!validatePassword('EquipdTest!').valid, 'missing number rejected')
-assert(!validatePassword('EquipdTest1').valid, 'missing special character rejected')
-assert(!validatePassword('a'.repeat(PASSWORD_MAX_LENGTH + 1)).valid, 'over max length rejected')
-assert(validatePassword('a'.repeat(PASSWORD_MIN_LENGTH) + 'A1!').valid, 'minimum length accepted')
+assert(!validatePassword('Eq1!').valid, 'short password rejected')
+assert(!validatePassword('equipd1!').valid, 'missing uppercase rejected')
+assert(!validatePassword('EQUIPD1!').valid, 'missing lowercase rejected')
+assert(!validatePassword('Equipd!').valid, 'missing number rejected')
+assert(!validatePassword('Equipd1').valid, 'missing special character rejected')
+assert(!validatePassword('EquipdTest1!LongXXX').valid, 'over max length rejected')
+assert(validatePassword('EquipdTest1!LongXX').valid, 'maximum length accepted')
+assert(validatePassword('Equipd1!').valid, 'minimum length accepted')
 
 const statuses = getPasswordRequirementStatus(validPassword)
 assert(statuses.every((entry) => entry.met), 'all requirements met for valid password')

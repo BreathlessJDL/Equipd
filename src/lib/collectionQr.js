@@ -64,6 +64,46 @@ export async function confirmCollectionByQr(token, checks) {
   return { data, error }
 }
 
+export const COLLECTION_REJECTION_REASONS = {
+  ITEM_NOT_AS_DESCRIBED: 'item_not_as_described',
+  DAMAGED_ITEM: 'damaged_item',
+  OTHER: 'other',
+}
+
+export const COLLECTION_REJECTION_REASON_OPTIONS = [
+  { value: COLLECTION_REJECTION_REASONS.ITEM_NOT_AS_DESCRIBED, label: 'Item not as described' },
+  { value: COLLECTION_REJECTION_REASONS.DAMAGED_ITEM, label: 'Damaged or faulty item' },
+  { value: COLLECTION_REJECTION_REASONS.OTHER, label: 'Other issue at collection' },
+]
+
+export async function rejectCollectionByQr({
+  token,
+  reason,
+  description,
+  evidencePaths = [],
+  requestId,
+}) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const userAgent =
+    typeof navigator !== 'undefined' && navigator.userAgent
+      ? navigator.userAgent.slice(0, 512)
+      : null
+
+  const { data, error } = await supabase.rpc('reject_collection_by_qr', {
+    p_token: token,
+    p_reason: reason,
+    p_description: description?.trim() ?? '',
+    p_evidence_paths: evidencePaths,
+    p_request_id: requestId ?? crypto.randomUUID(),
+    p_user_agent: userAgent,
+  })
+
+  return { data, error }
+}
+
 export function buildCollectionConfirmationChecks({
   itemCollected,
   itemInspected,

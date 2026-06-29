@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import './OrderDisputeSection.css'
 
+const MAX_FILES = 8
+
+function formatFileSize(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 function OpenOrderDisputeModal({
   orderType,
   reasonOptions,
@@ -16,8 +23,14 @@ function OpenOrderDisputeModal({
   const singleReasonOnly = reasonOptions.length <= 1
 
   function handleFileChange(event) {
-    const files = [...(event.target.files ?? [])]
-    setEvidenceFiles(files)
+    const selected = [...(event.target.files ?? [])]
+    event.target.value = ''
+    if (!selected.length) return
+    setEvidenceFiles((current) => [...current, ...selected].slice(0, MAX_FILES))
+  }
+
+  function removeFile(index) {
+    setEvidenceFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))
   }
 
   function handleSubmit(event) {
@@ -60,7 +73,7 @@ function OpenOrderDisputeModal({
           Report a problem
         </h2>
         <p className="order-dispute-modal__lead">
-          Describe the issue and upload at least one photo. Opening a dispute pauses seller payout
+          Describe the issue and upload evidence. Opening a dispute pauses seller payout
           while Equipd reviews your case.
         </p>
 
@@ -96,22 +109,35 @@ function OpenOrderDisputeModal({
           </label>
 
           <label className="order-dispute-modal__field">
-            <span className="order-dispute-modal__label">Evidence photos</span>
+            <span className="order-dispute-modal__label">Evidence files</span>
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,application/pdf"
               multiple
-              disabled={submitting}
-              required={evidenceFiles.length === 0}
+              disabled={submitting || evidenceFiles.length >= MAX_FILES}
               onChange={handleFileChange}
             />
             <span className="order-dispute-modal__hint">
-              Upload at least one JPEG, PNG, or WebP photo (max 5 MB each).
+              At least one file required. Up to {MAX_FILES} files. Images, videos, or PDFs. Max 25 MB
+              each.
             </span>
             {evidenceFiles.length > 0 ? (
-              <span className="order-dispute-modal__file-count" role="status">
-                {evidenceFiles.length} photo{evidenceFiles.length === 1 ? '' : 's'} selected
-              </span>
+              <ul className="order-dispute-modal__file-list">
+                {evidenceFiles.map((file, index) => (
+                  <li key={`${file.name}-${file.size}-${index}`}>
+                    <span>
+                      {file.name} ({formatFileSize(file.size)})
+                    </span>
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => removeFile(index)}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ) : null}
           </label>
 

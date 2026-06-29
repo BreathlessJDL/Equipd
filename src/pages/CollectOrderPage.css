@@ -259,6 +259,74 @@
   color: var(--color-orange);
 }
 
+.collect-order-page__reject-toggle-wrap {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+}
+
+.collect-order-page__reject {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.collect-order-page__reject-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.collect-order-page__reject-lead {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.collect-order-page__reject-form {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.collect-order-page__reject-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.collect-order-page__reject-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.collect-order-page__reject-input,
+.collect-order-page__reject-textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  border-radius: var(--radius);
+  font: inherit;
+  color: var(--color-text);
+  background: #fff;
+}
+
+.collect-order-page__reject-textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.collect-order-page__button--danger {
+  border: 1px solid color-mix(in srgb, #dc2626 35%, var(--color-border));
+  background: #fff;
+  color: #b91c1c;
+}
+
+.collect-order-page__button--danger:hover:not(:disabled) {
+  border-color: #dc2626;
+  background: color-mix(in srgb, #dc2626 6%, #fff);
+}
+
 .collect-order-page__button--confirm {
   margin-top: 0.25rem;
 }

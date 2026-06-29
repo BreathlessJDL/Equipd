@@ -34,8 +34,43 @@ function adminSupportUrl(): string {
   return `${appBaseUrl()}/admin/support`
 }
 
+function adminOrdersUrl(): string {
+  return `${appBaseUrl()}/admin/orders`
+}
+
+function orderPath(orderId: unknown): string {
+  const id = String(orderId ?? '').trim()
+  return id ? `/orders/${id}` : ''
+}
+
+function formatEvidenceDetails(metadata: Record<string, unknown>): { count: string; list: string } {
+  const rawPaths = metadata.evidence_paths
+  if (Array.isArray(rawPaths) && rawPaths.length > 0) {
+    return {
+      count: String(rawPaths.length),
+      list: rawPaths.map((path, index) => `${index + 1}. ${String(path)}`).join('\n'),
+    }
+  }
+
+  const count = metadata.evidence_count
+  return {
+    count: count != null && count !== '' ? String(count) : '0',
+    list: '',
+  }
+}
+
+function contactLabel(name: unknown, email: unknown, fallbackId?: unknown): string {
+  const safeName = String(name ?? '').trim()
+  const safeEmail = String(email ?? '').trim()
+  if (safeName && safeEmail) return `${safeName} <${safeEmail}>`
+  if (safeEmail) return safeEmail
+  if (safeName) return safeName
+  if (fallbackId != null && fallbackId !== '') return String(fallbackId)
+  return ''
+}
+
 function orderUrl(orderId: string): string {
-  return `${appBaseUrl()}/orders/${orderId}`
+  return `${appBaseUrl()}${orderPath(orderId)}`
 }
 
 function detailRow(label: string, value: unknown): string {
@@ -64,25 +99,37 @@ function buildEmailShell(title: string, intro: string, rows: string, actionLabel
 
 function buildSupportRequestEmail(metadata: Record<string, unknown>): EmailContent {
   const listingTitle = String(metadata.listing_title ?? 'Listing')
+  const orderId = String(metadata.order_id ?? '')
+  const evidence = formatEvidenceDetails(metadata)
+  const reporterName = metadata.reporter_name ?? metadata.opened_by_label
+  const reporterEmail = metadata.reporter_email
+  const description = metadata.description ?? metadata.message
   const subject = `New support request: ${listingTitle}`
   const intro = 'A transaction support request was raised on Equipd and needs review.'
   const rows = [
     detailRow('Request ID', metadata.request_id),
-    detailRow('Order ID', metadata.order_id),
+    detailRow('Order ID', orderId),
     detailRow('Listing', listingTitle),
     detailRow('Reason', metadata.reason),
-    detailRow('Opened by', metadata.opened_by_label),
-    detailRow('Buyer ID', metadata.buyer_id),
-    detailRow('Seller ID', metadata.seller_id),
-    detailRow('Message', metadata.message),
+    detailRow('Reporter', contactLabel(reporterName, reporterEmail, metadata.opened_by)),
+    detailRow('Reporter email', reporterEmail),
+    detailRow('Buyer', contactLabel(metadata.buyer_name, metadata.buyer_email, metadata.buyer_id)),
+    detailRow('Buyer email', metadata.buyer_email),
+    detailRow('Seller', contactLabel(metadata.seller_name, metadata.seller_email, metadata.seller_id)),
+    detailRow('Seller email', metadata.seller_email),
+    detailRow('Evidence files', evidence.count),
+    detailRow('Evidence paths', evidence.list),
+    detailRow('Description', description),
+    detailRow('Order page', orderId ? orderUrl(orderId) : ''),
+    detailRow('Admin orders', adminOrdersUrl()),
   ].join('')
 
   const shell = buildEmailShell(
     'New transaction support request',
     intro,
     rows,
-    'Open Admin Support',
-    adminSupportUrl(),
+    orderId ? 'View order' : 'Open Admin Support',
+    orderId ? orderUrl(orderId) : adminSupportUrl(),
   )
 
   const text = [
@@ -91,18 +138,24 @@ function buildSupportRequestEmail(metadata: Record<string, unknown>): EmailConte
     intro,
     '',
     `Request ID: ${metadata.request_id ?? ''}`,
-    `Order ID: ${metadata.order_id ?? ''}`,
+    `Order ID: ${orderId}`,
     `Listing: ${listingTitle}`,
     `Reason: ${metadata.reason ?? ''}`,
-    `Opened by: ${metadata.opened_by_label ?? ''}`,
-    `Buyer ID: ${metadata.buyer_id ?? ''}`,
-    `Seller ID: ${metadata.seller_id ?? ''}`,
+    `Reporter: ${contactLabel(reporterName, reporterEmail, metadata.opened_by)}`,
+    `Reporter email: ${reporterEmail ?? ''}`,
+    `Buyer: ${contactLabel(metadata.buyer_name, metadata.buyer_email, metadata.buyer_id)}`,
+    `Buyer email: ${metadata.buyer_email ?? ''}`,
+    `Seller: ${contactLabel(metadata.seller_name, metadata.seller_email, metadata.seller_id)}`,
+    `Seller email: ${metadata.seller_email ?? ''}`,
+    `Evidence files: ${evidence.count}`,
+    evidence.list ? `Evidence paths:\n${evidence.list}` : '',
     '',
-    'Message:',
-    String(metadata.message ?? ''),
+    'Description:',
+    String(description ?? ''),
     '',
-    `Admin Support: ${adminSupportUrl()}`,
-    metadata.order_id ? `Order: ${orderUrl(String(metadata.order_id))}` : '',
+    orderId ? `Order: ${orderUrl(orderId)}` : '',
+    `Admin orders: ${adminOrdersUrl()}`,
+    `Admin support: ${adminSupportUrl()}`,
   ]
     .filter(Boolean)
     .join('\n')
@@ -112,27 +165,37 @@ function buildSupportRequestEmail(metadata: Record<string, unknown>): EmailConte
 
 function buildDisputeEmail(metadata: Record<string, unknown>): EmailContent {
   const listingTitle = String(metadata.listing_title ?? 'Order')
+  const orderId = String(metadata.order_id ?? '')
+  const evidence = formatEvidenceDetails(metadata)
+  const reporterName = metadata.reporter_name ?? metadata.buyer_name
+  const reporterEmail = metadata.reporter_email ?? metadata.buyer_email
   const subject = `New Buyer Protection dispute: ${listingTitle}`
   const intro =
     'A buyer opened a Buyer Protection dispute. Seller payout is on hold until Equipd reviews the case.'
   const rows = [
     detailRow('Dispute ID', metadata.dispute_id),
-    detailRow('Order ID', metadata.order_id),
+    detailRow('Order ID', orderId),
     detailRow('Listing', listingTitle),
     detailRow('Order type', metadata.order_type),
     detailRow('Reason', metadata.reason),
-    detailRow('Buyer ID', metadata.buyer_id),
-    detailRow('Seller ID', metadata.seller_id),
-    detailRow('Evidence files', metadata.evidence_count),
+    detailRow('Reporter', contactLabel(reporterName, reporterEmail, metadata.buyer_id)),
+    detailRow('Reporter email', reporterEmail),
+    detailRow('Buyer', contactLabel(metadata.buyer_name, metadata.buyer_email, metadata.buyer_id)),
+    detailRow('Buyer email', metadata.buyer_email),
+    detailRow('Seller', contactLabel(metadata.seller_name, metadata.seller_email, metadata.seller_id)),
+    detailRow('Seller email', metadata.seller_email),
+    detailRow('Evidence files', evidence.count),
+    detailRow('Evidence paths', evidence.list),
     detailRow('Description', metadata.description),
+    detailRow('Order page', orderId ? orderUrl(orderId) : ''),
+    detailRow('Admin orders', adminOrdersUrl()),
   ].join('')
 
-  const orderId = String(metadata.order_id ?? '')
   const shell = buildEmailShell(
     'New Buyer Protection dispute',
     intro,
     rows,
-    'View order',
+    orderId ? 'View order' : 'Open Admin Support',
     orderId ? orderUrl(orderId) : adminSupportUrl(),
   )
 
@@ -142,16 +205,24 @@ function buildDisputeEmail(metadata: Record<string, unknown>): EmailContent {
     intro,
     '',
     `Dispute ID: ${metadata.dispute_id ?? ''}`,
-    `Order ID: ${metadata.order_id ?? ''}`,
+    `Order ID: ${orderId}`,
     `Listing: ${listingTitle}`,
     `Order type: ${metadata.order_type ?? ''}`,
     `Reason: ${metadata.reason ?? ''}`,
-    `Evidence files: ${metadata.evidence_count ?? ''}`,
+    `Reporter: ${contactLabel(reporterName, reporterEmail, metadata.buyer_id)}`,
+    `Reporter email: ${reporterEmail ?? ''}`,
+    `Buyer: ${contactLabel(metadata.buyer_name, metadata.buyer_email, metadata.buyer_id)}`,
+    `Buyer email: ${metadata.buyer_email ?? ''}`,
+    `Seller: ${contactLabel(metadata.seller_name, metadata.seller_email, metadata.seller_id)}`,
+    `Seller email: ${metadata.seller_email ?? ''}`,
+    `Evidence files: ${evidence.count}`,
+    evidence.list ? `Evidence paths:\n${evidence.list}` : '',
     '',
     'Description:',
     String(metadata.description ?? ''),
     '',
-    orderId ? `Order: ${orderUrl(orderId)}` : `Admin Support: ${adminSupportUrl()}`,
+    orderId ? `Order: ${orderUrl(orderId)}` : '',
+    `Admin orders: ${adminOrdersUrl()}`,
   ].join('\n')
 
   return { subject, text, html: shell.html }

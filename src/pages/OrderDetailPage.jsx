@@ -13,6 +13,7 @@ import CourierDeliveryConfirmation from '../components/CourierDeliveryConfirmati
 import CourierEvidenceForm from '../components/CourierEvidenceForm'
 import CourierEvidenceSummary from '../components/CourierEvidenceSummary'
 import { OrderReviewSection } from '../components/Reviews'
+import OrderCaseUpdatesHistory from '../components/OrderCaseUpdatesHistory'
 import OrderSupportRequest from '../components/OrderSupportRequest'
 import OrderDisputeSection from '../components/OrderDisputeSection'
 import OrderFulfilmentDetailsCard from '../components/orders/OrderFulfilmentDetailsCard'
@@ -60,20 +61,23 @@ import {
   ORDER_TYPES,
   isOrderParticipant,
 } from '../lib/orders'
-import { formatBuyerProtectionStatus, isBuyerProtectionWindowActive, isOrderDisputed } from '../lib/orderDisputes'
+import { formatBuyerProtectionStatus, fetchDisputesForOrder, isBuyerProtectionWindowActive, isOrderDisputed } from '../lib/orderDisputes'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { canShowOrderFulfilmentDetails } from '../lib/orderDeliveryDetails'
 import {
   canRaiseSupportRequest,
   fetchSupportRequestsForOrder,
+  getActiveSupportRequest,
   getSupportRequestErrorMessage,
 } from '../lib/supportRequests'
+import { fetchOrderCaseUpdates, hasVisibleCaseUpdates } from '../lib/caseUpdates'
 import {
   fetchReviewsForOrder,
   getReviewErrorMessage,
   isOrderReviewable,
 } from '../lib/reviews'
 import { getStatusBadgeFromOrderLifecycleStage } from '../lib/orderLifecycleStatus'
+import { fetchPublicProfile, getProfileDisplayName } from '../lib/profiles'
 
 function formatOrderNumber(orderId) {
   return formatOrderReference(orderId)
@@ -136,6 +140,22 @@ function OrderReferenceRow({ orderReference }) {
   )
 }
 
+function OrderParticipantProfileLink({ label, userId, profile }) {
+  if (!userId) return null
+
+  const username = profile?.username?.trim()
+  const linkLabel = username ? `@${username}` : getProfileDisplayName(profile)
+
+  return (
+    <p className="order-detail__overview-meta">
+      {label}:{' '}
+      <Link to={`/shop/${userId}`} className="order-detail__participant-link">
+        {linkLabel}
+      </Link>
+    </p>
+  )
+}
+
 function OrderDetailCompactSupport() {
   return (
     <div className="order-detail__compact-support">
@@ -161,7 +181,11 @@ function OrderDetailPage() {
   const { isAdmin, loading: adminLoading } = useIsAdmin()
   const [order, setOrder] = useState(null)
   const [supportRequests, setSupportRequests] = useState([])
+  const [disputes, setDisputes] = useState([])
+  const [caseUpdates, setCaseUpdates] = useState([])
   const [reviews, setReviews] = useState([])
+  const [buyerProfile, setBuyerProfile] = useState(null)
+  const [sellerProfile, setSellerProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -187,10 +211,14 @@ function OrderDetailPage() {
     const [
       { data, error: fetchError },
       supportRequestsResult,
+      disputesResult,
+      caseUpdatesResult,
       reviewsResult,
     ] = await Promise.all([
       fetchOrderById(orderId),
       fetchSupportRequestsForOrder(orderId),
+      fetchDisputesForOrder(orderId),
+      fetchOrderCaseUpdates(orderId),
       fetchReviewsForOrder(orderId),
     ])
 
@@ -198,7 +226,11 @@ function OrderDetailPage() {
       setError(getOrderErrorMessage(fetchError))
       setOrder(null)
       setSupportRequests([])
+      setDisputes([])
+      setCaseUpdates([])
       setReviews([])
+      setBuyerProfile(null)
+      setSellerProfile(null)
       setLoading(false)
       setRefreshing(false)
       return
@@ -210,22 +242,33 @@ function OrderDetailPage() {
       setError('You do not have access to this order.')
       setOrder(null)
       setSupportRequests([])
+      setDisputes([])
+      setCaseUpdates([])
       setReviews([])
+      setBuyerProfile(null)
+      setSellerProfile(null)
       setLoading(false)
       setRefreshing(false)
       return
     }
 
+    const [buyerProfileResult, sellerProfileResult] = await Promise.all([
+      data.buyer_id ? fetchPublicProfile(data.buyer_id) : Promise.resolve({ data: null }),
+      data.seller_id ? fetchPublicProfile(data.seller_id) : Promise.resolve({ data: null }),
+    ])
+
     setOrder(data)
+    setBuyerProfile(buyerProfileResult.data ?? null)
+    setSellerProfile(sellerProfileResult.data ?? null)
     setSupportRequests(supportRequestsResult.error ? [] : (supportRequestsResult.data ?? []))
+    setDisputes(disputesResult.error ? [] : (disputesResult.data ?? []))
+    setCaseUpdates(caseUpdatesResult.error ? [] : (caseUpdatesResult.data ?? []))
     setReviews(reviewsResult.error ? [] : (reviewsResult.data ?? []))
 
     if (supportRequestsResult.error && isParticipant) {
       setSupportError(getSupportRequestErrorMessage(supportRequestsResult.error))
     } else if (supportRequestsResult.error && isAdmin) {
-      setSupportError(
-        'Support request details are only available to order participants here. Use Admin support to review requests.',
-      )
+      setSupportError(getSupportRequestErrorMessage(supportRequestsResult.error))
     }
 
     if (reviewsResult.error) {
@@ -244,6 +287,16 @@ function OrderDetailPage() {
 
     if (!fetchError) {
       setSupportRequests(data ?? [])
+    }
+  }, [orderId])
+
+  const refreshCaseUpdates = useCallback(async () => {
+    if (!orderId) return
+
+    const { data, error: fetchError } = await fetchOrderCaseUpdates(orderId)
+
+    if (!fetchError) {
+      setCaseUpdates(data ?? [])
     }
   }, [orderId])
 
@@ -328,10 +381,12 @@ function OrderDetailPage() {
       payment: order.payment,
       offer: order.offer,
       supportRequests,
+      disputes,
+      caseUpdates,
       viewerRole,
       userId: user?.id,
     })
-  }, [order, supportRequests, user?.id, viewerRole])
+  }, [caseUpdates, disputes, order, supportRequests, user?.id, viewerRole])
 
   if (loading || adminLoading) {
     return (
@@ -426,12 +481,13 @@ function OrderDetailPage() {
     (order.protection_status === 'released' ||
       order.payout_released_at ||
       isOrderCompleted(order))
+  const activeSupportRequest = getActiveSupportRequest(supportRequests)
   const showDisputeSection =
     !isCancelled &&
     isPaymentComplete(payment) &&
-    (isAdminViewer ||
-      isOrderDisputed(order) ||
-      (viewerRole === 'buyer' && buyerProtectionActive))
+    (isOrderDisputed(order) ||
+      (viewerRole === 'buyer' && buyerProtectionActive) ||
+      (isAdmin && Boolean(activeSupportRequest)))
   const showCompactSupport =
     !isCancelled && !isAdminViewer && buyerProtectionEnded && !isOrderDisputed(order)
   const showFulfilmentDetailsCard =
@@ -466,7 +522,10 @@ function OrderDetailPage() {
     showDisputeSection ||
     showOrderSupportRequest ||
     showCompactSupport ||
+    hasVisibleCaseUpdates(caseUpdates) ||
     (isAdminViewer && supportError)
+
+  const showCaseUpdatesHistory = hasVisibleCaseUpdates(caseUpdates)
 
   const roleLabel = isAdminViewer
     ? 'Admin view'
@@ -571,6 +630,16 @@ function OrderDetailPage() {
                 <p className="order-detail__overview-meta">{categoryName}</p>
               ) : null}
               <p className="order-detail__overview-meta">{roleLabel}</p>
+              <OrderParticipantProfileLink
+                label="Buyer"
+                userId={order?.buyer_id}
+                profile={buyerProfile}
+              />
+              <OrderParticipantProfileLink
+                label="Seller"
+                userId={order?.seller_id}
+                profile={sellerProfile}
+              />
             </div>
           </div>
 
@@ -817,15 +886,32 @@ function OrderDetailPage() {
 
         {showSupportFooter ? (
           <section className="order-detail__card order-detail__support-card">
+            {showCaseUpdatesHistory ? (
+              <div className="order-detail__support-block">
+                <OrderCaseUpdatesHistory updates={caseUpdates} isAdminViewer={isAdminViewer} />
+              </div>
+            ) : null}
+
             {showDisputeSection ? (
               <div className="order-detail__support-block">
                 <OrderDisputeSection
                   order={order}
                   payment={payment}
                   role={viewerRole}
+                  isAdmin={isAdmin}
                   compact
+                  supportRequest={activeSupportRequest}
+                  useCaseUpdateHistory={showCaseUpdatesHistory}
                   onDisputeOpened={() => loadOrder({ refresh: true })}
-                  onDisputeUpdated={() => loadOrder({ refresh: true })}
+                  onDisputeUpdated={() => {
+                    refreshCaseUpdates()
+                    loadOrder({ refresh: true })
+                  }}
+                  onSupportUpdated={() => {
+                    refreshSupportRequests()
+                    refreshCaseUpdates()
+                    loadOrder({ refresh: true })
+                  }}
                 />
               </div>
             ) : null}
@@ -841,9 +927,15 @@ function OrderDetailPage() {
                   order={order}
                   payment={payment}
                   requests={supportRequests}
+                  disputes={disputes}
                   userId={user?.id}
                   viewerRole={viewerRole}
-                  onSubmitted={refreshSupportRequests}
+                  useCaseUpdateHistory={showCaseUpdatesHistory}
+                  onSubmitted={() => {
+                    refreshSupportRequests()
+                    refreshCaseUpdates()
+                    loadOrder({ refresh: true })
+                  }}
                 />
               </div>
             ) : null}

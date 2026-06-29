@@ -1,5 +1,8 @@
-export const PASSWORD_MIN_LENGTH = 10
-export const PASSWORD_MAX_LENGTH = 128
+export const PASSWORD_MIN_LENGTH = 6
+export const PASSWORD_MAX_LENGTH = 18
+
+export const PASSWORD_POLICY_SUMMARY =
+  'Password must be 6–18 characters and include an uppercase letter, lowercase letter, number and special character.'
 
 export const PASSWORD_REQUIREMENTS = [
   {
@@ -88,8 +91,8 @@ export function getPasswordStrength(password = '') {
   let score = metCount
 
   if (value.length >= 14) score += 0.5
+  if (value.length >= 16) score += 0.5
   if (value.length >= 18) score += 0.5
-  if (value.length >= 24) score += 0.5
 
   if (score < 2) return STRENGTH_LEVELS[0]
   if (score < 3) return STRENGTH_LEVELS[1]

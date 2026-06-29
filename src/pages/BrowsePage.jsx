@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import MarketplaceBrowseShell from '../components/browse/MarketplaceBrowseShell'
 import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
+import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
 import ListingBrowseResults from '../components/ListingBrowseResults'
+import '../components/home/HomePage.css'
 import '../components/ListingBrowse.css'
 import '../components/browse/BrowseActiveFilterChips.css'
 import { useBrowseFilters } from '../hooks/useBrowseFilters'
@@ -171,6 +173,10 @@ function BrowsePage() {
               emptyFilteredMessage={BROWSE_FILTER_EMPTY_MESSAGE}
               variant="home"
             />
+          </div>
+
+          <div className="listing-browse__location-discovery">
+            <HomeDiscoverySection />
           </div>
         </div>
       </section>

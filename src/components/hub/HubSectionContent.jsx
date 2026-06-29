@@ -3,6 +3,8 @@ import ListingCard from '../ListingCard'
 import BuyerProtectionInfo from '../BuyerProtectionInfo'
 import EquipdTypeIcon from '../icons/EquipdTypeIcon'
 import '../icons/EquipdTypeIcon.css'
+import HubScopedPngIcon from './HubScopedPngIcon'
+import { HUB_PNG_ICONS } from '../../lib/hubPngIcons'
 import { ArrowRightIcon } from '../icons/NavIcons'
 import '../icons/NavIcons.css'
 import {
@@ -201,6 +203,51 @@ function HubAttentionChevron() {
   )
 }
 
+function HubSummaryCardIcon({ cardKey }) {
+  if (cardKey === 'buying') {
+    return (
+      <HubScopedPngIcon
+        src={HUB_PNG_ICONS.buying}
+        className="hub-summary-card__type-icon hub-summary-card__type-icon--buying-png"
+      />
+    )
+  }
+
+  if (cardKey === 'selling') {
+    return (
+      <HubScopedPngIcon
+        src={HUB_PNG_ICONS.selling}
+        className="hub-summary-card__type-icon hub-summary-card__type-icon--selling-png"
+      />
+    )
+  }
+
+  return (
+    <EquipdTypeIcon
+      variant={HUB_SUMMARY_ICON_VARIANT[cardKey]}
+      className="hub-summary-card__type-icon"
+    />
+  )
+}
+
+function HubTransactionActionIcon({ cardKey }) {
+  if (cardKey === 'orders-in-progress') {
+    return (
+      <HubScopedPngIcon
+        src={HUB_PNG_ICONS.orderInProgress}
+        className="hub-transaction-action__icon hub-transaction-action__icon--orders-png"
+      />
+    )
+  }
+
+  return (
+    <EquipdTypeIcon
+      variant={HUB_SUMMARY_ICON_VARIANT[cardKey]}
+      className="hub-transaction-action__icon"
+    />
+  )
+}
+
 function HubSummarySection({ counts, needsAttention, onNavigate }) {
   return (
     <HubPanel
@@ -219,10 +266,7 @@ function HubSummarySection({ counts, needsAttention, onNavigate }) {
               }${card.hideCount ? ' hub-summary-card--no-count' : ''}`}
               onClick={() => onNavigate(card.section, card.tab, undefined, card.subTab)}
             >
-              <EquipdTypeIcon
-                variant={HUB_SUMMARY_ICON_VARIANT[card.key]}
-                className="hub-summary-card__type-icon"
-              />
+              <HubSummaryCardIcon cardKey={card.key} />
               {!card.hideCount ? (
                 <span className="hub-summary-card__value">{counts[card.countKey]}</span>
               ) : null}
@@ -248,10 +292,7 @@ function HubSummarySection({ counts, needsAttention, onNavigate }) {
                     onNavigate(card.section, card.tab, undefined, card.subTab)
                   }
                 >
-                  <EquipdTypeIcon
-                    variant={HUB_SUMMARY_ICON_VARIANT[card.key]}
-                    className="hub-transaction-action__icon"
-                  />
+                  <HubTransactionActionIcon cardKey={card.key} />
                   <span className="hub-transaction-action__body">
                     <span className="hub-transaction-action__title-row">
                       <span className="hub-transaction-action__title">{card.label}</span>

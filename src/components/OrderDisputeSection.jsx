@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import {
   canBuyerOpenDispute,
   fetchDisputesForOrder,
@@ -12,7 +13,7 @@ import {
   getDisputeErrorMessage,
   getDisputeReasonOptions,
   getDisputeSellerMessage,
-  getDisputeResolutionMessage,
+  getEquipdSupportUpdateFromDispute,
   getDisputeSingleReasonNote,
   getLatestOrderDispute,
   isBuyerProtectionWindowActive,
@@ -20,66 +21,25 @@ import {
   isOrderDisputed,
   openOrderDispute,
 } from '../lib/orderDisputes'
+import { fetchOrderCaseReturnLogistics } from '../lib/caseReturn'
 import {
-  getOrderEvidenceSignedUrls,
+  canShowParticipantCaseEvidenceUpload,
+  isParticipantViewerRole,
+} from '../lib/caseEvidence'
+import {
   uploadDisputeEvidenceFile,
-  validateEvidenceImageFile,
+  validateIssueEvidenceFile,
 } from '../lib/orderEvidence'
+import { getEquipdSupportUpdateFromSupportRequest } from '../lib/supportRequests'
 import OpenOrderDisputeModal from './OpenOrderDisputeModal'
+import AddAdditionalEvidenceSection from './AddAdditionalEvidenceSection'
+import CaseReturnWorkflow from './CaseReturnWorkflow'
 import DisputeAdminControls from './DisputeAdminControls'
+import IssueEvidenceList from './IssueEvidenceList'
+import SupportUpdateCard from './SupportUpdateCard'
 import './OrderDisputeSection.css'
 
-function DisputeEvidenceThumbnails({ paths }) {
-  const [urlsByPath, setUrlsByPath] = useState({})
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let active = true
-
-    async function load() {
-      setLoading(true)
-      const signed = await getOrderEvidenceSignedUrls(paths ?? [])
-      if (!active) return
-      setUrlsByPath(signed)
-      setLoading(false)
-    }
-
-    load()
-
-    return () => {
-      active = false
-    }
-  }, [paths])
-
-  if (!paths?.length) return null
-
-  return (
-    <ul className="order-dispute__evidence-list">
-      {paths.map((path) => {
-        const entry = urlsByPath[path]
-        const url = entry?.url
-
-        return (
-          <li key={path} className="order-dispute__evidence-item">
-            {loading ? (
-              <span className="order-dispute__evidence-loading">Loading…</span>
-            ) : url ? (
-              <a href={url} target="_blank" rel="noreferrer">
-                <img src={url} alt="" className="order-dispute__evidence-thumb" />
-              </a>
-            ) : (
-              <span className="order-dispute__evidence-missing">Evidence unavailable</span>
-            )}
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
 function OrderDisputeSummary({ dispute, role }) {
-  const resolutionMessage = getDisputeResolutionMessage(dispute)
-
   return (
     <div className="order-dispute__summary">
       {role === 'buyer' && isDisputeActive(dispute) ? (
@@ -92,12 +52,6 @@ function OrderDisputeSummary({ dispute, role }) {
           {getDisputeSellerMessage()}
         </p>
       ) : null}
-      {resolutionMessage ? (
-        <p className="order-dispute__message order-dispute__message--resolution" role="status">
-          {resolutionMessage}
-        </p>
-      ) : null}
-
       <dl className="order-dispute__meta">
         <div className="order-dispute__row">
           <dt className="order-dispute__label">Status</dt>
@@ -117,10 +71,13 @@ function OrderDisputeSummary({ dispute, role }) {
         </div>
       </dl>
 
-      <div className="order-dispute__evidence">
-        <h4 className="order-dispute__evidence-title">Evidence</h4>
-        <DisputeEvidenceThumbnails paths={dispute.evidence_paths} />
-      </div>
+      <IssueEvidenceList paths={dispute.evidence_paths} title="Buyer evidence" />
+      {dispute.seller_response_evidence_paths?.length ? (
+        <IssueEvidenceList
+          paths={dispute.seller_response_evidence_paths}
+          title="Seller evidence"
+        />
+      ) : null}
     </div>
   )
 }
@@ -129,12 +86,19 @@ function OrderDisputeSection({
   order,
   payment,
   role,
+  isAdmin = false,
   compact = false,
   allowReport = true,
+  supportRequest = null,
+  useCaseUpdateHistory = false,
   onDisputeOpened,
   onDisputeUpdated,
+  onSupportUpdated,
 }) {
+  const { user } = useAuth()
+  const userId = user?.id
   const [disputes, setDisputes] = useState([])
+  const [returnLogistics, setReturnLogistics] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -150,8 +114,49 @@ function OrderDisputeSection({
   const showProtectionPanel =
     role === 'buyer' && protectionWindowActive && !activeDispute && !isOrderDisputed(order)
   const showDisputeSummary =
-    Boolean(displayDispute) || (isOrderDisputed(order) && role !== 'admin')
-  const showAdminControls = role === 'admin' && Boolean(displayDispute)
+    Boolean(displayDispute) ||
+    (isOrderDisputed(order) && (role === 'buyer' || role === 'seller'))
+  const showAdminControls =
+    isAdmin && (Boolean(displayDispute) || Boolean(supportRequest))
+  const disputeSupportUpdate = useMemo(
+    () => (displayDispute ? getEquipdSupportUpdateFromDispute(displayDispute) : null),
+    [displayDispute],
+  )
+  const supportRequestUpdate = useMemo(
+    () => (supportRequest ? getEquipdSupportUpdateFromSupportRequest(supportRequest) : null),
+    [supportRequest],
+  )
+  const disputeEvidenceCase = activeDispute ? { type: 'dispute', record: activeDispute } : null
+  const canUploadDisputeEvidence = canShowParticipantCaseEvidenceUpload(
+    disputeEvidenceCase,
+    order,
+    role,
+    userId,
+  )
+  const showClosedDisputeMessage =
+    Boolean(displayDispute) && !activeDispute && isParticipantViewerRole(role)
+
+  const refreshReturnWorkflow = useCallback(
+    async (updatedDispute) => {
+      if (updatedDispute?.id) {
+        setDisputes((current) => [
+          updatedDispute,
+          ...current.filter((entry) => entry.id !== updatedDispute.id),
+        ])
+      } else if (order?.id) {
+        const { data } = await fetchDisputesForOrder(order.id)
+        setDisputes(data ?? [])
+      }
+
+      if (order?.id) {
+        const { data: logistics } = await fetchOrderCaseReturnLogistics(order.id)
+        setReturnLogistics(logistics ?? [])
+      }
+
+      onDisputeUpdated?.(updatedDispute)
+    },
+    [onDisputeUpdated, order?.id],
+  )
 
   useEffect(() => {
     if (!order?.id) return undefined
@@ -163,6 +168,7 @@ function OrderDisputeSection({
       setError('')
 
       const { data, error: fetchError } = await fetchDisputesForOrder(order.id)
+      const { data: logistics } = await fetchOrderCaseReturnLogistics(order.id)
 
       if (!active) return
 
@@ -172,6 +178,8 @@ function OrderDisputeSection({
       } else {
         setDisputes(data ?? [])
       }
+
+      setReturnLogistics(logistics ?? [])
 
       setLoading(false)
     }
@@ -190,7 +198,7 @@ function OrderDisputeSection({
     setSubmitError('')
 
     for (const file of evidenceFiles) {
-      const validationError = validateEvidenceImageFile(file)
+      const validationError = validateIssueEvidenceFile(file)
       if (validationError) {
         setSubmitting(false)
         setSubmitError(validationError)
@@ -291,6 +299,12 @@ function OrderDisputeSection({
           <h2 id="order-dispute-summary-title" className="order-dispute__title">
             Dispute
           </h2>
+          {disputeSupportUpdate && !useCaseUpdateHistory ? (
+            <SupportUpdateCard {...disputeSupportUpdate} />
+          ) : null}
+          {!disputeSupportUpdate && supportRequestUpdate && !useCaseUpdateHistory ? (
+            <SupportUpdateCard {...supportRequestUpdate} />
+          ) : null}
           {displayDispute ? (
             <OrderDisputeSummary dispute={displayDispute} role={role} />
           ) : (
@@ -298,10 +312,22 @@ function OrderDisputeSection({
               {role === 'buyer' ? getDisputeBuyerMessage() : getDisputeSellerMessage()}
             </p>
           )}
-          {showAdminControls ? (
-            <DisputeAdminControls
+          {displayDispute && isParticipantViewerRole(role) ? (
+            <CaseReturnWorkflow
               dispute={displayDispute}
-              onUpdated={(updatedDispute) => {
+              returnLogistics={returnLogistics}
+              userId={userId}
+              isAdminViewer={isAdmin}
+              onUpdated={() => refreshReturnWorkflow()}
+            />
+          ) : null}
+          {canUploadDisputeEvidence ? (
+            <AddAdditionalEvidenceSection
+              orderId={order.id}
+              caseType="dispute"
+              caseId={activeDispute.id}
+              uploaderRole={role}
+              onUploaded={(updatedDispute) => {
                 if (updatedDispute) {
                   setDisputes((current) => [
                     updatedDispute,
@@ -312,15 +338,45 @@ function OrderDisputeSection({
               }}
             />
           ) : null}
+          {showClosedDisputeMessage ? (
+            <p className="order-dispute__closed-notice" role="status">
+              This case has been closed. You can no longer upload additional evidence.
+            </p>
+          ) : null}
+          {showAdminControls ? (
+            <DisputeAdminControls
+              dispute={displayDispute}
+              supportRequest={supportRequest}
+              returnLogistics={returnLogistics}
+              userId={userId}
+              onDisputeUpdated={(updatedDispute) => {
+                if (updatedDispute) {
+                  setDisputes((current) => [
+                    updatedDispute,
+                    ...current.filter((entry) => entry.id !== updatedDispute.id),
+                  ])
+                }
+                onDisputeUpdated?.(updatedDispute)
+              }}
+              onSupportUpdated={onSupportUpdated}
+              onReturnUpdated={() => refreshReturnWorkflow()}
+            />
+          ) : null}
         </>
       ) : showAdminControls ? (
         <>
           <h2 id="order-dispute-summary-title" className="order-dispute__title">
             Dispute
           </h2>
+          {supportRequestUpdate && !useCaseUpdateHistory ? (
+            <SupportUpdateCard {...supportRequestUpdate} />
+          ) : null}
           <DisputeAdminControls
             dispute={displayDispute}
-            onUpdated={(updatedDispute) => {
+            supportRequest={supportRequest}
+            returnLogistics={returnLogistics}
+            userId={userId}
+            onDisputeUpdated={(updatedDispute) => {
               if (updatedDispute) {
                 setDisputes((current) => [
                   updatedDispute,
@@ -329,6 +385,8 @@ function OrderDisputeSection({
               }
               onDisputeUpdated?.(updatedDispute)
             }}
+            onSupportUpdated={onSupportUpdated}
+            onReturnUpdated={() => refreshReturnWorkflow()}
           />
         </>
       ) : null}

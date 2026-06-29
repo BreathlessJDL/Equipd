@@ -18,6 +18,7 @@ const loggedInPublicNavLinks = [
 ]
 
 const adminNavLinks = [
+  { to: '/admin/cases', label: 'Cases' },
   { to: '/admin/support', label: 'Support' },
   { to: '/admin/orders', label: 'Orders' },
 ]

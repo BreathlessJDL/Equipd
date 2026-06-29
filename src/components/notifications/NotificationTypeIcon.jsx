@@ -1,6 +1,11 @@
 import EquipdTypeIcon from '../icons/EquipdTypeIcon'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
-import { getNotificationIconType } from '../../lib/notificationPresentation'
+import {
+  getNotificationIconType,
+  NOTIFICATION_ICON_TYPES,
+} from '../../lib/notificationPresentation'
+import { NOTIFICATION_PNG_ICONS } from '../../lib/notificationPngIcons'
+import NotificationScopedPngIcon from './NotificationScopedPngIcon'
 
 const NOTIFICATION_TO_EQUIPD_VARIANT = {
   new_offer: EQUIPD_ICON_VARIANT.NEW_OFFER,
@@ -16,8 +21,27 @@ const NOTIFICATION_TO_EQUIPD_VARIANT = {
   default: EQUIPD_ICON_VARIANT.DEFAULT,
 }
 
+const NOTIFICATION_PNG_CONFIG = {
+  [NOTIFICATION_ICON_TYPES.BUYER_PAYMENT_RECEIVED]: {
+    src: NOTIFICATION_PNG_ICONS.buyerPayment,
+    className: 'notification-icon--buyer-payment-png',
+  },
+  [NOTIFICATION_ICON_TYPES.COLLECTION_CONFIRMED]: {
+    src: NOTIFICATION_PNG_ICONS.collectionConfirmed,
+    className: 'notification-icon--collection-confirmed-png',
+  },
+}
+
 export function NotificationTypeIcon({ notification }) {
   const iconType = getNotificationIconType(notification)
+  const pngConfig = NOTIFICATION_PNG_CONFIG[iconType]
+
+  if (pngConfig) {
+    return (
+      <NotificationScopedPngIcon src={pngConfig.src} className={pngConfig.className} />
+    )
+  }
+
   const variant = NOTIFICATION_TO_EQUIPD_VARIANT[iconType] ?? EQUIPD_ICON_VARIANT.DEFAULT
 
   return <EquipdTypeIcon variant={variant} />

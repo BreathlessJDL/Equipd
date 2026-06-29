@@ -2,12 +2,21 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthModal } from '../../hooks/useAuthModal'
 import LoginForm from './LoginForm'
+import SignupEmailConfirmation from './SignupEmailConfirmation'
 import SignupForm from './SignupForm'
 import './AuthModal.css'
 
 function AuthModal() {
   const navigate = useNavigate()
-  const { open, mode, redirectTo, closeAuthModal, switchAuthModal } = useAuthModal()
+  const {
+    open,
+    mode,
+    redirectTo,
+    pendingConfirmationEmail,
+    closeAuthModal,
+    switchAuthModal,
+    showSignupConfirmation,
+  } = useAuthModal()
 
   useEffect(() => {
     if (!open) return undefined
@@ -39,7 +48,22 @@ function AuthModal() {
     }
   }
 
+  function handleEmailConfirmationRequired({ email }) {
+    showSignupConfirmation(email)
+  }
+
+  function handleOpenLoginFromConfirmation() {
+    switchAuthModal('login')
+  }
+
   const isLogin = mode === 'login'
+  const isSignupConfirmation = mode === 'signup-confirmation'
+
+  const dialogLabelId = isLogin
+    ? 'auth-modal-login-heading'
+    : isSignupConfirmation
+      ? 'auth-modal-signup-confirmation-heading'
+      : 'auth-modal-signup-heading'
 
   return (
     <div className="auth-modal" role="presentation">
@@ -54,7 +78,7 @@ function AuthModal() {
         className="auth-modal__dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby={isLogin ? 'auth-modal-login-heading' : 'auth-modal-signup-heading'}
+        aria-labelledby={dialogLabelId}
       >
         <button
           type="button"
@@ -73,11 +97,19 @@ function AuthModal() {
               onSuccess={handleAuthSuccess}
               onSwitchToSignup={() => switchAuthModal('signup')}
             />
+          ) : isSignupConfirmation ? (
+            <SignupEmailConfirmation
+              idPrefix="auth-modal-signup-confirmation"
+              email={pendingConfirmationEmail}
+              onOpenLogin={handleOpenLoginFromConfirmation}
+              onClose={closeAuthModal}
+            />
           ) : (
             <SignupForm
               idPrefix="auth-modal-signup"
               redirectTo={redirectTo}
               onSuccess={handleAuthSuccess}
+              onEmailConfirmationRequired={handleEmailConfirmationRequired}
               onSwitchToLogin={() => switchAuthModal('login')}
             />
           )}

@@ -114,6 +114,8 @@ create policy "Order participants can read order disputes"
 -- Path: {order_id}/disputes/{dispute_id}/{filename}
 -- ---------------------------------------------------------------------------
 
+-- Requires storage_buyer_can_upload_dispute_evidence from prelaunch-security-fixes.sql
+-- (SECURITY DEFINER — do not query public.orders directly; clients lack SELECT).
 drop policy if exists "Buyer can upload dispute evidence" on storage.objects;
 
 create policy "Buyer can upload dispute evidence"
@@ -122,31 +124,7 @@ create policy "Buyer can upload dispute evidence"
   with check (
     bucket_id = 'order-evidence'
     and (storage.foldername(name))[2] = 'disputes'
-    and exists (
-      select 1
-      from public.orders o
-      where o.id::text = (storage.foldername(name))[1]
-        and o.buyer_id = auth.uid()
-        and o.fulfilment_status in (
-          'collected'::public.order_fulfilment_status,
-          'delivered'::public.order_fulfilment_status
-        )
-        and o.payout_release_at is not null
-        and o.payout_release_at > now()
-        and o.payout_released_at is null
-        and o.fulfilment_status not in (
-          'disputed'::public.order_fulfilment_status,
-          'refunded'::public.order_fulfilment_status,
-          'cancelled'::public.order_fulfilment_status,
-          'completed'::public.order_fulfilment_status
-        )
-        and not exists (
-          select 1
-          from public.order_disputes d
-          where d.order_id = o.id
-            and d.status in ('open', 'under_review')
-        )
-    )
+    and public.storage_buyer_can_upload_dispute_evidence(((storage.foldername(name))[1])::uuid)
   );
 
 -- ---------------------------------------------------------------------------

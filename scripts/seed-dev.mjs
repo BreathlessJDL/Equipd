@@ -33,6 +33,7 @@ import {
   DEV_USER_KEYS,
   DEV_USERS,
 } from './seed-dev-data.mjs'
+import { calculateBuyerProtectionFee } from '../src/lib/buyerProtection.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -44,6 +45,19 @@ const MIME_BY_EXT = {
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
   '.webp': 'image/webp',
+}
+
+function buildDevCheckoutTotals(itemPricePence) {
+  const buyerProtectionFeePence = calculateBuyerProtectionFee(itemPricePence)
+  const platformFeePence = 0
+
+  return {
+    itemPricePence,
+    buyerProtectionFeePence,
+    buyerTotalPence: itemPricePence + buyerProtectionFeePence,
+    platformFeePence,
+    sellerNetPence: itemPricePence - platformFeePence,
+  }
 }
 
 function loadEnvFile(relativePath) {
@@ -345,8 +359,7 @@ async function seedOffersOrdersAndReviews(supabase) {
 
   const completedOffer = DEV_OFFERS.find((offer) => offer.id.endsWith('302'))
   const completedListing = listingBySlug[completedOffer.listingSlug]
-  const platformFeePence = 0
-  const sellerNetPence = completedOffer.amountPence - platformFeePence
+  const checkoutTotals = buildDevCheckoutTotals(completedOffer.amountPence)
 
   const { error: paymentError } = await supabase.from('payments').upsert(
     {
@@ -355,9 +368,11 @@ async function seedOffersOrdersAndReviews(supabase) {
       listing_id: completedListing.id,
       buyer_id: DEV_USER_KEYS[completedOffer.buyerKey],
       seller_id: completedListing.seller_id,
-      amount_pence: completedOffer.amountPence,
-      platform_fee_pence: platformFeePence,
-      seller_net_pence: sellerNetPence,
+      amount_pence: checkoutTotals.itemPricePence,
+      platform_fee_pence: checkoutTotals.platformFeePence,
+      buyer_protection_fee_pence: checkoutTotals.buyerProtectionFeePence,
+      buyer_total_pence: checkoutTotals.buyerTotalPence,
+      seller_net_pence: checkoutTotals.sellerNetPence,
       status: 'paid',
       expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
       paid_at: new Date().toISOString(),
@@ -374,9 +389,12 @@ async function seedOffersOrdersAndReviews(supabase) {
       listing_id: completedListing.id,
       buyer_id: DEV_USER_KEYS[completedOffer.buyerKey],
       seller_id: completedListing.seller_id,
-      amount_pence: completedOffer.amountPence,
-      platform_fee_pence: platformFeePence,
-      seller_net_pence: sellerNetPence,
+      amount_pence: checkoutTotals.itemPricePence,
+      item_price_pence: checkoutTotals.itemPricePence,
+      platform_fee_pence: checkoutTotals.platformFeePence,
+      buyer_protection_fee_pence: checkoutTotals.buyerProtectionFeePence,
+      buyer_total_pence: checkoutTotals.buyerTotalPence,
+      seller_net_pence: checkoutTotals.sellerNetPence,
       fulfilment_status: 'completed',
       payout_status: 'paid',
       buyer_confirmed_at: new Date().toISOString(),
@@ -392,21 +410,18 @@ async function seedOffersOrdersAndReviews(supabase) {
     .eq('id', completedListing.id)
 
   for (const review of DEV_REVIEWS) {
-    const listing = listingBySlug[review.listingSlug]
-
     await supabase
       .from('reviews')
       .delete()
       .eq('order_id', review.orderId)
-      .eq('reviewer_id', DEV_USER_KEYS[review.reviewerKey])
+      .eq('reviewer_user_id', DEV_USER_KEYS[review.reviewerKey])
 
     const { error } = await supabase.from('reviews').insert({
       order_id: review.orderId,
-      listing_id: listing.id,
-      reviewer_id: DEV_USER_KEYS[review.reviewerKey],
-      reviewee_id: DEV_USER_KEYS[review.revieweeKey],
+      reviewer_user_id: DEV_USER_KEYS[review.reviewerKey],
+      reviewed_user_id: DEV_USER_KEYS[review.revieweeKey],
       rating: review.rating,
-      comment: review.comment,
+      review_text: review.comment,
     })
 
     if (error) throw error

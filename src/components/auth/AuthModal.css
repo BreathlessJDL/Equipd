@@ -75,6 +75,44 @@
   text-align: center;
 }
 
+.signup-email-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.signup-email-confirmation__body {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.signup-email-confirmation__body p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.signup-email-confirmation__email {
+  color: var(--color-navy);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.signup-email-confirmation__actions {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 0.25rem;
+}
+
+.signup-email-confirmation__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+  text-align: center;
+}
+
 @media (max-width: 480px) {
   .auth-modal {
     padding: var(--space-sm);

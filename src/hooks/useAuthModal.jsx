@@ -7,6 +7,7 @@ export function AuthModalProvider({ children }) {
     open: false,
     mode: 'login',
     redirectTo: '/',
+    pendingConfirmationEmail: '',
   })
 
   const openLoginModal = useCallback(({ redirectTo = '/' } = {}) => {
@@ -18,7 +19,21 @@ export function AuthModalProvider({ children }) {
   }, [])
 
   const closeAuthModal = useCallback(() => {
-    setState((current) => ({ ...current, open: false }))
+    setState((current) => ({
+      ...current,
+      open: false,
+      mode: 'login',
+      pendingConfirmationEmail: '',
+    }))
+  }, [])
+
+  const showSignupConfirmation = useCallback((email = '') => {
+    setState((current) => ({
+      ...current,
+      open: true,
+      mode: 'signup-confirmation',
+      pendingConfirmationEmail: email.trim(),
+    }))
   }, [])
 
   const switchAuthModal = useCallback((mode) => {
@@ -32,8 +47,9 @@ export function AuthModalProvider({ children }) {
       openSignupModal,
       closeAuthModal,
       switchAuthModal,
+      showSignupConfirmation,
     }),
-    [state, openLoginModal, openSignupModal, closeAuthModal, switchAuthModal],
+    [state, openLoginModal, openSignupModal, closeAuthModal, switchAuthModal, showSignupConfirmation],
   )
 
   return <AuthModalContext.Provider value={value}>{children}</AuthModalContext.Provider>

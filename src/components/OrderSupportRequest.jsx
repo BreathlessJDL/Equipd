@@ -1,42 +1,97 @@
 import { useState } from 'react'
+import AddAdditionalEvidenceSection from './AddAdditionalEvidenceSection'
+import EvidenceFilePicker from './EvidenceFilePicker'
+import {
+  canShowParticipantCaseEvidenceUpload,
+  getActiveOrderCase,
+  isOrderCaseActive,
+} from '../lib/caseEvidence'
 import {
   SUPPORT_REQUEST_REASON_OPTIONS,
   SUPPORT_REQUEST_REASONS,
-  canShowResolutionNotes,
   canUserRaiseSupportRequest,
   createSupportRequest,
   formatSupportRequestReason,
   formatSupportRequestStatus,
   formatSupportRequestTimestamp,
+  getEquipdSupportUpdateFromSupportRequest,
   getSupportRequestErrorMessage,
   getUserActiveSupportRequest,
   isSupportRequestActive,
 } from '../lib/supportRequests'
+import {
+  MAX_ISSUE_EVIDENCE_FILES,
+  uploadSupportEvidenceFile,
+  validateIssueEvidenceFile,
+} from '../lib/orderEvidence'
+import IssueEvidenceList from './IssueEvidenceList'
+import SupportUpdateCard from './SupportUpdateCard'
 import './OrderSupportRequest.css'
 
 function OrderSupportRequest({
   order,
   payment,
   requests,
+  disputes = [],
   userId,
   viewerRole,
+  useCaseUpdateHistory = false,
   onSubmitted,
 }) {
+  function renderSupportUpdate(request) {
+    if (useCaseUpdateHistory) return null
+    const update = getEquipdSupportUpdateFromSupportRequest(request)
+    return update ? <SupportUpdateCard {...update} /> : null
+  }
+
   const [reason, setReason] = useState(SUPPORT_REQUEST_REASONS.ITEM_NOT_RECEIVED)
   const [message, setMessage] = useState('')
+  const [evidenceFiles, setEvidenceFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  const activeCase = getActiveOrderCase(disputes, requests)
+  const caseIsActive = isOrderCaseActive(activeCase)
   const userActiveRequest = getUserActiveSupportRequest(requests, userId)
   const counterpartyActiveRequest = (requests ?? []).find(
     (request) => request.opened_by !== userId && isSupportRequestActive(request),
   )
-  const canRaise = canUserRaiseSupportRequest(order, payment, requests, userId)
+  const canRaise = canUserRaiseSupportRequest(order, payment, requests, userId, disputes)
+  const canUploadEvidence = canShowParticipantCaseEvidenceUpload(
+    activeCase,
+    order,
+    viewerRole,
+    userId,
+  )
+  const showClosedCaseMessage =
+    !caseIsActive &&
+    (requests?.length ?? 0) > 0 &&
+    !getActiveOrderCase(disputes, requests) &&
+    !canRaise
   const pastRequests = (requests ?? []).filter(
     (request) =>
       !isSameRequest(request, userActiveRequest) &&
       !isSameRequest(request, counterpartyActiveRequest),
   )
+
+  async function uploadEvidenceFiles(orderId, requestId, files) {
+    const evidencePaths = []
+
+    for (const file of files) {
+      const validationError = validateIssueEvidenceFile(file)
+      if (validationError) {
+        throw new Error(validationError)
+      }
+
+      const { path, error: uploadError } = await uploadSupportEvidenceFile(orderId, requestId, file)
+      if (uploadError) {
+        throw uploadError
+      }
+      evidencePaths.push(path)
+    }
+
+    return evidencePaths
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -46,22 +101,38 @@ function OrderSupportRequest({
     setSubmitting(true)
     setError('')
 
-    const { error: submitError } = await createSupportRequest({
-      orderId: order.id,
-      reason,
-      message,
-    })
+    try {
+      for (const file of evidenceFiles) {
+        const validationError = validateIssueEvidenceFile(file)
+        if (validationError) throw new Error(validationError)
+      }
 
-    if (submitError) {
+      const requestId = crypto.randomUUID()
+      let evidencePaths = []
+
+      if (evidenceFiles.length) {
+        evidencePaths = await uploadEvidenceFiles(order.id, requestId, evidenceFiles)
+      }
+
+      const { error: submitError } = await createSupportRequest({
+        orderId: order.id,
+        reason,
+        message,
+        evidencePaths,
+        requestId,
+      })
+
+      if (submitError) throw submitError
+
+      setMessage('')
+      setReason(SUPPORT_REQUEST_REASONS.ITEM_NOT_RECEIVED)
+      setEvidenceFiles([])
+      onSubmitted?.()
+    } catch (submitError) {
       setError(getSupportRequestErrorMessage(submitError))
+    } finally {
       setSubmitting(false)
-      return
     }
-
-    setMessage('')
-    setReason(SUPPORT_REQUEST_REASONS.ITEM_NOT_RECEIVED)
-    setSubmitting(false)
-    onSubmitted?.()
   }
 
   return (
@@ -75,6 +146,7 @@ function OrderSupportRequest({
       {counterpartyActiveRequest ? (
         <div className="order-support__current order-support__current--counterparty">
           <h3 className="order-support__subtitle">Support issue raised by the other party</h3>
+          {renderSupportUpdate(counterpartyActiveRequest)}
           <dl className="order-support__meta">
             <div className="order-support__row">
               <dt className="order-support__label">Status</dt>
@@ -94,14 +166,15 @@ function OrderSupportRequest({
                 {formatSupportRequestTimestamp(counterpartyActiveRequest.created_at)}
               </dd>
             </div>
-            <SupportResolutionNotes request={counterpartyActiveRequest} />
           </dl>
+          <IssueEvidenceList paths={counterpartyActiveRequest.evidence_paths} />
         </div>
       ) : null}
 
       {userActiveRequest ? (
         <div className="order-support__current">
           <h3 className="order-support__subtitle">Your support request</h3>
+          {renderSupportUpdate(userActiveRequest)}
           <dl className="order-support__meta">
             <div className="order-support__row">
               <dt className="order-support__label">Status</dt>
@@ -127,9 +200,25 @@ function OrderSupportRequest({
                 {userActiveRequest.message}
               </dd>
             </div>
-            <SupportResolutionNotes request={userActiveRequest} />
           </dl>
+          <IssueEvidenceList paths={userActiveRequest.evidence_paths} />
         </div>
+      ) : null}
+
+      {canUploadEvidence && activeCase?.type === 'support' ? (
+        <AddAdditionalEvidenceSection
+          orderId={order.id}
+          caseType={activeCase.type}
+          caseId={activeCase.record.id}
+          uploaderRole={viewerRole}
+          onUploaded={() => onSubmitted?.()}
+        />
+      ) : null}
+
+      {showClosedCaseMessage && !activeCase ? (
+        <p className="order-support__closed-notice" role="status">
+          This case has been closed. You can no longer upload additional evidence.
+        </p>
       ) : null}
 
       {canRaise ? (
@@ -167,6 +256,15 @@ function OrderSupportRequest({
             />
           </label>
 
+          <EvidenceFilePicker
+            inputId="support-new-evidence"
+            files={evidenceFiles}
+            disabled={submitting}
+            onChange={setEvidenceFiles}
+            label="Evidence files (optional)"
+            hint={`Up to ${MAX_ISSUE_EVIDENCE_FILES} files. Images, videos, or PDFs. Max 25 MB each.`}
+          />
+
           <button
             type="submit"
             className="order-support__button"
@@ -181,6 +279,10 @@ function OrderSupportRequest({
             </p>
           ) : null}
         </form>
+      ) : error ? (
+        <p className="order-support__error" role="alert">
+          {error}
+        </p>
       ) : null}
 
       {pastRequests.length > 0 ? (
@@ -198,28 +300,13 @@ function OrderSupportRequest({
                   {' · '}
                   {formatSupportRequestTimestamp(request.created_at)}
                 </p>
-                {canShowResolutionNotes(request) ? (
-                  <p className="order-support__resolution">{request.resolution_notes}</p>
-                ) : null}
+                {renderSupportUpdate(request)}
               </li>
             ))}
           </ul>
         </div>
       ) : null}
     </section>
-  )
-}
-
-function SupportResolutionNotes({ request }) {
-  if (!canShowResolutionNotes(request)) return null
-
-  return (
-    <div className="order-support__row">
-      <dt className="order-support__label">Resolution</dt>
-      <dd className="order-support__value order-support__resolution">
-        {request.resolution_notes}
-      </dd>
-    </div>
   )
 }
 

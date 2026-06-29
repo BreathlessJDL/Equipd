@@ -3,6 +3,7 @@ import {
   getPasswordRequirementStatus,
   getPasswordStrength,
   PASSWORD_MAX_LENGTH,
+  PASSWORD_POLICY_SUMMARY,
 } from '../../lib/passwordPolicy'
 import './PasswordField.css'
 
@@ -97,7 +98,9 @@ function PasswordField({
       ) : null}
 
       {showRequirements ? (
-        <ul className="password-field__requirements" aria-label="Password requirements">
+        <>
+          <p className="password-field__summary">{PASSWORD_POLICY_SUMMARY}</p>
+          <ul className="password-field__requirements" aria-label="Password requirements">
           {requirements.map((requirement) => (
             <li
               key={requirement.id}
@@ -109,7 +112,8 @@ function PasswordField({
               <span>{requirement.label}</span>
             </li>
           ))}
-        </ul>
+          </ul>
+        </>
       ) : null}
     </div>
   )

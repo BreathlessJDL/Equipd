@@ -58,7 +58,7 @@ function assert(condition, label) {
   console.error(`FAIL ${label}`)
 }
 
-const validPassword = 'EquipdTest1!'
+const validPassword = 'Equipd1!'
 
 const passwordRpc = await supabase.rpc('validate_signup_password', {
   p_password: validPassword,
@@ -67,18 +67,18 @@ assert(!passwordRpc.error, 'validate_signup_password RPC is available')
 assert(passwordRpc.data?.valid === true, 'RPC accepts valid password')
 
 const shortPasswordRpc = await supabase.rpc('validate_signup_password', {
-  p_password: 'short1!A',
+  p_password: 'Eq1!',
 })
 assert(shortPasswordRpc.data?.valid === false, 'RPC rejects short password')
 assert(
-  shortPasswordRpc.data?.error === 'Password must be at least 10 characters.',
+  shortPasswordRpc.data?.error === 'Password must be at least 6 characters.',
   'RPC returns specific short-password error',
 )
 
 const serverValidation = await validatePasswordWithServer(supabase, validPassword)
 assert(serverValidation.valid, 'validatePasswordWithServer accepts valid password')
 
-const serverInvalid = await validatePasswordWithServer(supabase, 'EquipdTest1')
+const serverInvalid = await validatePasswordWithServer(supabase, 'Equipd1')
 assert(!serverInvalid.valid, 'validatePasswordWithServer rejects missing special char')
 assert(
   serverInvalid.error === 'At least one special character.',

@@ -90,6 +90,7 @@ export const NOTIFICATION_ICON_TYPES = {
   OFFER_ACCEPTED: 'offer_accepted',
   OFFER_DECLINED: 'offer_declined',
   COLLECTION_CONFIRMED: 'collection_confirmed',
+  BUYER_PAYMENT_RECEIVED: 'buyer_payment_received',
   ITEM_DISPATCHED: 'item_dispatched',
   DELIVERY_CONFIRMED: 'delivery_confirmed',
   PAYOUT_PAYMENT: 'payout_payment',
@@ -121,6 +122,7 @@ const OFFER_TYPE_PATTERNS = {
     'offer_cancelled',
   ],
   [NOTIFICATION_ICON_TYPES.COLLECTION_CONFIRMED]: ['collection_confirmed'],
+  [NOTIFICATION_ICON_TYPES.BUYER_PAYMENT_RECEIVED]: ['buyer_payment_received'],
   [NOTIFICATION_ICON_TYPES.ITEM_DISPATCHED]: [
     'courier_evidence',
     'courier_collection',
@@ -171,6 +173,14 @@ export function getNotificationIconType(notification) {
     return NOTIFICATION_ICON_TYPES.SUPPORT_DISPUTE
   }
 
+  if (matchesNotificationType(type, OFFER_TYPE_PATTERNS[NOTIFICATION_ICON_TYPES.BUYER_PAYMENT_RECEIVED])) {
+    return NOTIFICATION_ICON_TYPES.BUYER_PAYMENT_RECEIVED
+  }
+
+  if (title.includes('buyer payment received')) {
+    return NOTIFICATION_ICON_TYPES.BUYER_PAYMENT_RECEIVED
+  }
+
   if (matchesNotificationType(type, OFFER_TYPE_PATTERNS[NOTIFICATION_ICON_TYPES.PAYOUT_PAYMENT])) {
     return NOTIFICATION_ICON_TYPES.PAYOUT_PAYMENT
   }
@@ -194,7 +204,11 @@ export function getNotificationIconType(notification) {
     return NOTIFICATION_ICON_TYPES.COLLECTION_CONFIRMED
   }
 
-  if (title.includes('collection confirmed')) {
+  if (
+    title.includes('collection confirmed') ||
+    title.includes('handover confirmed') ||
+    title.includes('collection complete')
+  ) {
     return NOTIFICATION_ICON_TYPES.COLLECTION_CONFIRMED
   }
 
@@ -301,6 +315,7 @@ export function getNotificationActionLabel(notification) {
 
   if (
     iconType === NOTIFICATION_ICON_TYPES.COLLECTION_CONFIRMED ||
+    iconType === NOTIFICATION_ICON_TYPES.BUYER_PAYMENT_RECEIVED ||
     iconType === NOTIFICATION_ICON_TYPES.ITEM_DISPATCHED ||
     iconType === NOTIFICATION_ICON_TYPES.DELIVERY_CONFIRMED ||
     iconType === NOTIFICATION_ICON_TYPES.PAYOUT_PAYMENT ||

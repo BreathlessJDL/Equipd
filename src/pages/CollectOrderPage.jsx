@@ -10,12 +10,20 @@ import { useAuthModal } from '../hooks/useAuthModal'
 import { usePageTitle } from '../hooks/usePageTitle'
 import {
   buildCollectionConfirmationChecks,
+  COLLECTION_REJECTION_REASON_OPTIONS,
+  COLLECTION_REJECTION_REASONS,
   confirmCollectionByQr,
   fetchCollectionQrPreview,
   getCollectionQrErrorMessage,
+  rejectCollectionByQr,
 } from '../lib/collectionQr'
 import { fetchOrderById } from '../lib/orders'
 import { getListingPrimaryImageUrl } from '../lib/listingImages'
+import {
+  uploadSupportEvidenceFile,
+  validateIssueEvidenceFile,
+} from '../lib/orderEvidence'
+import EvidenceFilePicker from '../components/EvidenceFilePicker'
 import './CollectOrderPage.css'
 import '../components/PageStub.css'
 
@@ -141,6 +149,123 @@ function CollectOrderChecklist({ checks, setChecks, handoverVerb, submitting }) 
   )
 }
 
+function CollectOrderRejectedView({ preview, orderDetails }) {
+  return (
+    <section className="page-stub collect-order-page collect-order-page--rejected">
+      <header className="collect-order-page__success-hero">
+        <h1 className="collect-order-page__success-title">Item rejected at collection</h1>
+        <p className="collect-order-page__success-lead">
+          Collection was not confirmed. Equipd support is reviewing your case and seller payout
+          remains on hold.
+        </p>
+      </header>
+
+      <CollectOrderSummaryCard preview={preview} orderDetails={orderDetails} />
+
+      <div className="collect-order-page__actions collect-order-page__actions--success">
+        {preview?.order_id ? (
+          <Link
+            to={`/orders/${preview.order_id}`}
+            className="collect-order-page__button collect-order-page__button--primary"
+          >
+            View order
+          </Link>
+        ) : null}
+        <Link
+          to="/hub"
+          className="collect-order-page__button collect-order-page__button--secondary"
+        >
+          Back to Hub
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+function CollectOrderRejectForm({
+  rejectReason,
+  setRejectReason,
+  rejectDescription,
+  setRejectDescription,
+  rejectFiles,
+  setRejectFiles,
+  submitting,
+  error,
+  onSubmit,
+}) {
+  return (
+    <section className="collect-order-page__reject" aria-labelledby="collect-order-reject-title">
+      <h2 id="collect-order-reject-title" className="collect-order-page__reject-title">
+        Reject item at collection
+      </h2>
+      <p className="collect-order-page__reject-lead">
+        If the item is not acceptable, reject it here instead of confirming collection. Seller
+        payout stays blocked and Equipd support will review your case.
+      </p>
+
+      <form className="collect-order-page__reject-form" onSubmit={onSubmit}>
+        <div className="collect-order-page__reject-field">
+          <label className="collect-order-page__reject-label" htmlFor="collect-reject-reason">
+            Reason
+          </label>
+          <select
+            id="collect-reject-reason"
+            className="collect-order-page__reject-input"
+            value={rejectReason}
+            disabled={submitting}
+            onChange={(event) => setRejectReason(event.target.value)}
+          >
+            {COLLECTION_REJECTION_REASON_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="collect-order-page__reject-field">
+          <label className="collect-order-page__reject-label" htmlFor="collect-reject-description">
+            What is wrong with the item?
+          </label>
+          <textarea
+            id="collect-reject-description"
+            className="collect-order-page__reject-textarea"
+            rows={4}
+            required
+            disabled={submitting}
+            value={rejectDescription}
+            onChange={(event) => setRejectDescription(event.target.value)}
+            placeholder="Describe the issue you found when inspecting the item."
+          />
+        </div>
+
+        <EvidenceFilePicker
+          inputId="collect-reject-evidence"
+          files={rejectFiles}
+          onChange={setRejectFiles}
+          disabled={submitting}
+          label="Photos or files (optional)"
+          hint="Upload photos if they help explain the issue."
+        />
+
+        {error ? (
+          <p className="collect-order-page__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <button
+          type="submit"
+          className="collect-order-page__button collect-order-page__button--danger"
+          disabled={submitting || !rejectDescription.trim()}
+        >
+          {submitting ? 'Submitting rejection…' : 'Reject item'}
+        </button>
+      </form>
+    </section>
+  )
+}
+
 function CollectOrderSuccessView({ preview, orderDetails, sellerDelivery }) {
   const title = sellerDelivery ? 'Handover confirmed' : 'Collection confirmed'
   const confirmationLead = sellerDelivery
@@ -212,6 +337,13 @@ function CollectOrderPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [rejected, setRejected] = useState(false)
+  const [showRejectForm, setShowRejectForm] = useState(false)
+  const [rejectReason, setRejectReason] = useState(COLLECTION_REJECTION_REASONS.ITEM_NOT_AS_DESCRIBED)
+  const [rejectDescription, setRejectDescription] = useState('')
+  const [rejectFiles, setRejectFiles] = useState([])
+  const [rejectSubmitting, setRejectSubmitting] = useState(false)
+  const [rejectError, setRejectError] = useState('')
   const [checks, setChecks] = useState({
     item_collected: false,
     item_inspected: false,
@@ -288,6 +420,56 @@ function CollectOrderPage() {
     setSuccess(true)
   }
 
+  async function handleReject(event) {
+    event.preventDefault()
+    if (!token || rejectSubmitting || !preview?.order_id) return
+
+    setRejectSubmitting(true)
+    setRejectError('')
+
+    try {
+      const requestId = crypto.randomUUID()
+      const evidencePaths = []
+
+      for (const file of rejectFiles) {
+        const validationError = validateIssueEvidenceFile(file)
+        if (validationError) {
+          throw new Error(validationError)
+        }
+
+        const { path, error: uploadError } = await uploadSupportEvidenceFile(
+          preview.order_id,
+          requestId,
+          file,
+        )
+
+        if (uploadError) {
+          throw uploadError
+        }
+
+        evidencePaths.push(path)
+      }
+
+      const { error: rejectRpcError } = await rejectCollectionByQr({
+        token,
+        reason: rejectReason,
+        description: rejectDescription,
+        evidencePaths,
+        requestId,
+      })
+
+      if (rejectRpcError) {
+        throw rejectRpcError
+      }
+
+      setRejected(true)
+    } catch (rejectFailure) {
+      setRejectError(getCollectionQrErrorMessage(rejectFailure))
+    } finally {
+      setRejectSubmitting(false)
+    }
+  }
+
   if (loading || authLoading) {
     return (
       <section className="page-stub collect-order-page">
@@ -303,6 +485,10 @@ function CollectOrderPage() {
         <ErrorState>{error}</ErrorState>
       </section>
     )
+  }
+
+  if (rejected) {
+    return <CollectOrderRejectedView preview={preview} orderDetails={orderDetails} />
   }
 
   if (success || preview?.status === 'already_collected') {
@@ -431,7 +617,7 @@ function CollectOrderPage() {
         <button
           type="button"
           className="collect-order-page__button collect-order-page__button--primary collect-order-page__button--confirm"
-          disabled={!allChecksComplete || submitting}
+          disabled={!allChecksComplete || submitting || rejectSubmitting}
           onClick={handleConfirm}
         >
           {submitting ? 'Confirming…' : sellerDelivery ? 'Confirm handover' : 'Confirm collection'}
@@ -443,6 +629,33 @@ function CollectOrderPage() {
           </p>
         ) : null}
       </div>
+
+      {!sellerDelivery ? (
+        <div className="collect-order-page__reject-toggle-wrap">
+          {!showRejectForm ? (
+            <button
+              type="button"
+              className="collect-order-page__button collect-order-page__button--secondary"
+              disabled={submitting || rejectSubmitting}
+              onClick={() => setShowRejectForm(true)}
+            >
+              Item not accepted
+            </button>
+          ) : (
+            <CollectOrderRejectForm
+              rejectReason={rejectReason}
+              setRejectReason={setRejectReason}
+              rejectDescription={rejectDescription}
+              setRejectDescription={setRejectDescription}
+              rejectFiles={rejectFiles}
+              setRejectFiles={setRejectFiles}
+              submitting={rejectSubmitting}
+              error={rejectError}
+              onSubmit={handleReject}
+            />
+          )}
+        </div>
+      ) : null}
     </section>
   )
 }

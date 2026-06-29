@@ -9,6 +9,7 @@ import ScrollToTop from './components/routing/ScrollToTop'
 import { AuthProvider } from './hooks/useAuth'
 import { AuthModalProvider } from './hooks/useAuthModal'
 import { CookieConsentProvider } from './hooks/useCookieConsent'
+import AdminCasesPage from './pages/AdminCasesPage'
 import AdminOrdersPage from './pages/AdminOrdersPage'
 import AdminSupportPage from './pages/AdminSupportPage'
 import AddListingPage from './pages/AddListingPage'
@@ -148,6 +149,14 @@ function App() {
                 <ProtectedRoute>
                   <OrderDetailPage />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/cases"
+              element={
+                <AdminProtectedRoute>
+                  <AdminCasesPage />
+                </AdminProtectedRoute>
               }
             />
             <Route

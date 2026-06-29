@@ -68,12 +68,13 @@ function minimalJpegBuffer() {
   return Buffer.from(base64, 'base64')
 }
 
-async function findEligibleCollectedOrder(admin) {
+async function findEligibleCollectedOrder(admin, buyerId) {
   const { data: candidates } = await admin
     .from('orders')
     .select(
       'id, buyer_id, seller_id, payment_id, fulfilment_status, order_type, payout_release_at, payout_released_at, payout_status, stripe_transfer_id',
     )
+    .eq('buyer_id', buyerId)
     .eq('fulfilment_status', 'collected')
     .eq('order_type', 'collection')
     .gt('payout_release_at', new Date().toISOString())
@@ -140,7 +141,7 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const order = await findEligibleCollectedOrder(admin)
+  const order = await findEligibleCollectedOrder(admin, BUYER.id)
   logPass(`Using order ${order.id}`)
 
   logStep('Wrong buyer cannot open dispute')

@@ -7,7 +7,7 @@ const PROFILE_FIELDS_BASE =
 
 const PROFILE_FIELDS_WITH_LOCATION_COLUMNS = `${PROFILE_FIELDS_BASE}, city, county, postcode`
 
-const PROFILE_FIELDS_WITH_USERNAME = `${PROFILE_FIELDS_WITH_LOCATION_COLUMNS}, username`
+const PROFILE_FIELDS_WITH_USERNAME = `${PROFILE_FIELDS_WITH_LOCATION_COLUMNS}, username, username_last_changed_at`
 
 const PUBLIC_PROFILE_FIELDS_BASE = 'id, display_name, location, avatar_url, created_at'
 
@@ -39,9 +39,50 @@ export function notifyProfileUpdated(userId) {
 export const USERNAME_MIN_LENGTH = 3
 export const USERNAME_MAX_LENGTH = 24
 export const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+export const USERNAME_CHANGE_COOLDOWN_DAYS = 30
 
 export function normalizeUsername(value) {
   return value?.trim() ?? ''
+}
+
+export function hasUsernameChanged(nextUsername, currentUsername) {
+  return (
+    normalizeUsername(nextUsername).toLowerCase()
+    !== normalizeUsername(currentUsername).toLowerCase()
+  )
+}
+
+export function getUsernameChangeEligibility(profile, nextUsername) {
+  const currentUsername = profile?.username ?? ''
+  if (!hasUsernameChanged(nextUsername, currentUsername)) {
+    return { allowed: true, error: null, nextEligibleAt: null }
+  }
+
+  if (!currentUsername?.trim() || !profile?.username_last_changed_at) {
+    return { allowed: true, error: null, nextEligibleAt: null }
+  }
+
+  const lastChanged = new Date(profile.username_last_changed_at)
+  if (Number.isNaN(lastChanged.getTime())) {
+    return { allowed: true, error: null, nextEligibleAt: null }
+  }
+
+  const nextEligibleAt = new Date(lastChanged)
+  nextEligibleAt.setDate(nextEligibleAt.getDate() + USERNAME_CHANGE_COOLDOWN_DAYS)
+
+  if (Date.now() < nextEligibleAt.getTime()) {
+    const formattedDate = new Intl.DateTimeFormat('en-GB', {
+      dateStyle: 'medium',
+    }).format(nextEligibleAt)
+
+    return {
+      allowed: false,
+      error: `You can only change your username once every ${USERNAME_CHANGE_COOLDOWN_DAYS} days. You can change it again after ${formattedDate}.`,
+      nextEligibleAt,
+    }
+  }
+
+  return { allowed: true, error: null, nextEligibleAt: null }
 }
 
 function isMissingUsernameColumnError(error) {
@@ -670,6 +711,14 @@ export function getProfileErrorMessage(error) {
 
   if (error.code === '23514') {
     return 'Username must be 3–24 characters and use only letters, numbers, underscores, and hyphens.'
+  }
+
+  if (/username is already taken/i.test(error.message ?? '')) {
+    return 'That username is already taken.'
+  }
+
+  if (/once every 30 days/i.test(error.message ?? '')) {
+    return error.message
   }
 
   return error.message || 'Something went wrong. Please try again.'

@@ -205,6 +205,16 @@ a.order-detail__overview-title:hover {
   color: var(--color-muted);
 }
 
+.order-detail__participant-link {
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.order-detail__participant-link:hover {
+  text-decoration: underline;
+}
+
 .order-detail__overview-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

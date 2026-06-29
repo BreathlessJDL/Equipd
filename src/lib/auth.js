@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
-import { getOAuthCallbackUrl, validateOAuthRedirectUrl } from './siteUrl'
+import { getEmailAuthRedirectUrl, getOAuthCallbackUrl, validateOAuthRedirectUrl } from './siteUrl'
+import { PASSWORD_POLICY_SUMMARY } from './passwordPolicy'
 
 export { getAuthRedirectUrl, getEmailAuthRedirectUrl, getOAuthCallbackUrl, OAUTH_CALLBACK_PATH, EMAIL_AUTH_CALLBACK_PATH } from './siteUrl'
 
@@ -28,7 +29,7 @@ export function getAuthErrorMessage(error) {
   }
 
   if (/password/i.test(message) && /(weak|short|least|character|requirement)/i.test(message)) {
-    return 'Password does not meet the Equipd requirements. Use at least 10 characters with uppercase, lowercase, a number, and a special character.'
+    return PASSWORD_POLICY_SUMMARY
   }
 
   return message || 'Something went wrong. Please try again.'
@@ -72,4 +73,98 @@ export async function signInWithGoogle({ postAuthRedirect = '/' } = {}) {
   }
 
   return result
+}
+
+const EMAIL_ADDRESS_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export function validateEmailAddress(email) {
+  const normalized = email?.trim() ?? ''
+  if (!normalized) {
+    return { valid: false, email: normalized, error: 'Email is required.' }
+  }
+
+  if (!EMAIL_ADDRESS_PATTERN.test(normalized)) {
+    return { valid: false, email: normalized, error: 'Enter a valid email address.' }
+  }
+
+  return { valid: true, email: normalized, error: null }
+}
+
+export async function updateUserEmailWithPassword({ currentEmail, currentPassword, newEmail }) {
+  if (!supabase) {
+    return { error: new Error('Supabase is not configured.') }
+  }
+
+  const validation = validateEmailAddress(newEmail)
+  if (!validation.valid) {
+    return { error: new Error(validation.error) }
+  }
+
+  const normalizedCurrentEmail = currentEmail?.trim() ?? ''
+  if (!normalizedCurrentEmail) {
+    return { error: new Error('Current email is unavailable. Sign in again and retry.') }
+  }
+
+  if (validation.email.toLowerCase() === normalizedCurrentEmail.toLowerCase()) {
+    return { error: new Error('Enter a different email address.') }
+  }
+
+  if (!currentPassword) {
+    return { error: new Error('Enter your current password to change your email.') }
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: normalizedCurrentEmail,
+    password: currentPassword,
+  })
+
+  if (signInError) {
+    return { error: new Error('Current password is incorrect.') }
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser(
+    { email: validation.email },
+    { emailRedirectTo: getEmailAuthRedirectUrl() },
+  )
+
+  if (updateError) {
+    return { error: updateError }
+  }
+
+  return { error: null, email: validation.email }
+}
+
+export const SIGNUP_CONFIRMATION_RESEND_COOLDOWN_SECONDS = 60
+
+export function getResendConfirmationErrorMessage(error) {
+  if (!error) return 'Could not resend the confirmation email. Please try again in a moment.'
+
+  const message = error.message ?? ''
+
+  if (/rate limit|too many|after \d+ seconds/i.test(message)) {
+    return 'Please wait a moment before requesting another confirmation email.'
+  }
+
+  return 'Could not resend the confirmation email. Please try again in a moment.'
+}
+
+export async function resendSignupConfirmationEmail(email) {
+  if (!supabase) {
+    return { error: new Error('Supabase is not configured.') }
+  }
+
+  const normalizedEmail = email?.trim() ?? ''
+  if (!normalizedEmail) {
+    return { error: new Error('Email is unavailable for resend.') }
+  }
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: normalizedEmail,
+    options: {
+      emailRedirectTo: getEmailAuthRedirectUrl(),
+    },
+  })
+
+  return { error }
 }

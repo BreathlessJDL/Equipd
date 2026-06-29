@@ -18,15 +18,19 @@ import {
   getProfileDisplayName,
   getProfileErrorMessage,
   getProfileLocationPlace,
+  getUsernameChangeEligibility,
+  hasUsernameChanged,
   isUsernameAvailable,
   notifyProfileLocationUpdated,
   notifyProfileUpdated,
   supportsUsername,
   updateProfile,
+  USERNAME_CHANGE_COOLDOWN_DAYS,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   validateUsername,
 } from '../lib/profiles'
+import { getAuthErrorMessage, updateUserEmailWithPassword } from '../lib/auth'
 import {
   getStripeApiErrorMessage,
   startStripeConnectOnboarding,
@@ -66,6 +70,11 @@ function SettingsPage() {
   const [stripeError, setStripeError] = useState('')
   const [stripeNotice, setStripeNotice] = useState('')
   const [usernameSupported, setUsernameSupported] = useState(true)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailPassword, setEmailPassword] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailError, setEmailError] = useState('')
+  const [emailSuccess, setEmailSuccess] = useState('')
 
   const usernameRequired = searchParams.get('username') === 'required'
   const postAuthRedirect = location.state?.postAuthRedirect
@@ -237,14 +246,23 @@ function SettingsPage() {
       }
 
       if (normalizedUsername) {
-        const availability = await isUsernameAvailable(validation.username, {
-          excludeUserId: user.id,
-        })
-
-        if (!availability.available) {
+        const usernameChange = getUsernameChangeEligibility(profileData, normalizedUsername)
+        if (!usernameChange.allowed) {
           setSaving(false)
-          setSaveError(getProfileErrorMessage(availability.error))
+          setSaveError(usernameChange.error)
           return
+        }
+
+        if (hasUsernameChanged(normalizedUsername, profileData?.username)) {
+          const availability = await isUsernameAvailable(validation.username, {
+            excludeUserId: user.id,
+          })
+
+          if (!availability.available) {
+            setSaving(false)
+            setSaveError(getProfileErrorMessage(availability.error))
+            return
+          }
         }
       }
     }
@@ -354,6 +372,39 @@ function SettingsPage() {
     globalThis.location.assign(url)
   }
 
+  async function handleEmailChangeSubmit(event) {
+    event.preventDefault()
+    if (!user?.email || emailSaving) return
+
+    setEmailSaving(true)
+    setEmailError('')
+    setEmailSuccess('')
+
+    const { error, email } = await updateUserEmailWithPassword({
+      currentEmail: user.email,
+      currentPassword: emailPassword,
+      newEmail,
+    })
+
+    setEmailSaving(false)
+
+    if (error) {
+      setEmailError(getAuthErrorMessage(error))
+      return
+    }
+
+    setNewEmail('')
+    setEmailPassword('')
+    setEmailSuccess(
+      `We sent a confirmation link to ${email}. Your login email will update after you verify the new address.`,
+    )
+  }
+
+  const usernameChangeEligibility = useMemo(
+    () => getUsernameChangeEligibility(profileData, username),
+    [profileData, username],
+  )
+
   const previewProfile = useMemo(
     () => ({
       ...(profileData ?? {}),
@@ -364,6 +415,10 @@ function SettingsPage() {
   )
 
   const displayName = getProfileDisplayName(previewProfile, { email: user?.email })
+  const trimmedUsername = username.trim()
+  const showUsernamePreviewMeta = Boolean(
+    trimmedUsername && trimmedUsername.toLowerCase() !== displayName.toLowerCase(),
+  )
   const hasSavedCoordinates =
     locationPlace?.latitude != null && locationPlace?.longitude != null
   const hasPhoto = Boolean(
@@ -470,20 +525,15 @@ function SettingsPage() {
                     'Usernames are not enabled on this database yet. Run supabase/profile-username.sql in the Supabase SQL Editor, then refresh.'
                   )}
                 </p>
-              </div>
-
-              <div className="settings-form__field">
-                <label className="settings-form__label" htmlFor="settings-email">
-                  Email
-                </label>
-                <input
-                  id="settings-email"
-                  className="settings-form__input settings-form__input--readonly"
-                  type="email"
-                  value={user?.email ?? ''}
-                  readOnly
-                />
-                <p className="settings-form__hint">Email is managed through your login account.</p>
+                {!usernameChangeEligibility.allowed ? (
+                  <p className="settings-form__message settings-form__message--error" role="alert">
+                    {usernameChangeEligibility.error}
+                  </p>
+                ) : profileData?.username_last_changed_at ? (
+                  <p className="settings-form__hint">
+                    Usernames can be changed once every {USERNAME_CHANGE_COOLDOWN_DAYS} days.
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -541,6 +591,92 @@ function SettingsPage() {
               </button>
             </div>
           </form>
+
+          <form className="settings-card settings-form" onSubmit={handleEmailChangeSubmit}>
+            <div className="settings-card__section">
+              <h2 className="settings-card__title">Login email</h2>
+              <p className="settings-card__lead">
+                Change the email address you use to sign in. You must confirm the new address
+                before it takes effect.
+              </p>
+
+              <div className="settings-form__field">
+                <label className="settings-form__label" htmlFor="settings-current-email">
+                  Current email
+                </label>
+                <input
+                  id="settings-current-email"
+                  className="settings-form__input settings-form__input--readonly"
+                  type="email"
+                  value={user?.email ?? ''}
+                  readOnly
+                />
+              </div>
+
+              <div className="settings-form__field">
+                <label className="settings-form__label" htmlFor="settings-new-email">
+                  New email
+                </label>
+                <input
+                  id="settings-new-email"
+                  className="settings-form__input"
+                  type="email"
+                  autoComplete="email"
+                  value={newEmail}
+                  disabled={emailSaving}
+                  onChange={(event) => {
+                    setNewEmail(event.target.value)
+                    setEmailSuccess('')
+                    setEmailError('')
+                  }}
+                />
+              </div>
+
+              <div className="settings-form__field">
+                <label className="settings-form__label" htmlFor="settings-email-password">
+                  Current password
+                </label>
+                <input
+                  id="settings-email-password"
+                  className="settings-form__input"
+                  type="password"
+                  autoComplete="current-password"
+                  value={emailPassword}
+                  disabled={emailSaving}
+                  onChange={(event) => {
+                    setEmailPassword(event.target.value)
+                    setEmailSuccess('')
+                    setEmailError('')
+                  }}
+                />
+                <p className="settings-form__hint">
+                  Re-enter your current password to change your email.
+                </p>
+              </div>
+
+              <div className="settings-form__actions">
+                {emailError ? (
+                  <p className="settings-form__message settings-form__message--error" role="alert">
+                    {emailError}
+                  </p>
+                ) : null}
+
+                {emailSuccess ? (
+                  <p className="settings-form__message settings-form__message--success" role="status">
+                    {emailSuccess}
+                  </p>
+                ) : null}
+
+                <button
+                  className="settings-form__button"
+                  type="submit"
+                  disabled={emailSaving || !newEmail.trim() || !emailPassword}
+                >
+                  {emailSaving ? 'Sending confirmation…' : 'Change email'}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
 
         <aside className="settings-page__sidebar">
@@ -596,11 +732,11 @@ function SettingsPage() {
             <div className="settings-preview__identity">
               <UserAvatar profile={previewProfile} user={user} size="xl" />
               <p className="settings-preview__name">{displayName}</p>
-              {username.trim() ? (
-                <p className="settings-preview__meta">@{username.trim()}</p>
-              ) : (
+              {showUsernamePreviewMeta ? (
+                <p className="settings-preview__meta">@{trimmedUsername}</p>
+              ) : !trimmedUsername ? (
                 <p className="settings-preview__meta">No username set</p>
-              )}
+              ) : null}
             </div>
             <Link className="settings-preview__link" to={`/shop/${user.id}`}>
               View public profile

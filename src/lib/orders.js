@@ -83,6 +83,8 @@ const orderFields = `
   delivered_at,
   collection_confirmed_at,
   collection_confirmed_by,
+  collection_rejected_at,
+  collection_rejection_reason,
   courier_name,
   courier_company,
   courier_tracking_reference,

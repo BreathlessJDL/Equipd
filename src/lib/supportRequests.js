@@ -1,5 +1,6 @@
 import { isPaymentComplete } from './payments'
 import { ORDER_FULFILMENT_STATUSES } from './orders'
+import { getActiveOrderDispute } from './orderDisputes'
 import { supabase } from './supabase'
 
 export const SUPPORT_REQUEST_REASONS = {
@@ -15,6 +16,12 @@ export const SUPPORT_REQUEST_REASONS = {
 export const SUPPORT_REQUEST_STATUSES = {
   OPEN: 'open',
   REVIEWING: 'reviewing',
+  AWAITING_BUYER_EVIDENCE: 'awaiting_buyer_evidence',
+  AWAITING_SELLER_EVIDENCE: 'awaiting_seller_evidence',
+  REFUND_PENDING: 'refund_pending',
+  PARTIAL_REFUND_PENDING: 'partial_refund_pending',
+  REFUND_COMPLETED: 'refund_completed',
+  REJECTED: 'rejected',
   RESOLVED: 'resolved',
   CLOSED: 'closed',
 }
@@ -46,8 +53,14 @@ export function formatSupportRequestStatus(status) {
   const labels = {
     open: 'Open',
     reviewing: 'Under review',
+    awaiting_buyer_evidence: 'Awaiting buyer evidence',
+    awaiting_seller_evidence: 'Awaiting seller evidence',
+    refund_pending: 'Refund pending',
+    partial_refund_pending: 'Partial refund pending',
+    refund_completed: 'Refund completed',
+    rejected: 'Rejected',
     resolved: 'Resolved',
-    closed: 'Closed',
+    closed: 'Case closed',
   }
 
   return labels[status] ?? status
@@ -72,8 +85,66 @@ export function canRaiseSupportRequest(order, payment) {
 export function isSupportRequestActive(request) {
   return (
     request?.status === SUPPORT_REQUEST_STATUSES.OPEN ||
-    request?.status === SUPPORT_REQUEST_STATUSES.REVIEWING
+    request?.status === SUPPORT_REQUEST_STATUSES.REVIEWING ||
+    request?.status === SUPPORT_REQUEST_STATUSES.AWAITING_BUYER_EVIDENCE ||
+    request?.status === SUPPORT_REQUEST_STATUSES.AWAITING_SELLER_EVIDENCE ||
+    request?.status === SUPPORT_REQUEST_STATUSES.REFUND_PENDING ||
+    request?.status === SUPPORT_REQUEST_STATUSES.PARTIAL_REFUND_PENDING ||
+    request?.status === SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED
   )
+}
+
+export function canUserAddSupportEvidence(request, userId) {
+  if (!request || !userId) return false
+  if (request.status === SUPPORT_REQUEST_STATUSES.AWAITING_BUYER_EVIDENCE) {
+    return request.buyer_id === userId
+  }
+  if (request.status === SUPPORT_REQUEST_STATUSES.AWAITING_SELLER_EVIDENCE) {
+    return request.seller_id === userId
+  }
+  return false
+}
+
+export function getEquipdCustomerMessageFromSupportRequest(request) {
+  const message = request?.resolution_notes?.trim()
+  return message || null
+}
+
+export function getEquipdSupportUpdateFromSupportRequest(request) {
+  const message = getEquipdCustomerMessageFromSupportRequest(request)
+  if (!message) return null
+
+  return {
+    statusLabel: formatSupportRequestStatus(request.status),
+    message,
+    updatedAt: formatSupportRequestTimestamp(request.updated_at ?? request.resolved_at),
+  }
+}
+
+export function canAdminManageSupportRequest(request) {
+  return isSupportRequestActive(request) || canCloseSupportCase(request)
+}
+
+function canCloseSupportCase(request) {
+  if (!request || request.case_outcome) return false
+  const blocked = new Set([
+    SUPPORT_REQUEST_STATUSES.REFUND_PENDING,
+    SUPPORT_REQUEST_STATUSES.PARTIAL_REFUND_PENDING,
+  ])
+  if (blocked.has(request.status)) return false
+  return (
+    request.status === SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED ||
+    request.status === SUPPORT_REQUEST_STATUSES.REJECTED ||
+    request.status === SUPPORT_REQUEST_STATUSES.RESOLVED ||
+    request.status === SUPPORT_REQUEST_STATUSES.OPEN ||
+    request.status === SUPPORT_REQUEST_STATUSES.REVIEWING ||
+    request.status === SUPPORT_REQUEST_STATUSES.AWAITING_BUYER_EVIDENCE ||
+    request.status === SUPPORT_REQUEST_STATUSES.AWAITING_SELLER_EVIDENCE
+  )
+}
+
+export function getActiveSupportRequest(requests) {
+  return (requests ?? []).find((request) => isSupportRequestActive(request)) ?? null
 }
 
 export function getUserActiveSupportRequest(requests, userId) {
@@ -82,16 +153,21 @@ export function getUserActiveSupportRequest(requests, userId) {
   )
 }
 
-export function canUserRaiseSupportRequest(order, payment, requests, userId) {
+export function canUserRaiseSupportRequest(order, payment, requests, userId, disputes = []) {
   if (!canRaiseSupportRequest(order, payment)) return false
-  return !getUserActiveSupportRequest(requests, userId)
+  if (getActiveOrderDispute(disputes)) return false
+  if (getActiveSupportRequest(requests)) return false
+  return true
 }
 
 export function canShowResolutionNotes(request) {
   if (!request?.resolution_notes) return false
   return (
     request.status === SUPPORT_REQUEST_STATUSES.RESOLVED ||
-    request.status === SUPPORT_REQUEST_STATUSES.CLOSED
+    request.status === SUPPORT_REQUEST_STATUSES.CLOSED ||
+    request.status === SUPPORT_REQUEST_STATUSES.REJECTED ||
+    request.status === SUPPORT_REQUEST_STATUSES.REFUND_PENDING ||
+    request.status === SUPPORT_REQUEST_STATUSES.PARTIAL_REFUND_PENDING
   )
 }
 
@@ -107,7 +183,7 @@ export async function fetchSupportRequestsForOrder(orderId) {
   return { data: data ?? [], error }
 }
 
-export async function createSupportRequest({ orderId, reason, message }) {
+export async function createSupportRequest({ orderId, reason, message, evidencePaths, requestId }) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -122,6 +198,45 @@ export async function createSupportRequest({ orderId, reason, message }) {
     p_order_id: orderId,
     p_reason: reason,
     p_message: trimmedMessage,
+    p_evidence_paths: evidencePaths ?? [],
+    p_request_id: requestId ?? crypto.randomUUID(),
+  })
+
+  return { data, error }
+}
+
+export async function appendSupportRequestEvidence(requestId, evidencePaths) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const { data, error } = await supabase.rpc('append_support_request_evidence', {
+    p_request_id: requestId,
+    p_evidence_paths: evidencePaths,
+  })
+
+  return { data, error }
+}
+
+export async function adminApplySupportDecision({
+  requestId,
+  decision,
+  adminNote,
+  customerMessage,
+  refundAmountPence,
+  evidenceParty,
+}) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const { data, error } = await supabase.rpc('admin_apply_support_decision', {
+    p_request_id: requestId,
+    p_decision: decision,
+    p_admin_note: adminNote?.trim() || null,
+    p_customer_message: customerMessage?.trim() || null,
+    p_refund_amount_pence: refundAmountPence ?? null,
+    p_evidence_party: evidenceParty ?? 'buyer',
   })
 
   return { data, error }

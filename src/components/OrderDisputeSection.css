@@ -75,6 +75,15 @@
   background: var(--color-notice-bg, #fff7ed);
 }
 
+.order-dispute__closed-notice {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-muted, #666) 6%, var(--color-surface, #fff));
+  font-size: 0.875rem;
+}
+
 .order-dispute__meta {
   margin: 0;
 }
@@ -125,6 +134,12 @@
   object-fit: cover;
   border-radius: 0.375rem;
   border: 1px solid var(--color-border, #e2e2e2);
+  background: var(--color-surface-muted, #f5f5f5);
+}
+
+.order-dispute__evidence-thumb-link {
+  display: inline-block;
+  line-height: 0;
 }
 
 .order-dispute__error {
@@ -195,6 +210,60 @@
   font-size: 0.9375rem;
 }
 
+.order-dispute__admin-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border, #e2e2e2);
+}
+
+.order-dispute__admin-panel-section {
+  margin-top: 1rem;
+}
+
+.order-dispute__admin-section--close {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--color-muted, #666) 4%, var(--color-surface, #fff));
+}
+
+.order-dispute__admin-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.order-dispute__admin-summary {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-dispute__admin-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted, #666);
+  font-size: 0.9375rem;
+}
+
+.order-dispute__admin-summary-item--complete::before {
+  content: '✓';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface, #fff));
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .order-dispute__admin-field {
   display: grid;
   gap: 0.375rem;
@@ -204,6 +273,146 @@
 .order-dispute__admin-field textarea {
   width: 100%;
   font: inherit;
+}
+
+.order-dispute__admin-hint {
+  display: block;
+  margin: 0.25rem 0 0.5rem;
+  color: var(--color-text-muted, #666);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.order-support-update {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-muted, #666) 6%, var(--color-surface, #fff));
+}
+
+.order-support-update__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.order-support-update__meta {
+  margin: 0;
+}
+
+.order-support-update__row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) 1fr;
+  gap: 0.375rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.order-support-update__row:last-child {
+  margin-bottom: 0;
+}
+
+.order-support-update__row--message {
+  display: block;
+}
+
+.order-support-update__row--message .order-support-update__label {
+  margin-bottom: 0.25rem;
+}
+
+.order-support-update__label {
+  margin: 0;
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+}
+
+.order-support-update__value {
+  margin: 0;
+}
+
+.order-support-update__message {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .order-support-update__row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
+.order-dispute__admin-field select,
+.order-dispute__admin-field input {
+  width: 100%;
+  font: inherit;
+}
+
+.order-dispute__evidence-file {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 5rem;
+  min-height: 5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  text-decoration: none;
+  color: inherit;
+  box-sizing: border-box;
+  background: var(--color-surface-muted, #f5f5f5);
+}
+
+.order-dispute__evidence-file-type {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #666);
+}
+
+.order-dispute__evidence-file-name {
+  display: block;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--color-text, #111);
+}
+
+.order-dispute__evidence-file-subtitle {
+  display: block;
+  max-width: 7rem;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted, #666);
+}
+
+.order-dispute-modal__file-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-dispute-modal__file-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0;
+  font-size: 0.875rem;
+}
+
+.order-dispute-modal__file-list button {
+  border: none;
+  background: none;
+  color: var(--color-danger, #b42318);
+  font: inherit;
+  cursor: pointer;
 }
 
 .order-dispute__admin-actions {
@@ -227,4 +436,42 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+
+.order-case-return {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+.order-case-return__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.order-case-return__subtitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.order-case-return__lead,
+.order-case-return__hint {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.order-case-return__form,
+.order-case-return__details,
+.order-case-return__buyer-confirm,
+.order-case-return__admin-refund {
+  margin-top: 1rem;
+}
+
+.order-case-closure__form {
+  margin-top: 0.5rem;
+}
+
+.order-case-return__meta {
+  margin-bottom: 0.75rem;
 }

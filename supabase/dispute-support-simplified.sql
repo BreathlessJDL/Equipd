@@ -1,0 +1,47 @@
+-- =============================================================================
+-- Equipd simplified dispute / support workflow
+-- =============================================================================
+--
+-- This migration is split into two files because Postgres requires new enum
+-- values to be committed before they can be used in indexes, constraints, or
+-- functions.
+--
+-- Run in Supabase SQL Editor (separate executions — do not combine):
+--
+--   1. supabase/dispute-support-simplified-01-enums.sql
+--      Wait until it completes successfully.
+--
+--   2. supabase/dispute-support-simplified-02-schema-functions.sql
+--
+--   3. supabase/dispute-support-simplified-03-storage-rls-fix.sql
+--      Required if prelaunch-security-fixes.sql revoked SELECT on orders.
+--
+--   4. supabase/dispute-support-email-enrichment.sql
+--      Reporter/buyer/seller emails in support team notifications.
+--
+--   5. supabase/case-management-phase1.sql
+--      Admin cases dashboard + order_case_updates history.
+--
+--   6. supabase/case-management-phase1-dispute-open-update.sql
+--      Evidence-received messaging when buyer opens dispute with evidence.
+--
+--   7. supabase/case-management-phase2-return-workflow.sql
+--      Return / collection workflow for Buyer Protection disputes.
+--
+--   8. supabase/case-management-phase2-5-admin-polish.sql
+--      Internal case_outcome field for Phase 3 closure.
+--
+--   9. supabase/case-management-phase3-01-enums.sql
+--      support_request_status refund_completed (run separately first).
+--
+--  10. supabase/case-management-phase3-refund-closure.sql
+--      Mark refund completed + close case workflow.
+--
+--  11. supabase/case-management-additional-evidence.sql
+--      Additional evidence uploads on active disputes/support requests.
+--
+-- Prerequisites:
+--   buyer-protection-phase4c-dispute-admin-resolution.sql
+--   support-team-email-notifications.sql
+--
+-- Do not run file 01 and file 02 in a single transaction.

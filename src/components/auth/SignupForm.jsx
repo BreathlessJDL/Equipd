@@ -20,6 +20,7 @@ function SignupForm({
   idPrefix = 'signup',
   redirectTo = '/settings',
   onSuccess,
+  onEmailConfirmationRequired,
   onSwitchToLogin,
   showSwitchLink = true,
   compact = false,
@@ -30,13 +31,19 @@ function SignupForm({
   const [submitting, setSubmitting] = useState(false)
   const [usernameError, setUsernameError] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+
+  function clearForm() {
+    setUsername('')
+    setEmail('')
+    setPassword('')
+    setUsernameError('')
+    setError('')
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setUsernameError('')
     setError('')
-    setSuccess('')
 
     if (!isSupabaseConfigured || !supabase) {
       setError('Supabase is not configured. Add your keys to .env.local and restart the dev server.')
@@ -122,12 +129,15 @@ function SignupForm({
     setSubmitting(false)
 
     if (data.session) {
-      setSuccess('Account created.')
+      clearForm()
       onSuccess?.({ redirectTo })
       return
     }
 
-    setSuccess('Account created. Check your email to confirm your address, then log in.')
+    const confirmedEmail = email.trim()
+
+    clearForm()
+    onEmailConfirmationRequired?.({ email: confirmedEmail })
   }
 
   return (
@@ -214,12 +224,6 @@ function SignupForm({
         {error ? (
           <p className="auth-form__message auth-form__message--error" role="alert">
             {error}
-          </p>
-        ) : null}
-
-        {success ? (
-          <p className="auth-form__message auth-form__message--success" role="status">
-            {success}
           </p>
         ) : null}
 

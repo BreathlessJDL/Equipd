@@ -80,17 +80,17 @@ begin
     return jsonb_build_object('valid', false, 'error', 'Password is required.');
   end if;
 
-  if char_length(p_password) < 10 then
+  if char_length(p_password) < 6 then
     return jsonb_build_object(
       'valid', false,
-      'error', 'Password must be at least 10 characters.'
+      'error', 'Password must be at least 6 characters.'
     );
   end if;
 
-  if char_length(p_password) > 128 then
+  if char_length(p_password) > 18 then
     return jsonb_build_object(
       'valid', false,
-      'error', 'Password must be no more than 128 characters.'
+      'error', 'Password must be no more than 18 characters.'
     );
   end if;
 

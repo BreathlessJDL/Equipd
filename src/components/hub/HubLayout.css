@@ -385,6 +385,50 @@
   height: 1.25rem;
 }
 
+/* Hub-only PNG tiles: buying, selling, orders in progress */
+.hub-scoped-png-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.hub-scoped-png-icon__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hub-summary-card__type-icon.hub-scoped-png-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+}
+
+.hub-summary-card__type-icon--buying-png .hub-scoped-png-icon__image,
+.hub-summary-card__type-icon--selling-png .hub-scoped-png-icon__image {
+  width: 1.75rem;
+  height: 1.75rem;
+  max-width: 1.75rem;
+  max-height: 1.75rem;
+}
+
+.hub-transaction-action__icon.hub-scoped-png-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+}
+
+.hub-transaction-action__icon--orders-png .hub-scoped-png-icon__image {
+  width: 2rem;
+  height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
+}
+
 .hub-transaction-action__body {
   flex: 1 1 auto;
   min-width: 0;
@@ -871,6 +915,11 @@
     margin-bottom: var(--space-md);
   }
 
+  .hub-summary-panel__body {
+    --hub-mobile-icon-size: 1.625rem;
+    --hub-mobile-icon-glyph: 0.9rem;
+  }
+
   .hub-summary-card--mobile-only {
     display: grid;
   }
@@ -897,14 +946,41 @@
   }
 
   .hub-transaction-action__icon.equipd-type-icon {
-    width: 1.625rem;
-    height: 1.625rem;
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
     border-radius: 8px;
   }
 
   .hub-transaction-action__icon.equipd-type-icon .equipd-type-icon__svg {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: var(--hub-mobile-icon-glyph);
+    height: var(--hub-mobile-icon-glyph);
+  }
+
+  .hub-summary-card__type-icon.hub-scoped-png-icon {
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
+    border-radius: 8px;
+  }
+
+  .hub-summary-card__type-icon--buying-png .hub-scoped-png-icon__image,
+  .hub-summary-card__type-icon--selling-png .hub-scoped-png-icon__image {
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
+    max-width: var(--hub-mobile-icon-size);
+    max-height: var(--hub-mobile-icon-size);
+  }
+
+  .hub-transaction-action__icon.hub-scoped-png-icon {
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
+    border-radius: 8px;
+  }
+
+  .hub-transaction-action__icon--orders-png .hub-scoped-png-icon__image {
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
+    max-width: var(--hub-mobile-icon-size);
+    max-height: var(--hub-mobile-icon-size);
   }
 
   .hub-summary-panel__body .hub-summary-cards {
@@ -917,25 +993,35 @@
     height: 1.25rem;
   }
 
-  .hub-summary-card--no-count {
-    grid-template-columns: 1.625rem minmax(0, 1fr);
-    grid-template-rows: auto auto;
-  }
-
-  .hub-summary-card--no-count .hub-summary-card__type-icon {
-    grid-row: 1 / span 2;
-    align-self: center;
-  }
-
   .hub-summary-card {
     display: grid;
-    grid-template-columns: 1.625rem minmax(0, 1fr);
+    grid-template-columns: var(--hub-mobile-icon-size) minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-content: start;
     gap: 0.05rem 0.4rem;
     min-width: 0;
     padding: 0.5rem 0.55rem;
     border-radius: var(--radius);
+  }
+
+  .hub-summary-card.hub-summary-card--no-count {
+    grid-template-rows: auto;
+    align-items: center;
+    align-content: center;
+  }
+
+  .hub-summary-card.hub-summary-card--no-count .hub-summary-card__type-icon {
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .hub-summary-card.hub-summary-card--no-count .hub-summary-card__label {
+    grid-row: 1;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    min-height: var(--hub-mobile-icon-size);
+    line-height: 1.2;
   }
 
   .hub-summary-card:hover {
@@ -945,22 +1031,15 @@
   .hub-summary-card__type-icon {
     grid-row: 1 / 3;
     align-self: start;
-    width: 1.625rem;
-    height: 1.625rem;
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
     margin-bottom: 0;
     border-radius: 8px;
   }
 
   .hub-summary-card__type-icon.equipd-type-icon .equipd-type-icon__svg {
-    width: 0.9rem;
-    height: 0.9rem;
-  }
-
-  .hub-summary-card__type-icon.equipd-type-icon--selling-stall .equipd-type-icon__svg {
-    width: 1.05rem;
-    height: 1.05rem;
-    transform: scale(1.12);
-    transform-origin: center;
+    width: var(--hub-mobile-icon-glyph);
+    height: var(--hub-mobile-icon-glyph);
   }
 
   .hub-summary-card__value {
@@ -1040,14 +1119,14 @@
 
   .hub-attention__row--mobile .equipd-type-icon {
     flex-shrink: 0;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 10px;
+    width: var(--hub-mobile-icon-size);
+    height: var(--hub-mobile-icon-size);
+    border-radius: 8px;
   }
 
   .hub-attention__row--mobile .equipd-type-icon .equipd-type-icon__svg {
-    width: 1.125rem;
-    height: 1.125rem;
+    width: var(--hub-mobile-icon-glyph);
+    height: var(--hub-mobile-icon-glyph);
   }
 
   .hub-attention__mobile-title {

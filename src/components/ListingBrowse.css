@@ -1013,3 +1013,24 @@
   background: color-mix(in srgb, var(--color-orange) 6%, var(--color-surface));
   border-bottom: 1px solid var(--color-border);
 }
+
+/* Mobile Browse page — Browse by Location after listing grid */
+.listing-browse__location-discovery {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .listing-browse:has(.listing-browse__location-discovery) {
+    padding-bottom: 0;
+  }
+
+  .listing-browse__location-discovery {
+    display: block;
+    margin-top: var(--space-lg);
+    padding-bottom: var(--space-lg);
+  }
+
+  .listing-browse__location-discovery .home-discovery {
+    padding-block: 0;
+  }
+}

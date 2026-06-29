@@ -161,13 +161,6 @@ function UserShopPage({ userId }) {
   const hasReviews = reviewSummary.reviewCount > 0 && reviewSummary.averageRating != null
   const canMessageSeller = !isOwnShop && listings.length > 0
   const activeListingCount = listings.length
-  const username = profile?.username?.trim()
-  const displayNameField = profile?.display_name?.trim()
-  const showDisplayNameSubtitle = Boolean(
-    username
-    && displayNameField
-    && displayNameField.toLowerCase() !== username.toLowerCase(),
-  )
   const profileSubline = [
     profile?.location?.trim(),
     joinDate ? `Joined ${joinDate}` : null,
@@ -199,9 +192,6 @@ function UserShopPage({ userId }) {
             <UserAvatar profile={avatarProfile} user={user} size="lg" className="user-shop__avatar" />
             <div className="user-shop__meta">
               <h1 className="user-shop__name">{displayName}</h1>
-              {showDisplayNameSubtitle ? (
-                <p className="user-shop__display-name">{displayNameField}</p>
-              ) : null}
               <p className="user-shop__reviews">
                 {hasReviews ? (
                   <>

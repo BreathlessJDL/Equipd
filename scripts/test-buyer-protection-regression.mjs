@@ -153,6 +153,26 @@ async function prepareListing(admin, listingId, { collectionAvailable, courierAv
     .eq('id', listingId)
 }
 
+async function fetchListingPricePence(admin, listingId) {
+  const { data, error } = await admin
+    .from('listings')
+    .select('price_pence')
+    .eq('id', listingId)
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to load listing price: ${error.message}`)
+  }
+
+  return data.price_pence
+}
+
+function offerAmountBelowAsking(listingPricePence, { minDiscountPence = 500, maxDiscountPence = 5000 } = {}) {
+  const discount =
+    minDiscountPence + Math.floor(Math.random() * (maxDiscountPence - minDiscountPence + 1))
+  return listingPricePence - discount
+}
+
 async function createAcceptedOffer(authed, {
   listingId,
   buyer,
@@ -436,6 +456,7 @@ async function setProtectionWindowElapsed(admin, orderId) {
 function assertPayoutEligible(order, label) {
   assert(
     order.fulfilment_status === 'buyer_confirmed' ||
+      order.fulfilment_status === 'completed' ||
       order.fulfilment_status === 'collected' ||
       order.fulfilment_status === 'delivered',
     `${label}: unexpected fulfilment_status ${order.fulfilment_status}`,
@@ -446,6 +467,14 @@ function assertPayoutEligible(order, label) {
   )
   assert(order.payout_status !== 'on_hold', `${label}: payout should not be on hold`)
   assert(!order.stripe_transfer_id, `${label}: no Stripe transfer in regression`)
+}
+
+function assertProtectionWindowCompleted(order, label) {
+  assert(
+    order.fulfilment_status === 'completed',
+    `${label}: expected completed after protection window, got ${order.fulfilment_status}`,
+  )
+  assert(order.buyer_confirmed_at, `${label}: expected buyer_confirmed_at to be set`)
 }
 
 function assertPayoutFrozen(order, label) {
@@ -513,7 +542,11 @@ async function main() {
     courierAvailable: false,
   })
 
-  const collectionAmount = 28000 + Math.floor(Math.random() * 1000)
+  const collectionListingPrice = await fetchListingPricePence(admin, COLLECTION_LISTING_ID)
+  const collectionAmount = offerAmountBelowAsking(collectionListingPrice, {
+    minDiscountPence: 5000,
+    maxDiscountPence: 8000,
+  })
 
   logStep('Offer accepted and payment rows created')
   const collectionOfferId = await createAcceptedOffer(authed, {
@@ -559,7 +592,7 @@ async function main() {
   )
 
   const collectionEligible = await fetchOrder(admin, order.id)
-  assert(collectionEligible.fulfilment_status === 'buyer_confirmed', 'Expected buyer_confirmed after window')
+  assertProtectionWindowCompleted(collectionEligible, 'Collection no-dispute')
   assertPayoutEligible(collectionEligible, 'Collection no-dispute')
   logPass(`Collection payout eligible: payout_status=${collectionEligible.payout_status}`)
 
@@ -643,7 +676,11 @@ async function main() {
     courierAvailable: true,
   })
 
-  const courierAmount = 150000 + Math.floor(Math.random() * 1000)
+  const courierListingPrice = await fetchListingPricePence(admin, COURIER_LISTING_ID)
+  const courierAmount = offerAmountBelowAsking(courierListingPrice, {
+    minDiscountPence: 1000,
+    maxDiscountPence: 5000,
+  })
   const courierOfferId = await createAcceptedOffer(authed, {
     listingId: COURIER_LISTING_ID,
     buyer: COURIER_BUYER,
@@ -681,7 +718,7 @@ async function main() {
   )
 
   courierOrder = await fetchOrder(admin, courierOrder.id)
-  assert(courierOrder.fulfilment_status === 'buyer_confirmed', 'Expected buyer_confirmed')
+  assertProtectionWindowCompleted(courierOrder, 'Courier no-dispute')
   assertPayoutEligible(courierOrder, 'Courier no-dispute')
   logPass(`Courier payout eligible: payout_status=${courierOrder.payout_status}`)
 

@@ -2,8 +2,11 @@
  * Keep in sync with src/lib/passwordPolicy.js
  */
 
-export const PASSWORD_MIN_LENGTH = 10
-export const PASSWORD_MAX_LENGTH = 128
+export const PASSWORD_MIN_LENGTH = 6
+export const PASSWORD_MAX_LENGTH = 18
+
+export const PASSWORD_POLICY_SUMMARY =
+  'Password must be 6–18 characters and include an uppercase letter, lowercase letter, number and special character.'
 
 const PASSWORD_REQUIREMENTS = [
   {

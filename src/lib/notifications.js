@@ -31,7 +31,6 @@ export const NOTIFICATION_TYPES = {
   ORDER_DISPUTE_UNDER_REVIEW: 'order_dispute_under_review',
   ORDER_DISPUTE_RESOLVED_BUYER: 'order_dispute_resolved_buyer',
   ORDER_DISPUTE_RESOLVED_SELLER: 'order_dispute_resolved_seller',
-  SUPPORT_REQUEST_OPENED: 'support_request_opened',
 }
 
 const OFFER_NOTIFICATION_TYPES = new Set([
