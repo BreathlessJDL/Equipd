@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  dedupeGooglePlacesAutocompleteDropdowns,
+  findPacContainerForInput,
   hideGooglePlacesAutocompleteDropdown,
   isGoogleMapsConfigured,
   loadGoogleMapsPlaces,
@@ -86,7 +86,7 @@ function BrowseLocationSearchField({
             inputRef.current.value = mapped.displayLabel
           }
           onPlaceSelectedRef.current(mapped)
-          hideGooglePlacesAutocompleteDropdown()
+          hideGooglePlacesAutocompleteDropdown(inputRef.current)
           setLoadError('')
         })
 
@@ -114,7 +114,8 @@ function BrowseLocationSearchField({
   }, [])
 
   function handleInputChange(event) {
-    resetGooglePlacesAutocompleteDropdownVisibility()
+    resetGooglePlacesAutocompleteDropdownVisibility(inputRef.current)
+    findPacContainerForInput(inputRef.current)
     onSearchChangeRef.current(event.target.value)
 
     if (selectedPlace) {
@@ -128,7 +129,8 @@ function BrowseLocationSearchField({
 
   function handleInputFocus() {
     isFocusedRef.current = true
-    resetGooglePlacesAutocompleteDropdownVisibility()
+    resetGooglePlacesAutocompleteDropdownVisibility(inputRef.current)
+    findPacContainerForInput(inputRef.current)
   }
 
   function handleInputBlur() {

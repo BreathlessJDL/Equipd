@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
-  hideGooglePlacesAutocompleteDropdown,
-  isGoogleMapsConfigured,
-  loadGoogleMapsPlaces,
   mapGooglePlaceToFormattedAddress,
-  resetGooglePlacesAutocompleteDropdownVisibility,
+  mapGooglePlaceToListingLocation,
 } from '../../lib/listingLocation'
+import { useGooglePlacesAutocomplete } from '../../hooks/useGooglePlacesAutocomplete'
 import './ListingLocationAutocomplete.css'
 
 function CollectionAddressAutocomplete({
@@ -13,121 +11,66 @@ function CollectionAddressAutocomplete({
   value,
   disabled = false,
   onChange,
+  onPlaceSelected,
   inputClassName = 'listing-form__input listing-form__input--underline',
   placeholder = 'Start typing your collection address',
 }) {
-  const inputRef = useRef(null)
-  const autocompleteRef = useRef(null)
-  const onChangeRef = useRef(onChange)
-  const isFocusedRef = useRef(false)
-  const [loadError, setLoadError] = useState('')
-  const [placesStatus, setPlacesStatus] = useState(() =>
-    isGoogleMapsConfigured() ? 'loading' : 'unconfigured',
+  const createAutocomplete = useCallback(
+    (google, input) =>
+      new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'gb' },
+        fields: ['formatted_address', 'address_components', 'geometry', 'name'],
+        types: ['address'],
+      }),
+    [],
   )
 
-  useEffect(() => {
-    onChangeRef.current = onChange
-  }, [onChange])
+  const handlePlaceChanged = useCallback(
+    (place, { input, setLoadError, hideDropdown }) => {
+      const formattedAddress = mapGooglePlaceToFormattedAddress(place)
 
-  useEffect(() => {
-    if (!inputRef.current || isFocusedRef.current) return
-
-    const nextValue = value ?? ''
-    if (inputRef.current.value !== nextValue) {
-      inputRef.current.value = nextValue
-    }
-  }, [value])
-
-  useEffect(() => {
-    if (!isGoogleMapsConfigured()) {
-      setPlacesStatus('unconfigured')
-      setLoadError('')
-      return undefined
-    }
-
-    let cancelled = false
-    let placeChangedListener = null
-
-    async function initAutocomplete() {
-      setPlacesStatus('loading')
-      setLoadError('')
-
-      try {
-        const google = await loadGoogleMapsPlaces()
-        if (cancelled || !inputRef.current) return
-
-        let autocomplete = inputRef.current._equipdPlacesAutocomplete
-
-        if (!autocomplete) {
-          autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-            componentRestrictions: { country: 'gb' },
-            fields: ['formatted_address', 'address_components', 'geometry'],
-            types: ['address'],
-          })
-          inputRef.current._equipdPlacesAutocomplete = autocomplete
-        }
-
-        if (placeChangedListener && window.google?.maps?.event) {
-          window.google.maps.event.removeListener(placeChangedListener)
-        }
-
-        placeChangedListener = autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace()
-          const formattedAddress = mapGooglePlaceToFormattedAddress(place)
-
-          if (!formattedAddress) {
-            setLoadError('Select an address from the suggestions.')
-            return
-          }
-
-          if (inputRef.current) {
-            inputRef.current.value = formattedAddress
-          }
-
-          onChangeRef.current(formattedAddress)
-          hideGooglePlacesAutocompleteDropdown()
-          setLoadError('')
-        })
-
-        autocompleteRef.current = autocomplete
-        setPlacesStatus('ready')
-        setLoadError('')
-      } catch (error) {
-        if (cancelled) return
-        setPlacesStatus('failed')
-        setLoadError(error.message || 'Address search failed to load.')
-      }
-    }
-
-    initAutocomplete()
-
-    return () => {
-      cancelled = true
-
-      if (placeChangedListener && window.google?.maps?.event) {
-        window.google.maps.event.removeListener(placeChangedListener)
+      if (!formattedAddress) {
+        setLoadError('Select an address from the suggestions.')
+        return
       }
 
-      autocompleteRef.current = null
-    }
-  }, [])
+      const publicLocation = mapGooglePlaceToListingLocation(place)
 
-  function handleInputChange(event) {
-    resetGooglePlacesAutocompleteDropdownVisibility()
-    onChangeRef.current(event.target.value)
+      if (input) {
+        input.value = formattedAddress
+      }
 
-    if (placesStatus === 'ready') {
+      onChange(formattedAddress)
+      onPlaceSelected?.({
+        formattedAddress,
+        publicLocation,
+      })
+      hideDropdown()
       setLoadError('')
-    }
-  }
+    },
+    [onChange, onPlaceSelected],
+  )
 
-  function handleInputFocus() {
-    isFocusedRef.current = true
-    resetGooglePlacesAutocompleteDropdownVisibility()
-  }
+  const {
+    inputRef,
+    loadError,
+    placesStatus,
+    handleInputFocus,
+    handleInputBlur,
+    syncInputValue,
+    handleInputChange,
+  } = useGooglePlacesAutocomplete({
+    disabled,
+    createAutocomplete,
+    onPlaceChanged: handlePlaceChanged,
+  })
 
-  function handleInputBlur() {
-    isFocusedRef.current = false
+  useEffect(() => {
+    syncInputValue(value)
+  }, [value, syncInputValue])
+
+  function handleChange(event) {
+    handleInputChange(event, onChange)
   }
 
   return (
@@ -141,7 +84,7 @@ function CollectionAddressAutocomplete({
         placeholder={placeholder}
         defaultValue={value ?? ''}
         disabled={disabled}
-        onChange={handleInputChange}
+        onChange={handleChange}
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
       />

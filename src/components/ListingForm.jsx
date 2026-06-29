@@ -2,6 +2,7 @@ import ListingImageUpload from './ListingImageUpload'
 import CollectionAddressAutocomplete from './listing/CollectionAddressAutocomplete'
 import ListingLocationAutocomplete from './listing/ListingLocationAutocomplete'
 import { LISTING_CONDITIONS } from '../lib/constants'
+import { hasSelectedListingLocation } from '../lib/listingLocation'
 import {
   buildBrandSelectOptions,
   buildCategorySelectOptions,
@@ -118,6 +119,42 @@ function ListingForm({
     const next = checked ? [...current, value] : current.filter((option) => option !== value)
     onFieldChange('deliveryOptions', next)
   }
+
+  function handleCollectionAddressPlaceSelected({ formattedAddress, publicLocation }) {
+    const updates = { collectionAddress: formattedAddress }
+
+    if (
+      publicLocation?.latitude != null &&
+      publicLocation?.longitude != null &&
+      !hasSelectedListingLocation(form)
+    ) {
+      updates.locationSearch = publicLocation.displayLabel
+      updates.locationPlace = publicLocation
+    }
+
+    onFieldChange(updates)
+  }
+
+  function handleListingLocationPlaceSelected(place) {
+    onFieldChange({
+      locationPlace: place,
+      ...(place?.displayLabel ? { locationSearch: place.displayLabel } : {}),
+    })
+  }
+
+  function handleListingLocationSearchChange(value) {
+    const updates = { locationSearch: value }
+
+    if (form.locationPlace && value !== form.locationPlace.displayLabel) {
+      updates.locationPlace = null
+    }
+
+    onFieldChange(updates)
+  }
+
+  const locationValidationAttempted = Boolean(
+    formError?.includes('Select a location from the suggestions'),
+  )
 
   return (
     <form className="listing-form" onSubmit={onSubmit} noValidate>
@@ -296,8 +333,9 @@ function ListingForm({
             inputId={fieldId('location')}
             value={form.locationSearch}
             selectedPlace={form.locationPlace}
-            onSearchChange={(value) => onFieldChange('locationSearch', value)}
-            onPlaceSelected={(value) => onFieldChange('locationPlace', value)}
+            validationAttempted={locationValidationAttempted}
+            onSearchChange={handleListingLocationSearchChange}
+            onPlaceSelected={handleListingLocationPlaceSelected}
           />
         </ListingFormRow>
       </ListingFormSection>
@@ -344,6 +382,7 @@ function ListingForm({
                 inputId={fieldId('collection-address')}
                 value={form.collectionAddress}
                 onChange={(nextValue) => onFieldChange('collectionAddress', nextValue)}
+                onPlaceSelected={handleCollectionAddressPlaceSelected}
                 placeholder="Start typing your collection address"
               />
             </ListingFormRow>

@@ -8,6 +8,7 @@
 
 import {
   buildListingLocationFields,
+  buildCollectionAddressPlaceSelection,
   formatListingLocationCard,
   formatListingLocationDetail,
   formatStructuredLocationDisplay,
@@ -17,6 +18,7 @@ import {
   normalizeUkPostcode,
   pickExistingListingLocationFields,
   resolveListingLocationPayload,
+  shouldAutoFillListingLocationFromAddress,
 } from '../src/lib/listingLocation.js'
 
 function assert(condition, message) {
@@ -80,6 +82,42 @@ const selected = resolveListingLocationPayload({
 assert(selected.postcode == null || selected.city === 'Wakefield', 'Selected place payload saved')
 
 assert(listingLocationFromRecord(preserved)?.city === 'Manchester', 'Structured record round-trip')
+
+assert(
+  shouldAutoFillListingLocationFromAddress({ locationPlace: null, locationSearch: '' }) === true,
+  'Auto-fill allowed when listing location empty',
+)
+assert(
+  shouldAutoFillListingLocationFromAddress({
+    locationPlace: wakefieldPlace,
+    locationSearch: wakefieldPlace.displayLabel,
+  }) === false,
+  'Auto-fill blocked when listing location already selected',
+)
+
+const streetPlace = buildCollectionAddressPlaceSelection({
+  formatted_address: '12 High Street, Wakefield WF1 1AA, UK',
+  address_components: [
+    { long_name: '12', short_name: '12', types: ['street_number'] },
+    { long_name: 'High Street', short_name: 'High St', types: ['route'] },
+    { long_name: 'Wakefield', short_name: 'Wakefield', types: ['postal_town'] },
+    { long_name: 'West Yorkshire', short_name: 'West Yorkshire', types: ['administrative_area_level_2'] },
+    { long_name: 'WF1 1AA', short_name: 'WF1 1AA', types: ['postal_code'] },
+  ],
+  geometry: {
+    location: {
+      lat: () => 53.6833,
+      lng: () => -1.4977,
+    },
+  },
+})
+
+assert(streetPlace.formattedAddress.includes('High Street'), 'Collection address keeps full street line')
+assert(streetPlace.publicLocation.city === 'Wakefield', 'Public location uses town not street')
+assert(
+  streetPlace.publicLocation.displayLabel === 'Wakefield, West Yorkshire',
+  'Public location label is card-safe',
+)
 
 logPass('Listing location helpers behave as expected')
 console.log('\nAll listing location formatting checks passed.')

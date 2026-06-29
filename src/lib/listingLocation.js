@@ -214,6 +214,20 @@ export function hasSelectedListingLocation(form) {
   )
 }
 
+export function shouldAutoFillListingLocationFromAddress(form) {
+  return !hasSelectedListingLocation(form)
+}
+
+export function buildCollectionAddressPlaceSelection(place) {
+  const formattedAddress = mapGooglePlaceToFormattedAddress(place)
+  if (!formattedAddress) return null
+
+  return {
+    formattedAddress,
+    publicLocation: mapGooglePlaceToListingLocation(place),
+  }
+}
+
 export function hasListingLocationForPublish(form, existingListing = null) {
   if (hasSelectedListingLocation(form)) return true
 
@@ -394,18 +408,80 @@ export function loadGoogleMapsPlaces() {
 
 export const GOOGLE_PLACES_PAC_HIDDEN_CLASS = 'equipd-pac-hidden'
 
-export function hideGooglePlacesAutocompleteDropdown() {
+const PAC_INPUT_PROXIMITY_THRESHOLD_PX = 240
+
+/**
+ * Associate a Google pac-container with its input. Google appends containers to
+ * document.body, so we match by proximity below the input rather than removing
+ * other inputs' containers (which breaks multi-autocomplete forms).
+ */
+export function findPacContainerForInput(input) {
+  if (!input || typeof document === 'undefined') return null
+
+  if (input._equipdPacContainer?.isConnected) {
+    return input._equipdPacContainer
+  }
+
+  const containers = document.querySelectorAll('.pac-container')
+  if (containers.length === 0) return null
+
+  const inputRect = input.getBoundingClientRect()
+  let bestMatch = null
+  let bestScore = Infinity
+
+  containers.forEach((container) => {
+    const rect = container.getBoundingClientRect()
+    const verticalDistance = Math.abs(rect.top - inputRect.bottom)
+    const horizontalDistance = Math.abs(rect.left - inputRect.left)
+    const score = verticalDistance + horizontalDistance * 0.25
+
+    if (score < bestScore) {
+      bestScore = score
+      bestMatch = container
+    }
+  })
+
+  if (bestMatch && bestScore <= PAC_INPUT_PROXIMITY_THRESHOLD_PX) {
+    input._equipdPacContainer = bestMatch
+    if (input.id) {
+      bestMatch.dataset.equipdPlacesInputId = input.id
+    }
+  }
+
+  return bestMatch
+}
+
+export function hideGooglePlacesAutocompleteDropdown(input = null) {
   if (typeof document === 'undefined') return
+
+  if (input) {
+    const container = findPacContainerForInput(input)
+    if (container) {
+      container.classList.add(GOOGLE_PLACES_PAC_HIDDEN_CLASS)
+    }
+    return
+  }
 
   document.querySelectorAll('.pac-container').forEach((container) => {
     container.classList.add(GOOGLE_PLACES_PAC_HIDDEN_CLASS)
   })
 }
 
-export function resetGooglePlacesAutocompleteDropdownVisibility() {
+export function resetGooglePlacesAutocompleteDropdownVisibility(input = null) {
   if (typeof document === 'undefined') return
 
-  dedupeGooglePlacesAutocompleteDropdowns()
+  if (input) {
+    findPacContainerForInput(input)
+
+    document.querySelectorAll('.pac-container').forEach((container) => {
+      const linkedInputId = container.dataset.equipdPlacesInputId
+      if (!linkedInputId || linkedInputId === input.id) {
+        container.classList.remove(GOOGLE_PLACES_PAC_HIDDEN_CLASS)
+      }
+    })
+
+    return
+  }
 
   document.querySelectorAll('.pac-container').forEach((container) => {
     container.classList.remove(GOOGLE_PLACES_PAC_HIDDEN_CLASS)
@@ -420,13 +496,7 @@ export function destroyGooglePlacesAutocompleteDropdowns() {
   })
 }
 
+/** @deprecated Prefer per-input pac scoping via findPacContainerForInput. */
 export function dedupeGooglePlacesAutocompleteDropdowns() {
   if (typeof document === 'undefined') return
-
-  const containers = document.querySelectorAll('.pac-container')
-  containers.forEach((container, index) => {
-    if (index < containers.length - 1) {
-      container.remove()
-    }
-  })
 }

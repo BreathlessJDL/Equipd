@@ -114,7 +114,11 @@ function EditListingPage() {
   }, [slug])
 
   function updateField(field, value) {
-    setForm((current) => ({ ...current, [field]: value }))
+    if (field && typeof field === 'object' && !Array.isArray(field)) {
+      setForm((current) => ({ ...current, ...field }))
+    } else {
+      setForm((current) => ({ ...current, [field]: value }))
+    }
     setFormError('')
     setFormSuccess('')
   }
