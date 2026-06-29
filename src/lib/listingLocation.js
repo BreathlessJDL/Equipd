@@ -418,8 +418,16 @@ const PAC_INPUT_PROXIMITY_THRESHOLD_PX = 240
 export function findPacContainerForInput(input) {
   if (!input || typeof document === 'undefined') return null
 
-  if (input._equipdPacContainer?.isConnected) {
-    return input._equipdPacContainer
+  const linked = input._equipdPacContainer
+  if (linked?.isConnected && linked.getBoundingClientRect().width > 0) {
+    return linked
+  }
+
+  if (linked) {
+    delete input._equipdPacContainer
+    if (linked.dataset.equipdPlacesInputId === input.id) {
+      delete linked.dataset.equipdPlacesInputId
+    }
   }
 
   const containers = document.querySelectorAll('.pac-container')
@@ -431,6 +439,8 @@ export function findPacContainerForInput(input) {
 
   containers.forEach((container) => {
     const rect = container.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return
+
     const verticalDistance = Math.abs(rect.top - inputRect.bottom)
     const horizontalDistance = Math.abs(rect.left - inputRect.left)
     const score = verticalDistance + horizontalDistance * 0.25
@@ -449,6 +459,27 @@ export function findPacContainerForInput(input) {
   }
 
   return bestMatch
+}
+
+export function destroyPlacesAutocompleteForInput(input) {
+  if (!input || typeof document === 'undefined') return
+
+  const autocomplete = input._equipdPlacesAutocomplete
+  if (autocomplete && window.google?.maps?.event) {
+    window.google.maps.event.clearInstanceListeners(autocomplete)
+  }
+
+  delete input._equipdPlacesAutocomplete
+
+  if (input.id) {
+    document.querySelectorAll('.pac-container').forEach((container) => {
+      if (container.dataset.equipdPlacesInputId === input.id) {
+        container.remove()
+      }
+    })
+  }
+
+  delete input._equipdPacContainer
 }
 
 export function hideGooglePlacesAutocompleteDropdown(input = null) {
@@ -474,8 +505,7 @@ export function resetGooglePlacesAutocompleteDropdownVisibility(input = null) {
     findPacContainerForInput(input)
 
     document.querySelectorAll('.pac-container').forEach((container) => {
-      const linkedInputId = container.dataset.equipdPlacesInputId
-      if (!linkedInputId || linkedInputId === input.id) {
+      if (container.dataset.equipdPlacesInputId === input.id) {
         container.classList.remove(GOOGLE_PLACES_PAC_HIDDEN_CLASS)
       }
     })

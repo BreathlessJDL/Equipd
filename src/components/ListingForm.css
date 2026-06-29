@@ -36,7 +36,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .listing-form__row {

@@ -1,0 +1,330 @@
+﻿{
+  "formErrorText": "Select a location from the suggestions.",
+  "googleKeyConfigured": true,
+  "consoleMessages": [
+    "[error] Failed to load resource: the server responded with a status of 400 ()",
+    "[error] Failed to load resource: the server responded with a status of 400 ()",
+    "[warning] As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.",
+    "[warning] As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide."
+  ],
+  "beforeSubmit": {
+    "label": "before-submit",
+    "inputExists": true,
+    "inputDisabled": false,
+    "inputReadOnly": false,
+    "inputValue": "",
+    "inputAutocompleteBound": true,
+    "inputPacLinked": false,
+    "inputPacConnected": null,
+    "activeElementId": "",
+    "activeElementTag": "body",
+    "inputFocused": false,
+    "pacContainerCount": 1,
+    "visiblePacCount": 0,
+    "pacWithItems": 0,
+    "pacDetails": [
+      {
+        "index": 0,
+        "display": "none",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "10050",
+        "pointerEvents": "none",
+        "position": "absolute",
+        "overflow": "hidden",
+        "rect": {
+          "top": 0,
+          "left": 0,
+          "width": 0,
+          "height": 0
+        },
+        "className": "pac-container pac-logo",
+        "childCount": 0,
+        "hiddenClass": false,
+        "linkedInputId": null,
+        "visible": false,
+        "items": []
+      }
+    ],
+    "inputStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "zIndex": "auto",
+      "pointerEvents": "auto",
+      "position": "static",
+      "overflow": "clip",
+      "rect": {
+        "top": 938.859375,
+        "left": 473,
+        "width": 470,
+        "height": 36.1875
+      },
+      "className": "listing-form__input listing-form__input--underline pac-target-input",
+      "childCount": 0,
+      "hiddenClass": false
+    },
+    "coveringElements": [],
+    "googleMapsReady": true,
+    "searchTerm": "Leeds"
+  },
+  "beforeSubmitTyping": {
+    "label": "before-submit-after-typing",
+    "inputExists": true,
+    "inputDisabled": false,
+    "inputReadOnly": false,
+    "inputValue": "Leeds",
+    "inputAutocompleteBound": true,
+    "inputPacLinked": false,
+    "inputPacConnected": null,
+    "activeElementId": "listing-location",
+    "activeElementTag": "input",
+    "inputFocused": true,
+    "pacContainerCount": 1,
+    "visiblePacCount": 1,
+    "pacWithItems": 1,
+    "pacDetails": [
+      {
+        "index": 0,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "10050",
+        "pointerEvents": "auto",
+        "position": "absolute",
+        "overflow": "hidden",
+        "rect": {
+          "top": 382,
+          "left": 473,
+          "width": 470,
+          "height": 147.78125
+        },
+        "className": "pac-container pac-logo",
+        "childCount": 3,
+        "hiddenClass": false,
+        "linkedInputId": null,
+        "visible": true,
+        "items": [
+          "LeedsUK",
+          "Leeds Train StationNew Station Street, Leeds, UK",
+          "Leeds City CentreLeeds, UK"
+        ]
+      }
+    ],
+    "inputStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "zIndex": "auto",
+      "pointerEvents": "auto",
+      "position": "static",
+      "overflow": "clip",
+      "rect": {
+        "top": 341.859375,
+        "left": 473,
+        "width": 470,
+        "height": 36.1875
+      },
+      "className": "listing-form__input listing-form__input--underline pac-target-input",
+      "childCount": 0,
+      "hiddenClass": false
+    },
+    "coveringElements": [],
+    "googleMapsReady": true,
+    "searchTerm": "Leeds"
+  },
+  "afterValidationError": {
+    "label": "after-validation-error",
+    "inputExists": true,
+    "inputDisabled": false,
+    "inputReadOnly": false,
+    "inputValue": "Leeds",
+    "inputAutocompleteBound": true,
+    "inputPacLinked": false,
+    "inputPacConnected": null,
+    "activeElementId": "",
+    "activeElementTag": "body",
+    "inputFocused": false,
+    "pacContainerCount": 2,
+    "visiblePacCount": 0,
+    "pacWithItems": 2,
+    "pacDetails": [
+      {
+        "index": 0,
+        "display": "none",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "10050",
+        "pointerEvents": "auto",
+        "position": "absolute",
+        "overflow": "hidden",
+        "rect": {
+          "top": 0,
+          "left": 0,
+          "width": 0,
+          "height": 0
+        },
+        "className": "pac-container pac-logo",
+        "childCount": 3,
+        "hiddenClass": false,
+        "linkedInputId": null,
+        "visible": false,
+        "items": [
+          "LeedsUK",
+          "Leeds Train StationNew Station Street, Leeds, UK",
+          "Leeds City CentreLeeds, UK"
+        ]
+      },
+      {
+        "index": 1,
+        "display": "none",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "10050",
+        "pointerEvents": "auto",
+        "position": "absolute",
+        "overflow": "hidden",
+        "rect": {
+          "top": 0,
+          "left": 0,
+          "width": 0,
+          "height": 0
+        },
+        "className": "pac-container pac-logo",
+        "childCount": 4,
+        "hiddenClass": false,
+        "linkedInputId": null,
+        "visible": false,
+        "items": [
+          "10 Leeds Old RoadBradford, UK",
+          "Street LaneGildersome, Leeds, UK",
+          "Street LaneLeeds, UK",
+          "10 Test CloseTilehurst, Reading, UK"
+        ]
+      }
+    ],
+    "inputStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "zIndex": "auto",
+      "pointerEvents": "auto",
+      "position": "static",
+      "overflow": "clip",
+      "rect": {
+        "top": -542.078125,
+        "left": 473,
+        "width": 470,
+        "height": 36.1875
+      },
+      "className": "listing-form__input listing-form__input--underline pac-target-input",
+      "childCount": 0,
+      "hiddenClass": false
+    },
+    "coveringElements": [],
+    "googleMapsReady": true,
+    "searchTerm": "Leeds"
+  },
+  "afterFailedSubmitTyping": {
+    "label": "after-failed-submit-typing",
+    "inputExists": true,
+    "inputDisabled": false,
+    "inputReadOnly": false,
+    "inputValue": "Leeds",
+    "inputAutocompleteBound": true,
+    "inputPacLinked": true,
+    "inputPacConnected": true,
+    "activeElementId": "listing-location",
+    "activeElementTag": "input",
+    "inputFocused": true,
+    "pacContainerCount": 2,
+    "visiblePacCount": 1,
+    "pacWithItems": 2,
+    "pacDetails": [
+      {
+        "index": 0,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "10050",
+        "pointerEvents": "auto",
+        "position": "absolute",
+        "overflow": "hidden",
+        "rect": {
+          "top": 382,
+          "left": 473,
+          "width": 470,
+          "height": 147.78125
+        },
+        "className": "pac-container pac-logo",
+        "childCount": 3,
+        "hiddenClass": false,
+        "linkedInputId": "listing-location",
+        "visible": true,
+        "items": [
+          "LeedsUK",
+          "Leeds Train StationNew Station Street, Leeds, UK",
+          "Leeds City CentreLeeds, UK"
+        ]
+      },
+      {
+        "index": 1,
+        "display": "none",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "10050",
+        "pointerEvents": "auto",
+        "position": "absolute",
+        "overflow": "hidden",
+        "rect": {
+          "top": 0,
+          "left": 0,
+          "width": 0,
+          "height": 0
+        },
+        "className": "pac-container pac-logo",
+        "childCount": 4,
+        "hiddenClass": false,
+        "linkedInputId": null,
+        "visible": false,
+        "items": [
+          "10 Leeds Old RoadBradford, UK",
+          "Street LaneGildersome, Leeds, UK",
+          "Street LaneLeeds, UK",
+          "10 Test CloseTilehurst, Reading, UK"
+        ]
+      }
+    ],
+    "inputStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "zIndex": "auto",
+      "pointerEvents": "auto",
+      "position": "static",
+      "overflow": "clip",
+      "rect": {
+        "top": 341.921875,
+        "left": 473,
+        "width": 470,
+        "height": 36.1875
+      },
+      "className": "listing-form__input listing-form__input--underline pac-target-input",
+      "childCount": 0,
+      "hiddenClass": false
+    },
+    "coveringElements": [],
+    "googleMapsReady": true,
+    "searchTerm": "Leeds"
+  }
+}
+
+--- SUMMARY ---
+Suggestions visible BEFORE failed submit: true
+Suggestions visible AFTER failed submit: true
+Autocomplete still bound after failed submit: true
+Input disabled after failed submit: false
+Input remounted (autocomplete lost): NO
+PAC containers after typing: 2
+PAC with items after typing: 2
+Hidden PAC containers: 0

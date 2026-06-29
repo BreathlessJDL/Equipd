@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  destroyPlacesAutocompleteForInput,
   findPacContainerForInput,
   hideGooglePlacesAutocompleteDropdown,
   isGoogleMapsConfigured,
@@ -16,11 +17,14 @@ export function useGooglePlacesAutocomplete({
   disabled = false,
   createAutocomplete,
   onPlaceChanged,
+  reinitializeOnFocus = false,
 }) {
   const inputRef = useRef(null)
   const autocompleteRef = useRef(null)
   const onPlaceChangedRef = useRef(onPlaceChanged)
   const isFocusedRef = useRef(false)
+  const placeChangedListenerRef = useRef(null)
+  const needsReinitRef = useRef(false)
   const [loadError, setLoadError] = useState('')
   const [placesStatus, setPlacesStatus] = useState(() =>
     isGoogleMapsConfigured() ? 'loading' : 'unconfigured',
@@ -30,26 +34,53 @@ export function useGooglePlacesAutocomplete({
     onPlaceChangedRef.current = onPlaceChanged
   }, [onPlaceChanged])
 
-  const bindAutocomplete = useCallback(async () => {
-    if (!isGoogleMapsConfigured() || disabled || !inputRef.current) {
-      return null
+  useEffect(() => {
+    needsReinitRef.current = Boolean(reinitializeOnFocus)
+  }, [reinitializeOnFocus])
+
+  const attachPlaceChangedListener = useCallback((autocomplete) => {
+    if (placeChangedListenerRef.current && window.google?.maps?.event) {
+      window.google.maps.event.removeListener(placeChangedListenerRef.current)
     }
 
-    const google = await loadGoogleMapsPlaces()
-    if (!inputRef.current || disabled) return null
+    placeChangedListenerRef.current = autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace()
+      onPlaceChangedRef.current(place, {
+        autocomplete,
+        input: inputRef.current,
+        setLoadError,
+        hideDropdown: () => hideGooglePlacesAutocompleteDropdown(inputRef.current),
+      })
+    })
+  }, [])
 
-    let autocomplete = inputRef.current._equipdPlacesAutocomplete
+  const bindAutocomplete = useCallback(
+    async ({ forceRecreate = false } = {}) => {
+      if (!isGoogleMapsConfigured() || disabled || !inputRef.current) {
+        return null
+      }
 
-    if (!autocomplete) {
-      autocomplete = createAutocomplete(google, inputRef.current)
-      inputRef.current._equipdPlacesAutocomplete = autocomplete
-    }
+      const google = await loadGoogleMapsPlaces()
+      if (!inputRef.current || disabled) return null
 
-    autocompleteRef.current = autocomplete
-    findPacContainerForInput(inputRef.current)
-    resetGooglePlacesAutocompleteDropdownVisibility(inputRef.current)
-    return autocomplete
-  }, [createAutocomplete, disabled])
+      if (forceRecreate) {
+        destroyPlacesAutocompleteForInput(inputRef.current)
+      }
+
+      let autocomplete = inputRef.current._equipdPlacesAutocomplete
+
+      if (!autocomplete) {
+        autocomplete = createAutocomplete(google, inputRef.current)
+        inputRef.current._equipdPlacesAutocomplete = autocomplete
+        attachPlaceChangedListener(autocomplete)
+      }
+
+      autocompleteRef.current = autocomplete
+      resetGooglePlacesAutocompleteDropdownVisibility(inputRef.current)
+      return autocomplete
+    },
+    [attachPlaceChangedListener, createAutocomplete, disabled],
+  )
 
   useEffect(() => {
     if (disabled) {
@@ -63,7 +94,6 @@ export function useGooglePlacesAutocomplete({
     }
 
     let cancelled = false
-    let placeChangedListener = null
 
     async function initAutocomplete() {
       setPlacesStatus('loading')
@@ -72,20 +102,6 @@ export function useGooglePlacesAutocomplete({
       try {
         const autocomplete = await bindAutocomplete()
         if (cancelled || !autocomplete) return
-
-        if (placeChangedListener && window.google?.maps?.event) {
-          window.google.maps.event.removeListener(placeChangedListener)
-        }
-
-        placeChangedListener = autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace()
-          onPlaceChangedRef.current(place, {
-            autocomplete,
-            input: inputRef.current,
-            setLoadError,
-            hideDropdown: () => hideGooglePlacesAutocompleteDropdown(inputRef.current),
-          })
-        })
 
         setPlacesStatus('ready')
         setLoadError('')
@@ -101,34 +117,45 @@ export function useGooglePlacesAutocomplete({
     return () => {
       cancelled = true
 
-      if (placeChangedListener && window.google?.maps?.event) {
-        window.google.maps.event.removeListener(placeChangedListener)
+      if (placeChangedListenerRef.current && window.google?.maps?.event) {
+        window.google.maps.event.removeListener(placeChangedListenerRef.current)
       }
 
+      placeChangedListenerRef.current = null
       autocompleteRef.current = null
     }
   }, [bindAutocomplete, disabled])
 
-  const ensureAutocompleteReady = useCallback(async () => {
-    if (disabled || !inputRef.current) return
+  const ensureAutocompleteReady = useCallback(
+    async ({ forceRecreate = false } = {}) => {
+      if (disabled || !inputRef.current) return
 
-    try {
-      await bindAutocomplete()
-      if (placesStatus !== 'ready') {
+      try {
+        await bindAutocomplete({ forceRecreate })
         setPlacesStatus('ready')
+        setLoadError('')
+      } catch (error) {
+        setPlacesStatus('failed')
+        setLoadError(error.message || 'Location search failed to load.')
       }
-      setLoadError('')
-    } catch (error) {
-      setPlacesStatus('failed')
-      setLoadError(error.message || 'Location search failed to load.')
-    }
-  }, [bindAutocomplete, disabled, placesStatus])
+    },
+    [bindAutocomplete, disabled],
+  )
 
-  const handleInputFocus = useCallback(() => {
+  const handleInputFocus = useCallback(async () => {
     isFocusedRef.current = true
-    resetGooglePlacesAutocompleteDropdownVisibility(inputRef.current)
+
+    if (inputRef.current) {
+      inputRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+
+    const forceRecreate = needsReinitRef.current
+    if (forceRecreate) {
+      needsReinitRef.current = false
+    }
+
     findPacContainerForInput(inputRef.current)
-    ensureAutocompleteReady()
+    await ensureAutocompleteReady({ forceRecreate })
   }, [ensureAutocompleteReady])
 
   const handleInputBlur = useCallback(() => {

@@ -52,11 +52,11 @@ function ListingLocationAutocomplete({
     handleInputBlur,
     syncInputValue,
     handleInputChange,
-    ensureAutocompleteReady,
   } = useGooglePlacesAutocomplete({
     disabled,
     createAutocomplete,
     onPlaceChanged: handlePlaceChanged,
+    reinitializeOnFocus: validationAttempted,
   })
 
   useEffect(() => {
@@ -66,8 +66,8 @@ function ListingLocationAutocomplete({
   useEffect(() => {
     if (!validationAttempted || !inputRef.current) return
 
-    ensureAutocompleteReady()
-  }, [validationAttempted, ensureAutocompleteReady, inputRef])
+    inputRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [validationAttempted, inputRef])
 
   function handleChange(event) {
     handleInputChange(event, (nextValue) => {
