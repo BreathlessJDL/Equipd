@@ -80,8 +80,8 @@ export function HubViewOrderAction({ to }) {
   return <HubNavAction to={to} label="Order" icon={ReceiptIcon} />
 }
 
-export function HubEditListingAction({ to }) {
-  return <HubNavAction to={to} label="Edit" icon={PencilIcon} />
+export function HubEditListingAction({ to, label = 'Edit' }) {
+  return <HubNavAction to={to} label={label} icon={PencilIcon} />
 }
 
 export function buildHubNavActions({ order, conversationUrl, listingUrl, includeViewOrder = false }) {

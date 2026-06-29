@@ -33,22 +33,23 @@ function ListingCardImage({ listing }) {
   return <div className="listing-card__image listing-card__image--placeholder">No photo</div>
 }
 
-function ListingCardGrid({ listing, showStatus = false, showNewBadge = false }) {
+function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null }) {
   const showBadge = showNewBadge && isRecentListing(listing)
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
+  const listingHref = primaryLinkTo ?? `/listings/${listing.slug}`
 
   return (
     <article className="listing-card listing-card--grid">
       <div className="listing-card__media">
-        <Link to={`/listings/${listing.slug}`} className="listing-card__image-link" tabIndex={-1}>
+        <Link to={listingHref} className="listing-card__image-link" tabIndex={-1}>
           <ListingCardImage listing={listing} />
         </Link>
         {showBadge ? <span className="listing-card__badge">New</span> : null}
         <ListingSaveButton listing={listing} />
       </div>
 
-      <Link to={`/listings/${listing.slug}`} className="listing-card__body">
+      <Link to={listingHref} className="listing-card__body">
         <h3 className="listing-card__title" title={listing.title}>
           {listing.title}
         </h3>
@@ -89,26 +90,35 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false }) 
           </div>
         ) : null}
       </Link>
+
+      {primaryLinkTo ? (
+        <div className="listing-card__owner-action">
+          <Link to={primaryLinkTo} className="listing-card__owner-action-link">
+            Edit draft
+          </Link>
+        </div>
+      ) : null}
     </article>
   )
 }
 
-function ListingCardRow({ listing, showStatus = false }) {
+function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null }) {
   const hasCollection = listing.collection_available !== false
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
+  const listingHref = primaryLinkTo ?? `/listings/${listing.slug}`
 
   return (
     <article className="listing-row">
       <div className="listing-row__media">
-        <Link to={`/listings/${listing.slug}`} className="listing-row__image-link" tabIndex={-1}>
+        <Link to={listingHref} className="listing-row__image-link" tabIndex={-1}>
           <ListingCardImage listing={listing} />
         </Link>
         <ListingSaveButton listing={listing} />
       </div>
 
       <div className="listing-row__content">
-        <Link to={`/listings/${listing.slug}`} className="listing-row__title">
+        <Link to={listingHref} className="listing-row__title">
           {listing.title}
         </Link>
 
@@ -176,9 +186,10 @@ function ListingCard({
   showStatus = false,
   variant = 'grid',
   showNewBadge = false,
+  primaryLinkTo = null,
 }) {
   if (variant === 'row') {
-    return <ListingCardRow listing={listing} showStatus={showStatus} />
+    return <ListingCardRow listing={listing} showStatus={showStatus} primaryLinkTo={primaryLinkTo} />
   }
 
   return (
@@ -186,6 +197,7 @@ function ListingCard({
       listing={listing}
       showStatus={showStatus}
       showNewBadge={showNewBadge}
+      primaryLinkTo={primaryLinkTo}
     />
   )
 }

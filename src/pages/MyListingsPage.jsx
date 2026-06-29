@@ -75,7 +75,15 @@ function MyListingsPage() {
       {!loading && !error && listings.length > 0 ? (
         <div className="listing-browse__grid">
           {listings.filter(isHubManageableListing).map((listing) => (
-            <ListingCard key={listing.id} listing={listing} variant="home" showStatus />
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="home"
+              showStatus
+              primaryLinkTo={
+                listing.status === 'draft' ? `/listings/${listing.slug}/edit` : null
+              }
+            />
           ))}
         </div>
       ) : null}

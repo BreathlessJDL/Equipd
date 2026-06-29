@@ -175,27 +175,22 @@ function EditListingPage() {
     setImageError('')
   }
 
-  async function handleSave() {
-    if (!listing || !form || !user?.id) return
+  async function persistListing({ targetStatus, validateForPublish = false, redirect = false, successMessage }) {
+    if (!listing || !form || !user?.id) {
+      return { ok: false }
+    }
 
     if (!isListingOwner(listing, user.id)) {
-      setFormError('You do not have permission to edit this listing.')
-      return
+      return { ok: false, error: 'You do not have permission to edit this listing.' }
     }
-
-    setSubmitting(true)
-    setFormError('')
-    setFormSuccess('')
 
     if (!form.categoryId) {
-      setSubmitting(false)
-      setFormError('Select a category to save your listing.')
-      return
+      return { ok: false, error: 'Select a category to save your listing.' }
     }
 
-    const payload = prepareListingPayload(form, listing.status, listing)
+    const payload = prepareListingPayload(form, targetStatus, listing)
 
-    if (listing.status === 'active') {
+    if (validateForPublish) {
       const validationErrors = validateListingForPublish({
         title: form.title,
         categoryId: form.categoryId,
@@ -209,19 +204,15 @@ function EditListingPage() {
       })
 
       if (validationErrors.length > 0) {
-        setSubmitting(false)
-        setFormError(validationErrors.join(' '))
-        return
+        return { ok: false, error: validationErrors.join(' ') }
       }
     }
 
     if (!payload.price_pence || !payload.condition) {
-      setSubmitting(false)
-      setFormError('Enter a valid price and condition.')
-      return
+      return { ok: false, error: 'Enter a valid price and condition.' }
     }
 
-    const { error } = await updateListing(listing.id, {
+    const { data, error } = await updateListing(listing.id, {
       category_id: payload.category_id,
       title: payload.title,
       brand: payload.brand,
@@ -241,38 +232,101 @@ function EditListingPage() {
       courier_available: payload.courier_available,
       delivery_notes: payload.delivery_notes,
       seller_delivery_radius_miles: payload.seller_delivery_radius_miles,
+      status: targetStatus,
     })
 
     if (error) {
-      setSubmitting(false)
-      setFormError(getListingErrorMessage(error))
-      return
+      return { ok: false, error: getListingErrorMessage(error) }
     }
 
     const { error: fulfilmentError } = await persistListingFulfilmentPrivate(listing.id, form)
 
     if (fulfilmentError) {
-      setSubmitting(false)
-      setFormError(
-        `Listing saved, but private fulfilment details could not be saved: ${getListingFulfilmentPrivateErrorMessage(fulfilmentError)}`,
-      )
-      return
+      return {
+        ok: false,
+        error: `Listing saved, but private fulfilment details could not be saved: ${getListingFulfilmentPrivateErrorMessage(fulfilmentError)}`,
+      }
     }
 
     if (existingImages.length > 0) {
       const { error: orderError } = await updateListingImagesOrder(existingImages)
 
       if (orderError) {
-        setSubmitting(false)
-        setFormError(`Listing saved, but photo order could not be updated: ${getImageErrorMessage(orderError)}`)
-        return
+        return {
+          ok: false,
+          error: `Listing saved, but photo order could not be updated: ${getImageErrorMessage(orderError)}`,
+        }
       }
     }
 
+    setListing(data)
+
+    if (redirect) {
+      setFormSuccess(successMessage)
+      navigate(`/listings/${data.slug}`, { replace: true })
+      return { ok: true }
+    }
+
+    return { ok: true, listing: data, successMessage }
+  }
+
+  async function runSave({ targetStatus, validateForPublish, redirect, successMessage }) {
+    setSubmitting(true)
+    setFormError('')
+    setFormSuccess('')
+
+    const result = await persistListing({
+      targetStatus,
+      validateForPublish,
+      redirect,
+      successMessage,
+    })
+
     setSubmitting(false)
 
-    setFormSuccess('Listing updated. Redirecting…')
-    navigate(`/listings/${listing.slug}`, { replace: true })
+    if (!result.ok) {
+      if (result.error) {
+        setFormError(result.error)
+      }
+      return
+    }
+
+    if (!redirect && result.successMessage) {
+      setFormSuccess(result.successMessage)
+    }
+  }
+
+  function handleSaveDraft() {
+    if (listing?.status !== 'draft') return
+
+    runSave({
+      targetStatus: 'draft',
+      validateForPublish: false,
+      redirect: false,
+      successMessage: 'Draft saved.',
+    })
+  }
+
+  function handlePublishDraft() {
+    if (listing?.status !== 'draft') return
+
+    runSave({
+      targetStatus: 'active',
+      validateForPublish: true,
+      redirect: true,
+      successMessage: 'Listing published. Redirecting…',
+    })
+  }
+
+  function handleSaveChanges() {
+    if (!listing || listing.status === 'draft') return
+
+    runSave({
+      targetStatus: listing.status,
+      validateForPublish: listing.status === 'active',
+      redirect: true,
+      successMessage: 'Listing updated. Redirecting…',
+    })
   }
 
   if (loading) {
@@ -312,9 +366,17 @@ function EditListingPage() {
     )
   }
 
+  const isDraft = listing.status === 'draft'
+
   return (
     <div className="listing-form-page">
-      <h1 className="listing-form-page__title">Edit listing</h1>
+      <h1 className="listing-form-page__title">{isDraft ? 'Edit draft listing' : 'Edit listing'}</h1>
+
+      {isDraft ? (
+        <p className="listing-form__hint listing-form__hint--inline">
+          Finish required details, then publish when you are ready. Saving keeps this listing as a draft.
+        </p>
+      ) : null}
 
       <ListingForm
         form={form}
@@ -332,19 +394,33 @@ function EditListingPage() {
         formSuccess={formSuccess}
         onSubmit={(event) => {
           event.preventDefault()
-          handleSave()
+          if (isDraft) {
+            handlePublishDraft()
+            return
+          }
+          handleSaveChanges()
         }}
       >
         <div className="listing-form__actions">
-          <Link to={`/listings/${listing.slug}`} className="listing-form__button listing-form__button--secondary">
+          <Link to={isDraft ? '/my-listings' : `/listings/${listing.slug}`} className="listing-form__button listing-form__button--secondary">
             Cancel
           </Link>
+          {isDraft ? (
+            <button
+              type="button"
+              className="listing-form__button listing-form__button--secondary"
+              disabled={submitting || uploadingImages}
+              onClick={handleSaveDraft}
+            >
+              {submitting ? 'Saving…' : 'Save draft'}
+            </button>
+          ) : null}
           <button
             type="submit"
             className="listing-form__button listing-form__button--primary"
             disabled={submitting || uploadingImages}
           >
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? (isDraft ? 'Publishing…' : 'Saving…') : isDraft ? 'Publish listing' : 'Save changes'}
           </button>
         </div>
       </ListingForm>

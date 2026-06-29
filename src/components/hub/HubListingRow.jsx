@@ -35,11 +35,12 @@ function HubListingRow({
   const badge = getHubListingStatusBadge(listing)
   const metadata = formatHubListingMetadata(listing)
   const canEdit = editUrl && listing.status !== 'sold'
+  const isDraft = listing.status === 'draft'
 
   return (
     <HubItemRow
-      media={<HubItemThumbnail src={thumbnailUrl} href={listingUrl} alt="" />}
-      title={<HubItemTitle href={listingUrl}>{listing.title}</HubItemTitle>}
+      media={<HubItemThumbnail src={thumbnailUrl} href={isDraft ? editUrl : listingUrl} alt="" />}
+      title={<HubItemTitle href={isDraft ? editUrl : listingUrl}>{listing.title}</HubItemTitle>}
       status={
         <HubItemStatusBadge
           variant={statusVariant ?? badge.variant}
@@ -50,8 +51,10 @@ function HubListingRow({
       price={<HubItemPrice amount={formatPricePence(listing.price_pence)} />}
       iconActions={
         <HubItemNavActions>
-          {canEdit ? <HubEditListingAction to={editUrl} /> : null}
-          {listingUrl ? <HubViewListingAction to={listingUrl} /> : null}
+          {canEdit ? (
+            <HubEditListingAction to={editUrl} label={isDraft ? 'Edit draft' : 'Edit'} />
+          ) : null}
+          {listingUrl && !isDraft ? <HubViewListingAction to={listingUrl} /> : null}
           {orderUrl ? <HubViewOrderAction to={orderUrl} /> : null}
           {conversationUrl ? <HubViewConversationAction to={conversationUrl} /> : null}
         </HubItemNavActions>

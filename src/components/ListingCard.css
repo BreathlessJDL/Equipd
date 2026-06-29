@@ -146,6 +146,22 @@
   color: var(--color-text);
 }
 
+.listing-card__owner-action {
+  padding: 0.65rem 1rem 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.listing-card__owner-action-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-orange, #e85d04);
+  text-decoration: none;
+}
+
+.listing-card__owner-action-link:hover {
+  text-decoration: underline;
+}
+
 /* Save button */
 
 .listing-save-button {
