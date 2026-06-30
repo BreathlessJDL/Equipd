@@ -20,6 +20,7 @@ import {
   canCloseCase,
   canMarkRefundCompleted,
   isAdminCaseWorkflowComplete,
+  isCaseClosed,
 } from '../lib/caseClosure'
 import {
   adminApplySupportDecision,
@@ -29,7 +30,7 @@ import {
   isSupportRequestActive,
   SUPPORT_REQUEST_STATUSES,
 } from '../lib/supportRequests'
-import { CaseCloseAction, CaseRefundCompletedAction } from './CaseClosureControls'
+import { CaseCloseAction, CaseClosedSummary, CaseRefundCompletedAction } from './CaseClosureControls'
 import CaseReturnWorkflow, { CaseReturnAdminRefundAction } from './CaseReturnWorkflow'
 import IssueEvidenceList from './IssueEvidenceList'
 import './OrderDisputeSection.css'
@@ -92,18 +93,26 @@ function DisputeAdminControls({
   supportRequest,
   returnLogistics = [],
   userId,
+  showReturnWorkflow = false,
   onDisputeUpdated,
   onSupportUpdated,
   onReturnUpdated,
 }) {
   const managingDispute = Boolean(
-    dispute && (canAdminManageDispute(dispute) || canCloseCase(dispute)),
+    dispute &&
+      (canAdminManageDispute(dispute) || canCloseCase(dispute) || isCaseClosed(dispute)),
   )
   const managingSupport = !managingDispute && Boolean(
-    supportRequest && canAdminManageSupportRequest(supportRequest),
+    supportRequest &&
+      (canAdminManageSupportRequest(supportRequest) ||
+        canCloseCase(supportRequest) ||
+        isCaseClosed(supportRequest)),
   )
   const activeRecord = managingDispute ? dispute : supportRequest
-  const canManage = managingDispute || managingSupport
+  const recordClosed = isCaseClosed(activeRecord)
+  const canManage =
+    (managingDispute && canAdminManageDispute(dispute) && !recordClosed) ||
+    (managingSupport && canAdminManageSupportRequest(supportRequest) && !recordClosed)
 
   const investigationOptions = managingDispute
     ? getAdminInvestigationDecisionOptions(dispute)
@@ -133,10 +142,14 @@ function DisputeAdminControls({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const showIssueRefundAction = managingDispute && canAdminIssueRefundAfterCollection(dispute)
-  const showMarkRefundCompleted = Boolean(activeRecord && canMarkRefundCompleted(activeRecord))
-  const showCloseCase = Boolean(activeRecord && canCloseCase(activeRecord))
+  const showIssueRefundAction =
+    managingDispute && !recordClosed && canAdminIssueRefundAfterCollection(dispute)
+  const showMarkRefundCompleted = Boolean(
+    activeRecord && !recordClosed && canMarkRefundCompleted(activeRecord),
+  )
+  const showCloseCase = Boolean(activeRecord && !recordClosed && canCloseCase(activeRecord))
   const showDecisionForm =
+    !recordClosed &&
     !showIssueRefundAction &&
     !showMarkRefundCompleted &&
     ((managingDispute &&
@@ -168,7 +181,8 @@ function DisputeAdminControls({
     ? dispute?.evidence_paths
     : supportRequest?.evidence_paths
 
-  if (!canManage && !showCloseCase) return null
+  if (!activeRecord && !showCloseCase) return null
+  if (!managingDispute && !managingSupport && !showCloseCase) return null
 
   function handleInvestigationDecisionChange(nextDecision) {
     setInvestigationDecision(nextDecision)
@@ -374,14 +388,31 @@ function DisputeAdminControls({
         ) : null}
       </section>
 
-      {managingDispute ? (
+      {showReturnWorkflow && managingDispute && !recordClosed ? (
         <CaseReturnWorkflow
           dispute={dispute}
           returnLogistics={returnLogistics}
           userId={userId}
           isAdminViewer
+          embedded
           onUpdated={onReturnUpdated}
         />
+      ) : null}
+
+      {recordClosed ? (
+        <section
+          className="order-dispute__admin-section order-dispute__admin-section--closed"
+          aria-labelledby="admin-closed-summary-title"
+        >
+          <h4 id="admin-closed-summary-title" className="order-dispute__admin-section-title">
+            Case closure
+          </h4>
+          <CaseClosedSummary
+            record={activeRecord}
+            isDispute={managingDispute}
+            showAdminNote
+          />
+        </section>
       ) : null}
 
       {showWorkflowSummary ? (

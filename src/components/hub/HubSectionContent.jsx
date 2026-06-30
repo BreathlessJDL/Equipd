@@ -70,7 +70,7 @@ const HUB_SUMMARY_CARDS = [
     key: 'buying',
     label: 'Buying',
     shortLabel: 'Buying',
-    hint: 'Offers, purchases & orders',
+    hint: 'View your purchases',
     section: 'buying',
     tab: 'offers',
     mobileOnly: true,
@@ -80,7 +80,7 @@ const HUB_SUMMARY_CARDS = [
     key: 'selling',
     label: 'Selling',
     shortLabel: 'Selling',
-    hint: 'Offers received & sales',
+    hint: 'Manage your listings',
     section: 'selling',
     tab: 'offers',
     mobileOnly: true,
@@ -174,7 +174,7 @@ function HubSummaryCardIcon({ cardKey }) {
     return (
       <HubScopedPngIcon
         src={HUB_PNG_ICONS.buying}
-        className="hub-summary-card__type-icon hub-summary-card__type-icon--buying-png"
+        className="hub-summary-card__feature-icon hub-summary-card__feature-icon--buying"
       />
     )
   }
@@ -183,7 +183,7 @@ function HubSummaryCardIcon({ cardKey }) {
     return (
       <HubScopedPngIcon
         src={HUB_PNG_ICONS.selling}
-        className="hub-summary-card__type-icon hub-summary-card__type-icon--selling-png"
+        className="hub-summary-card__feature-icon hub-summary-card__feature-icon--selling"
       />
     )
   }
@@ -229,7 +229,7 @@ function HubSummarySection({ counts, needsAttention, onNavigate }) {
               type="button"
               className={`hub-summary-card${
                 card.mobileOnly ? ' hub-summary-card--mobile-only' : ''
-              }${card.hideCount ? ' hub-summary-card--no-count' : ''}`}
+              }${card.hideCount ? ' hub-summary-card--no-count' : ''} hub-summary-card--${card.key}`}
               onClick={() => onNavigate(card.section, card.tab, undefined, card.subTab)}
             >
               <HubSummaryCardIcon cardKey={card.key} />

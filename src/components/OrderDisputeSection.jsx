@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import {
+  canAdminManageDispute,
   canBuyerOpenDispute,
   fetchDisputesForOrder,
   formatDisputeReason,
@@ -22,6 +23,7 @@ import {
   isOrderDisputed,
   openOrderDispute,
 } from '../lib/orderDisputes'
+import { isCaseClosed, canCloseCase, canMarkRefundCompleted } from '../lib/caseClosure'
 import { fetchOrderCaseReturnLogistics } from '../lib/caseReturn'
 import {
   canShowParticipantCaseEvidenceUpload,
@@ -31,11 +33,13 @@ import {
   uploadDisputeEvidenceFile,
   validateIssueEvidenceFile,
 } from '../lib/orderEvidence'
-import { getEquipdSupportUpdateFromSupportRequest } from '../lib/supportRequests'
+import { getEquipdSupportUpdateFromSupportRequest, canAdminManageSupportRequest, formatSupportRequestStatus } from '../lib/supportRequests'
 import OpenOrderDisputeModal from './OpenOrderDisputeModal'
 import AddAdditionalEvidenceSection from './AddAdditionalEvidenceSection'
+import { CaseClosedSummary } from './CaseClosureControls'
 import CaseReturnWorkflow from './CaseReturnWorkflow'
 import DisputeAdminControls from './DisputeAdminControls'
+import OrderDetailAccordion from './orders/OrderDetailAccordion'
 import IssueEvidenceList from './IssueEvidenceList'
 import SupportUpdateCard from './SupportUpdateCard'
 import './OrderDisputeSection.css'
@@ -106,6 +110,14 @@ function OrderDisputeSummary({ dispute, role }) {
           />
         ) : null}
       </div>
+
+      {isCaseClosed(dispute) ? (
+        <CaseClosedSummary
+          record={dispute}
+          isDispute
+          showAdminNote={role === 'admin'}
+        />
+      ) : null}
     </div>
   )
 }
@@ -155,14 +167,44 @@ function OrderDisputeSection({
     [supportRequest],
   )
   const disputeEvidenceCase = activeDispute ? { type: 'dispute', record: activeDispute } : null
-  const canUploadDisputeEvidence = canShowParticipantCaseEvidenceUpload(
-    disputeEvidenceCase,
-    order,
-    role,
-    userId,
-  )
+  const canUploadDisputeEvidence =
+    !isCaseClosed(displayDispute) &&
+    canShowParticipantCaseEvidenceUpload(disputeEvidenceCase, order, role, userId)
   const showClosedDisputeMessage =
-    Boolean(displayDispute) && !activeDispute && isParticipantViewerRole(role)
+    Boolean(displayDispute) &&
+    !activeDispute &&
+    isParticipantViewerRole(role) &&
+    !isCaseClosed(displayDispute)
+
+  const isParticipantViewer = isParticipantViewerRole(role)
+  const showReturnWorkflowForParticipant = Boolean(displayDispute && isParticipantViewer)
+  const showReturnWorkflowForAdmin = Boolean(
+    isAdmin && displayDispute && !isParticipantViewer && !isCaseClosed(displayDispute),
+  )
+  const disputeAccordionStatus = displayDispute
+    ? formatDisputeStatus(displayDispute.status)
+    : isOrderDisputed(order)
+      ? 'Under dispute'
+      : null
+  const disputeAccordionDefaultOpen = displayDispute
+    ? isDisputeActive(displayDispute) && !isCaseClosed(displayDispute)
+    : isOrderDisputed(order)
+  const adminAccordionStatus = displayDispute
+    ? formatDisputeStatus(displayDispute.status)
+    : supportRequest
+      ? formatSupportRequestStatus(supportRequest.status)
+      : 'Open case'
+  const adminAccordionDefaultOpen =
+    (displayDispute &&
+      !isCaseClosed(displayDispute) &&
+      (canAdminManageDispute(displayDispute) ||
+        canCloseCase(displayDispute) ||
+        canMarkRefundCompleted(displayDispute))) ||
+    (supportRequest &&
+      !isCaseClosed(supportRequest) &&
+      (canAdminManageSupportRequest(supportRequest) ||
+        canCloseCase(supportRequest) ||
+        canMarkRefundCompleted(supportRequest)))
 
   const refreshReturnWorkflow = useCallback(
     async (updatedDispute) => {
@@ -280,7 +322,7 @@ function OrderDisputeSection({
   return (
     <section
       className={`order-dispute${compact ? ' order-dispute--compact' : ''}`}
-      aria-labelledby={showDisputeSummary ? 'order-dispute-summary-title' : 'order-dispute-title'}
+      aria-label="Dispute and case management"
     >
       {error ? (
         <p className="order-dispute__error" role="alert">
@@ -323,10 +365,12 @@ function OrderDisputeSection({
       ) : null}
 
       {showDisputeSummary ? (
-        <>
-          <h2 id="order-dispute-summary-title" className="order-dispute__title">
-            Dispute
-          </h2>
+        <OrderDetailAccordion
+          className="order-dispute-accordion"
+          title="Dispute / case details"
+          status={disputeAccordionStatus}
+          defaultOpen={disputeAccordionDefaultOpen}
+        >
           {disputeSupportUpdate && !useCaseUpdateHistory ? (
             <SupportUpdateCard {...disputeSupportUpdate} />
           ) : null}
@@ -344,12 +388,13 @@ function OrderDisputeSection({
                   : getDisputeSellerMessage()}
             </p>
           )}
-          {displayDispute && (isParticipantViewerRole(role) || isAdmin) ? (
+          {showReturnWorkflowForParticipant ? (
             <CaseReturnWorkflow
               dispute={displayDispute}
               returnLogistics={returnLogistics}
               userId={userId}
-              isAdminViewer={isAdmin}
+              isAdminViewer={false}
+              embedded
               onUpdated={() => refreshReturnWorkflow()}
             />
           ) : null}
@@ -375,32 +420,17 @@ function OrderDisputeSection({
               This case has been closed. You can no longer upload additional evidence.
             </p>
           ) : null}
-          {showAdminControls ? (
-            <DisputeAdminControls
-              dispute={displayDispute}
-              supportRequest={supportRequest}
-              returnLogistics={returnLogistics}
-              userId={userId}
-              onDisputeUpdated={(updatedDispute) => {
-                if (updatedDispute) {
-                  setDisputes((current) => [
-                    updatedDispute,
-                    ...current.filter((entry) => entry.id !== updatedDispute.id),
-                  ])
-                }
-                onDisputeUpdated?.(updatedDispute)
-              }}
-              onSupportUpdated={onSupportUpdated}
-              onReturnUpdated={() => refreshReturnWorkflow()}
-            />
-          ) : null}
-        </>
-      ) : showAdminControls ? (
-        <>
-          <h2 id="order-dispute-summary-title" className="order-dispute__title">
-            Dispute
-          </h2>
-          {supportRequestUpdate && !useCaseUpdateHistory ? (
+        </OrderDetailAccordion>
+      ) : null}
+
+      {showAdminControls ? (
+        <OrderDetailAccordion
+          className="order-dispute-accordion order-dispute-accordion--admin"
+          title="Case management"
+          status={adminAccordionStatus}
+          defaultOpen={adminAccordionDefaultOpen}
+        >
+          {!showDisputeSummary && supportRequestUpdate && !useCaseUpdateHistory ? (
             <SupportUpdateCard {...supportRequestUpdate} />
           ) : null}
           <DisputeAdminControls
@@ -408,6 +438,7 @@ function OrderDisputeSection({
             supportRequest={supportRequest}
             returnLogistics={returnLogistics}
             userId={userId}
+            showReturnWorkflow={showReturnWorkflowForAdmin}
             onDisputeUpdated={(updatedDispute) => {
               if (updatedDispute) {
                 setDisputes((current) => [
@@ -420,7 +451,7 @@ function OrderDisputeSection({
             onSupportUpdated={onSupportUpdated}
             onReturnUpdated={() => refreshReturnWorkflow()}
           />
-        </>
+        </OrderDetailAccordion>
       ) : null}
 
       {showModal && allowReport ? (

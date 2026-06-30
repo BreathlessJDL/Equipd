@@ -66,6 +66,22 @@ function assertDisputeStepOrder(timeline, expectedKeys) {
   )
 }
 
+function assertNoDetailedEvidenceSteps(timeline) {
+  const keys = getDisputeEvents(timeline).map((event) => event.key)
+  const detailedKeys = [
+    'dispute_evidence_received',
+    'dispute_awaiting_evidence',
+    'dispute_review_pending',
+    'dispute_awaiting_seller_collection',
+    'dispute_collection_arranged',
+    'dispute_ready_for_refund',
+  ]
+
+  for (const key of detailedKeys) {
+    assert(!keys.includes(key), `Detailed step ${key} should not appear in order progress`)
+  }
+}
+
 function assertRefundNotBeforeReturn(timeline) {
   const keys = getDisputeEvents(timeline).map((event) => event.key)
   const refundIndex = keys.indexOf('dispute_refund_pending')
@@ -109,13 +125,10 @@ function testOpenedDisputeWithEvidence() {
     caseUpdates,
   })
 
-  assertDisputeStepOrder(timeline, [
-    'dispute_opened',
-    'dispute_evidence_received',
-  ])
-  assert(getCurrentDisputeEvent(timeline)?.key === 'dispute_evidence_received', 'Expected evidence received current')
-  assertRefundNotBeforeReturn(timeline)
-  logPass('Opened dispute with evidence stops at evidence received')
+  assertDisputeStepOrder(timeline, ['dispute_opened', 'dispute_under_review'])
+  assert(getCurrentDisputeEvent(timeline)?.key === 'dispute_under_review', 'Expected under review current')
+  assertNoDetailedEvidenceSteps(timeline)
+  logPass('Opened dispute with evidence stays high-level')
 }
 
 function testAwaitingSellerCollection() {
@@ -142,17 +155,13 @@ function testAwaitingSellerCollection() {
     caseUpdates,
   })
 
-  assertDisputeStepOrder(timeline, [
-    'dispute_opened',
-    'dispute_evidence_received',
-    'dispute_return_authorised',
-    'dispute_awaiting_seller_collection',
-  ])
+  assertDisputeStepOrder(timeline, ['dispute_opened', 'dispute_return_authorised'])
   assert(
-    getCurrentDisputeEvent(timeline)?.key === 'dispute_awaiting_seller_collection',
-    'Expected awaiting seller collection current',
+    getCurrentDisputeEvent(timeline)?.key === 'dispute_return_authorised',
+    'Expected return authorised current',
   )
-  logPass('Return authorised shows awaiting seller collection as current')
+  assertNoDetailedEvidenceSteps(timeline)
+  logPass('Return authorised shows only major return milestone')
 }
 
 function testCollectionArranged() {
@@ -187,10 +196,11 @@ function testCollectionArranged() {
   })
 
   assert(
-    getCurrentDisputeEvent(timeline)?.key === 'dispute_collection_arranged',
-    'Expected collection arranged current',
+    getCurrentDisputeEvent(timeline)?.key === 'dispute_return_authorised',
+    'Expected return authorised current during collection arranged',
   )
-  logPass('Seller arranged collection is current')
+  assertNoDetailedEvidenceSteps(timeline)
+  logPass('Collection arranged does not add extra order progress steps')
 }
 
 function testReadyForRefund() {
@@ -232,8 +242,8 @@ function testReadyForRefund() {
   })
 
   assert(
-    getCurrentDisputeEvent(timeline)?.key === 'dispute_ready_for_refund',
-    'Expected ready for refund current',
+    getCurrentDisputeEvent(timeline)?.key === 'dispute_collection_confirmed',
+    'Expected collection confirmed current',
   )
   assert(
     !getDisputeEvents(timeline).some(
@@ -241,7 +251,7 @@ function testReadyForRefund() {
     ),
     'Refund pending should not be current when ready for refund',
   )
-  logPass('Buyer confirmed collection shows ready for refund as current')
+  logPass('Ready for refund shows collection confirmed as current')
 }
 
 function testRefundPendingAfterReturnFlow() {
@@ -291,12 +301,8 @@ function testRefundPendingAfterReturnFlow() {
 
   assertDisputeStepOrder(timeline, [
     'dispute_opened',
-    'dispute_evidence_received',
     'dispute_return_authorised',
-    'dispute_awaiting_seller_collection',
-    'dispute_collection_arranged',
     'dispute_collection_confirmed',
-    'dispute_ready_for_refund',
     'dispute_refund_pending',
   ])
   assert(
@@ -304,7 +310,8 @@ function testRefundPendingAfterReturnFlow() {
     'Expected refund pending current',
   )
   assertRefundNotBeforeReturn(timeline)
-  logPass('Refund pending follows full return workflow in order')
+  assertNoDetailedEvidenceSteps(timeline)
+  logPass('Refund pending follows major return milestones only')
 }
 
 function testRefundWithoutReturn() {
@@ -438,11 +445,18 @@ function testBuildDisputeTimelineStepsExport() {
         status: DISPUTE_STATUSES.READY_FOR_REFUND,
         created_at: '2026-01-13T10:00:00Z',
       },
+      {
+        id: '2',
+        dispute_id: DISPUTE_ID,
+        event_type: 'return_authorised',
+        status: DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION,
+        created_at: '2026-01-11T10:00:00Z',
+      },
     ],
   )
 
-  assert(steps.at(-1)?.key === 'dispute_ready_for_refund', 'Latest built step should be ready for refund')
-  logPass('buildDisputeTimelineSteps uses case updates chronologically')
+  assert(steps.at(-1)?.key === 'dispute_collection_confirmed', 'Latest built step should be collection confirmed')
+  logPass('buildDisputeTimelineSteps uses milestone timestamps from case updates')
 }
 
 function testRefundCompletedAndCaseClosed() {
@@ -498,14 +512,16 @@ function testRefundCompletedAndCaseClosed() {
 
   assertDisputeStepOrder(timeline, [
     'dispute_opened',
-    'dispute_evidence_received',
-    'dispute_under_review',
     'dispute_refund_pending',
     'dispute_refund_completed',
     'dispute_case_closed',
   ])
   assert(getCurrentDisputeEvent(timeline)?.key === 'dispute_case_closed', 'Expected case closed current')
-  logPass('Refund completed and case closed appear in timeline order')
+  assert(
+    getCurrentDisputeEvent(timeline)?.label === 'Full refund approved',
+    'Expected full refund approved label',
+  )
+  logPass('Refund completed and case closed appear as high-level resolution steps')
 }
 
 function testRejectedClaimClosed() {
@@ -551,14 +567,9 @@ function testRejectedClaimClosed() {
     caseUpdates,
   })
 
-  assertDisputeStepOrder(timeline, [
-    'dispute_opened',
-    'dispute_evidence_received',
-    'dispute_under_review',
-    'dispute_rejected',
-    'dispute_case_closed',
-  ])
-  logPass('Rejected claim closes with case closed step')
+  assertDisputeStepOrder(timeline, ['dispute_opened', 'dispute_rejected'])
+  assert(getCurrentDisputeEvent(timeline)?.label === 'Claim rejected', 'Expected claim rejected label')
+  logPass('Rejected claim closes with a single high-level resolution step')
 }
 
 function main() {

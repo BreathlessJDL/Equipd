@@ -92,8 +92,20 @@ export function canMarkRefundCompleted(record) {
   return REFUND_PENDING_STATUSES.has(record?.status)
 }
 
+export function formatCaseOutcomeLabel(outcome) {
+  return CASE_OUTCOME_OPTIONS.find((option) => option.value === outcome)?.label ?? outcome ?? '—'
+}
+
+export function isCaseClosed(record) {
+  if (!record) return false
+  if (record.case_outcome) return true
+  if (record.status === SUPPORT_REQUEST_STATUSES.CLOSED) return true
+  if (record.status === DISPUTE_STATUSES.CANCELLED) return true
+  return false
+}
+
 export function canCloseCase(record) {
-  if (!record || record.case_outcome) return false
+  if (!record || isCaseClosed(record)) return false
   if (CLOSE_BLOCKED_STATUSES.has(record?.status)) return false
   return CLOSE_ALLOWED_STATUSES.has(record?.status)
 }

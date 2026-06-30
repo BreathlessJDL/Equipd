@@ -9,11 +9,14 @@ import {
   formatReturnTimestamp,
   getReturnLogisticsForDispute,
   getCaseReturnErrorMessage,
+  getReturnWorkflowStatusLabel,
   isReturnWorkflowDispute,
+  returnWorkflowNeedsUserAction,
   sellerArrangeCaseCollection,
 } from '../lib/caseReturn'
 import { getDefaultAdminDecisionCustomerMessage } from '../lib/adminDecisionMessages'
 import { ADMIN_DISPUTE_DECISIONS } from '../lib/orderDisputes'
+import OrderDetailAccordion from './orders/OrderDetailAccordion'
 import './OrderDisputeSection.css'
 
 function CaseReturnWorkflow({
@@ -21,6 +24,7 @@ function CaseReturnWorkflow({
   returnLogistics,
   userId,
   isAdminViewer = false,
+  embedded = false,
   onUpdated,
 }) {
   const [collectionDate, setCollectionDate] = useState('')
@@ -85,10 +89,8 @@ function CaseReturnWorkflow({
     onUpdated?.()
   }
 
-  return (
-    <div className="order-case-return">
-      <h3 className="order-case-return__title">Return &amp; collection</h3>
-
+  const panel = (
+    <div className="order-case-return__panel">
       {isAdminViewer && logistics ? (
         <dl className="order-dispute__meta order-case-return__meta">
           <div className="order-dispute__row">
@@ -256,6 +258,26 @@ function CaseReturnWorkflow({
         </p>
       ) : null}
     </div>
+  )
+
+  if (embedded) {
+    return (
+      <section className="order-case-return order-case-return--embedded">
+        <h3 className="order-case-return__title">Return &amp; collection</h3>
+        {panel}
+      </section>
+    )
+  }
+
+  return (
+    <OrderDetailAccordion
+      className="order-case-return"
+      title="Return & collection"
+      status={getReturnWorkflowStatusLabel(dispute, returnLogistics)}
+      defaultOpen={returnWorkflowNeedsUserAction(dispute, userId)}
+    >
+      {panel}
+    </OrderDetailAccordion>
   )
 }
 

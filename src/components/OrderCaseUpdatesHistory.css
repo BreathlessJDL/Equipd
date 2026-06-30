@@ -73,6 +73,24 @@
   font-size: 0.875rem;
 }
 
+.order-case-updates__show-all {
+  margin-top: 0.65rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.order-case-updates__show-all:hover {
+  color: var(--color-navy);
+}
+
 @media (max-width: 760px) {
   .order-case-updates__message,
   .order-case-updates__internal-note {

@@ -7,8 +7,37 @@
 }
 
 .order-dispute--compact {
-  margin-top: 1rem;
-  padding: 1rem;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.order-dispute-accordion--admin .order-dispute__admin-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.order-case-return.order-detail-accordion {
+  margin-top: 0.75rem;
+}
+
+.order-case-return--embedded {
+  margin-top: 0.75rem;
+  min-width: 0;
+}
+
+.order-case-return__panel {
+  min-width: 0;
 }
 
 .order-dispute__title {

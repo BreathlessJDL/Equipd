@@ -17,6 +17,8 @@ import OrderCaseUpdatesHistory from '../components/OrderCaseUpdatesHistory'
 import OrderSupportRequest from '../components/OrderSupportRequest'
 import OrderDisputeSection from '../components/OrderDisputeSection'
 import OrderFulfilmentDetailsCard from '../components/orders/OrderFulfilmentDetailsCard'
+import OrderDetailAccordion from '../components/orders/OrderDetailAccordion'
+import '../components/orders/OrderDetailAccordion.css'
 import OrderTimeline from '../components/OrderTimeline'
 import { TransactionCancelButton } from '../components/TransactionCancel'
 import { EnvelopeIcon, EyeIcon } from '../components/icons/NavIcons'
@@ -521,13 +523,6 @@ function OrderDetailPage() {
     showDevEndBuyerProtection ||
     showBuyerConfirm
 
-  const showSupportFooter =
-    showDisputeSection ||
-    showOrderSupportRequest ||
-    showCompactSupport ||
-    hasVisibleCaseUpdates(caseUpdates) ||
-    (isAdminViewer && (supportError || isOrderDisputed(order)))
-
   const showCaseUpdatesHistory = hasVisibleCaseUpdates(caseUpdates)
 
   const roleLabel = isAdminViewer
@@ -784,11 +779,14 @@ function OrderDetailPage() {
           />
         ) : null}
 
-        <section className="order-detail__card order-detail__info-card">
-          <h2 className="order-detail__card-title">Order information</h2>
-
-          <details className="order-detail__info-group" open>
-            <summary className="order-detail__info-summary">Payment &amp; offer</summary>
+        <OrderDetailAccordion
+          className="order-detail__card order-detail__info-card"
+          title="Order information"
+          status={getOrderFulfilmentDisplayStatus(order, viewerRole)}
+          defaultOpen={false}
+        >
+          <div className="order-detail__info-group">
+            <h3 className="order-detail__info-subtitle">Payment &amp; offer</h3>
             <dl className="order-detail__info-list">
               <OrderDetailInfoRow label="Offer status">
                 {offer ? formatOfferStatus(offer.status) : '—'}
@@ -805,11 +803,11 @@ function OrderDetailPage() {
                 </OrderDetailInfoRow>
               ) : null}
             </dl>
-          </details>
+          </div>
 
           {viewerRole === 'seller' ? (
-            <details className="order-detail__info-group">
-              <summary className="order-detail__info-summary">Seller payout</summary>
+            <div className="order-detail__info-group">
+              <h3 className="order-detail__info-subtitle">Seller payout</h3>
               <dl className="order-detail__info-list">
                 <OrderDetailInfoRow label="Seller receives">
                   {formatPricePence(
@@ -817,23 +815,23 @@ function OrderDetailPage() {
                   )}
                 </OrderDetailInfoRow>
               </dl>
-            </details>
+            </div>
           ) : null}
 
-          <details className="order-detail__info-group">
-            <summary className="order-detail__info-summary">Delivery method</summary>
+          <div className="order-detail__info-group">
+            <h3 className="order-detail__info-subtitle">Delivery method</h3>
             <p className="order-detail__delivery-method">{deliveryMethodDescription}</p>
-          </details>
+          </div>
 
-          <details className="order-detail__info-group">
-            <summary className="order-detail__info-summary">Location</summary>
+          <div className="order-detail__info-group">
+            <h3 className="order-detail__info-subtitle">Location</h3>
             <dl className="order-detail__info-list">
               <OrderDetailInfoRow label="Location">{listing?.location}</OrderDetailInfoRow>
             </dl>
-          </details>
+          </div>
 
-          <details className="order-detail__info-group">
-            <summary className="order-detail__info-summary">Timeline timestamps</summary>
+          <div className="order-detail__info-group">
+            <h3 className="order-detail__info-subtitle">Timeline timestamps</h3>
             <dl className="order-detail__info-list">
               <OrderDetailInfoRow label="Order created">
                 {formatOrderTimestamp(order.created_at)}
@@ -855,17 +853,17 @@ function OrderDetailPage() {
                 </>
               ) : null}
             </dl>
-          </details>
+          </div>
 
-          <details className="order-detail__info-group">
-            <summary className="order-detail__info-summary">Internal reference</summary>
+          <div className="order-detail__info-group">
+            <h3 className="order-detail__info-subtitle">Internal reference</h3>
             <dl className="order-detail__info-list">
               <OrderDetailInfoRow label="Order ID">
                 <code className="order-detail__code">{order.id}</code>
               </OrderDetailInfoRow>
             </dl>
-          </details>
-        </section>
+          </div>
+        </OrderDetailAccordion>
 
         {timeline ? (
           <section className="order-detail__card order-detail__timeline-card">
@@ -887,71 +885,75 @@ function OrderDetailPage() {
           </section>
         ) : null}
 
-        {showSupportFooter ? (
+        {showCaseUpdatesHistory ? (
+          <OrderDetailAccordion
+            className="order-detail__card"
+            title="Support updates"
+            status={`${caseUpdates.length} ${caseUpdates.length === 1 ? 'update' : 'updates'}`}
+            defaultOpen={caseUpdates.length <= 2}
+          >
+            <OrderCaseUpdatesHistory
+              updates={caseUpdates}
+              viewerRole={viewerRole}
+              isAdminViewer={isAdminViewer}
+              hideTitle
+            />
+          </OrderDetailAccordion>
+        ) : null}
+
+        {showDisputeSection ? (
+          <OrderDisputeSection
+            order={order}
+            payment={payment}
+            role={viewerRole}
+            isAdmin={isAdmin}
+            compact
+            supportRequest={activeSupportRequest}
+            useCaseUpdateHistory={showCaseUpdatesHistory}
+            onDisputeOpened={() => loadOrder({ refresh: true })}
+            onDisputeUpdated={() => {
+              refreshCaseUpdates()
+              loadOrder({ refresh: true })
+            }}
+            onSupportUpdated={() => {
+              refreshSupportRequests()
+              refreshCaseUpdates()
+              loadOrder({ refresh: true })
+            }}
+          />
+        ) : null}
+
+        {showCompactSupport ? (
           <section className="order-detail__card order-detail__support-card">
-            {showCaseUpdatesHistory ? (
-              <div className="order-detail__support-block">
-                <OrderCaseUpdatesHistory
-                  updates={caseUpdates}
-                  viewerRole={viewerRole}
-                  isAdminViewer={isAdminViewer}
-                />
-              </div>
+            <OrderDetailCompactSupport />
+          </section>
+        ) : showOrderSupportRequest ? (
+          <section className="order-detail__card order-detail__support-card">
+            {supportError ? (
+              <ErrorState compact>{supportError}</ErrorState>
             ) : null}
+            <OrderSupportRequest
+              order={order}
+              payment={payment}
+              requests={supportRequests}
+              disputes={disputes}
+              userId={user?.id}
+              viewerRole={viewerRole}
+              useCaseUpdateHistory={showCaseUpdatesHistory}
+              onSubmitted={() => {
+                refreshSupportRequests()
+                refreshCaseUpdates()
+                loadOrder({ refresh: true })
+              }}
+            />
+          </section>
+        ) : null}
 
-            {showDisputeSection ? (
-              <div className="order-detail__support-block">
-                <OrderDisputeSection
-                  order={order}
-                  payment={payment}
-                  role={viewerRole}
-                  isAdmin={isAdmin}
-                  compact
-                  supportRequest={activeSupportRequest}
-                  useCaseUpdateHistory={showCaseUpdatesHistory}
-                  onDisputeOpened={() => loadOrder({ refresh: true })}
-                  onDisputeUpdated={() => {
-                    refreshCaseUpdates()
-                    loadOrder({ refresh: true })
-                  }}
-                  onSupportUpdated={() => {
-                    refreshSupportRequests()
-                    refreshCaseUpdates()
-                    loadOrder({ refresh: true })
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {showCompactSupport ? (
-              <OrderDetailCompactSupport />
-            ) : showOrderSupportRequest ? (
-              <div className="order-detail__support-block">
-                {supportError ? (
-                  <ErrorState compact>{supportError}</ErrorState>
-                ) : null}
-                <OrderSupportRequest
-                  order={order}
-                  payment={payment}
-                  requests={supportRequests}
-                  disputes={disputes}
-                  userId={user?.id}
-                  viewerRole={viewerRole}
-                  useCaseUpdateHistory={showCaseUpdatesHistory}
-                  onSubmitted={() => {
-                    refreshSupportRequests()
-                    refreshCaseUpdates()
-                    loadOrder({ refresh: true })
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {isAdminViewer && supportError && !showOrderSupportRequest ? (
-              <ErrorState compact actionLabel="Open admin support" actionTo="/admin/support">
-                {supportError}
-              </ErrorState>
-            ) : null}
+        {isAdminViewer && supportError && !showOrderSupportRequest ? (
+          <section className="order-detail__card order-detail__support-card">
+            <ErrorState compact actionLabel="Open admin support" actionTo="/admin/support">
+              {supportError}
+            </ErrorState>
           </section>
         ) : null}
       </div>

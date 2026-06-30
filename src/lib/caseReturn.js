@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { DISPUTE_STATUSES } from './orderDisputes'
+import { DISPUTE_STATUSES, formatDisputeStatus } from './orderDisputes'
 
 export const RETURN_DISPUTE_STATUSES = new Set([
   DISPUTE_STATUSES.RETURN_AUTHORISED,
@@ -57,6 +57,32 @@ export function canAdminIssueRefundAfterCollection(dispute) {
     dispute.status === DISPUTE_STATUSES.READY_FOR_REFUND ||
     dispute.status === DISPUTE_STATUSES.COLLECTION_CONFIRMED
   )
+}
+
+export function returnWorkflowNeedsUserAction(dispute, userId) {
+  return (
+    canSellerArrangeCollection(dispute, userId) || canBuyerConfirmCollection(dispute, userId)
+  )
+}
+
+export function getReturnWorkflowStatusLabel(dispute, returnLogistics = []) {
+  if (!dispute) return null
+
+  const logistics = getReturnLogisticsForDispute(returnLogistics, dispute.id)
+  if (!isReturnWorkflowDispute(dispute) && !logistics) return null
+
+  switch (dispute.status) {
+    case DISPUTE_STATUSES.RETURN_AUTHORISED:
+    case DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION:
+      return 'Awaiting seller collection'
+    case DISPUTE_STATUSES.COLLECTION_ARRANGED:
+      return 'Awaiting buyer confirmation'
+    case DISPUTE_STATUSES.COLLECTION_CONFIRMED:
+    case DISPUTE_STATUSES.READY_FOR_REFUND:
+      return 'Collection confirmed'
+    default:
+      return formatDisputeStatus(dispute.status)
+  }
 }
 
 export function formatReturnTimestamp(value) {

@@ -17,7 +17,7 @@ import {
   isBuyerProtectionWindowActive,
   isOrderDisputed,
 } from './orderDisputes'
-import { formatCaseUpdateStatus } from './caseUpdates'
+import { CASE_OUTCOMES } from './caseClosure'
 import {
   SUPPORT_REQUEST_STATUSES,
   formatSupportRequestReason,
@@ -44,20 +44,13 @@ function isBuyerProtectionActive(order) {
 
 const DISPUTE_TIMELINE_STEP_ORDER = [
   'dispute_opened',
-  'dispute_evidence_received',
-  'dispute_awaiting_evidence',
   'dispute_under_review',
-  'dispute_review_pending',
   'dispute_return_authorised',
-  'dispute_awaiting_seller_collection',
-  'dispute_collection_arranged',
   'dispute_collection_confirmed',
-  'dispute_ready_for_refund',
   'dispute_refund_pending',
   'dispute_refund_completed',
   'dispute_rejected',
   'dispute_case_closed',
-  'dispute_resolved',
 ]
 
 function hasPausedDispute(order, disputes) {
@@ -412,209 +405,107 @@ function getDisputeCaseUpdates(caseUpdates, disputeId) {
     })
 }
 
-function shouldSkipDisputeCaseUpdate(update, seenKeys) {
-  if (update.event_type === 'admin_note_update' || update.event_type === 'support_message_update') {
+const DISPUTE_STATUS_PROGRESS = {
+  [DISPUTE_STATUSES.OPEN]: 10,
+  [DISPUTE_STATUSES.UNDER_REVIEW]: 20,
+  [DISPUTE_STATUSES.AWAITING_BUYER_EVIDENCE]: 20,
+  [DISPUTE_STATUSES.AWAITING_SELLER_EVIDENCE]: 20,
+  [DISPUTE_STATUSES.RETURN_AUTHORISED]: 40,
+  [DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION]: 45,
+  [DISPUTE_STATUSES.COLLECTION_ARRANGED]: 50,
+  [DISPUTE_STATUSES.COLLECTION_CONFIRMED]: 60,
+  [DISPUTE_STATUSES.READY_FOR_REFUND]: 65,
+  [DISPUTE_STATUSES.REFUND_PENDING]: 70,
+  [DISPUTE_STATUSES.PARTIAL_REFUND_PENDING]: 70,
+  [DISPUTE_STATUSES.REFUND_COMPLETED]: 80,
+  [DISPUTE_STATUSES.REJECTED]: 90,
+  [DISPUTE_STATUSES.RESOLVED]: 100,
+  [DISPUTE_STATUSES.RESOLVED_BUYER]: 100,
+  [DISPUTE_STATUSES.RESOLVED_SELLER]: 100,
+  [DISPUTE_STATUSES.CANCELLED]: 100,
+}
+
+const TERMINAL_DISPUTE_STATUSES = new Set([
+  DISPUTE_STATUSES.REJECTED,
+  DISPUTE_STATUSES.RESOLVED,
+  DISPUTE_STATUSES.RESOLVED_BUYER,
+  DISPUTE_STATUSES.RESOLVED_SELLER,
+  DISPUTE_STATUSES.CANCELLED,
+])
+
+const DISPUTE_MILESTONE_EVENT_TO_STEP_KEY = {
+  case_opened: 'dispute_opened',
+  return_authorised: 'dispute_return_authorised',
+  collection_confirmed: 'dispute_collection_confirmed',
+  refund_pending: 'dispute_refund_pending',
+  refund_completed: 'dispute_refund_completed',
+  case_closed: 'dispute_case_closed',
+}
+
+function disputeStatusProgress(status) {
+  return DISPUTE_STATUS_PROGRESS[status] ?? 0
+}
+
+function isTerminalDisputeStatus(status) {
+  return TERMINAL_DISPUTE_STATUSES.has(status)
+}
+
+function getDisputeResolutionTimelineLabel(dispute) {
+  if (dispute?.status === DISPUTE_STATUSES.REJECTED) {
+    return 'Claim rejected'
+  }
+
+  switch (dispute?.case_outcome) {
+    case CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND:
+      return 'Full refund approved'
+    case CASE_OUTCOMES.BUYER_UPHELD_PARTIAL_REFUND:
+      return 'Partial refund agreed'
+    case CASE_OUTCOMES.SELLER_UPHELD:
+      return 'Claim rejected'
+    default:
+      return 'Case closed'
+  }
+}
+
+function disputeHadReturnWorkflow(dispute, caseUpdates = []) {
+  if ((caseUpdates ?? []).some((update) => update.event_type === 'return_authorised')) {
     return true
   }
 
-  if (update.event_type !== 'admin_decision') return false
-
-  switch (update.status) {
-    case DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION:
-      return seenKeys.has('dispute_awaiting_seller_collection')
-    case DISPUTE_STATUSES.COLLECTION_ARRANGED:
-      return seenKeys.has('dispute_collection_arranged')
-    case DISPUTE_STATUSES.READY_FOR_REFUND:
-      return seenKeys.has('dispute_ready_for_refund')
-    case DISPUTE_STATUSES.REFUND_PENDING:
-    case DISPUTE_STATUSES.PARTIAL_REFUND_PENDING:
-      return seenKeys.has('dispute_refund_pending')
-    case DISPUTE_STATUSES.REFUND_COMPLETED:
-      return seenKeys.has('dispute_refund_completed')
-    case DISPUTE_STATUSES.RESOLVED:
-      return seenKeys.has('dispute_case_closed')
-    case DISPUTE_STATUSES.RETURN_AUTHORISED:
-      return seenKeys.has('dispute_return_authorised')
-    default:
-      return false
-  }
+  return [
+    DISPUTE_STATUSES.RETURN_AUTHORISED,
+    DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION,
+    DISPUTE_STATUSES.COLLECTION_ARRANGED,
+    DISPUTE_STATUSES.COLLECTION_CONFIRMED,
+    DISPUTE_STATUSES.READY_FOR_REFUND,
+  ].includes(dispute?.status)
 }
 
-function expandCaseUpdateToDisputeSteps(update) {
-  const timestamp = update.created_at ?? null
-  const { event_type: eventType, status } = update
-
-  switch (eventType) {
-    case 'case_opened':
-      if (status === 'evidence_received') {
-        return [
-          { key: 'dispute_opened', label: 'Dispute opened', timestamp },
-          { key: 'dispute_evidence_received', label: 'Evidence received', timestamp },
-        ]
-      }
-
-      if (status === 'awaiting_buyer_evidence') {
-        return [
-          { key: 'dispute_opened', label: 'Dispute opened', timestamp },
-          { key: 'dispute_awaiting_evidence', label: 'Awaiting buyer evidence', timestamp },
-        ]
-      }
-
-      return [{ key: 'dispute_opened', label: 'Dispute opened', timestamp }]
-
-    case 'return_authorised':
-      return [
-        { key: 'dispute_return_authorised', label: 'Return authorised', timestamp },
-        {
-          key: 'dispute_awaiting_seller_collection',
-          label: 'Awaiting seller collection',
-          timestamp,
-        },
-      ]
-
-    case 'collection_arranged':
-      return [{ key: 'dispute_collection_arranged', label: 'Collection arranged', timestamp }]
-
-    case 'collection_confirmed':
-      if (status === DISPUTE_STATUSES.READY_FOR_REFUND) {
-        return [
-          { key: 'dispute_collection_confirmed', label: 'Collection confirmed', timestamp },
-          { key: 'dispute_ready_for_refund', label: 'Ready for refund', timestamp },
-        ]
-      }
-
-      return [{ key: 'dispute_collection_confirmed', label: 'Collection confirmed', timestamp }]
-
-    case 'refund_pending':
-      return [{ key: 'dispute_refund_pending', label: 'Refund pending', timestamp }]
-
-    case 'refund_completed':
-      return [{ key: 'dispute_refund_completed', label: 'Refund completed', timestamp }]
-
-    case 'case_closed':
-      return [{ key: 'dispute_case_closed', label: 'Case closed', timestamp }]
-
-    default:
-      break
-  }
-
-  if (eventType === 'admin_decision' || eventType === 'legacy_support_update') {
-    switch (status) {
-      case DISPUTE_STATUSES.OPEN:
-        return [{ key: 'dispute_review_pending', label: 'Equipd review in progress', timestamp }]
-      case DISPUTE_STATUSES.UNDER_REVIEW:
-      case DISPUTE_STATUSES.AWAITING_BUYER_EVIDENCE:
-      case DISPUTE_STATUSES.AWAITING_SELLER_EVIDENCE:
-        return [{ key: 'dispute_under_review', label: 'Equipd review in progress', timestamp }]
-      case DISPUTE_STATUSES.RETURN_AUTHORISED:
-        return [{ key: 'dispute_return_authorised', label: 'Return authorised', timestamp }]
-      case DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION:
-        return [
-          { key: 'dispute_return_authorised', label: 'Return authorised', timestamp },
-          {
-            key: 'dispute_awaiting_seller_collection',
-            label: 'Awaiting seller collection',
-            timestamp,
-          },
-        ]
-      case DISPUTE_STATUSES.COLLECTION_ARRANGED:
-        return [{ key: 'dispute_collection_arranged', label: 'Collection arranged', timestamp }]
-      case DISPUTE_STATUSES.COLLECTION_CONFIRMED:
-        return [{ key: 'dispute_collection_confirmed', label: 'Collection confirmed', timestamp }]
-      case DISPUTE_STATUSES.READY_FOR_REFUND:
-        return [{ key: 'dispute_ready_for_refund', label: 'Ready for refund', timestamp }]
-      case DISPUTE_STATUSES.REFUND_PENDING:
-      case DISPUTE_STATUSES.PARTIAL_REFUND_PENDING:
-        return [{ key: 'dispute_refund_pending', label: 'Refund pending', timestamp }]
-      case DISPUTE_STATUSES.REFUND_COMPLETED:
-        return [{ key: 'dispute_refund_completed', label: 'Refund completed', timestamp }]
-      case DISPUTE_STATUSES.REJECTED:
-        return [{ key: 'dispute_rejected', label: 'Claim rejected', timestamp }]
-      case DISPUTE_STATUSES.RESOLVED:
-      case DISPUTE_STATUSES.RESOLVED_BUYER:
-      case DISPUTE_STATUSES.RESOLVED_SELLER:
-        return [{ key: 'dispute_case_closed', label: 'Case closed', timestamp }]
-      default:
-        return null
-    }
-  }
-
-  const label = formatCaseUpdateStatus(status)
-  if (label && label !== status) {
-    return [{ key: `dispute_status_${status}`, label, timestamp }]
-  }
-
-  return null
-}
-
-function appendDisputeSteps(steps, seenKeys, nextSteps) {
-  for (const step of nextSteps ?? []) {
-    if (!step?.key || seenKeys.has(step.key)) continue
-    seenKeys.add(step.key)
-    steps.push(step)
-  }
-}
-
-function appendTerminalDisputeSteps(steps, seenKeys, dispute, order) {
+function disputeHadRefundWorkflow(dispute, caseUpdates = []) {
   if (
     [
-      DISPUTE_STATUSES.RESOLVED,
-      DISPUTE_STATUSES.RESOLVED_BUYER,
-      DISPUTE_STATUSES.RESOLVED_SELLER,
-    ].includes(dispute?.status) &&
-    !seenKeys.has('dispute_case_closed')
+      DISPUTE_STATUSES.REFUND_PENDING,
+      DISPUTE_STATUSES.PARTIAL_REFUND_PENDING,
+      DISPUTE_STATUSES.REFUND_COMPLETED,
+    ].includes(dispute?.status)
   ) {
-    appendDisputeSteps(steps, seenKeys, [
-      {
-        key: 'dispute_case_closed',
-        label: 'Case closed',
-        timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
-      },
-    ])
+    return true
   }
 
   if (
-    dispute?.status === DISPUTE_STATUSES.REJECTED &&
-    !seenKeys.has('dispute_rejected')
+    dispute?.case_outcome === CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND ||
+    dispute?.case_outcome === CASE_OUTCOMES.BUYER_UPHELD_PARTIAL_REFUND
   ) {
-    appendDisputeSteps(steps, seenKeys, [
-      {
-        key: 'dispute_rejected',
-        label: 'Claim rejected',
-        timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
-      },
-    ])
-  }
-}
-
-export function buildDisputeTimelineSteps(order, disputes = [], caseUpdates = []) {
-  const dispute = getDisputeForTimeline(order, disputes)
-  if (!dispute && !isOrderDisputed(order)) return []
-
-  const disputeUpdates = getDisputeCaseUpdates(caseUpdates, dispute?.id)
-  const steps = []
-  const seenKeys = new Set()
-
-  if (disputeUpdates.length > 0) {
-    for (const update of disputeUpdates) {
-      if (shouldSkipDisputeCaseUpdate(update, seenKeys)) continue
-      appendDisputeSteps(steps, seenKeys, expandCaseUpdateToDisputeSteps(update))
-    }
-
-    appendTerminalDisputeSteps(steps, seenKeys, dispute, order)
-
-    if (steps.length > 0) {
-      return steps
-    }
+    return true
   }
 
-  return getDisputeStepsFromStatus(order, disputes)
+  return (caseUpdates ?? []).some(
+    (update) =>
+      update.event_type === 'refund_pending' || update.event_type === 'refund_completed',
+  )
 }
 
-function getDisputeStepsFromStatus(order, disputes = []) {
-  const dispute = getDisputeForTimeline(order, disputes)
-  if (!dispute && !isOrderDisputed(order)) return []
-
+function buildSimplifiedDisputeTimelineSteps(order, dispute, caseUpdates = []) {
   const steps = [
     {
       key: 'dispute_opened',
@@ -624,283 +515,115 @@ function getDisputeStepsFromStatus(order, disputes = []) {
   ]
 
   if (!dispute) {
-    steps.push({
-      key: 'dispute_review_pending',
-      label: 'Equipd review in progress',
-      timestamp: null,
-    })
+    if (isOrderDisputed(order)) {
+      steps.push({ key: 'dispute_under_review', label: 'Under review', timestamp: null })
+    }
     return steps
   }
 
-  const status = dispute.status
-
-  if (status === DISPUTE_STATUSES.OPEN) {
-    steps.push({
-      key: 'dispute_review_pending',
-      label: 'Equipd review in progress',
-      timestamp: null,
-    })
-    return steps
-  }
+  const { status } = dispute
+  const progress = disputeStatusProgress(status)
+  const terminal = isTerminalDisputeStatus(status)
 
   if (
-    status === DISPUTE_STATUSES.UNDER_REVIEW ||
-    status === DISPUTE_STATUSES.AWAITING_BUYER_EVIDENCE ||
-    status === DISPUTE_STATUSES.AWAITING_SELLER_EVIDENCE
+    !terminal &&
+    progress <= disputeStatusProgress(DISPUTE_STATUSES.AWAITING_SELLER_EVIDENCE)
   ) {
     steps.push({
       key: 'dispute_under_review',
-      label: 'Equipd review in progress',
+      label: 'Under review',
       timestamp: dispute.updated_at ?? null,
     })
-    return steps
   }
 
-  if (
-    status === DISPUTE_STATUSES.RETURN_AUTHORISED ||
-    status === DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION ||
-    status === DISPUTE_STATUSES.COLLECTION_ARRANGED ||
-    status === DISPUTE_STATUSES.COLLECTION_CONFIRMED ||
-    status === DISPUTE_STATUSES.READY_FOR_REFUND
-  ) {
-    steps.push({
-      key: 'dispute_under_review',
-      label: 'Equipd review in progress',
-      timestamp: dispute.created_at ?? null,
-    })
+  const hadReturnWorkflow = disputeHadReturnWorkflow(dispute, caseUpdates)
+
+  if (hadReturnWorkflow) {
     steps.push({
       key: 'dispute_return_authorised',
       label: 'Return authorised',
-      timestamp: dispute.updated_at ?? null,
+      timestamp: null,
     })
-
-    if (
-      status === DISPUTE_STATUSES.AWAITING_SELLER_COLLECTION ||
-      status === DISPUTE_STATUSES.COLLECTION_ARRANGED ||
-      status === DISPUTE_STATUSES.COLLECTION_CONFIRMED ||
-      status === DISPUTE_STATUSES.READY_FOR_REFUND
-    ) {
-      steps.push({
-        key: 'dispute_awaiting_seller_collection',
-        label: 'Awaiting seller collection',
-        timestamp: null,
-      })
-    }
-
-    if (
-      status === DISPUTE_STATUSES.COLLECTION_ARRANGED ||
-      status === DISPUTE_STATUSES.COLLECTION_CONFIRMED ||
-      status === DISPUTE_STATUSES.READY_FOR_REFUND
-    ) {
-      steps.push({
-        key: 'dispute_collection_arranged',
-        label: 'Collection arranged',
-        timestamp: dispute.updated_at ?? null,
-      })
-    }
-
-    if (
-      status === DISPUTE_STATUSES.COLLECTION_CONFIRMED ||
-      status === DISPUTE_STATUSES.READY_FOR_REFUND
-    ) {
-      steps.push({
-        key: 'dispute_collection_confirmed',
-        label: 'Collection confirmed',
-        timestamp: dispute.updated_at ?? null,
-      })
-    }
-
-    if (status === DISPUTE_STATUSES.READY_FOR_REFUND) {
-      steps.push({
-        key: 'dispute_ready_for_refund',
-        label: 'Ready for refund',
-        timestamp: dispute.updated_at ?? null,
-      })
-    }
-
-    return steps
   }
 
   if (
-    status === DISPUTE_STATUSES.REFUND_PENDING ||
-    status === DISPUTE_STATUSES.PARTIAL_REFUND_PENDING
+    hadReturnWorkflow &&
+    progress >= disputeStatusProgress(DISPUTE_STATUSES.COLLECTION_CONFIRMED)
   ) {
-    const hadReturnWorkflow =
-      dispute.resolution?.toLowerCase().includes('collection') ||
-      dispute.customer_message?.toLowerCase().includes('collection')
-
-    if (hadReturnWorkflow) {
-      steps.push({
-        key: 'dispute_under_review',
-        label: 'Equipd review in progress',
-        timestamp: dispute.created_at ?? null,
-      })
-      steps.push({
-        key: 'dispute_return_authorised',
-        label: 'Return authorised',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_awaiting_seller_collection',
-        label: 'Awaiting seller collection',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_collection_arranged',
-        label: 'Collection arranged',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_collection_confirmed',
-        label: 'Collection confirmed',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_ready_for_refund',
-        label: 'Ready for refund',
-        timestamp: null,
-      })
-    } else {
-      steps.push({
-        key: 'dispute_under_review',
-        label: 'Under review',
-        timestamp: dispute.updated_at ?? null,
-      })
-    }
-
     steps.push({
-      key: 'dispute_refund_pending',
-      label: 'Refund pending',
-      timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
+      key: 'dispute_collection_confirmed',
+      label: 'Collection confirmed',
+      timestamp: null,
     })
-    return steps
   }
 
-  if (status === DISPUTE_STATUSES.REFUND_COMPLETED) {
-    const hadReturnWorkflow =
-      dispute.resolution?.toLowerCase().includes('collection') ||
-      dispute.customer_message?.toLowerCase().includes('collection')
+  const hadRefundWorkflow = disputeHadRefundWorkflow(dispute, caseUpdates)
 
-    if (hadReturnWorkflow) {
-      steps.push({
-        key: 'dispute_under_review',
-        label: 'Equipd review in progress',
-        timestamp: dispute.created_at ?? null,
-      })
-      steps.push({
-        key: 'dispute_return_authorised',
-        label: 'Return authorised',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_awaiting_seller_collection',
-        label: 'Awaiting seller collection',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_collection_arranged',
-        label: 'Collection arranged',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_collection_confirmed',
-        label: 'Collection confirmed',
-        timestamp: null,
-      })
-      steps.push({
-        key: 'dispute_ready_for_refund',
-        label: 'Ready for refund',
-        timestamp: null,
-      })
-    } else {
-      steps.push({
-        key: 'dispute_under_review',
-        label: 'Under review',
-        timestamp: dispute.updated_at ?? null,
-      })
-    }
-
+  if (hadRefundWorkflow) {
     steps.push({
       key: 'dispute_refund_pending',
-      label: 'Refund pending',
-      timestamp: dispute.refund_completed_at ?? dispute.updated_at ?? null,
+      label:
+        status === DISPUTE_STATUSES.PARTIAL_REFUND_PENDING
+          ? 'Partial refund pending'
+          : 'Refund pending',
+      timestamp: dispute.updated_at ?? null,
     })
+  }
+
+  if (
+    hadRefundWorkflow &&
+    (status === DISPUTE_STATUSES.REFUND_COMPLETED ||
+      progress >= disputeStatusProgress(DISPUTE_STATUSES.REFUND_COMPLETED) ||
+      dispute.refund_completed_at)
+  ) {
     steps.push({
       key: 'dispute_refund_completed',
       label: 'Refund completed',
       timestamp: dispute.refund_completed_at ?? dispute.updated_at ?? null,
     })
-    return steps
   }
 
-  if (status === DISPUTE_STATUSES.REJECTED) {
-    steps.push({
-      key: 'dispute_under_review',
-      label: 'Under review',
-      timestamp: dispute.updated_at ?? null,
-    })
-    steps.push({
-      key: 'dispute_rejected',
-      label: 'Claim rejected',
-      timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
-    })
-    return steps
-  }
+  if (terminal) {
+    const finalKey =
+      status === DISPUTE_STATUSES.REJECTED ||
+      dispute.case_outcome === CASE_OUTCOMES.SELLER_UPHELD
+        ? 'dispute_rejected'
+        : 'dispute_case_closed'
 
-  if (
-    status === DISPUTE_STATUSES.RESOLVED ||
-    status === DISPUTE_STATUSES.RESOLVED_BUYER ||
-    status === DISPUTE_STATUSES.RESOLVED_SELLER
-  ) {
-    steps.push({
-      key: 'dispute_under_review',
-      label: 'Under review',
-      timestamp: dispute.updated_at ?? null,
-    })
-
-    if (dispute.case_outcome) {
-      if (
-        dispute.case_outcome === 'buyer_upheld_full_refund' ||
-        dispute.case_outcome === 'buyer_upheld_partial_refund'
-      ) {
-        steps.push({
-          key: 'dispute_refund_completed',
-          label: 'Refund completed',
-          timestamp: dispute.refund_completed_at ?? dispute.resolved_at ?? null,
-        })
-      }
-
-      if (dispute.case_outcome === 'seller_upheld') {
-        steps.push({
-          key: 'dispute_rejected',
-          label: 'Claim rejected',
-          timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
-        })
-      }
-
+    if (!steps.some((step) => step.key === finalKey)) {
       steps.push({
-        key: 'dispute_case_closed',
-        label: 'Case closed',
-        timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
-      })
-    } else {
-      steps.push({
-        key: 'dispute_resolved',
-        label: 'Dispute resolved',
+        key: finalKey,
+        label: getDisputeResolutionTimelineLabel(dispute),
         timestamp: dispute.resolved_at ?? dispute.updated_at ?? null,
       })
     }
-
-    return steps
   }
 
-  steps.push({
-    key: 'dispute_review_pending',
-    label: 'Equipd review in progress',
-    timestamp: null,
-  })
-
   return steps
+}
+
+function applyDisputeMilestoneTimestamps(steps, caseUpdates) {
+  const timestampsByKey = {}
+
+  for (const update of caseUpdates ?? []) {
+    const stepKey = DISPUTE_MILESTONE_EVENT_TO_STEP_KEY[update.event_type]
+    if (!stepKey || timestampsByKey[stepKey]) continue
+    timestampsByKey[stepKey] = update.created_at ?? null
+  }
+
+  return steps.map((step) => ({
+    ...step,
+    timestamp: timestampsByKey[step.key] ?? step.timestamp,
+  }))
+}
+
+export function buildDisputeTimelineSteps(order, disputes = [], caseUpdates = []) {
+  const dispute = getDisputeForTimeline(order, disputes)
+  if (!dispute && !isOrderDisputed(order)) return []
+
+  const disputeUpdates = getDisputeCaseUpdates(caseUpdates, dispute?.id)
+  const steps = buildSimplifiedDisputeTimelineSteps(order, dispute, disputeUpdates)
+  return applyDisputeMilestoneTimestamps(steps, disputeUpdates)
 }
 
 function getDisputeCurrentStage(order, disputes = [], caseUpdates = []) {

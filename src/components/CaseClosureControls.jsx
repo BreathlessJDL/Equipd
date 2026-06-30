@@ -7,12 +7,56 @@ import {
   adminMarkSupportRefundCompleted,
   canCloseCase,
   canMarkRefundCompleted,
+  formatCaseOutcomeLabel,
   getCaseClosureErrorMessage,
   getDefaultCloseCaseCustomerMessage,
   getDefaultRefundCompletedCustomerMessage,
   suggestCaseOutcome,
 } from '../lib/caseClosure'
+import { formatDisputeTimestamp } from '../lib/orderDisputes'
+import { formatSupportRequestTimestamp } from '../lib/supportRequests'
 import './OrderDisputeSection.css'
+
+export function CaseClosedSummary({ record, isDispute, showAdminNote = false }) {
+  const outcomeLabel = formatCaseOutcomeLabel(record?.case_outcome)
+  const closedAt = record?.resolved_at ?? record?.updated_at ?? null
+  const finalMessage =
+    record?.customer_message ?? record?.resolution_notes ?? record?.resolution ?? ''
+  const adminNote = record?.admin_note ?? record?.admin_notes ?? ''
+  const formatTimestamp = isDispute ? formatDisputeTimestamp : formatSupportRequestTimestamp
+
+  return (
+    <div className="order-case-closure__summary">
+      <p className="order-case-closure__summary-title">Case closed</p>
+      <dl className="order-dispute__meta">
+        {record?.case_outcome ? (
+          <div className="order-dispute__row">
+            <dt className="order-dispute__label">Outcome</dt>
+            <dd className="order-dispute__value">{outcomeLabel}</dd>
+          </div>
+        ) : null}
+        {closedAt ? (
+          <div className="order-dispute__row">
+            <dt className="order-dispute__label">Closed</dt>
+            <dd className="order-dispute__value">{formatTimestamp(closedAt)}</dd>
+          </div>
+        ) : null}
+        {finalMessage ? (
+          <div className="order-dispute__row order-dispute__row--description">
+            <dt className="order-dispute__label">Final message</dt>
+            <dd className="order-dispute__value">{finalMessage}</dd>
+          </div>
+        ) : null}
+        {showAdminNote && adminNote ? (
+          <div className="order-dispute__row order-dispute__row--description">
+            <dt className="order-dispute__label">Admin note (internal)</dt>
+            <dd className="order-dispute__value">{adminNote}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  )
+}
 
 export function CaseRefundCompletedAction({
   record,
