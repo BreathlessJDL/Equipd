@@ -266,7 +266,7 @@ function testCaseClosureHelpers() {
     if (['refund_pending', 'partial_refund_pending', 'ready_for_refund'].includes(record.status)) {
       return false
     }
-    return ['refund_completed', 'rejected', 'resolved'].includes(record.status)
+    return ['rejected', 'resolved', 'open', 'under_review'].includes(record.status)
   }
 
   assert(canMarkRefundCompleted({ status: 'refund_pending' }), 'refund_pending should allow mark completed')
@@ -275,7 +275,7 @@ function testCaseClosureHelpers() {
     'partial_refund_pending should allow mark completed',
   )
   assert(!canMarkRefundCompleted({ status: 'ready_for_refund' }), 'ready_for_refund should not allow mark completed')
-  assert(canCloseCase({ status: 'refund_completed' }), 'refund_completed should allow close')
+  assert(!canCloseCase({ status: 'refund_completed' }), 'refund_completed should not allow manual close')
   assert(canCloseCase({ status: 'rejected' }), 'rejected should allow close')
   assert(!canCloseCase({ status: 'refund_pending' }), 'refund_pending should block close')
   assert(!canCloseCase({ status: 'resolved', case_outcome: 'seller_upheld' }), 'closed case should block re-close')
@@ -359,7 +359,7 @@ async function main() {
   assert(refundPending.status === 'refund_pending', 'Expected refund_pending')
   logPass('Dispute moved to refund pending')
 
-  logStep('Mark refund completed')
+  logStep('Mark refund completed (auto-closes case)')
   const refundReference = `PHASE3-REF-${Date.now()}`
 
   const { data: refundCompleted, error: completedError } = await authed.rpc(
@@ -367,7 +367,7 @@ async function main() {
     {
       p_dispute_id: dispute.id,
       p_admin_note: 'Refund processed via bank transfer',
-      p_customer_message: 'The refund has now been completed. Equipd will close this case once final checks are complete.',
+      p_customer_message: 'The refund has now been completed.',
       p_refund_reference: refundReference,
     },
   )
@@ -376,20 +376,33 @@ async function main() {
     throw new Error(`admin_mark_dispute_refund_completed failed: ${completedError.message}`)
   }
 
-  assert(refundCompleted.status === 'refund_completed', 'Expected refund_completed')
+  assert(refundCompleted.status === 'resolved', 'Expected resolved status after refund completion')
+  assert(
+    refundCompleted.case_outcome === CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND,
+    'Expected full refund case outcome',
+  )
   assert(refundCompleted.refund_reference === refundReference, 'Expected refund reference saved')
   assert(refundCompleted.refund_completed_at, 'Expected refund_completed_at')
   assert(refundCompleted.refund_completed_by === adminUser.id, 'Expected refund_completed_by')
-  logPass('Refund marked completed')
+  assert(refundCompleted.resolved_at, 'Expected resolved_at')
+  assert(refundCompleted.resolved_by === adminUser.id, 'Expected resolved_by')
+  logPass('Refund marked completed and case closed')
 
   const { data: updatesAfterRefund } = await authed.rpc('fetch_order_case_updates', {
     p_order_id: orderId,
   })
   assert(hasCaseUpdate(updatesAfterRefund, 'refund_completed'), 'Expected refund_completed update')
+  assert(hasCaseUpdate(updatesAfterRefund, 'case_closed'), 'Expected case_closed update')
 
   const refundUpdate = updatesAfterRefund.find((update) => update.event_type === 'refund_completed')
   assert(refundUpdate?.internal_note?.includes('bank transfer'), 'Admin should see internal note')
   assert(refundUpdate?.message_to_customer?.includes('refund has now been completed'), 'Customer message saved')
+
+  const closeUpdate = updatesAfterRefund.find((update) => update.event_type === 'case_closed')
+  assert(
+    closeUpdate?.message_to_customer === 'Case closed. Refund completed successfully.',
+    'Expected final closure message',
+  )
 
   logStep('Buyer cannot see internal notes')
   await signInAsUser(admin, authed, buyerId)
@@ -405,36 +418,25 @@ async function main() {
   logStep('Buyer cannot close case')
   const { error: buyerCloseError } = await authed.rpc('admin_close_dispute_case', {
     p_dispute_id: dispute.id,
-    p_case_outcome: CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND,
+    p_case_outcome: CASE_OUTCOMES.SELLER_UPHELD,
     p_admin_note: 'Should fail',
     p_customer_message: 'Should fail',
   })
   assert(buyerCloseError, 'Buyer should not close case')
   logPass(`Buyer blocked from close: ${buyerCloseError.message}`)
 
-  logStep('Admin closes case')
+  logStep('Admin cannot re-close case')
   await signInAdmin(admin, authed, adminUser)
 
-  const { data: closed, error: closeError } = await authed.rpc('admin_close_dispute_case', {
+  const { error: closeError } = await authed.rpc('admin_close_dispute_case', {
     p_dispute_id: dispute.id,
-    p_case_outcome: CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND,
-    p_admin_note: 'Case closed after manual refund',
-    p_customer_message: 'This case has now been resolved and closed. Thank you for working with Equipd while we reviewed the issue.',
+    p_case_outcome: CASE_OUTCOMES.SELLER_UPHELD,
+    p_admin_note: 'Should fail',
+    p_customer_message: 'Should fail',
   })
 
-  if (closeError) {
-    throw new Error(`admin_close_dispute_case failed: ${closeError.message}`)
-  }
-
-  assert(closed.status === 'resolved', 'Expected resolved status')
-  assert(closed.case_outcome === CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND, 'Expected case outcome')
-  assert(closed.resolved_at, 'Expected resolved_at')
-  logPass('Case closed with outcome')
-
-  const { data: updatesAfterClose } = await authed.rpc('fetch_order_case_updates', {
-    p_order_id: orderId,
-  })
-  assert(hasCaseUpdate(updatesAfterClose, 'case_closed'), 'Expected case_closed update')
+  assert(closeError, 'Already closed case should block re-close')
+  logPass(`Re-close blocked: ${closeError.message}`)
 
   logStep('Closed case hidden from active admin queue')
   const { data: activeCases, error: activeError } = await authed.rpc('admin_list_cases', {

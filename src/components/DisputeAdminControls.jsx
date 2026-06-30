@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   ADMIN_DISPUTE_DECISIONS,
-  DISPUTE_STATUSES,
   adminApplyDisputeDecision,
   adminMarkDisputeUnderReview,
   canAdminManageDispute,
@@ -28,7 +27,6 @@ import {
   formatSupportRequestStatus,
   getSupportRequestErrorMessage,
   isSupportRequestActive,
-  SUPPORT_REQUEST_STATUSES,
 } from '../lib/supportRequests'
 import { CaseCloseAction, CaseClosedSummary, CaseRefundCompletedAction } from './CaseClosureControls'
 import CaseReturnWorkflow, { CaseReturnAdminRefundAction } from './CaseReturnWorkflow'
@@ -152,12 +150,8 @@ function DisputeAdminControls({
     !recordClosed &&
     !showIssueRefundAction &&
     !showMarkRefundCompleted &&
-    ((managingDispute &&
-      canAdminManageDispute(dispute) &&
-      dispute.status !== DISPUTE_STATUSES.REFUND_COMPLETED) ||
-      (managingSupport &&
-        isSupportRequestActive(supportRequest) &&
-        supportRequest.status !== SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED))
+    ((managingDispute && canAdminManageDispute(dispute)) ||
+      (managingSupport && isSupportRequestActive(supportRequest)))
   const showWorkflowSummary = Boolean(
     activeRecord && isAdminCaseWorkflowComplete(activeRecord) && showCloseCase,
   )
@@ -165,11 +159,7 @@ function DisputeAdminControls({
     showDecisionForm && !showWorkflowSummary && investigationOptions.length > 0
   const showResolutionSection =
     showDecisionForm && !showWorkflowSummary && resolutionOptions.length > 0
-  const showFinanceSection =
-    !showWorkflowSummary && (showIssueRefundAction || showMarkRefundCompleted)
-  const showFinanceSummaryStep =
-    activeRecord?.status === DISPUTE_STATUSES.REFUND_COMPLETED ||
-    activeRecord?.status === SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED
+  const showFinanceSection = !showWorkflowSummary && (showIssueRefundAction || showMarkRefundCompleted)
 
   const statusLabel = managingDispute
     ? formatDisputeStatus(dispute.status)
@@ -449,7 +439,7 @@ function DisputeAdminControls({
       ) : null}
 
       {showWorkflowSummary ? (
-        <AdminWorkflowSummary showFinanceStep={showFinanceSummaryStep} />
+        <AdminWorkflowSummary showFinanceStep={false} />
       ) : null}
 
       {showInvestigationSection ? (

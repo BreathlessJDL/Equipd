@@ -331,19 +331,20 @@ async function upsertOrderDeliveryDetails(orderId, payload, selectColumns) {
   )
 
   if (readError && !isMissingDeliveryDetailsColumnError(readError)) {
-    return { data: null, error: readError }
+    return { data: null, error: readError, operation: null }
   }
 
   if (existing) {
-    return supabase
+    const result = await supabase
       .from('order_delivery_details')
       .update(payload)
       .eq('order_id', orderId)
       .select(selectColumns)
       .single()
+    return { ...result, operation: 'update' }
   }
 
-  return supabase
+  const result = await supabase
     .from('order_delivery_details')
     .insert({
       order_id: orderId,
@@ -351,6 +352,7 @@ async function upsertOrderDeliveryDetails(orderId, payload, selectColumns) {
     })
     .select(selectColumns)
     .single()
+  return { ...result, operation: 'insert' }
 }
 
 export async function updateOrderDeliveryDetails(orderId, patch = {}) {
@@ -367,7 +369,7 @@ export async function updateOrderDeliveryDetails(orderId, patch = {}) {
     return { data: null, error: validated.error }
   }
 
-  let { data, error } = await upsertOrderDeliveryDetails(
+  let { data, error, operation } = await upsertOrderDeliveryDetails(
     orderId,
     validated.payload,
     ORDER_DELIVERY_DETAILS_SELECT_EXTENDED,
@@ -375,7 +377,7 @@ export async function updateOrderDeliveryDetails(orderId, patch = {}) {
 
   if (error && isMissingDeliveryDetailsColumnError(error)) {
     logOrderDeliveryDetailsError(
-      'upsert fallback to base columns — run seller-delivery-buyer-details-extension.sql',
+      'save fallback to base columns — run seller-delivery-buyer-details-extension.sql',
       error,
       { orderId },
     )
@@ -387,13 +389,16 @@ export async function updateOrderDeliveryDetails(orderId, patch = {}) {
     )
     data = fallback.data
     error = fallback.error
+    operation = fallback.operation
   }
 
   if (error) {
-    logOrderDeliveryDetailsError('upsert failed', error, {
+    logOrderDeliveryDetailsError('save failed', error, {
       orderId,
+      operation,
+      payload: validated.payload,
       rlsHint: isOrderDeliveryDetailsPermissionError(error)
-        ? 'Run supabase/order-delivery-details-rls-fix.sql'
+        ? 'Run supabase/order-delivery-details-write-fix-live.sql (drop enforce trigger)'
         : undefined,
     })
     return { data: null, error }

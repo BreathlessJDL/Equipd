@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  CASE_OUTCOME_OPTIONS,
+  MANUAL_CLOSE_CASE_OUTCOME_OPTIONS,
   adminCloseDisputeCase,
   adminCloseSupportCase,
   adminMarkDisputeRefundCompleted,
@@ -103,14 +103,15 @@ export function CaseRefundCompletedAction({
       return
     }
 
-    setSuccess('Refund marked as completed.')
+    setSuccess('Refund completed and case closed.')
     onUpdated?.(result.data)
   }
 
   return (
     <form className="order-case-closure__form" onSubmit={handleSubmit}>
       <p className="order-case-return__lead">
-        Confirm the refund has been processed manually before closing this case.
+        Confirm the refund has been processed. This completes the refund and closes the case
+        immediately.
       </p>
 
       <label className="order-dispute__admin-field">
@@ -236,7 +237,7 @@ export function CaseCloseAction({
           required
           onChange={(event) => handleOutcomeChange(event.target.value)}
         >
-          {CASE_OUTCOME_OPTIONS.map((option) => (
+          {MANUAL_CLOSE_CASE_OUTCOME_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

@@ -89,8 +89,7 @@ export function isSupportRequestActive(request) {
     request?.status === SUPPORT_REQUEST_STATUSES.AWAITING_BUYER_EVIDENCE ||
     request?.status === SUPPORT_REQUEST_STATUSES.AWAITING_SELLER_EVIDENCE ||
     request?.status === SUPPORT_REQUEST_STATUSES.REFUND_PENDING ||
-    request?.status === SUPPORT_REQUEST_STATUSES.PARTIAL_REFUND_PENDING ||
-    request?.status === SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED
+    request?.status === SUPPORT_REQUEST_STATUSES.PARTIAL_REFUND_PENDING
   )
 }
 
@@ -133,7 +132,6 @@ function canCloseSupportCase(request) {
   ])
   if (blocked.has(request.status)) return false
   return (
-    request.status === SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED ||
     request.status === SUPPORT_REQUEST_STATUSES.REJECTED ||
     request.status === SUPPORT_REQUEST_STATUSES.RESOLVED ||
     request.status === SUPPORT_REQUEST_STATUSES.OPEN ||

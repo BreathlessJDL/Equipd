@@ -22,6 +22,15 @@ export const CASE_OUTCOME_OPTIONS = [
   { value: CASE_OUTCOMES.CANCELLED, label: 'Cancelled' },
 ]
 
+const REFUND_CASE_OUTCOMES = new Set([
+  CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND,
+  CASE_OUTCOMES.BUYER_UPHELD_PARTIAL_REFUND,
+])
+
+export const MANUAL_CLOSE_CASE_OUTCOME_OPTIONS = CASE_OUTCOME_OPTIONS.filter(
+  (option) => !REFUND_CASE_OUTCOMES.has(option.value),
+)
+
 const REFUND_PENDING_STATUSES = new Set([
   DISPUTE_STATUSES.REFUND_PENDING,
   DISPUTE_STATUSES.PARTIAL_REFUND_PENDING,
@@ -42,7 +51,6 @@ const CLOSE_BLOCKED_STATUSES = new Set([
 ])
 
 const CLOSE_ALLOWED_STATUSES = new Set([
-  DISPUTE_STATUSES.REFUND_COMPLETED,
   DISPUTE_STATUSES.REJECTED,
   DISPUTE_STATUSES.RESOLVED,
   DISPUTE_STATUSES.RESOLVED_BUYER,
@@ -51,7 +59,6 @@ const CLOSE_ALLOWED_STATUSES = new Set([
   DISPUTE_STATUSES.UNDER_REVIEW,
   DISPUTE_STATUSES.AWAITING_BUYER_EVIDENCE,
   DISPUTE_STATUSES.AWAITING_SELLER_EVIDENCE,
-  SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED,
   SUPPORT_REQUEST_STATUSES.REJECTED,
   SUPPORT_REQUEST_STATUSES.RESOLVED,
   SUPPORT_REQUEST_STATUSES.OPEN,
@@ -69,12 +76,10 @@ export function isAdminCaseWorkflowComplete(record) {
   if (!record) return false
 
   const completeStatuses = new Set([
-    DISPUTE_STATUSES.REFUND_COMPLETED,
     DISPUTE_STATUSES.REJECTED,
     DISPUTE_STATUSES.RESOLVED,
     DISPUTE_STATUSES.RESOLVED_BUYER,
     DISPUTE_STATUSES.RESOLVED_SELLER,
-    SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED,
     SUPPORT_REQUEST_STATUSES.REJECTED,
     SUPPORT_REQUEST_STATUSES.RESOLVED,
   ])
@@ -129,7 +134,11 @@ export function canCloseCase(record) {
 }
 
 export function getDefaultRefundCompletedCustomerMessage() {
-  return 'The refund has now been completed. Equipd will close this case once final checks are complete.'
+  return 'The refund has now been completed.'
+}
+
+export function getRefundCaseClosedMessage() {
+  return 'Case closed. Refund completed successfully.'
 }
 
 export function getDefaultCloseCaseCustomerMessage(outcome) {
@@ -158,17 +167,6 @@ export function suggestCaseOutcome(record) {
 
   if (record.status === DISPUTE_STATUSES.REJECTED || record.status === SUPPORT_REQUEST_STATUSES.REJECTED) {
     return CASE_OUTCOMES.SELLER_UPHELD
-  }
-
-  if (
-    record.status === DISPUTE_STATUSES.REFUND_COMPLETED ||
-    record.status === SUPPORT_REQUEST_STATUSES.REFUND_COMPLETED
-  ) {
-    if (record.refund_amount_pence > 0) {
-      return CASE_OUTCOMES.BUYER_UPHELD_PARTIAL_REFUND
-    }
-
-    return CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND
   }
 
   return CASE_OUTCOMES.MUTUAL_AGREEMENT
