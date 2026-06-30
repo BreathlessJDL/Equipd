@@ -29,6 +29,8 @@ import '../components/OrderDetail.css'
 import '../components/PageStub.css'
 import { useAuth } from '../hooks/useAuth'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import OrderFinancialBreakdown from '../components/OrderFinancialBreakdown'
+import SellerPayoutSummary from '../components/SellerPayoutSummary'
 import { fetchAdminOrderById } from '../lib/admin'
 import {
   formatPricePence,
@@ -668,7 +670,10 @@ function OrderDetailPage() {
           </div>
 
           <dl className="order-detail__overview-facts">
-            <OrderDetailOverviewFact label="Total" highlight>
+            <OrderDetailOverviewFact
+              label={viewerRole === 'seller' || isAdminViewer ? 'Buyer total' : 'Total'}
+              highlight={viewerRole === 'buyer'}
+            >
               {totalPrice}
             </OrderDetailOverviewFact>
             <OrderDetailOverviewFact label="Payment">
@@ -684,6 +689,30 @@ function OrderDetailPage() {
               {buyerProtectionStatus}
             </OrderDetailOverviewFact>
           </dl>
+
+          {viewerRole === 'seller' ? (
+            <div className="order-detail__overview-payout">
+              <h2 className="order-detail__overview-payout-title">Your payout</h2>
+              <SellerPayoutSummary
+                order={order}
+                payment={payment}
+                offerAmountLabel="Sale price"
+                receiveLabel="You'll receive"
+                showNote
+              />
+            </div>
+          ) : null}
+
+          {isAdminViewer ? (
+            <div className="order-detail__overview-payout">
+              <h2 className="order-detail__overview-payout-title">Payment &amp; payout breakdown</h2>
+              <OrderFinancialBreakdown
+                order={order}
+                payment={payment}
+                viewerRole="admin"
+              />
+            </div>
+          ) : null}
 
           {listingUrl || conversationUrl ? (
             <div className="order-detail__overview-actions">
@@ -833,16 +862,16 @@ function OrderDetailPage() {
             </dl>
           </div>
 
-          {viewerRole === 'seller' ? (
+          {(viewerRole === 'seller' || viewerRole === 'admin') ? (
             <div className="order-detail__info-group">
-              <h3 className="order-detail__info-subtitle">Seller payout</h3>
-              <dl className="order-detail__info-list">
-                <OrderDetailInfoRow label="Seller receives">
-                  {formatPricePence(
-                    order.seller_net_pence ?? order.item_price_pence ?? order.amount_pence,
-                  )}
-                </OrderDetailInfoRow>
-              </dl>
+              <h3 className="order-detail__info-subtitle">
+                {viewerRole === 'admin' ? 'Payment & payout breakdown' : 'Seller payout'}
+              </h3>
+              <OrderFinancialBreakdown
+                order={order}
+                payment={payment}
+                viewerRole={viewerRole}
+              />
             </div>
           ) : null}
 

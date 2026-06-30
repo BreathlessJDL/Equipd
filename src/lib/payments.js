@@ -21,6 +21,7 @@ const paymentFields = `
   buyer_protection_fee_pence,
   buyer_total_pence,
   platform_fee_pence,
+  seller_service_fee_pence,
   seller_net_pence,
   expires_at,
   paid_at,

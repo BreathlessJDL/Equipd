@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import BuyerOrderConfirmation from '../BuyerOrderConfirmation'
 import CounterOfferModal from '../messages/CounterOfferModal'
+import AcceptOfferConfirmationModal from '../listing/AcceptOfferConfirmationModal'
 import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
+import SellerPayoutSummary from '../SellerPayoutSummary'
 import CollectionQrPanel from '../CollectionQrPanel'
 import CollectionBuyerHandoverPanel from '../orders/CollectionBuyerHandoverPanel'
 import CourierDeliveryConfirmation from '../CourierDeliveryConfirmation'
@@ -20,7 +22,6 @@ import {
 import {
   HubItemButton,
   HubItemList,
-  HubItemPrice,
   HubItemRow,
   HubItemStatusBadge,
   HubItemThumbnail,
@@ -29,7 +30,6 @@ import {
 import './HubItemRow.css'
 import { HubEmptyState } from './HubEmptyState'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
-import { formatPricePence } from '../../lib/listings'
 import { getProfileDisplayName } from '../../lib/profiles'
 import {
   formatHubOfferMetadata,
@@ -203,9 +203,13 @@ function HubOfferCard({
         className="hub-item-row__buyer-protection"
       />
     ) : (
-      <HubItemPrice
-        amount={formatPricePence(offer.amount_pence)}
-        label={orderStatusRole ? undefined : 'offer'}
+      <SellerPayoutSummary
+        itemPricePence={offer.amount_pence}
+        payment={payment}
+        compact
+        offerAmountLabel="Offer price"
+        receiveLabel="You'll receive"
+        className="hub-item-row__seller-payout"
       />
     )
 
@@ -477,6 +481,7 @@ function HubOfferList({
   const [actingOfferId, setActingOfferId] = useState(null)
   const [actionError, setActionError] = useState('')
   const [counteringOffer, setCounteringOffer] = useState(null)
+  const [acceptedOfferConfirmation, setAcceptedOfferConfirmation] = useState(null)
 
   if (loadError) {
     return (
@@ -505,6 +510,8 @@ function HubOfferList({
     setActingOfferId(offerId)
     setActionError('')
 
+    const acceptedOffer = safeOffers.find((entry) => entry.id === offerId)
+
     const actionMap = {
       withdraw: () => withdrawOffer(offerId),
       accept: () => acceptOffer(offerId),
@@ -518,6 +525,10 @@ function HubOfferList({
     if (error) {
       setActionError(getOfferErrorMessage(error))
       return
+    }
+
+    if (action === 'accept' && acceptedOffer) {
+      setAcceptedOfferConfirmation(acceptedOffer)
     }
 
     onOfferUpdated?.()
@@ -595,6 +606,13 @@ function HubOfferList({
         submitting={Boolean(actingOfferId)}
         onClose={() => setCounteringOffer(null)}
         onSubmit={handleCounterSubmit}
+      />
+
+      <AcceptOfferConfirmationModal
+        open={Boolean(acceptedOfferConfirmation)}
+        itemPricePence={acceptedOfferConfirmation?.amount_pence ?? null}
+        conversationId={acceptedOfferConfirmation?.conversation_id ?? null}
+        onClose={() => setAcceptedOfferConfirmation(null)}
       />
     </>
   )

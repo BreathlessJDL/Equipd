@@ -34,6 +34,7 @@ import {
   DEV_USERS,
 } from './seed-dev-data.mjs'
 import { calculateBuyerProtectionFee } from '../src/lib/buyerProtection.js'
+import { calculateSellerNetPayout, calculateSellerServiceFee } from '../src/lib/sellerServiceFee.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -49,14 +50,16 @@ const MIME_BY_EXT = {
 
 function buildDevCheckoutTotals(itemPricePence) {
   const buyerProtectionFeePence = calculateBuyerProtectionFee(itemPricePence)
-  const platformFeePence = 0
+  const sellerServiceFeePence = calculateSellerServiceFee(itemPricePence)
+  const platformFeePence = buyerProtectionFeePence
 
   return {
     itemPricePence,
     buyerProtectionFeePence,
     buyerTotalPence: itemPricePence + buyerProtectionFeePence,
     platformFeePence,
-    sellerNetPence: itemPricePence - platformFeePence,
+    sellerServiceFeePence,
+    sellerNetPence: calculateSellerNetPayout(itemPricePence),
   }
 }
 
@@ -372,6 +375,7 @@ async function seedOffersOrdersAndReviews(supabase) {
       platform_fee_pence: checkoutTotals.platformFeePence,
       buyer_protection_fee_pence: checkoutTotals.buyerProtectionFeePence,
       buyer_total_pence: checkoutTotals.buyerTotalPence,
+      seller_service_fee_pence: checkoutTotals.sellerServiceFeePence,
       seller_net_pence: checkoutTotals.sellerNetPence,
       status: 'paid',
       expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -394,6 +398,7 @@ async function seedOffersOrdersAndReviews(supabase) {
       platform_fee_pence: checkoutTotals.platformFeePence,
       buyer_protection_fee_pence: checkoutTotals.buyerProtectionFeePence,
       buyer_total_pence: checkoutTotals.buyerTotalPence,
+      seller_service_fee_pence: checkoutTotals.sellerServiceFeePence,
       seller_net_pence: checkoutTotals.sellerNetPence,
       fulfilment_status: 'completed',
       payout_status: 'paid',

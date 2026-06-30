@@ -259,7 +259,7 @@ export const HELP_ARTICLES = [
     slug: 'buyer-protection',
     title: 'Buyer Protection',
     category: 'buying',
-    updatedAt: '2026-06-24',
+    updatedAt: '2026-06-28',
     excerpt:
       'How Equipd protects buyers and sellers with secure payments, QR handover confirmation, delivery confirmation, and a 24-hour protection window.',
     content: [
@@ -286,6 +286,10 @@ export const HELP_ARTICLES = [
       {
         type: 'paragraph',
         text: 'Funds are held by Equipd while you arrange fulfilment with the seller. They are not paid out to the seller immediately.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Buyers pay the item price plus a Buyer Protection fee at checkout. Sellers pay a separate 2% Seller Service Fee, deducted from the seller payout when the sale completes. Sellers do not pay the Buyer Protection fee.',
       },
       {
         type: 'paragraph',
@@ -1303,6 +1307,10 @@ export const HELP_ARTICLES = [
         text: 'The equipment should remain available until payment has been completed.',
       },
       {
+        type: 'paragraph',
+        text: 'When the sale completes, Equipd deducts a 2% Seller Service Fee from your payout. You will see the sale price, fee, and amount you will receive before accepting offers.',
+      },
+      {
         type: 'heading',
         text: 'Step 4: Arrange fulfilment',
       },
@@ -1617,7 +1625,7 @@ export const HELP_ARTICLES = [
     slug: 'getting-paid',
     title: 'Getting Paid',
     category: 'selling',
-    updatedAt: '2026-06-24',
+    updatedAt: '2026-06-28',
     excerpt:
       'How seller payouts work on Equipd, including Stripe setup, Buyer Protection holds, and payout timing.',
     content: [
@@ -1654,6 +1662,14 @@ export const HELP_ARTICLES = [
       {
         type: 'paragraph',
         text: 'Until setup is complete, payouts cannot be released.',
+      },
+      {
+        type: 'heading',
+        text: 'Seller Service Fee',
+      },
+      {
+        type: 'paragraph',
+        text: 'When your item sells, Equipd deducts a 2% Seller Service Fee from your payout before funds are transferred. You will see the sale price, fee, and amount you will receive before accepting offers and on your order details.',
       },
       {
         type: 'heading',
@@ -1728,7 +1744,7 @@ export const HELP_ARTICLES = [
     slug: 'buyer-protection-fee',
     title: 'Buyer Protection Fee',
     category: 'payments',
-    updatedAt: '2026-06-24',
+    updatedAt: '2026-06-28',
     excerpt:
       'What the Buyer Protection fee covers, how it is calculated, and what it includes at checkout.',
     content: [
@@ -1802,7 +1818,11 @@ export const HELP_ARTICLES = [
       },
       {
         type: 'paragraph',
-        text: "The Buyer Protection fee is separate from the seller's sale proceeds and is retained by Equipd.",
+        text: "The Buyer Protection fee is separate from the seller's sale proceeds and is retained by Equipd. Buyers pay the item price plus Buyer Protection. Sellers do not pay the Buyer Protection fee.",
+      },
+      {
+        type: 'paragraph',
+        text: 'Sellers pay a separate 2% Seller Service Fee when an item sells. This is deducted from the seller payout and helps cover secure payments, marketplace operation, customer support, Buyer Protection administration, dispute resolution and ongoing platform improvements.',
       },
       {
         type: 'heading',
@@ -1841,7 +1861,7 @@ export const HELP_ARTICLES = [
     slug: 'seller-payouts',
     title: 'Seller Payouts',
     category: 'payments',
-    updatedAt: '2026-06-24',
+    updatedAt: '2026-06-28',
     excerpt:
       'Why Equipd holds seller payouts, when funds are released, and how disputes affect payout timing.',
     content: [
@@ -1872,6 +1892,18 @@ export const HELP_ARTICLES = [
       {
         type: 'paragraph',
         text: 'This helps create a safer marketplace for both buyers and sellers.',
+      },
+      {
+        type: 'heading',
+        text: 'Seller Service Fee',
+      },
+      {
+        type: 'paragraph',
+        text: 'Sellers pay a 2% Seller Service Fee when an item sells. This is deducted from the seller payout and helps cover secure payments, marketplace operation, customer support, Buyer Protection administration, dispute resolution and ongoing platform improvements.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Buyers pay the item price plus Buyer Protection. Sellers do not pay the Buyer Protection fee.',
       },
       {
         type: 'heading',

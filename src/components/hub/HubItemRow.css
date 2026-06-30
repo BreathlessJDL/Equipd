@@ -226,6 +226,26 @@
   width: 100%;
 }
 
+.hub-item-row__info .hub-item-row__seller-payout.seller-payout-summary {
+  margin-top: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: 100%;
+}
+
+.hub-item-row__info .hub-item-row__seller-payout .seller-payout-summary__row {
+  font-size: 0.6875rem;
+}
+
+.hub-item-row__info .hub-item-row__seller-payout .seller-payout-summary__row dd {
+  font-size: 0.8125rem;
+}
+
+.hub-item-row__info .hub-item-row__seller-payout .seller-payout-summary__row--total dd {
+  font-size: 0.875rem;
+}
+
 .hub-item-row__info .buyer-protection-offer-summary__row {
   flex-direction: row;
   justify-content: flex-start;

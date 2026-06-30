@@ -257,6 +257,21 @@ a.order-detail__overview-title:hover {
   color: var(--color-text);
 }
 
+.order-detail__overview-payout {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+}
+
+.order-detail__overview-payout-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
 .order-detail__overview-actions {
   display: flex;
   flex-wrap: wrap;

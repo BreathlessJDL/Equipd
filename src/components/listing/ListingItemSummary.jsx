@@ -1,4 +1,5 @@
 import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
+import SellerPayoutSummary from '../SellerPayoutSummary'
 import {
   formatListingUploadedAgo,
   getListingDeliveryOptions,
@@ -55,6 +56,7 @@ function ListingItemSummary({
   reportListing = null,
   buyerProfile = null,
   viewerUserId = null,
+  isOwner = false,
 }) {
   const extras = parseListingDescriptionExtras(listing.description)
   const deliveryOptions = getListingDeliveryOptions(listing, { buyerProfile, viewerUserId })
@@ -81,10 +83,20 @@ function ListingItemSummary({
       {uploadedAgo ? <p className="listing-summary__uploaded">{uploadedAgo}</p> : null}
 
       <section className="listing-summary__purchase" aria-label="Price and actions">
-        <BuyerProtectionPriceDisplay
-          itemPricePence={listing.price_pence ?? listing.price}
-          className="buyer-protection-price--detail listing-summary__price-stack"
-        />
+        {isOwner ? (
+          <SellerPayoutSummary
+            itemPricePence={listing.price_pence ?? listing.price}
+            offerAmountLabel="Asking price"
+            receiveLabel="You'll receive"
+            showNote
+            className="listing-summary__seller-payout"
+          />
+        ) : (
+          <BuyerProtectionPriceDisplay
+            itemPricePence={listing.price_pence ?? listing.price}
+            className="buyer-protection-price--detail listing-summary__price-stack"
+          />
+        )}
 
         {actions ? <div className="listing-summary__actions">{actions}</div> : null}
 

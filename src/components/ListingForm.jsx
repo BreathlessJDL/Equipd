@@ -8,6 +8,8 @@ import {
   buildCategorySelectOptions,
   LISTING_RATING_OPTIONS,
 } from '../lib/listingOptions'
+import { parsePriceToPence } from '../lib/listings'
+import SellerPayoutSummary from './SellerPayoutSummary'
 import './ListingForm.css'
 
 export const emptyListingForm = {
@@ -456,6 +458,15 @@ function ListingForm({
             />
           </div>
         </ListingFormRow>
+        {parsePriceToPence(form.price) ? (
+          <SellerPayoutSummary
+            amountInput={form.price}
+            compact
+            offerAmountLabel="Price"
+            receiveLabel="You'll receive"
+            showNote
+          />
+        ) : null}
       </ListingFormSection>
 
       {showDraftHints ? (

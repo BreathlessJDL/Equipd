@@ -22,6 +22,8 @@ import {
 import PayNowWithFulfilment from './PayNowWithFulfilment'
 import BuyerProtectionInfo from './BuyerProtectionInfo'
 import BuyerProtectionOfferSummary from './BuyerProtectionOfferSummary'
+import SellerPayoutSummary from './SellerPayoutSummary'
+import AcceptOfferConfirmationModal from './listing/AcceptOfferConfirmationModal'
 import BuyerProtectionPriceDisplay from './BuyerProtectionPriceDisplay'
 import '../components/ListingDetail.css'
 
@@ -44,6 +46,7 @@ function ListingOffersSection({
   const [actionError, setActionError] = useState('')
   const [payingPaymentId, setPayingPaymentId] = useState(null)
   const [payError, setPayError] = useState('')
+  const [acceptedOfferConfirmation, setAcceptedOfferConfirmation] = useState(null)
 
   const canMakeOffer = Boolean(user && !isOwner && listing.status === 'active')
   const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
@@ -113,10 +116,16 @@ function ListingOffersSection({
       return
     }
 
-    if (action === 'accept' && refreshedOffers) {
-      onOffersChange(refreshedOffers)
-      onOfferAccepted?.()
-      return
+    if (action === 'accept') {
+      const acceptedOffer = offers.find((entry) => entry.id === offerId)
+      if (acceptedOffer) {
+        setAcceptedOfferConfirmation(acceptedOffer)
+      }
+      if (refreshedOffers) {
+        onOffersChange(refreshedOffers)
+        onOfferAccepted?.()
+        return
+      }
     }
 
     onOffersChange(offers.map((offer) => (offer.id === data.id ? data : offer)))
@@ -136,6 +145,7 @@ function ListingOffersSection({
   }
 
   return (
+    <>
     <section className="listing-detail__offers">
       <h2 className="listing-detail__offers-title">Offers</h2>
 
@@ -167,6 +177,8 @@ function ListingOffersSection({
               }}
             />
           </div>
+
+          <BuyerProtectionOfferSummary amountInput={offerAmount} compact />
 
           <div className="listing-detail__offer-field">
             <label className="listing-detail__label" htmlFor="offer-message">
@@ -260,7 +272,13 @@ function ListingOffersSection({
                       className="listing-detail__offer-buyer-protection"
                     />
                   ) : (
-                    <p className="listing-detail__offer-amount">{formatPricePence(offer.amount_pence)}</p>
+                    <SellerPayoutSummary
+                      itemPricePence={offer.amount_pence}
+                      payment={isAccepted ? payment : null}
+                      compact
+                      offerAmountLabel="Offer price"
+                      receiveLabel="You'll receive"
+                    />
                   )}
                   <span className="listing-detail__offer-status">{formatOfferStatus(offer.status)}</span>
                 </div>
@@ -342,6 +360,14 @@ function ListingOffersSection({
         </ul>
       ) : null}
     </section>
+
+    <AcceptOfferConfirmationModal
+      open={Boolean(acceptedOfferConfirmation)}
+      itemPricePence={acceptedOfferConfirmation?.amount_pence ?? null}
+      conversationId={acceptedOfferConfirmation?.conversation_id ?? null}
+      onClose={() => setAcceptedOfferConfirmation(null)}
+    />
+    </>
   )
 }
 

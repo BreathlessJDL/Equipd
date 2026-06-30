@@ -19,6 +19,7 @@ import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import BuyerOrderConfirmation from '../components/BuyerOrderConfirmation'
 import ListingImageGallery from '../components/listing/ListingImageGallery'
 import ListingItemSummary from '../components/listing/ListingItemSummary'
+import ListingOffersSection from '../components/ListingOffersSection'
 import ListingRecommendations from '../components/listing/ListingRecommendations'
 import ListingSavedCountOverlay from '../components/listing/ListingSavedCountOverlay'
 import MakeOfferModal from '../components/listing/MakeOfferModal'
@@ -387,6 +388,7 @@ function ListingDetailPage() {
           listing={listing}
           buyerProfile={buyerProfile}
           viewerUserId={user?.id ?? null}
+          isOwner={isOwner}
           actions={summaryActions}
           reportListing={
             canReportListing(listing, user?.id) ? (
@@ -400,6 +402,19 @@ function ListingDetailPage() {
           }
         />
       </div>
+
+      {user ? (
+        <ListingOffersSection
+          listing={listing}
+          user={user}
+          isOwner={isOwner}
+          offers={offers}
+          loadingOffers={false}
+          offersError=""
+          onOffersChange={setOffers}
+          onOfferAccepted={reloadOffers}
+        />
+      ) : null}
 
       {!isOwner && buyerConfirmableOffer?.order?.id ? (
         <section className="listing-detail__section listing-detail__panel">

@@ -15,9 +15,11 @@ import {
 } from '../../lib/offers'
 import { canPayNow } from '../../lib/payments'
 import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
+import SellerPayoutSummary from '../SellerPayoutSummary'
 import PayNowWithFulfilment from '../PayNowWithFulfilment'
 import { formatMessageTimestamp } from '../../lib/messages'
 import CounterOfferModal from './CounterOfferModal'
+import AcceptOfferConfirmationModal from '../listing/AcceptOfferConfirmationModal'
 import './MessageOfferCard.css'
 
 function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
@@ -26,6 +28,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
   const [actionError, setActionError] = useState('')
   const [paying, setPaying] = useState(false)
   const [counterModalOpen, setCounterModalOpen] = useState(false)
+  const [acceptConfirmationOpen, setAcceptConfirmationOpen] = useState(false)
 
   if (!offer) return null
 
@@ -55,6 +58,10 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
     if (error) {
       setActionError(getOfferErrorMessage(error))
       return
+    }
+
+    if (action === 'accept' && isSeller) {
+      setAcceptConfirmationOpen(true)
     }
 
     onOfferUpdated?.()
@@ -120,7 +127,13 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
                 className="message-offer-card__amount-stack"
               />
             ) : (
-              <p className="message-offer-card__amount">{formatPricePence(offer.amount_pence)}</p>
+              <SellerPayoutSummary
+                itemPricePence={offer.amount_pence}
+                payment={payment}
+                compact
+                offerAmountLabel="Offer price"
+                receiveLabel="You'll receive"
+              />
             )}
             {offer.message ? (
               <p className="message-offer-card__note">{offer.message}</p>
@@ -217,6 +230,13 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
         submitting={acting}
         onClose={() => setCounterModalOpen(false)}
         onSubmit={handleCounterSubmit}
+      />
+
+      <AcceptOfferConfirmationModal
+        open={acceptConfirmationOpen}
+        itemPricePence={offer.amount_pence}
+        conversationId={offer.conversation_id ?? conversation?.id ?? null}
+        onClose={() => setAcceptConfirmationOpen(false)}
       />
     </>
   )

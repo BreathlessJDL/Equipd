@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { formatPricePence } from '../../lib/listings'
 import BuyerProtectionOfferSummary from '../BuyerProtectionOfferSummary'
+import SellerPayoutSummary from '../SellerPayoutSummary'
 import '../auth/AuthModal.css'
 import '../listing/MakeOfferModal.css'
 
@@ -85,10 +86,11 @@ function CounterOfferModal({ open, listingPricePence, submitting = false, onClos
             />
           </div>
 
-          <BuyerProtectionOfferSummary
+          <SellerPayoutSummary
             amountInput={amount}
             compact
-            totalLabel="Total payable if accepted"
+            offerAmountLabel="Counter-offer price"
+            receiveLabel="You'll receive"
           />
 
           <div className="make-offer-modal__actions">

@@ -304,7 +304,10 @@ async function main() {
   assert(orderAfterCapture.payout_status === 'not_due', `After capture payout_status expected not_due, got ${orderAfterCapture.payout_status}`)
   assert(orderAfterCapture.payout_release_at === null, 'After capture payout_release_at should remain null')
   assert(orderAfterCapture.payout_released_at === null, 'After capture payout_released_at should remain null')
-  assert(orderAfterCapture.seller_net_pence === offerAmountPence, 'Seller net unchanged after capture')
+  assert(
+    orderAfterCapture.seller_net_pence === offerAmountPence - Math.round(offerAmountPence * 0.02),
+    'Seller net should reflect 2% Seller Service Fee after capture',
+  )
 
   logPass(`Order moved to ${orderAfterCapture.fulfilment_status}; payout held (not_due, no release timestamp)`)
 

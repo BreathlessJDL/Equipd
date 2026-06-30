@@ -4,6 +4,16 @@
   text-align: center;
 }
 
+.offer-sent-modal__dialog--wide {
+  max-width: 28rem;
+  text-align: left;
+}
+
+.offer-sent-modal__dialog--wide .offer-sent-modal__title,
+.offer-sent-modal__dialog--wide .offer-sent-modal__body {
+  text-align: center;
+}
+
 .offer-sent-modal__title {
   margin: 0 0 0.75rem;
   font-size: 1.25rem;

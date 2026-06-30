@@ -2,6 +2,8 @@ export const BUYER_PROTECTION_FEE_MIN_PENCE = 500
 export const BUYER_PROTECTION_FEE_MAX_PENCE = 25000
 export const BUYER_PROTECTION_FEE_RATE = 0.05
 
+import { calculateSellerNetPayout, calculateSellerServiceFee } from './sellerServiceFee.js'
+
 export const BUYER_PROTECTION_FEE_NOTE =
   'Buyer Protection is 5% of the agreed sale price (minimum £5, maximum £250).'
 
@@ -34,11 +36,14 @@ export function calculateBuyerCheckoutTotals(itemPricePence) {
   const normalized = normalizeListingPricePence(itemPricePence) ?? 0
   const buyerProtectionFeePence = calculateBuyerProtectionFee(normalized)
 
+  const sellerServiceFeePence = calculateSellerServiceFee(normalized)
+
   return {
     itemPricePence: normalized,
     buyerProtectionFeePence,
     buyerTotalPence: normalized + buyerProtectionFeePence,
-    sellerNetPence: normalized,
+    sellerServiceFeePence,
+    sellerNetPence: calculateSellerNetPayout(normalized),
   }
 }
 
@@ -67,11 +72,15 @@ export function resolvePaymentCheckoutTotals(payment) {
   const buyerTotalPence =
     payment.buyer_total_pence ?? itemPricePence + buyerProtectionFeePence
 
+  const sellerServiceFeePence =
+    payment.seller_service_fee_pence ?? calculateSellerServiceFee(itemPricePence)
+
   return {
     itemPricePence,
     buyerProtectionFeePence,
     buyerTotalPence,
-    sellerNetPence: payment.seller_net_pence ?? itemPricePence,
+    sellerServiceFeePence,
+    sellerNetPence: payment.seller_net_pence ?? calculateSellerNetPayout(itemPricePence),
   }
 }
 
@@ -86,10 +95,14 @@ export function resolveOrderCheckoutTotals(order) {
   const buyerTotalPence =
     order.buyer_total_pence ?? itemPricePence + buyerProtectionFeePence
 
+  const sellerServiceFeePence =
+    order.seller_service_fee_pence ?? calculateSellerServiceFee(itemPricePence)
+
   return {
     itemPricePence,
     buyerProtectionFeePence,
     buyerTotalPence,
-    sellerNetPence: order.seller_net_pence ?? itemPricePence,
+    sellerServiceFeePence,
+    sellerNetPence: order.seller_net_pence ?? calculateSellerNetPayout(itemPricePence),
   }
 }
