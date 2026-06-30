@@ -11,11 +11,30 @@
 .order-fulfilment-details__privacy,
 .order-fulfilment-details__updated,
 .order-fulfilment-details__admin-note,
-.order-fulfilment-details__waiting {
+.order-fulfilment-details__waiting,
+.order-fulfilment-details__action-required,
+.order-fulfilment-details__seller-prompt {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--color-muted);
+}
+
+.order-fulfilment-details__action-required {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-orange) 35%, var(--color-border));
+  border-radius: calc(var(--radius) - 1px);
+  background: color-mix(in srgb, var(--color-orange) 8%, var(--color-surface));
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.order-fulfilment-details__seller-prompt {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) - 1px);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  color: var(--color-text);
 }
 
 .order-fulfilment-details__admin-note,
@@ -91,6 +110,11 @@
   font-size: 1rem;
   line-height: 1.45;
   resize: vertical;
+}
+
+.order-fulfilment-details__input--single {
+  min-height: 0;
+  resize: none;
 }
 
 .order-fulfilment-details__input:focus {

@@ -37,6 +37,10 @@ export function getStatusBadgeFromOrderLifecycleStage(stage, { viewerRole = null
     return { variant: 'cancelled', label: 'Cancelled' }
   }
 
+  if (key === 'case_closed') {
+    return { variant: 'completed', label: 'Case closed' }
+  }
+
   if (DISPUTE_STAGE_KEYS.has(key)) {
     return { variant: 'disputed', label: 'Dispute Open' }
   }

@@ -13,12 +13,16 @@ import {
   getDefaultRefundCompletedCustomerMessage,
   suggestCaseOutcome,
 } from '../lib/caseClosure'
-import { formatDisputeTimestamp } from '../lib/orderDisputes'
-import { formatSupportRequestTimestamp } from '../lib/supportRequests'
+import { formatDisputeStatus, formatDisputeTimestamp } from '../lib/orderDisputes'
+import { formatSupportRequestStatus, formatSupportRequestTimestamp } from '../lib/supportRequests'
 import './OrderDisputeSection.css'
 
 export function CaseClosedSummary({ record, isDispute, showAdminNote = false }) {
-  const outcomeLabel = formatCaseOutcomeLabel(record?.case_outcome)
+  const outcomeLabel = record?.case_outcome
+    ? formatCaseOutcomeLabel(record.case_outcome)
+    : isDispute
+      ? formatDisputeStatus(record?.status)
+      : formatSupportRequestStatus(record?.status)
   const closedAt = record?.resolved_at ?? record?.updated_at ?? null
   const finalMessage =
     record?.customer_message ?? record?.resolution_notes ?? record?.resolution ?? ''
@@ -29,7 +33,7 @@ export function CaseClosedSummary({ record, isDispute, showAdminNote = false }) 
     <div className="order-case-closure__summary">
       <p className="order-case-closure__summary-title">Case closed</p>
       <dl className="order-dispute__meta">
-        {record?.case_outcome ? (
+        {outcomeLabel ? (
           <div className="order-dispute__row">
             <dt className="order-dispute__label">Outcome</dt>
             <dd className="order-dispute__value">{outcomeLabel}</dd>

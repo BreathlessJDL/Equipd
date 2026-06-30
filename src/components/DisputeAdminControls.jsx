@@ -184,6 +184,39 @@ function DisputeAdminControls({
   if (!activeRecord && !showCloseCase) return null
   if (!managingDispute && !managingSupport && !showCloseCase) return null
 
+  if (recordClosed) {
+    return (
+      <div className="order-dispute__admin">
+        <h3 className="order-dispute__admin-title">Case management</h3>
+        <section
+          className="order-dispute__admin-section order-dispute__admin-section--closed"
+          aria-labelledby="admin-closed-summary-title"
+        >
+          <h4 id="admin-closed-summary-title" className="order-dispute__admin-section-title">
+            Case closure
+          </h4>
+          <CaseClosedSummary
+            record={activeRecord}
+            isDispute={managingDispute}
+            showAdminNote
+          />
+        </section>
+
+        <IssueEvidenceList paths={evidencePaths} title="Buyer evidence" />
+
+        {managingDispute && dispute?.seller_response_evidence_paths?.length ? (
+          <IssueEvidenceList
+            paths={dispute.seller_response_evidence_paths}
+            title="Seller evidence"
+          />
+        ) : null}
+      </div>
+    )
+  }
+
+  if (!activeRecord && !showCloseCase) return null
+  if (!managingDispute && !managingSupport && !showCloseCase) return null
+
   function handleInvestigationDecisionChange(nextDecision) {
     setInvestigationDecision(nextDecision)
     if (nextDecision !== ADMIN_DISPUTE_DECISIONS.MARK_UNDER_REVIEW) {

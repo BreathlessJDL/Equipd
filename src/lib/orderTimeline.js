@@ -17,7 +17,7 @@ import {
   isBuyerProtectionWindowActive,
   isOrderDisputed,
 } from './orderDisputes'
-import { CASE_OUTCOMES } from './caseClosure'
+import { CASE_OUTCOMES, isCaseClosed } from './caseClosure'
 import {
   SUPPORT_REQUEST_STATUSES,
   formatSupportRequestReason,
@@ -633,8 +633,9 @@ function getDisputeCurrentStage(order, disputes = [], caseUpdates = []) {
   const steps = buildDisputeTimelineSteps(order, disputes, caseUpdates)
   if (steps.length > 0) {
     const latestStep = steps[steps.length - 1]
+    const closed = dispute && isCaseClosed(dispute)
     return {
-      key: 'disputed',
+      key: closed ? 'case_closed' : 'disputed',
       label: latestStep.label,
       eventKey: latestStep.key,
     }
@@ -1087,10 +1088,17 @@ function getDisputeTimelineStepState(eventKey, order, disputes, currentEventKey,
   const stepKeys = steps.map((step) => step.key)
   if (!stepKeys.includes(eventKey)) return null
 
-  const currentIndex = stepKeys.indexOf(currentEventKey)
-  const eventIndex = stepKeys.indexOf(eventKey)
+  let currentIndex = stepKeys.indexOf(currentEventKey)
+  if (currentIndex === -1) {
+    const dispute = getDisputeForTimeline(order, disputes)
+    if (dispute && isTerminalDisputeStatus(dispute.status)) {
+      currentIndex = stepKeys.length - 1
+    } else {
+      return null
+    }
+  }
 
-  if (currentIndex === -1) return null
+  const eventIndex = stepKeys.indexOf(eventKey)
 
   if (eventIndex < currentIndex) return 'complete'
   if (eventIndex === currentIndex) return 'current'
@@ -1190,6 +1198,12 @@ function resolveCurrentEventKey(events, currentStage) {
 
   if (currentStage.key === 'cancelled') {
     return 'transaction_cancelled'
+  }
+
+  if (currentStage.key === 'case_closed' && currentStage.eventKey) {
+    if (events.some((event) => event.key === currentStage.eventKey)) {
+      return currentStage.eventKey
+    }
   }
 
   if (events.some((event) => event.key === currentStage.eventKey)) {

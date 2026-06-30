@@ -1,6 +1,6 @@
 import { isPaymentComplete } from './payments'
 import { ORDER_FULFILMENT_STATUSES } from './orders'
-import { getActiveOrderDispute } from './orderDisputes'
+import { DISPUTE_STATUSES, getActiveOrderDispute, getLatestOrderDispute } from './orderDisputes'
 import { supabase } from './supabase'
 
 export const SUPPORT_REQUEST_REASONS = {
@@ -153,8 +153,30 @@ export function getUserActiveSupportRequest(requests, userId) {
   )
 }
 
+function isClosedDisputeForSupport(dispute) {
+  if (!dispute) return false
+  if (dispute.case_outcome) return true
+  return [
+    DISPUTE_STATUSES.RESOLVED,
+    DISPUTE_STATUSES.RESOLVED_BUYER,
+    DISPUTE_STATUSES.RESOLVED_SELLER,
+    DISPUTE_STATUSES.CANCELLED,
+  ].includes(dispute.status)
+}
+
+function hasClosedBuyerProtectionCaseForSupport(disputes, requests) {
+  if (isClosedDisputeForSupport(getLatestOrderDispute(disputes))) return true
+  return (requests ?? []).some(
+    (request) =>
+      request.case_outcome ||
+      request.status === SUPPORT_REQUEST_STATUSES.CLOSED ||
+      request.status === SUPPORT_REQUEST_STATUSES.RESOLVED,
+  )
+}
+
 export function canUserRaiseSupportRequest(order, payment, requests, userId, disputes = []) {
   if (!canRaiseSupportRequest(order, payment)) return false
+  if (hasClosedBuyerProtectionCaseForSupport(disputes, requests)) return false
   if (getActiveOrderDispute(disputes)) return false
   if (getActiveSupportRequest(requests)) return false
   return true

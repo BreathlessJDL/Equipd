@@ -527,6 +527,9 @@ async function testSellerDeliveryAddress(admin, sellerClient, buyerClient) {
     const { error: insertError } = await buyerClient.from('order_delivery_details').upsert({
       order_id: order.id,
       buyer_delivery_address: '99 Buyer Delivery Road, Leeds LS1 1AA',
+      delivery_contact_name: 'Buyer QA',
+      delivery_contact_phone: '07700900123',
+      delivery_notes: 'Ring the bell on arrival',
     })
 
     assertPass(!insertError, 'Buyer can save delivery address after payment', `Buyer delivery address save failed: ${insertError?.message}`)

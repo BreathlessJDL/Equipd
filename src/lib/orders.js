@@ -321,8 +321,24 @@ export function formatPayoutStatus(status) {
   return labels[status] ?? status
 }
 
-export function getOrderFulfilmentDisplayStatus(order, viewerRole = null) {
+export function getOrderFulfilmentDisplayStatus(order, viewerRole = null, options = {}) {
   if (!order) return '—'
+
+  const { hasDeliveryDetails = false } = options
+
+  if (
+    order.order_type === ORDER_TYPES.SELLER_DELIVERY &&
+    order.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_SELLER_DELIVERY
+  ) {
+    if (!hasDeliveryDetails) {
+      if (viewerRole === 'buyer') return 'Add delivery details'
+      if (viewerRole === 'seller' || viewerRole === 'admin') {
+        return 'Waiting for buyer delivery details'
+      }
+    }
+
+    return 'Awaiting seller delivery'
+  }
 
   if (
     (viewerRole === 'seller' || viewerRole === 'admin') &&
@@ -652,7 +668,8 @@ export function isOrderSellerDeliveryHandoverConfirmed(order) {
   )
 }
 
-export function getSellerDeliveryHubStatusLabel(order, role) {
+export function getSellerDeliveryHubStatusLabel(order, role, options = {}) {
+  const { hasDeliveryDetails = false } = options
   const payoutLabel = getOrderPayoutReleaseStatusLabel(order)
   if (payoutLabel) return payoutLabel
 
@@ -661,8 +678,14 @@ export function getSellerDeliveryHubStatusLabel(order, role) {
   }
 
   if (order?.fulfilment_status === ORDER_FULFILMENT_STATUSES.AWAITING_SELLER_DELIVERY) {
+    if (!hasDeliveryDetails) {
+      return role === 'seller'
+        ? 'Paid — waiting for buyer delivery details'
+        : 'Paid — add your delivery details'
+    }
+
     return role === 'seller'
-      ? 'Paid — show your handover QR code once you have delivered the item'
+      ? 'Paid — arrange delivery, then show your handover QR code'
       : 'Paid — awaiting seller delivery. Inspect the equipment, then scan the seller handover QR code.'
   }
 

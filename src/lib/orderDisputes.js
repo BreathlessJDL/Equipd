@@ -279,8 +279,24 @@ export function isBuyerProtectionWindowActive(order) {
   return !Number.isNaN(releaseAt) && releaseAt > Date.now()
 }
 
-export function formatBuyerProtectionStatus(order, payment) {
+function isDisputeClosedForDisplay(dispute) {
+  if (!dispute) return false
+  if (dispute.case_outcome) return true
+  return [
+    DISPUTE_STATUSES.RESOLVED,
+    DISPUTE_STATUSES.RESOLVED_BUYER,
+    DISPUTE_STATUSES.RESOLVED_SELLER,
+    DISPUTE_STATUSES.CANCELLED,
+  ].includes(dispute.status)
+}
+
+export function formatBuyerProtectionStatus(order, payment, disputes = []) {
   if (!order) return '—'
+
+  const latestDispute = getLatestOrderDispute(disputes)
+  if (latestDispute && isDisputeClosedForDisplay(latestDispute)) {
+    return 'Case closed'
+  }
 
   if (isOrderDisputed(order) || order.fulfilment_status === ORDER_FULFILMENT_STATUSES.DISPUTED) {
     return 'Under dispute'
@@ -345,6 +361,7 @@ export function canBuyerOpenDispute(order, payment, disputes) {
   }
   if (!isBuyerProtectionWindowActive(order)) return false
   if (getActiveOrderDispute(disputes)) return false
+  if (isDisputeClosedForDisplay(getLatestOrderDispute(disputes))) return false
   return true
 }
 

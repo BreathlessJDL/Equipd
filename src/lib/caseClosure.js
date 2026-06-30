@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { DISPUTE_STATUSES } from './orderDisputes'
+import { DISPUTE_STATUSES, getLatestOrderDispute } from './orderDisputes'
 import { SUPPORT_REQUEST_STATUSES } from './supportRequests'
 
 export const CASE_OUTCOMES = {
@@ -96,12 +96,30 @@ export function formatCaseOutcomeLabel(outcome) {
   return CASE_OUTCOME_OPTIONS.find((option) => option.value === outcome)?.label ?? outcome ?? '—'
 }
 
+const CLOSED_DISPUTE_STATUSES = new Set([
+  DISPUTE_STATUSES.RESOLVED,
+  DISPUTE_STATUSES.RESOLVED_BUYER,
+  DISPUTE_STATUSES.RESOLVED_SELLER,
+  DISPUTE_STATUSES.CANCELLED,
+])
+
+const CLOSED_SUPPORT_STATUSES = new Set([
+  SUPPORT_REQUEST_STATUSES.CLOSED,
+  SUPPORT_REQUEST_STATUSES.RESOLVED,
+])
+
 export function isCaseClosed(record) {
   if (!record) return false
   if (record.case_outcome) return true
-  if (record.status === SUPPORT_REQUEST_STATUSES.CLOSED) return true
-  if (record.status === DISPUTE_STATUSES.CANCELLED) return true
+  if (CLOSED_DISPUTE_STATUSES.has(record.status)) return true
+  if (CLOSED_SUPPORT_STATUSES.has(record.status)) return true
   return false
+}
+
+export function hasClosedBuyerProtectionCase(disputes = [], supportRequests = []) {
+  const latestDispute = getLatestOrderDispute(disputes)
+  if (latestDispute && isCaseClosed(latestDispute)) return true
+  return (supportRequests ?? []).some((request) => isCaseClosed(request))
 }
 
 export function canCloseCase(record) {

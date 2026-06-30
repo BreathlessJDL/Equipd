@@ -65,6 +65,8 @@ import {
   isOrderParticipant,
 } from '../lib/orders'
 import { formatBuyerProtectionStatus, fetchDisputesForOrder, isBuyerProtectionWindowActive, isOrderDisputed } from '../lib/orderDisputes'
+import { hasClosedBuyerProtectionCase } from '../lib/caseClosure'
+import { hasBuyerSubmittedDeliveryDetails } from '../lib/orderDeliveryDetails'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { canShowOrderFulfilmentDetails } from '../lib/orderDeliveryDetails'
 import {
@@ -159,6 +161,20 @@ function OrderParticipantProfileLink({ label, userId, profile }) {
   )
 }
 
+function OrderDetailClosedCaseSupport() {
+  return (
+    <div className="order-detail__compact-support">
+      <h2 className="order-detail__card-title">Need help with this order?</h2>
+      <p className="order-detail__compact-support-lead" role="status">
+        This case has been closed. If you still need help, contact Equipd support.
+      </p>
+      <Link to="/support" className="order-detail__compact-support-btn">
+        Contact support
+      </Link>
+    </div>
+  )
+}
+
 function OrderDetailCompactSupport() {
   return (
     <div className="order-detail__compact-support">
@@ -189,6 +205,7 @@ function OrderDetailPage() {
   const [reviews, setReviews] = useState([])
   const [buyerProfile, setBuyerProfile] = useState(null)
   const [sellerProfile, setSellerProfile] = useState(null)
+  const [deliveryDetails, setDeliveryDetails] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -435,7 +452,11 @@ function OrderDetailPage() {
   const totalPrice = formatPricePence(
     order.buyer_total_pence ?? payment?.buyer_total_pence ?? order.amount_pence,
   )
-  const buyerProtectionStatus = formatBuyerProtectionStatus(order, payment)
+  const buyerProtectionStatus = formatBuyerProtectionStatus(order, payment, disputes)
+  const hasDeliveryDetails = hasBuyerSubmittedDeliveryDetails(deliveryDetails)
+  const fulfilmentDisplayStatus = getOrderFulfilmentDisplayStatus(order, viewerRole, {
+    hasDeliveryDetails,
+  })
   const showBuyerConfirm =
     !isAdminViewer && viewerRole === 'buyer' && canBuyerConfirmOrder(order, payment)
   const showHandoverQr =
@@ -474,9 +495,11 @@ function OrderDetailPage() {
       payment,
       order,
     })
+  const closedBuyerProtectionCase = hasClosedBuyerProtectionCase(disputes, supportRequests)
   const showSupportSection =
     !isCancelled &&
     !isAdminViewer &&
+    !closedBuyerProtectionCase &&
     (canRaiseSupportRequest(order, payment) || supportRequests.length > 0)
   const showReviewSection = isOrderReviewable(order)
   const buyerProtectionActive = isBuyerProtectionWindowActive(order)
@@ -499,10 +522,13 @@ function OrderDetailPage() {
     Boolean(order?.id)
     && (viewerRole === 'buyer' || viewerRole === 'seller' || viewerRole === 'admin')
     && canShowOrderFulfilmentDetails({ order, payment, viewerRole })
+  const showClosedCaseSupport =
+    !isCancelled && !isAdminViewer && closedBuyerProtectionCase
   const showOrderSupportRequest =
     !isCancelled &&
     !isAdminViewer &&
     !showCompactSupport &&
+    !showClosedCaseSupport &&
     !buyerProtectionActive &&
     showSupportSection
 
@@ -649,7 +675,7 @@ function OrderDetailPage() {
               {payment ? formatPaymentStatus(payment.status) : '—'}
             </OrderDetailOverviewFact>
             <OrderDetailOverviewFact label="Fulfilment">
-              {getOrderFulfilmentDisplayStatus(order, viewerRole)}
+              {fulfilmentDisplayStatus}
             </OrderDetailOverviewFact>
             <OrderDetailOverviewFact label="Delivery method">
               {deliveryMethodLabel}
@@ -771,18 +797,20 @@ function OrderDetailPage() {
 
         {showFulfilmentDetailsCard ? (
           <OrderFulfilmentDetailsCard
+            order={order}
             orderId={order.id}
             listingId={order.listing_id}
             orderType={order.order_type}
             viewerRole={viewerRole}
             readOnly={isAdminViewer}
+            onDetailsLoaded={setDeliveryDetails}
           />
         ) : null}
 
         <OrderDetailAccordion
           className="order-detail__card order-detail__info-card"
           title="Order information"
-          status={getOrderFulfilmentDisplayStatus(order, viewerRole)}
+          status={fulfilmentDisplayStatus}
           defaultOpen={false}
         >
           <div className="order-detail__info-group">
@@ -795,7 +823,7 @@ function OrderDetailPage() {
                 {payment ? formatPaymentStatus(payment.status) : '—'}
               </OrderDetailInfoRow>
               <OrderDetailInfoRow label="Fulfilment status">
-                {getOrderFulfilmentDisplayStatus(order, viewerRole)}
+                {fulfilmentDisplayStatus}
               </OrderDetailInfoRow>
               {getOrderPayoutDisplayStatus(order, viewerRole) ? (
                 <OrderDetailInfoRow label="Payout status">
@@ -923,7 +951,11 @@ function OrderDetailPage() {
           />
         ) : null}
 
-        {showCompactSupport ? (
+        {showClosedCaseSupport ? (
+          <section className="order-detail__card order-detail__support-card">
+            <OrderDetailClosedCaseSupport />
+          </section>
+        ) : showCompactSupport ? (
           <section className="order-detail__card order-detail__support-card">
             <OrderDetailCompactSupport />
           </section>

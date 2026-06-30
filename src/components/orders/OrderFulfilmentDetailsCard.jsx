@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LoadingState } from '../ui/UiState'
 import {
+  canBuyerEditDeliveryDetails,
   fetchListingFulfilmentPrivateForOrder,
   fetchOrderDeliveryDetails,
   formatFulfilmentDetailsTimestamp,
   getOrderDeliveryDetailsErrorMessage,
   getOrderFulfilmentDetailsCardTitle,
+  hasBuyerSubmittedDeliveryDetails,
   isCollectionFulfilmentOrderType,
   isSellerDeliveryFulfilmentOrderType,
   updateOrderDeliveryDetails,
@@ -58,25 +60,60 @@ function CollectionFulfilmentDetails({ details, updatedAt }) {
   )
 }
 
+function SellerDeliverySavedDetails({ details, showPrivacy = false }) {
+  return (
+    <>
+      {showPrivacy ? (
+        <p className="order-fulfilment-details__privacy">
+          Share the address and contact details the seller should use to arrange delivery. These
+          details are only shared with the seller for this order.
+        </p>
+      ) : null}
+      {details?.updatedAt ? (
+        <p className="order-fulfilment-details__updated" role="status">
+          Last updated {formatFulfilmentDetailsTimestamp(details.updatedAt)}
+        </p>
+      ) : null}
+      <dl className="order-fulfilment-details__fields">
+        <ReadOnlyField label="Delivery address" value={details?.buyerDeliveryAddress} />
+        <ReadOnlyField label="Contact name" value={details?.deliveryContactName} />
+        <ReadOnlyField label="Contact phone number" value={details?.deliveryContactPhone} />
+        {details?.deliveryNotes?.trim() ? (
+          <ReadOnlyField
+            label="Delivery notes / access instructions"
+            value={details.deliveryNotes}
+          />
+        ) : null}
+      </dl>
+    </>
+  )
+}
+
 function SellerDeliveryBuyerForm({
-  updatedAt,
+  formValues,
   saving,
   saveError,
   saveSuccess,
+  showActionRequired,
   onSubmit,
-  onAddressChange,
-  addressValue,
+  onFieldChange,
 }) {
+  const canSave =
+    formValues.address.trim()
+    && formValues.contactName.trim()
+    && formValues.contactPhone.trim()
+
   return (
     <>
-      <p className="order-fulfilment-details__privacy">
-        Only the seller and Equipd support can see this.
-      </p>
-      {updatedAt ? (
-        <p className="order-fulfilment-details__updated" role="status">
-          Last updated {formatFulfilmentDetailsTimestamp(updatedAt)}
+      {showActionRequired ? (
+        <p className="order-fulfilment-details__action-required" role="status">
+          Action required: add your delivery details so the seller can arrange delivery.
         </p>
       ) : null}
+      <p className="order-fulfilment-details__privacy">
+        Share the address and contact details the seller should use to arrange delivery. These
+        details are only shared with the seller for this order.
+      </p>
 
       <form className="order-fulfilment-details__form" onSubmit={onSubmit} noValidate>
         <div className="order-fulfilment-details__field order-fulfilment-details__field--editable">
@@ -86,11 +123,61 @@ function SellerDeliveryBuyerForm({
           <textarea
             id="order-delivery-address"
             className="order-fulfilment-details__input"
-            value={addressValue}
-            onChange={(event) => onAddressChange(event.target.value)}
+            value={formValues.address}
+            onChange={(event) => onFieldChange('address', event.target.value)}
             disabled={saving}
             rows={4}
             placeholder="Full delivery address"
+            required
+          />
+        </div>
+
+        <div className="order-fulfilment-details__field order-fulfilment-details__field--editable">
+          <label className="order-fulfilment-details__label" htmlFor="order-delivery-contact-name">
+            Contact name
+          </label>
+          <input
+            id="order-delivery-contact-name"
+            type="text"
+            className="order-fulfilment-details__input order-fulfilment-details__input--single"
+            value={formValues.contactName}
+            onChange={(event) => onFieldChange('contactName', event.target.value)}
+            disabled={saving}
+            placeholder="Name for delivery coordination"
+            autoComplete="name"
+            required
+          />
+        </div>
+
+        <div className="order-fulfilment-details__field order-fulfilment-details__field--editable">
+          <label className="order-fulfilment-details__label" htmlFor="order-delivery-contact-phone">
+            Contact phone number
+          </label>
+          <input
+            id="order-delivery-contact-phone"
+            type="tel"
+            className="order-fulfilment-details__input order-fulfilment-details__input--single"
+            value={formValues.contactPhone}
+            onChange={(event) => onFieldChange('contactPhone', event.target.value)}
+            disabled={saving}
+            placeholder="Phone number for delivery coordination"
+            autoComplete="tel"
+            required
+          />
+        </div>
+
+        <div className="order-fulfilment-details__field order-fulfilment-details__field--editable">
+          <label className="order-fulfilment-details__label" htmlFor="order-delivery-notes">
+            Delivery notes / access instructions (optional)
+          </label>
+          <textarea
+            id="order-delivery-notes"
+            className="order-fulfilment-details__input"
+            value={formValues.notes}
+            onChange={(event) => onFieldChange('notes', event.target.value)}
+            disabled={saving}
+            rows={3}
+            placeholder="Parking, gate codes, unloading access, or other delivery notes"
           />
         </div>
 
@@ -98,13 +185,13 @@ function SellerDeliveryBuyerForm({
           <button
             type="submit"
             className="order-fulfilment-details__save"
-            disabled={saving || !addressValue.trim()}
+            disabled={saving || !canSave}
           >
-            {saving ? 'Saving…' : 'Save delivery address'}
+            {saving ? 'Saving…' : 'Save delivery details'}
           </button>
           {saveSuccess ? (
             <p className="order-fulfilment-details__success" role="status">
-              Saved
+              Delivery details saved
             </p>
           ) : null}
           {saveError ? (
@@ -119,14 +206,12 @@ function SellerDeliveryBuyerForm({
 }
 
 function SellerDeliveryParticipantView({ details, viewerRole, readOnly }) {
-  const address = details?.buyerDeliveryAddress
+  const submitted = hasBuyerSubmittedDeliveryDetails(details)
 
-  if (!address?.trim()) {
+  if (!submitted) {
     return (
       <p className="order-fulfilment-details__waiting" role="status">
-        {viewerRole === 'seller' || readOnly
-          ? 'Waiting for buyer to provide delivery address.'
-          : 'Add your delivery address so the seller can arrange delivery.'}
+        Waiting for buyer to provide delivery details.
       </p>
     )
   }
@@ -134,37 +219,41 @@ function SellerDeliveryParticipantView({ details, viewerRole, readOnly }) {
   return (
     <>
       {readOnly ? (
-        <p className="order-fulfilment-details__privacy">
-          Only the seller and Equipd support can see this.
-        </p>
-      ) : null}
-      {readOnly ? (
         <p className="order-fulfilment-details__admin-note" role="status">
           Admin view only. Delivery details cannot be edited here.
         </p>
       ) : null}
-      <dl className="order-fulfilment-details__fields">
-        <ReadOnlyField label="Delivery address" value={address} />
-      </dl>
-      {details?.updatedAt ? (
-        <p className="order-fulfilment-details__updated" role="status">
-          Last updated {formatFulfilmentDetailsTimestamp(details.updatedAt)}
+      {viewerRole === 'seller' ? (
+        <p className="order-fulfilment-details__seller-prompt" role="status">
+          Arrange delivery with the buyer, then show your handover QR code when delivering.
         </p>
       ) : null}
+      <SellerDeliverySavedDetails details={details} />
     </>
   )
 }
 
+function createDeliveryFormState(details) {
+  return {
+    address: details?.buyerDeliveryAddress ?? '',
+    contactName: details?.deliveryContactName ?? '',
+    contactPhone: details?.deliveryContactPhone ?? '',
+    notes: details?.deliveryNotes ?? '',
+  }
+}
+
 function OrderFulfilmentDetailsCard({
+  order,
   orderId,
   listingId,
   orderType,
   viewerRole,
   readOnly = false,
+  onDetailsLoaded,
 }) {
   const [collectionDetails, setCollectionDetails] = useState(null)
   const [deliveryDetails, setDeliveryDetails] = useState(null)
-  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [formValues, setFormValues] = useState(() => createDeliveryFormState(null))
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -175,6 +264,8 @@ function OrderFulfilmentDetailsCard({
   const isSellerDelivery = isSellerDeliveryFulfilmentOrderType(orderType)
   const cardTitle = useMemo(() => getOrderFulfilmentDetailsCardTitle(orderType), [orderType])
   const isBuyer = viewerRole === 'buyer'
+  const buyerCanEdit = isBuyer && !readOnly && canBuyerEditDeliveryDetails(order)
+  const buyerHasSubmitted = hasBuyerSubmittedDeliveryDetails(deliveryDetails)
 
   useEffect(() => {
     if (!orderId) {
@@ -213,13 +304,14 @@ function OrderFulfilmentDetailsCard({
         if (error) {
           setLoadError(getOrderDeliveryDetailsErrorMessage(error))
           setDeliveryDetails(null)
-          setDeliveryAddress('')
+          setFormValues(createDeliveryFormState(null))
           setLoading(false)
           return
         }
 
         setDeliveryDetails(data)
-        setDeliveryAddress(data?.buyerDeliveryAddress ?? '')
+        setFormValues(createDeliveryFormState(data))
+        onDetailsLoaded?.(data)
         setLoading(false)
         return
       }
@@ -232,7 +324,7 @@ function OrderFulfilmentDetailsCard({
     return () => {
       active = false
     }
-  }, [isCollectionType, isSellerDelivery, listingId, orderId])
+  }, [isCollectionType, isSellerDelivery, listingId, onDetailsLoaded, orderId])
 
   useEffect(() => {
     if (!saveSuccess) return undefined
@@ -241,17 +333,26 @@ function OrderFulfilmentDetailsCard({
     return () => window.clearTimeout(timeoutId)
   }, [saveSuccess])
 
-  async function handleSaveDeliveryAddress(event) {
+  function handleFieldChange(field, value) {
+    setFormValues((current) => ({ ...current, [field]: value }))
+    setSaveError('')
+    setSaveSuccess(false)
+  }
+
+  async function handleSaveDeliveryDetails(event) {
     event.preventDefault()
 
-    if (!orderId || readOnly || saving || !isBuyer) return
+    if (!orderId || !buyerCanEdit || saving) return
 
     setSaving(true)
     setSaveError('')
     setSaveSuccess(false)
 
     const { data, error } = await updateOrderDeliveryDetails(orderId, {
-      buyerDeliveryAddress: deliveryAddress,
+      buyerDeliveryAddress: formValues.address,
+      deliveryContactName: formValues.contactName,
+      deliveryContactPhone: formValues.contactPhone,
+      deliveryNotes: formValues.notes,
     })
 
     setSaving(false)
@@ -262,7 +363,8 @@ function OrderFulfilmentDetailsCard({
     }
 
     setDeliveryDetails(data)
-    setDeliveryAddress(data?.buyerDeliveryAddress ?? '')
+    setFormValues(createDeliveryFormState(data))
+    onDetailsLoaded?.(data)
     setSaveSuccess(true)
   }
 
@@ -303,20 +405,20 @@ function OrderFulfilmentDetailsCard({
         />
       ) : null}
 
-      {isSellerDelivery && isBuyer && !readOnly ? (
+      {isSellerDelivery && buyerCanEdit ? (
         <SellerDeliveryBuyerForm
-          updatedAt={deliveryDetails?.updatedAt}
+          formValues={formValues}
           saving={saving}
           saveError={saveError}
           saveSuccess={saveSuccess}
-          onSubmit={handleSaveDeliveryAddress}
-          onAddressChange={(value) => {
-            setDeliveryAddress(value)
-            setSaveError('')
-            setSaveSuccess(false)
-          }}
-          addressValue={deliveryAddress}
+          showActionRequired={!buyerHasSubmitted}
+          onSubmit={handleSaveDeliveryDetails}
+          onFieldChange={handleFieldChange}
         />
+      ) : null}
+
+      {isSellerDelivery && isBuyer && !buyerCanEdit && buyerHasSubmitted ? (
+        <SellerDeliverySavedDetails details={deliveryDetails} showPrivacy />
       ) : null}
 
       {isSellerDelivery && (viewerRole === 'seller' || readOnly) ? (

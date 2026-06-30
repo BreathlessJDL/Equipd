@@ -572,6 +572,45 @@ function testRejectedClaimClosed() {
   logPass('Rejected claim closes with a single high-level resolution step')
 }
 
+function testResolvedWithoutCaseOutcomeUsesClosedStage() {
+  const timeline = buildTimeline({
+    order: baseOrder({ fulfilment_status: ORDER_FULFILMENT_STATUSES.DISPUTED }),
+    disputes: [
+      buildDispute(DISPUTE_STATUSES.RESOLVED, {
+        resolved_at: '2026-01-14T10:00:00Z',
+        customer_message: 'Case closed.',
+      }),
+    ],
+    caseUpdates: [
+      {
+        id: '1',
+        dispute_id: DISPUTE_ID,
+        event_type: 'case_opened',
+        status: 'evidence_received',
+        created_at: '2026-01-10T10:00:00Z',
+      },
+      {
+        id: '2',
+        dispute_id: DISPUTE_ID,
+        event_type: 'case_closed',
+        status: DISPUTE_STATUSES.RESOLVED,
+        created_at: '2026-01-14T10:00:00Z',
+      },
+    ],
+  })
+
+  assert(timeline.currentStage?.key === 'case_closed', 'Expected case_closed lifecycle stage')
+  assert(
+    getCurrentDisputeEvent(timeline)?.key === 'dispute_case_closed',
+    'Expected dispute_case_closed as current timeline step',
+  )
+  assert(
+    getCurrentDisputeEvent(timeline)?.state === 'current',
+    'Expected case closed step to use current styling state',
+  )
+  logPass('Resolved dispute without case_outcome shows closed stage and current timeline step')
+}
+
 function main() {
   testOpenedDisputeWithEvidence()
   testAwaitingSellerCollection()
@@ -581,6 +620,7 @@ function main() {
   testRefundWithoutReturn()
   testRefundCompletedAndCaseClosed()
   testRejectedClaimClosed()
+  testResolvedWithoutCaseOutcomeUsesClosedStage()
   testBuyerAndSellerTimelinesMatch()
   testCompletedOrderWithoutDispute()
   testBuildDisputeTimelineStepsExport()
