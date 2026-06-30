@@ -42,7 +42,12 @@ as $$
       and coalesce(o.order_type, 'collection'::public.order_type)
         = 'seller_delivery'::public.order_type
       and p.status = 'paid'::public.payment_status
-      and o.fulfilment_status = 'awaiting_seller_delivery'::public.order_fulfilment_status
+      and o.fulfilment_status in (
+        'awaiting_seller_delivery'::public.order_fulfilment_status,
+        'paid'::public.order_fulfilment_status
+      )
+      and o.collected_at is null
+      and o.collection_confirmed_at is null
   );
 $$;
 

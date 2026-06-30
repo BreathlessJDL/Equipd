@@ -23,8 +23,11 @@ const COLLECTION_FULFILMENT_ORDER_TYPES = new Set([
   ORDER_TYPES.BUYER_COURIER,
 ])
 
-const ORDER_DELIVERY_DETAILS_SELECT =
-  'order_id, buyer_delivery_address, delivery_contact_name, delivery_contact_phone, delivery_notes, delivery_details_submitted_at, created_at, updated_at'
+const ORDER_DELIVERY_DETAILS_SELECT_BASE =
+  'order_id, buyer_delivery_address, created_at, updated_at'
+
+const ORDER_DELIVERY_DETAILS_SELECT_EXTENDED =
+  `${ORDER_DELIVERY_DETAILS_SELECT_BASE}, delivery_contact_name, delivery_contact_phone, delivery_notes, delivery_details_submitted_at`
 
 export function isCollectionFulfilmentOrderType(orderType) {
   const type = orderType ?? ORDER_TYPES.COLLECTION
@@ -130,13 +133,67 @@ export function formatFulfilmentDetailsTimestamp(value) {
   }).format(new Date(value))
 }
 
-export function getOrderDeliveryDetailsErrorMessage(error) {
+function logOrderDeliveryDetailsError(context, error, extra = {}) {
+  if (!error) return
+
+  console.error('[order_delivery_details]', context, {
+    message: error.message,
+    code: error.code,
+    details: error.details,
+    hint: error.hint,
+    ...extra,
+  })
+}
+
+function isMissingDeliveryDetailsColumnError(error) {
+  const message = error?.message ?? ''
+  const code = error?.code ?? ''
+
+  return (
+    code === '42703'
+    || code === 'PGRST204'
+    || /column.+does not exist/i.test(message)
+    || /could not find the '.+' column of 'order_delivery_details'/i.test(message)
+  )
+}
+
+function isOrderDeliveryDetailsPermissionError(error) {
+  const message = error?.message ?? ''
+
+  return (
+    /permission denied/i.test(message)
+    || /row-level security/i.test(message)
+    || error?.code === '42501'
+  )
+}
+
+export function getOrderDeliveryDetailsLoadErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
 
   const message = error.message ?? ''
 
   if (message.includes('Not authenticated')) {
     return 'Sign in to view delivery details.'
+  }
+
+  if (isMissingDeliveryDetailsColumnError(error)) {
+    return 'Delivery details are temporarily unavailable. Equipd needs to apply a database update — please contact support if this persists.'
+  }
+
+  if (isOrderDeliveryDetailsPermissionError(error)) {
+    return 'Delivery details could not be loaded. Please refresh the page or contact support.'
+  }
+
+  return getListingFulfilmentPrivateErrorMessage(error)
+}
+
+export function getOrderDeliveryDetailsSaveErrorMessage(error) {
+  if (!error) return 'Delivery details could not be saved. Please try again.'
+
+  const message = error.message ?? ''
+
+  if (message.includes('Not authenticated')) {
+    return 'Sign in to save delivery details.'
   }
 
   if (message.includes('Only the buyer may change delivery details')) {
@@ -160,11 +217,71 @@ export function getOrderDeliveryDetailsErrorMessage(error) {
     return 'Enter a contact phone number before saving.'
   }
 
-  if (message.includes('row-level security') || message.includes('permission denied')) {
-    return 'Delivery details could not be loaded. Please refresh the page or contact support.'
+  if (isMissingDeliveryDetailsColumnError(error)) {
+    return 'Delivery details could not be saved. A database update is required — please contact support.'
   }
 
-  return getListingFulfilmentPrivateErrorMessage(error)
+  if (isOrderDeliveryDetailsPermissionError(error)) {
+    return 'Delivery details could not be saved. Please try again.'
+  }
+
+  return 'Delivery details could not be saved. Please try again.'
+}
+
+/** @deprecated Use getOrderDeliveryDetailsLoadErrorMessage or getOrderDeliveryDetailsSaveErrorMessage */
+export function getOrderDeliveryDetailsErrorMessage(error) {
+  return getOrderDeliveryDetailsLoadErrorMessage(error)
+}
+
+async function queryOrderDeliveryDetails(orderId, selectColumns) {
+  return supabase
+    .from('order_delivery_details')
+    .select(selectColumns)
+    .eq('order_id', orderId)
+    .maybeSingle()
+}
+
+export async function fetchOrderDeliveryDetails(orderId) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  if (!orderId) {
+    return { data: null, error: new Error('Order id is required.') }
+  }
+
+  let { data, error } = await queryOrderDeliveryDetails(
+    orderId,
+    ORDER_DELIVERY_DETAILS_SELECT_EXTENDED,
+  )
+
+  if (error && isMissingDeliveryDetailsColumnError(error)) {
+    logOrderDeliveryDetailsError(
+      'fetch fallback to base columns — run seller-delivery-buyer-details-extension.sql',
+      error,
+      { orderId },
+    )
+
+    const fallback = await queryOrderDeliveryDetails(orderId, ORDER_DELIVERY_DETAILS_SELECT_BASE)
+    data = fallback.data
+    error = fallback.error
+  }
+
+  if (error) {
+    logOrderDeliveryDetailsError('fetch failed', error, {
+      orderId,
+      rlsHint: isOrderDeliveryDetailsPermissionError(error)
+        ? 'Run supabase/order-delivery-details-rls-fix.sql'
+        : undefined,
+    })
+    return { data: null, error }
+  }
+
+  // No row yet is a normal state for a new seller-delivery order.
+  return {
+    data: data ? normalizeOrderDeliveryDetails(data) : null,
+    error: null,
+  }
 }
 
 function validateDeliveryDetailsPatch(patch = {}) {
@@ -207,29 +324,33 @@ function validateDeliveryDetailsPatch(patch = {}) {
   }
 }
 
-export async function fetchOrderDeliveryDetails(orderId) {
-  if (!supabase) {
-    return { data: null, error: new Error('Supabase is not configured.') }
+async function upsertOrderDeliveryDetails(orderId, payload, selectColumns) {
+  const { data: existing, error: readError } = await queryOrderDeliveryDetails(
+    orderId,
+    ORDER_DELIVERY_DETAILS_SELECT_BASE,
+  )
+
+  if (readError && !isMissingDeliveryDetailsColumnError(readError)) {
+    return { data: null, error: readError }
   }
 
-  if (!orderId) {
-    return { data: null, error: new Error('Order id is required.') }
+  if (existing) {
+    return supabase
+      .from('order_delivery_details')
+      .update(payload)
+      .eq('order_id', orderId)
+      .select(selectColumns)
+      .single()
   }
 
-  const { data, error } = await supabase
+  return supabase
     .from('order_delivery_details')
-    .select(ORDER_DELIVERY_DETAILS_SELECT)
-    .eq('order_id', orderId)
-    .maybeSingle()
-
-  if (error) {
-    return { data: null, error }
-  }
-
-  return {
-    data: normalizeOrderDeliveryDetails(data),
-    error: null,
-  }
+    .insert({
+      order_id: orderId,
+      ...payload,
+    })
+    .select(selectColumns)
+    .single()
 }
 
 export async function updateOrderDeliveryDetails(orderId, patch = {}) {
@@ -246,19 +367,35 @@ export async function updateOrderDeliveryDetails(orderId, patch = {}) {
     return { data: null, error: validated.error }
   }
 
-  const { data, error } = await supabase
-    .from('order_delivery_details')
-    .upsert(
-      {
-        order_id: orderId,
-        ...validated.payload,
-      },
-      { onConflict: 'order_id' },
+  let { data, error } = await upsertOrderDeliveryDetails(
+    orderId,
+    validated.payload,
+    ORDER_DELIVERY_DETAILS_SELECT_EXTENDED,
+  )
+
+  if (error && isMissingDeliveryDetailsColumnError(error)) {
+    logOrderDeliveryDetailsError(
+      'upsert fallback to base columns — run seller-delivery-buyer-details-extension.sql',
+      error,
+      { orderId },
     )
-    .select(ORDER_DELIVERY_DETAILS_SELECT)
-    .single()
+
+    const fallback = await upsertOrderDeliveryDetails(
+      orderId,
+      { buyer_delivery_address: validated.payload.buyer_delivery_address },
+      ORDER_DELIVERY_DETAILS_SELECT_BASE,
+    )
+    data = fallback.data
+    error = fallback.error
+  }
 
   if (error) {
+    logOrderDeliveryDetailsError('upsert failed', error, {
+      orderId,
+      rlsHint: isOrderDeliveryDetailsPermissionError(error)
+        ? 'Run supabase/order-delivery-details-rls-fix.sql'
+        : undefined,
+    })
     return { data: null, error }
   }
 
@@ -300,7 +437,7 @@ export async function fetchListingFulfilmentPrivateForOrder(orderId, listingId =
   const { data, error } = await fetchListingFulfilmentPrivate(resolvedListingId)
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error: error }
   }
 
   return {

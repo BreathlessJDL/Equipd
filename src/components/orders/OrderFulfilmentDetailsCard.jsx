@@ -5,7 +5,8 @@ import {
   fetchListingFulfilmentPrivateForOrder,
   fetchOrderDeliveryDetails,
   formatFulfilmentDetailsTimestamp,
-  getOrderDeliveryDetailsErrorMessage,
+  getOrderDeliveryDetailsLoadErrorMessage,
+  getOrderDeliveryDetailsSaveErrorMessage,
   getOrderFulfilmentDetailsCardTitle,
   hasBuyerSubmittedDeliveryDetails,
   isCollectionFulfilmentOrderType,
@@ -285,7 +286,7 @@ function OrderFulfilmentDetailsCard({
         if (!active) return
 
         if (error) {
-          setLoadError(getOrderDeliveryDetailsErrorMessage(error))
+          setLoadError(getOrderDeliveryDetailsLoadErrorMessage(error))
           setCollectionDetails(null)
           setLoading(false)
           return
@@ -302,7 +303,7 @@ function OrderFulfilmentDetailsCard({
         if (!active) return
 
         if (error) {
-          setLoadError(getOrderDeliveryDetailsErrorMessage(error))
+          setLoadError(getOrderDeliveryDetailsLoadErrorMessage(error))
           setDeliveryDetails(null)
           setFormValues(createDeliveryFormState(null))
           setLoading(false)
@@ -311,7 +312,7 @@ function OrderFulfilmentDetailsCard({
 
         setDeliveryDetails(data)
         setFormValues(createDeliveryFormState(data))
-        onDetailsLoaded?.(data)
+        onDetailsLoaded?.(data ?? null)
         setLoading(false)
         return
       }
@@ -358,7 +359,7 @@ function OrderFulfilmentDetailsCard({
     setSaving(false)
 
     if (error) {
-      setSaveError(getOrderDeliveryDetailsErrorMessage(error))
+      setSaveError(getOrderDeliveryDetailsSaveErrorMessage(error))
       return
     }
 
