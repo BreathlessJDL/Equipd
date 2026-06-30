@@ -1,24 +1,17 @@
 import { useState } from 'react'
-import {
-  confirmOrderReceived,
-  getOrderErrorMessage,
-  shouldAttemptPayoutRelease,
-} from '../lib/orders'
-import { getStripeApiErrorMessage, releaseOrderPayout } from '../lib/stripe-api'
+import { confirmOrderReceived, getOrderErrorMessage } from '../lib/orders'
 import './BuyerOrderConfirmation.css'
 
 function BuyerOrderConfirmation({ orderId, onConfirmed, compact = false }) {
   const [checked, setChecked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [releaseWarning, setReleaseWarning] = useState('')
 
   async function handleConfirm() {
     if (!orderId || !checked || submitting) return
 
     setSubmitting(true)
     setError('')
-    setReleaseWarning('')
 
     const { data, error: confirmError } = await confirmOrderReceived(orderId)
 
@@ -26,16 +19,6 @@ function BuyerOrderConfirmation({ orderId, onConfirmed, compact = false }) {
       setError(getOrderErrorMessage(confirmError))
       setSubmitting(false)
       return
-    }
-
-    if (shouldAttemptPayoutRelease(data?.payout_status)) {
-      const { error: releaseError } = await releaseOrderPayout(orderId)
-
-      if (releaseError) {
-        setReleaseWarning(
-          `Receipt confirmed, but payout release is still pending: ${getStripeApiErrorMessage(releaseError)}`,
-        )
-      }
     }
 
     setChecked(false)
@@ -50,8 +33,9 @@ function BuyerOrderConfirmation({ orderId, onConfirmed, compact = false }) {
       }`}
     >
       <p className="buyer-order-confirmation__warning">
-        Only confirm once you have the item and are satisfied with it. Equipd will then
-        attempt to release the seller payout. This cannot be undone from your account.
+        Only confirm once you have the item and are satisfied with it. Seller payout is
+        released automatically after the Buyer Protection window ends. This cannot be undone
+        from your account.
       </p>
 
       <label className="buyer-order-confirmation__checkbox">
@@ -79,12 +63,6 @@ function BuyerOrderConfirmation({ orderId, onConfirmed, compact = false }) {
       {error ? (
         <p className="buyer-order-confirmation__error" role="alert">
           {error}
-        </p>
-      ) : null}
-
-      {releaseWarning ? (
-        <p className="buyer-order-confirmation__warning" role="status">
-          {releaseWarning}
         </p>
       ) : null}
     </div>

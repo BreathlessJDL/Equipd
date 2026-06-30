@@ -761,12 +761,6 @@ export async function confirmOrderReceived(orderId) {
   return { data, error }
 }
 
-export function shouldAttemptPayoutRelease(payoutStatus) {
-  return (
-    payoutStatus === PAYOUT_STATUSES.READY || payoutStatus === PAYOUT_STATUSES.FAILED
-  )
-}
-
 export function enrichOfferWithOrder(offer) {
   if (!offer) return offer
 

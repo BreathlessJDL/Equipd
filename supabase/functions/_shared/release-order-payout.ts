@@ -345,11 +345,16 @@ export async function releaseReadyOrdersForSeller(
   stripe: Stripe,
   sellerId: string,
 ): Promise<ReleaseOrderPayoutResult[]> {
+  const nowIso = new Date().toISOString()
+
   const { data: orders, error } = await admin
     .from('orders')
     .select('id')
     .eq('seller_id', sellerId)
-    .in('fulfilment_status', ['buyer_confirmed', 'completed'])
+    .eq('fulfilment_status', 'completed')
+    .eq('protection_status', 'released')
+    .not('payout_release_at', 'is', null)
+    .lte('payout_release_at', nowIso)
     .in('payout_status', ['ready', 'failed'])
 
   if (error) {
