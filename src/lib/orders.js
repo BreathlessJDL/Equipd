@@ -184,6 +184,8 @@ function enrichOrderDetail(order) {
   }
 }
 
+export { enrichOrderDetail }
+
 export async function fetchOrderById(orderId) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
@@ -685,7 +687,18 @@ export function isOrderCompleted(order) {
 
 export function getOrderErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
-  return error.message || 'Something went wrong. Please try again.'
+
+  const message = error.message ?? ''
+
+  if (message.includes('Admin access required')) {
+    return 'You do not have access to this order.'
+  }
+
+  if (message.includes('Order not found')) {
+    return 'This order could not be found.'
+  }
+
+  return message || 'Something went wrong. Please try again.'
 }
 
 export async function setOrderFulfilmentMethod(paymentId, orderType) {

@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { formatOrderFulfilmentStatus, formatOrderTimestamp, formatPayoutStatus } from './orders'
+import { enrichOrderDetail, formatOrderFulfilmentStatus, formatOrderTimestamp, formatPayoutStatus } from './orders'
 import { formatPaymentStatus } from './payments'
 import { formatPricePence } from './listings'
 import {
@@ -160,6 +160,26 @@ export async function fetchAdminOrders(filter = 'all') {
   })
 
   return { data: data ?? [], error }
+}
+
+export async function fetchAdminOrderById(orderId) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  if (!orderId) {
+    return { data: null, error: new Error('Order id is required.') }
+  }
+
+  const { data, error } = await supabase.rpc('admin_fetch_order_detail', {
+    p_order_id: orderId,
+  })
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  return { data: enrichOrderDetail(data), error: null }
 }
 
 export function getAdminOrderWarnings(order) {

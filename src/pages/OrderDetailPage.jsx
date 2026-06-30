@@ -27,6 +27,7 @@ import '../components/OrderDetail.css'
 import '../components/PageStub.css'
 import { useAuth } from '../hooks/useAuth'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { fetchAdminOrderById } from '../lib/admin'
 import {
   formatPricePence,
 } from '../lib/listings'
@@ -209,18 +210,20 @@ function OrderDetailPage() {
     setReviewsError('')
 
     const [
-      { data, error: fetchError },
+      orderResult,
       supportRequestsResult,
       disputesResult,
       caseUpdatesResult,
       reviewsResult,
     ] = await Promise.all([
-      fetchOrderById(orderId),
+      isAdmin ? fetchAdminOrderById(orderId) : fetchOrderById(orderId),
       fetchSupportRequestsForOrder(orderId),
       fetchDisputesForOrder(orderId),
       fetchOrderCaseUpdates(orderId),
       fetchReviewsForOrder(orderId),
     ])
+
+    const { data, error: fetchError } = orderResult
 
     if (fetchError) {
       setError(getOrderErrorMessage(fetchError))
