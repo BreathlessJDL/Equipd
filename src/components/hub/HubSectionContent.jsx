@@ -86,40 +86,6 @@ const HUB_SUMMARY_CARDS = [
     mobileOnly: true,
     hideCount: true,
   },
-  {
-    key: 'active-listings',
-    label: 'Active listings',
-    shortLabel: 'Active listings',
-    hint: 'Items currently live',
-    section: 'listings',
-    tab: 'active',
-    countKey: 'activeListings',
-  },
-  {
-    key: 'offers-received',
-    label: 'Offers received',
-    shortLabel: 'Offers received',
-    hint: 'Waiting for your response',
-    section: 'selling',
-    tab: 'offers',
-    countKey: 'offersReceived',
-  },
-  {
-    key: 'offers-made',
-    label: 'Offers made',
-    shortLabel: 'Offers made',
-    hint: 'Offers you have sent',
-    section: 'offers',
-    countKey: 'offersMade',
-  },
-  {
-    key: 'saved-listings',
-    label: 'Saved listings',
-    shortLabel: 'Saved',
-    hint: 'Items you are watching',
-    section: 'saved',
-    countKey: 'savedListings',
-  },
 ]
 
 const HUB_TRANSACTION_ACTION_CARDS = [

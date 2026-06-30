@@ -130,7 +130,7 @@ function EvidencePreviewItem({ entry, loading }) {
   )
 }
 
-function IssueEvidenceList({ paths, title = 'Evidence' }) {
+function IssueEvidenceList({ paths, title = 'Evidence', emptyHint = null, alwaysShow = false }) {
   const [entriesByPath, setEntriesByPath] = useState({})
   const [loading, setLoading] = useState(true)
   const entriesRef = useRef(entriesByPath)
@@ -169,18 +169,23 @@ function IssueEvidenceList({ paths, title = 'Evidence' }) {
     }
   }, [normalizedPaths.join('|')])
 
-  if (!normalizedPaths.length) return null
+  if (!normalizedPaths.length && !alwaysShow) return null
 
   return (
     <div className="order-dispute__evidence">
       <h4 className="order-dispute__evidence-title">{title}</h4>
-      <ul className="order-dispute__evidence-list">
-        {normalizedPaths.map((path) => (
-          <li key={path} className="order-dispute__evidence-item">
-            <EvidencePreviewItem entry={entriesByPath[path]} loading={loading} />
-          </li>
-        ))}
-      </ul>
+      {!normalizedPaths.length && emptyHint ? (
+        <p className="order-dispute__evidence-empty">{emptyHint}</p>
+      ) : null}
+      {normalizedPaths.length ? (
+        <ul className="order-dispute__evidence-list">
+          {normalizedPaths.map((path) => (
+            <li key={path} className="order-dispute__evidence-item">
+              <EvidencePreviewItem entry={entriesByPath[path]} loading={loading} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   )
 }

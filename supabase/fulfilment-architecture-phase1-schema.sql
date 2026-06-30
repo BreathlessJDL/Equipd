@@ -150,6 +150,10 @@ begin
     raise exception 'Cannot reassign private fulfilment details to another listing';
   end if;
 
+  if TG_OP = 'DELETE' then
+    return OLD;
+  end if;
+
   return NEW;
 end;
 $$;

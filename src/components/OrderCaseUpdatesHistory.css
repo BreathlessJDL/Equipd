@@ -72,3 +72,11 @@
   line-height: 1.45;
   font-size: 0.875rem;
 }
+
+@media (max-width: 760px) {
+  .order-case-updates__message,
+  .order-case-updates__internal-note {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}

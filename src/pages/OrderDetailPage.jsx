@@ -487,7 +487,7 @@ function OrderDetailPage() {
     isPaymentComplete(payment) &&
     (isOrderDisputed(order) ||
       (viewerRole === 'buyer' && buyerProtectionActive) ||
-      (isAdmin && Boolean(activeSupportRequest)))
+      (isAdminViewer && Boolean(activeSupportRequest)))
   const showCompactSupport =
     !isCancelled && !isAdminViewer && buyerProtectionEnded && !isOrderDisputed(order)
   const showFulfilmentDetailsCard =
@@ -523,7 +523,7 @@ function OrderDetailPage() {
     showOrderSupportRequest ||
     showCompactSupport ||
     hasVisibleCaseUpdates(caseUpdates) ||
-    (isAdminViewer && supportError)
+    (isAdminViewer && (supportError || isOrderDisputed(order)))
 
   const showCaseUpdatesHistory = hasVisibleCaseUpdates(caseUpdates)
 
@@ -576,8 +576,8 @@ function OrderDetailPage() {
 
         {isAdminViewer ? (
           <p className="order-detail__banner order-detail__banner--notice" role="status">
-            Admin view only. Manage support requests from{' '}
-            <Link to="/admin/support">Admin support</Link>.
+            Admin view only. Manage this case from{' '}
+            <Link to="/admin/cases">Admin Cases</Link>.
           </p>
         ) : null}
       </header>
@@ -888,7 +888,11 @@ function OrderDetailPage() {
           <section className="order-detail__card order-detail__support-card">
             {showCaseUpdatesHistory ? (
               <div className="order-detail__support-block">
-                <OrderCaseUpdatesHistory updates={caseUpdates} isAdminViewer={isAdminViewer} />
+                <OrderCaseUpdatesHistory
+                  updates={caseUpdates}
+                  viewerRole={viewerRole}
+                  isAdminViewer={isAdminViewer}
+                />
               </div>
             ) : null}
 

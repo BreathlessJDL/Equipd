@@ -1,6 +1,13 @@
 import { supabase } from './supabase'
+import { formatOrderReference } from './orders'
 import { formatDisputeReason, formatDisputeStatus } from './orderDisputes'
 import { formatSupportRequestReason, formatSupportRequestStatus } from './supportRequests'
+
+export const ADMIN_CASE_SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'oldest_active', label: 'Oldest active first' },
+]
 
 export const ADMIN_CASE_FILTERS = [
   { value: 'active', label: 'Active' },
@@ -113,4 +120,62 @@ export async function fetchAdminCases(filter = 'all') {
   })
 
   return { data: data ?? [], error }
+}
+
+function normalizeAdminCaseSearch(value) {
+  return value?.trim().toLowerCase() ?? ''
+}
+
+function formatOrderIdSearchFragment(orderId) {
+  if (!orderId) return ''
+  const reference = formatOrderReference(orderId)
+  return `${String(orderId).toLowerCase()} ${reference.toLowerCase()} #${reference.toLowerCase()}`
+}
+
+export function filterAdminCases(cases, searchQuery) {
+  const query = normalizeAdminCaseSearch(searchQuery)
+  if (!query) return cases ?? []
+
+  return (cases ?? []).filter((caseRow) => {
+    const haystack = [
+      caseRow.case_id,
+      caseRow.order_id,
+      formatOrderIdSearchFragment(caseRow.order_id),
+      caseRow.listing_title,
+      caseRow.buyer_display_name,
+      caseRow.buyer_email,
+      caseRow.seller_display_name,
+      caseRow.seller_email,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    return haystack.includes(query)
+  })
+}
+
+export function sortAdminCases(cases, sortKey = 'newest') {
+  const rows = [...(cases ?? [])]
+
+  rows.sort((left, right) => {
+    const leftOpened = new Date(left.opened_at).getTime()
+    const rightOpened = new Date(right.opened_at).getTime()
+
+    if (sortKey === 'oldest') {
+      return leftOpened - rightOpened
+    }
+
+    if (sortKey === 'oldest_active') {
+      if (left.is_active !== right.is_active) {
+        return left.is_active ? -1 : 1
+      }
+
+      return leftOpened - rightOpened
+    }
+
+    return rightOpened - leftOpened
+  })
+
+  return rows
 }

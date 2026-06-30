@@ -42,6 +42,22 @@ async function uploadCaseEvidenceFiles({ orderId, caseType, caseId, files, uploa
   return evidencePaths
 }
 
+function getAdditionalEvidenceCopy(uploaderRole) {
+  if (uploaderRole === 'seller') {
+    return {
+      title: 'Add seller evidence',
+      lead:
+        'Upload any photos, videos, documents, courier proof, or messages that help explain your side of the case.',
+    }
+  }
+
+  return {
+    title: 'Add additional evidence',
+    lead:
+      'Upload any extra photos, videos, PDFs, receipts, courier proof, or screenshots that may help Equipd review this case.',
+  }
+}
+
 function AddAdditionalEvidenceSection({ orderId, caseType, caseId, uploaderRole, onUploaded }) {
   const [files, setFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
@@ -89,13 +105,12 @@ function AddAdditionalEvidenceSection({ orderId, caseType, caseId, uploaderRole,
     }
   }
 
+  const copy = getAdditionalEvidenceCopy(uploaderRole)
+
   return (
     <form className="order-support__form order-support__form--additional-evidence" onSubmit={handleSubmit}>
-      <h3 className="order-support__subtitle">Add additional evidence</h3>
-      <p className="order-support__lead">
-        Upload any extra photos, videos, PDFs, receipts, courier proof, or screenshots that may help
-        Equipd review this case.
-      </p>
+      <h3 className="order-support__subtitle">{copy.title}</h3>
+      <p className="order-support__lead">{copy.lead}</p>
 
       <EvidenceFilePicker
         inputId={`additional-evidence-${caseType}-${caseId}`}

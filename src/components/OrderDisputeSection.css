@@ -472,6 +472,66 @@
   margin-top: 0.5rem;
 }
 
+.order-dispute__evidence-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.order-dispute__evidence-empty {
+  margin: 0;
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .order-dispute {
+    padding: 0.85rem;
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
+  .order-dispute__row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .order-dispute__value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .order-dispute__admin-actions {
+    flex-direction: column;
+  }
+
+  .order-dispute__admin-actions > * {
+    width: 100%;
+  }
+
+  .order-dispute__admin-section--close {
+    padding: 0.85rem;
+  }
+
+  .order-dispute-modal__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .order-dispute-modal__actions > * {
+    width: 100%;
+  }
+
+  .order-dispute__evidence-list {
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  }
+
+  .order-dispute__evidence-file-name,
+  .order-dispute__evidence-file-subtitle {
+    max-width: 100%;
+  }
+}
+
 .order-case-return__meta {
   margin-bottom: 0.75rem;
 }

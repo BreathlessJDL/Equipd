@@ -590,4 +590,38 @@ a.order-detail__overview-title:hover {
   .order-detail__action-btn {
     width: 100%;
   }
+
+  .order-detail {
+    max-width: 100%;
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
+  .order-detail__stack,
+  .order-detail__support-card,
+  .order-detail__next-steps,
+  .order-detail__card {
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .order-detail__code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .order-detail__reference-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .order-detail__next-steps-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .order-detail__next-steps-actions > * {
+    width: 100%;
+  }
 }

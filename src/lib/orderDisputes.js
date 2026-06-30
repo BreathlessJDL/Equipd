@@ -353,11 +353,15 @@ export function isOrderDisputed(order) {
 }
 
 export function getDisputeBuyerMessage() {
-  return 'Dispute opened. Equipd will review the issue before any payout is released.'
+  return 'Your dispute has been raised. Equipd support is reviewing the case and will contact you if anything else is needed.'
 }
 
 export function getDisputeSellerMessage() {
-  return 'Order disputed. Payout is on hold while Equipd reviews the issue.'
+  return 'The buyer has raised a Buyer Protection dispute and uploaded evidence. Equipd support is reviewing the case.'
+}
+
+export function getDisputeAdminMessage() {
+  return 'Buyer Protection dispute open. Review evidence and case status below.'
 }
 
 export function getDisputeErrorMessage(error) {
@@ -386,8 +390,30 @@ export function getEquipdCustomerMessageFromDispute(dispute) {
   return message || null
 }
 
-export function getEquipdSupportUpdateFromDispute(dispute) {
+function isBuyerCentricDisputeOpenedMessage(message) {
+  const trimmed = message?.trim()
+  if (!trimmed) return false
+
+  return /^your dispute has been raised/i.test(trimmed)
+}
+
+export function getDisputeSupportMessageForViewer(dispute, viewerRole) {
   const message = getEquipdCustomerMessageFromDispute(dispute)
+  if (!message) return null
+
+  if (isBuyerCentricDisputeOpenedMessage(message)) {
+    if (viewerRole === 'seller') return getDisputeSellerMessage()
+    if (viewerRole === 'admin') return getDisputeAdminMessage()
+    if (viewerRole === 'buyer') return getDisputeBuyerMessage()
+  }
+
+  return message
+}
+
+export function getEquipdSupportUpdateFromDispute(dispute, viewerRole = null) {
+  const message = viewerRole
+    ? getDisputeSupportMessageForViewer(dispute, viewerRole)
+    : getEquipdCustomerMessageFromDispute(dispute)
   if (!message) return null
 
   return {

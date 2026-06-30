@@ -1,7 +1,7 @@
-import { formatCaseUpdateStatus, formatCaseUpdateTimestamp } from '../lib/caseUpdates'
+import { formatCaseUpdateStatus, formatCaseUpdateTimestamp, getCaseUpdateMessageForViewer } from '../lib/caseUpdates'
 import './OrderCaseUpdatesHistory.css'
 
-function OrderCaseUpdatesHistory({ updates, isAdminViewer = false }) {
+function OrderCaseUpdatesHistory({ updates, viewerRole = null, isAdminViewer = false }) {
   if (!updates?.length) return null
 
   return (
@@ -10,7 +10,10 @@ function OrderCaseUpdatesHistory({ updates, isAdminViewer = false }) {
         Support updates
       </h3>
       <ol className="order-case-updates__list">
-        {updates.map((update) => (
+        {updates.map((update) => {
+          const customerMessage = getCaseUpdateMessageForViewer(update, viewerRole)
+
+          return (
           <li key={update.id} className="order-case-updates__item">
             <article className="order-case-updates__card">
               <header className="order-case-updates__header">
@@ -22,10 +25,10 @@ function OrderCaseUpdatesHistory({ updates, isAdminViewer = false }) {
                 </time>
               </header>
 
-              {update.message_to_customer?.trim() ? (
+              {customerMessage ? (
                 <div className="order-case-updates__message-block">
                   <p className="order-case-updates__label">Message from Equipd</p>
-                  <p className="order-case-updates__message">{update.message_to_customer}</p>
+                  <p className="order-case-updates__message">{customerMessage}</p>
                 </div>
               ) : null}
 
@@ -37,7 +40,8 @@ function OrderCaseUpdatesHistory({ updates, isAdminViewer = false }) {
               ) : null}
             </article>
           </li>
-        ))}
+          )
+        })}
       </ol>
     </section>
   )

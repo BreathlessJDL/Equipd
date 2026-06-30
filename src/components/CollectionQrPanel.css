@@ -81,3 +81,29 @@
   color: var(--color-navy);
   font-size: 0.875rem;
 }
+
+@media (max-width: 760px) {
+  .collection-qr-panel {
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
+  .collection-qr-panel__qr {
+    width: min(200px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .collection-qr-panel__actions {
+    flex-direction: column;
+  }
+
+  .collection-qr-panel__button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .collection-qr-panel__link {
+    overflow-wrap: anywhere;
+  }
+}

@@ -13,6 +13,7 @@ import {
   getDisputeErrorMessage,
   getDisputeReasonOptions,
   getDisputeSellerMessage,
+  getDisputeAdminMessage,
   getEquipdSupportUpdateFromDispute,
   getDisputeSingleReasonNote,
   getLatestOrderDispute,
@@ -40,6 +41,11 @@ import SupportUpdateCard from './SupportUpdateCard'
 import './OrderDisputeSection.css'
 
 function OrderDisputeSummary({ dispute, role }) {
+  const showSellerEvidenceSection =
+    role === 'seller' ||
+    role === 'admin' ||
+    (dispute.seller_response_evidence_paths?.length ?? 0) > 0
+
   return (
     <div className="order-dispute__summary">
       {role === 'buyer' && isDisputeActive(dispute) ? (
@@ -50,6 +56,11 @@ function OrderDisputeSummary({ dispute, role }) {
       {role === 'seller' && isDisputeActive(dispute) ? (
         <p className="order-dispute__message order-dispute__message--seller" role="status">
           {getDisputeSellerMessage()}
+        </p>
+      ) : null}
+      {role === 'admin' && isDisputeActive(dispute) ? (
+        <p className="order-dispute__message order-dispute__message--admin" role="status">
+          {getDisputeAdminMessage()}
         </p>
       ) : null}
       <dl className="order-dispute__meta">
@@ -71,13 +82,30 @@ function OrderDisputeSummary({ dispute, role }) {
         </div>
       </dl>
 
-      <IssueEvidenceList paths={dispute.evidence_paths} title="Buyer evidence" />
-      {dispute.seller_response_evidence_paths?.length ? (
+      <div className="order-dispute__evidence-sections">
         <IssueEvidenceList
-          paths={dispute.seller_response_evidence_paths}
-          title="Seller evidence"
+          paths={dispute.evidence_paths}
+          title="Buyer evidence"
+          alwaysShow
+          emptyHint={
+            role === 'seller' || role === 'admin'
+              ? 'No buyer evidence uploaded yet.'
+              : 'No evidence uploaded yet.'
+          }
         />
-      ) : null}
+        {showSellerEvidenceSection ? (
+          <IssueEvidenceList
+            paths={dispute.seller_response_evidence_paths}
+            title="Seller evidence"
+            alwaysShow
+            emptyHint={
+              role === 'seller'
+                ? 'Upload photos, videos, documents, courier proof, or messages that support your side of the case.'
+                : 'No seller evidence uploaded yet.'
+            }
+          />
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -115,12 +143,12 @@ function OrderDisputeSection({
     role === 'buyer' && protectionWindowActive && !activeDispute && !isOrderDisputed(order)
   const showDisputeSummary =
     Boolean(displayDispute) ||
-    (isOrderDisputed(order) && (role === 'buyer' || role === 'seller'))
+    (isOrderDisputed(order) && (isParticipantViewerRole(role) || isAdmin))
   const showAdminControls =
-    isAdmin && (Boolean(displayDispute) || Boolean(supportRequest))
+    isAdmin && (Boolean(displayDispute) || Boolean(supportRequest) || isOrderDisputed(order))
   const disputeSupportUpdate = useMemo(
-    () => (displayDispute ? getEquipdSupportUpdateFromDispute(displayDispute) : null),
-    [displayDispute],
+    () => (displayDispute ? getEquipdSupportUpdateFromDispute(displayDispute, role) : null),
+    [displayDispute, role],
   )
   const supportRequestUpdate = useMemo(
     () => (supportRequest ? getEquipdSupportUpdateFromSupportRequest(supportRequest) : null),
@@ -309,10 +337,14 @@ function OrderDisputeSection({
             <OrderDisputeSummary dispute={displayDispute} role={role} />
           ) : (
             <p className="order-dispute__message" role="status">
-              {role === 'buyer' ? getDisputeBuyerMessage() : getDisputeSellerMessage()}
+              {role === 'buyer'
+                ? getDisputeBuyerMessage()
+                : role === 'admin'
+                  ? getDisputeAdminMessage()
+                  : getDisputeSellerMessage()}
             </p>
           )}
-          {displayDispute && isParticipantViewerRole(role) ? (
+          {displayDispute && (isParticipantViewerRole(role) || isAdmin) ? (
             <CaseReturnWorkflow
               dispute={displayDispute}
               returnLogistics={returnLogistics}

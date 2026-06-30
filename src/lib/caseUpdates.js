@@ -1,5 +1,10 @@
 import { supabase } from './supabase'
-import { formatDisputeStatus } from './orderDisputes'
+import {
+  formatDisputeStatus,
+  getDisputeAdminMessage,
+  getDisputeBuyerMessage,
+  getDisputeSellerMessage,
+} from './orderDisputes'
 import { formatSupportRequestStatus } from './supportRequests'
 
 const CASE_UPDATE_STATUS_LABELS = {
@@ -69,4 +74,32 @@ export function getPublicCaseUpdates(updates) {
       update.status ||
       update.event_type === 'case_opened',
   )
+}
+
+const BUYER_CENTRIC_DISPUTE_OPENED_PATTERNS = [
+  /^your dispute has been raised/i,
+  /^your dispute has been raised and your evidence has been received/i,
+]
+
+function isBuyerCentricDisputeOpenedMessage(message) {
+  const trimmed = message?.trim()
+  if (!trimmed) return false
+
+  return BUYER_CENTRIC_DISPUTE_OPENED_PATTERNS.some((pattern) => pattern.test(trimmed))
+}
+
+export function getCaseUpdateMessageForViewer(update, viewerRole) {
+  const message = update?.message_to_customer?.trim()
+  if (!message) return ''
+
+  if (
+    update.event_type === 'case_opened' &&
+    isBuyerCentricDisputeOpenedMessage(message)
+  ) {
+    if (viewerRole === 'seller') return getDisputeSellerMessage()
+    if (viewerRole === 'admin') return getDisputeAdminMessage()
+    if (viewerRole === 'buyer') return getDisputeBuyerMessage()
+  }
+
+  return message
 }

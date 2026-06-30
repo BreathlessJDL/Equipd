@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../components/AdminCases.css'
 import '../components/AdminSupport.css'
@@ -6,7 +6,9 @@ import '../components/PageStub.css'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import {
   ADMIN_CASE_FILTERS,
+  ADMIN_CASE_SORT_OPTIONS,
   fetchAdminCases,
+  filterAdminCases,
   formatAdminCaseUserLabel,
   formatCaseAge,
   formatCaseReason,
@@ -15,7 +17,9 @@ import {
   formatCaseType,
   formatCaseWaitingOn,
   isCaseOverdue,
+  sortAdminCases,
 } from '../lib/adminCases'
+import { formatOrderReference } from '../lib/orders'
 import { getAdminErrorMessage } from '../lib/admin'
 import { usePageTitle } from '../hooks/usePageTitle'
 
@@ -84,9 +88,16 @@ function AdminCaseActions({ caseRow }) {
 function AdminCasesPage() {
   usePageTitle('Admin Cases')
   const [filter, setFilter] = useState('active')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortKey, setSortKey] = useState('newest')
   const [cases, setCases] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const visibleCases = useMemo(
+    () => sortAdminCases(filterAdminCases(cases, searchQuery), sortKey),
+    [cases, searchQuery, sortKey],
+  )
 
   const loadCases = useCallback(async () => {
     setLoading(true)
@@ -139,12 +150,42 @@ function AdminCasesPage() {
         ))}
       </div>
 
+      <div className="admin-cases__toolbar">
+        <label className="admin-cases__search">
+          <span className="admin-cases__search-label">Search</span>
+          <input
+            type="search"
+            className="admin-cases__search-input"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Case/order #, buyer, seller, listing title…"
+          />
+        </label>
+
+        <label className="admin-cases__sort">
+          <span className="admin-cases__sort-label">Sort</span>
+          <select
+            className="admin-cases__sort-select"
+            value={sortKey}
+            onChange={(event) => setSortKey(event.target.value)}
+          >
+            {ADMIN_CASE_SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       {error ? <ErrorState compact>{error}</ErrorState> : null}
 
       {loading ? (
         <LoadingState compact>Loading support cases…</LoadingState>
-      ) : cases.length === 0 ? (
-        <EmptyState compact>No support cases</EmptyState>
+      ) : visibleCases.length === 0 ? (
+        <EmptyState compact>
+          {cases.length === 0 ? 'No support cases' : 'No cases match your search'}
+        </EmptyState>
       ) : (
         <>
           <div className="admin-cases__table-wrap admin-cases__desktop-only">
@@ -196,7 +237,7 @@ function AdminCasesPage() {
                 </tr>
               </thead>
               <tbody>
-                {cases.map((caseRow) => (
+                {visibleCases.map((caseRow) => (
                   <tr
                     key={`${caseRow.case_type}-${caseRow.case_id}`}
                     className={isCaseOverdue(caseRow) ? 'admin-cases__row--overdue' : undefined}
@@ -212,7 +253,7 @@ function AdminCasesPage() {
                     </td>
                     <td className="admin-cases__col admin-cases__col--order">
                       <Link to={`/orders/${caseRow.order_id}`} className="admin-support__link">
-                        {caseRow.order_id.slice(0, 8)}…
+                        #{formatOrderReference(caseRow.order_id)}
                       </Link>
                     </td>
                     <td className="admin-cases__col admin-cases__col--buyer">
@@ -253,7 +294,7 @@ function AdminCasesPage() {
           </div>
 
           <ul className="admin-cases__cards admin-cases__mobile-only">
-            {cases.map((caseRow) => (
+            {visibleCases.map((caseRow) => (
               <li
                 key={`${caseRow.case_type}-${caseRow.case_id}-card`}
                 className={`admin-cases__card${
@@ -274,7 +315,7 @@ function AdminCasesPage() {
                     <dt>Order</dt>
                     <dd>
                       <Link to={`/orders/${caseRow.order_id}`} className="admin-support__link">
-                        {caseRow.order_id.slice(0, 8)}…
+                        #{formatOrderReference(caseRow.order_id)}
                       </Link>
                     </dd>
                   </div>
