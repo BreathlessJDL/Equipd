@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <title>{{title}}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    /* Client resets */
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      height: 100% !important;
+      width: 100% !important;
+    }
+    * {
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+    table, td {
+      mso-table-lspace: 0pt !important;
+      mso-table-rspace: 0pt !important;
+      border-collapse: collapse;
+    }
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      outline: none;
+      text-decoration: none;
+    }
+    a {
+      text-decoration: none;
+    }
+    a[x-apple-data-detectors],
+    u + #body a,
+    #MessageViewBody a {
+      color: inherit !important;
+      text-decoration: none !important;
+      font-size: inherit !important;
+      font-family: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+    }
+
+    /* Typography helpers inside body slot */
+    .email-body p {
+      margin: 0 0 16px 0;
+    }
+    .email-body p:last-child {
+      margin-bottom: 0;
+    }
+    .email-body a {
+      color: #e8622a;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+    .email-body ul,
+    .email-body ol {
+      margin: 0 0 16px 0;
+      padding-left: 20px;
+    }
+    .email-body li {
+      margin-bottom: 8px;
+    }
+    .email-body strong {
+      font-weight: 600;
+      color: #0f2137;
+    }
+
+    /* Responsive */
+    @media only screen and (max-width: 620px) {
+      .email-shell {
+        width: 100% !important;
+      }
+      .email-hero__title {
+        font-size: 24px !important;
+        line-height: 1.3 !important;
+      }
+      .email-hero__subtitle {
+        font-size: 15px !important;
+      }
+      .email-content__card-inner {
+        padding: 22px 20px 26px 20px !important;
+        border-radius: 14px !important;
+      }
+      .email-cta__button {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+      }
+      .email-footer__links a,
+      .email-footer__links span {
+        display: inline-block;
+      }
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      .email-bg,
+      .email-bg__cell {
+        background-color: #111827 !important;
+      }
+      .email-hero__title,
+      .email-body,
+      .email-body strong {
+        color: #f3f4f6 !important;
+      }
+      .email-hero__subtitle,
+      .email-header__tagline,
+      .email-footer__links,
+      .email-footer__links a,
+      .email-footer__link {
+        color: #9ca3af !important;
+      }
+      .email-content__card-inner {
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
+        color: #e5e7eb !important;
+      }
+      .email-footer__copyright,
+      .email-footer__sent-by {
+        color: #6b7280 !important;
+      }
+      .email-footer__divider-cell td {
+        border-top-color: #374151 !important;
+      }
+      .email-logo--light {
+        display: none !important;
+      }
+      .email-logo--dark {
+        display: block !important;
+      }
+    }
+
+    /* Gmail iOS dark mode attribute selectors */
+    [data-ogsc] .email-bg,
+    [data-ogsc] .email-bg__cell {
+      background-color: #111827 !important;
+    }
+    [data-ogsc] .email-content__card-inner {
+      background-color: #1f2937 !important;
+      border-color: #374151 !important;
+      color: #e5e7eb !important;
+    }
+    [data-ogsc] .email-hero__title {
+      color: #f3f4f6 !important;
+    }
+  </style>
+</head>
+<body id="body" class="email-bg" style="margin: 0; padding: 0; width: 100% !important; background-color: #f7f8fa;">
+  <!-- Preheader (hidden inbox preview text) -->
+  <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all;">
+    {{preheader}}
+  </div>
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-bg" style="background-color: #f7f8fa;">
+    <tr>
+      <td align="center" valign="top" class="email-bg__cell" style="padding: 0; background-color: #f7f8fa;">
+        <!--[if mso | IE]>
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" align="center"><tr><td>
+        <![endif]-->
+
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-shell" style="max-width: 600px; margin: 0 auto;">
+          <tr>
+            <td align="center" valign="top" style="padding: 0;">
+
+              <!-- COMPONENT:header -->
+
+              <!-- COMPONENT:hero -->
+
+              <!-- COMPONENT:content -->
+
+              <!-- COMPONENT:cta -->
+
+              <!-- COMPONENT:footer -->
+
+            </td>
+          </tr>
+        </table>
+
+        <!--[if mso | IE]>
+        </td></tr></table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

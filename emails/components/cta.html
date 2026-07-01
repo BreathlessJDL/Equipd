@@ -1,0 +1,41 @@
+<!-- Equipd email — Primary CTA + secondary link component -->
+<!-- Placeholders: {{cta_text}}, {{cta_url}}, {{secondary_text}} (optional), {{secondary_url}} (optional) -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-cta">
+  <tr>
+    <td align="center" style="padding: 0 24px 32px 24px;" class="email-cta__cell">
+      {{#if cta_text}}
+      <!--[if mso]>
+      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{cta_url}}" style="height:52px;v-text-anchor:middle;width:280px;" arcsize="18%" strokecolor="#e8622a" fillcolor="#e8622a">
+        <w:anchorlock/>
+        <center style="color:#ffffff;font-family:Segoe UI, Arial, sans-serif;font-size:16px;font-weight:600;">{{cta_text}}</center>
+      </v:roundrect>
+      <![endif]-->
+      <!--[if !mso]><!-->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" class="email-cta__button-table">
+        <tr>
+          <td align="center" bgcolor="#e8622a" class="email-cta__button-cell" style="border-radius: 12px; background-color: #e8622a;">
+            <a
+              href="{{cta_url}}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="email-cta__button"
+              style="display: inline-block; min-width: 220px; padding: 16px 28px; font-family: Inter, 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.2; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 12px; background-color: #e8622a; border: 1px solid #e8622a; text-align: center; box-sizing: border-box;"
+            >
+              {{cta_text}}
+            </a>
+          </td>
+        </tr>
+      </table>
+      <!--<![endif]-->
+      {{/if}}
+
+      {{#if secondary_text}}
+      <p class="email-cta__secondary" style="margin: 20px 0 0 0; font-family: Inter, 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #5c6570;">
+        <a href="{{secondary_url}}" target="_blank" rel="noopener noreferrer" class="email-cta__secondary-link" style="color: #e8622a; text-decoration: underline; font-weight: 500;">
+          {{secondary_text}}
+        </a>
+      </p>
+      {{/if}}
+    </td>
+  </tr>
+</table>

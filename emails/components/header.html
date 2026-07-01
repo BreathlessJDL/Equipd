@@ -1,0 +1,37 @@
+<!-- Equipd email — Header component -->
+<!-- Placeholders: {{base_url}}, {{logo_url}}, {{tagline}} (optional) -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-header">
+  <tr>
+    <td align="center" style="padding: 22px 24px 4px 24px;" class="email-header__cell">
+      <a href="{{base_url}}/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+        <img
+          src="{{logo_url}}"
+          width="160"
+          height="54"
+          alt="Equipd"
+          class="email-logo email-logo--light"
+          style="display: block; width: 160px; max-width: 160px; height: auto; border: 0; outline: none; text-decoration: none;"
+        />
+        <!--[if !mso]><!-->
+        <img
+          src="{{logo_url}}"
+          width="160"
+          height="54"
+          alt="Equipd"
+          class="email-logo email-logo--dark"
+          style="display: none; width: 160px; max-width: 160px; height: auto; border: 0; outline: none; text-decoration: none;"
+        />
+        <!--<![endif]-->
+      </a>
+    </td>
+  </tr>
+  {{#if tagline}}
+  <tr>
+    <td align="center" style="padding: 0 24px 12px 24px;" class="email-header__tagline-cell">
+      <p class="email-header__tagline" style="margin: 0; font-family: Inter, 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5; color: #5c6570; letter-spacing: 0.01em;">
+        {{tagline}}
+      </p>
+    </td>
+  </tr>
+  {{/if}}
+</table>
