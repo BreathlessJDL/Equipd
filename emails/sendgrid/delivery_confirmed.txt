@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{counterparty_name}} has confirmed delivery of {{listing_title}}.
+
+Order number: {{order_number}}
+Buyer: {{counterparty_name}}
+Tracking reference: {{buyer_tracking_reference}}
+
+Payout is held during the Buyer Protection window. Open the order for full details.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

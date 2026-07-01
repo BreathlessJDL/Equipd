@@ -1,0 +1,23 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{seller_name}} has dispatched {{listing_title}} via courier. Your item is now in transit.
+
+Order number: {{order_number}}
+Seller: {{seller_name}}
+Courier: {{courier_name}}
+Company: {{courier_company}}
+
+Confirm delivery in your order once the item arrives to start your Buyer Protection window.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

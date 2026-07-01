@@ -156,17 +156,54 @@ export function buildSendGridPayload({
   from,
   replyTo,
 }) {
-  return {
-    personalizations: [
-      {
-        to: recipients.map((email) => ({ email })),
-        dynamic_template_data: dynamicTemplateData,
-      },
-    ],
+  const subject = dynamicTemplateData.subject?.trim()
+  const personalization = {
+    to: recipients.map((email) => ({ email })),
+    dynamic_template_data: dynamicTemplateData,
+  }
+
+  if (subject) {
+    personalization.subject = subject
+  }
+
+  const payload = {
+    personalizations: [personalization],
     from,
     reply_to: replyTo,
     template_id: templateId,
   }
+
+  if (subject) {
+    payload.subject = subject
+  }
+
+  return payload
+}
+
+export function summarizeSendGridPayloadSubjects(payload) {
+  return {
+    topLevelSubject: payload.subject ?? null,
+    personalizationSubject: payload.personalizations?.[0]?.subject ?? null,
+    dynamicTemplateDataSubject:
+      payload.personalizations?.[0]?.dynamic_template_data?.subject ?? null,
+  }
+}
+
+/** Log exact JSON body sent to SendGrid (no API key in payload). */
+export function logSendGridMailPayload(log, payload, context = {}) {
+  const subjectFields = summarizeSendGridPayloadSubjects(payload)
+  log(
+    'sendTransactionalEmail SendGrid request body',
+    JSON.stringify(
+      {
+        ...context,
+        subjectFields,
+        payload,
+      },
+      null,
+      2,
+    ),
+  )
 }
 
 /**
@@ -194,22 +231,36 @@ export async function sendTransactionalEmail(
     if (dryRun) {
       const templateResolution = resolveTemplateId(templateKey, getEnv)
       const senderPreview = resolveSenderConfig(getEnv, replyTo)
-      const payload = {
-        to: validation.recipients,
-        templateKey,
-        templateId: templateResolution.ok ? templateResolution.templateId : null,
-        templateEnvVar: templateResolution.envVarName ?? null,
-        from: senderPreview.ok ? senderPreview.from : null,
-        replyTo: senderPreview.ok ? senderPreview.replyTo : null,
-        dynamicTemplateData: enrichedData,
-        dryRun: true,
-        reason: !getEnv('SENDGRID_API_KEY')?.trim()
-          ? 'SENDGRID_API_KEY is not set'
-          : 'EMAIL_DRY_RUN is enabled',
+      const dryRunPayload =
+        templateResolution.ok && senderPreview.ok
+          ? buildSendGridPayload({
+              recipients: validation.recipients,
+              templateId: templateResolution.templateId,
+              dynamicTemplateData: enrichedData,
+              from: senderPreview.from,
+              replyTo: senderPreview.replyTo,
+            })
+          : null
+
+      if (dryRunPayload) {
+        logSendGridMailPayload(log, dryRunPayload, {
+          templateKey,
+          dryRun: true,
+          reason: !getEnv('SENDGRID_API_KEY')?.trim()
+            ? 'SENDGRID_API_KEY is not set'
+            : 'EMAIL_DRY_RUN is enabled',
+        })
+      } else {
+        log('sendTransactionalEmail dry-run', JSON.stringify({
+          to: validation.recipients,
+          templateKey,
+          templateId: templateResolution.ok ? templateResolution.templateId : null,
+          dynamicTemplateData: enrichedData,
+          dryRun: true,
+        }, null, 2))
       }
 
-      log('sendTransactionalEmail dry-run', JSON.stringify(payload, null, 2))
-      return { ok: true, dryRun: true, payload }
+      return { ok: true, dryRun: true, payload: dryRunPayload }
     }
 
     const sender = resolveSenderConfig(getEnv, replyTo)
@@ -231,6 +282,8 @@ export async function sendTransactionalEmail(
       from: sender.from,
       replyTo: sender.replyTo,
     })
+
+    logSendGridMailPayload(log, mailPayload, { templateKey })
 
     const sendResult = await sendViaApi({
       apiKey: getEnv('SENDGRID_API_KEY').trim(),

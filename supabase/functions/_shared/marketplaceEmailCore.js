@@ -25,7 +25,22 @@ export const MARKETPLACE_EMAIL_EVENT_KEYS = [
   'offer_accepted',
   'payment_successful',
   'new_order_received',
+  'buyer_delivery_details_added',
+  'collection_confirmed',
+  'courier_dispatched',
+  'delivery_confirmed',
+  'buyer_protection_started',
 ]
+
+const FULFILMENT_ORDER_EVENT_KEYS = new Set([
+  'buyer_delivery_details_added',
+  'collection_confirmed',
+  'courier_dispatched',
+  'delivery_confirmed',
+  'buyer_protection_started',
+])
+
+const DUAL_RECIPIENT_EVENT_KEYS = new Set(['collection_confirmed', 'delivery_confirmed'])
 
 const PAYMENT_DEADLINE_LABEL = '48 hours'
 
@@ -33,6 +48,51 @@ const SELLER_ONLY_DYNAMIC_KEYS = new Set([
   'seller_service_fee',
   'seller_net_payout',
 ])
+
+function readPayloadId(payload, camelKey, snakeKey) {
+  const value = payload?.[camelKey] ?? payload?.[snakeKey]
+  if (value === undefined || value === null) {
+    return undefined
+  }
+
+  const trimmed = String(value).trim()
+  return trimmed || undefined
+}
+
+/** Accept camelCase or snake_case IDs from pg_net payloads and Edge Function callers. */
+export function normalizeMarketplaceEmailPayload(payload = {}) {
+  return {
+    ...payload,
+    offerId: readPayloadId(payload, 'offerId', 'offer_id'),
+    orderId: readPayloadId(payload, 'orderId', 'order_id'),
+    paymentId: readPayloadId(payload, 'paymentId', 'payment_id'),
+    listingId: readPayloadId(payload, 'listingId', 'listing_id'),
+    recipientRole: readPayloadId(payload, 'recipientRole', 'recipient_role'),
+  }
+}
+
+async function resolveOrderIdForPayload(admin, payload) {
+  const normalized = normalizeMarketplaceEmailPayload(payload)
+  if (normalized.orderId) {
+    return normalized.orderId
+  }
+
+  if (!normalized.paymentId || !admin) {
+    return undefined
+  }
+
+  const { data, error } = await admin
+    .from('orders')
+    .select('id')
+    .eq('payment_id', normalized.paymentId)
+    .maybeSingle()
+
+  if (error) {
+    return undefined
+  }
+
+  return data?.id
+}
 
 export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
   switch (eventKey) {
@@ -44,6 +104,16 @@ export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
       return `payment_successful:${parts.orderId}:${parts.buyerId}`
     case 'new_order_received':
       return `new_order_received:${parts.orderId}:${parts.sellerId}`
+    case 'buyer_delivery_details_added':
+      return `buyer_delivery_details_added:${parts.orderId}:${parts.sellerId}`
+    case 'collection_confirmed':
+      return `collection_confirmed:${parts.orderId}:${parts.recipientUserId}`
+    case 'courier_dispatched':
+      return `courier_dispatched:${parts.orderId}:${parts.buyerId}`
+    case 'delivery_confirmed':
+      return `delivery_confirmed:${parts.orderId}:${parts.recipientUserId}`
+    case 'buyer_protection_started':
+      return `buyer_protection_started:${parts.orderId}:${parts.buyerId}`
     default:
       return `${eventKey}:${parts.entityId ?? 'unknown'}`
   }
@@ -52,6 +122,24 @@ export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
 export function formatOrderReference(orderId) {
   if (!orderId) return ''
   return String(orderId).replace(/-/g, '').slice(0, 8).toUpperCase()
+}
+
+export function formatProtectionEndsAt(isoDate) {
+  if (!isoDate) return '—'
+
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Europe/London',
+  }).format(new Date(isoDate))
+}
+
+function fulfilmentLabelForOrderType(orderType) {
+  return orderType === 'seller_delivery' ? 'handover' : 'collection'
+}
+
+function fulfilmentLabelTitleCase(orderType) {
+  return orderType === 'seller_delivery' ? 'Handover' : 'Collection'
 }
 
 export function formatPricePence(pence) {
@@ -67,17 +155,34 @@ export function formatPricePence(pence) {
   }).format(Number(pence) / 100)
 }
 
-export function getProfileDisplayName(profile, fallback = 'Equipd member') {
-  return (
-    profile?.display_name?.trim() ||
-    profile?.username?.trim() ||
-    fallback
-  )
+export function getMarketplaceUserName(profile, { email, fallback = 'Equipd member' } = {}) {
+  const username = profile?.username?.trim()
+  if (username) {
+    return username
+  }
+
+  const displayName = profile?.display_name?.trim()
+  if (displayName) {
+    return displayName
+  }
+
+  const emailValue = email ?? profile?.email
+  const emailPrefix = emailValue?.split('@')[0]?.trim()
+  if (emailPrefix) {
+    return emailPrefix
+  }
+
+  return fallback
 }
 
-export function getFirstName(profile, fallback = 'there') {
-  const displayName = getProfileDisplayName(profile, fallback)
-  return displayName.split(/\s+/)[0] || displayName
+/** @deprecated Use getMarketplaceUserName */
+export function getProfileDisplayName(profile, fallback = 'Equipd member') {
+  return getMarketplaceUserName(profile, { fallback })
+}
+
+/** Greeting / recipient_first_name uses the same identity priority as buyer_name / seller_name. */
+export function getMarketplaceRecipientName(profile, options = {}) {
+  return getMarketplaceUserName(profile, options)
 }
 
 export function assertBuyerEmailSafe(dynamicData) {
@@ -103,12 +208,48 @@ function layoutFields(baseUrl, fields) {
   }
 }
 
+export function composeMarketplaceEmailSubject(eventKey, listingTitle, { recipientRole, orderType } = {}) {
+  const title = listingTitle?.trim() || 'your listing'
+  const itemTitle = listingTitle?.trim() || 'your item'
+
+  switch (eventKey) {
+    case 'offer_received':
+      return `You have a new offer on ${title}`
+    case 'offer_accepted':
+      return `Your offer on ${title} has been accepted`
+    case 'payment_successful':
+      return `Payment confirmed for ${title}`
+    case 'new_order_received':
+      return `You've sold ${title}`
+    case 'buyer_delivery_details_added':
+      return `Delivery details added for ${title}`
+    case 'collection_confirmed': {
+      const label = fulfilmentLabelTitleCase(orderType)
+      if (recipientRole === 'buyer') {
+        return `You confirmed ${label.toLowerCase()} for ${itemTitle}`
+      }
+      return `${label} confirmed for ${itemTitle}`
+    }
+    case 'courier_dispatched':
+      return `${itemTitle} is on its way`
+    case 'delivery_confirmed':
+      if (recipientRole === 'buyer') {
+        return `You confirmed delivery for ${itemTitle}`
+      }
+      return `Delivery confirmed for ${itemTitle}`
+    case 'buyer_protection_started':
+      return `Buyer Protection started for ${itemTitle}`
+    default:
+      return ''
+  }
+}
+
 export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyerProfile, sellerProfile }) {
-  const buyerName = getProfileDisplayName(buyerProfile, 'A buyer')
+  const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'A buyer' })
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
   const listingPrice = formatPricePence(listing?.price_pence)
-  const recipientFirstName = getFirstName(sellerProfile, 'there')
+  const recipientFirstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
 
   const body = `
     <p>Hi ${recipientFirstName},</p>
@@ -122,6 +263,7 @@ export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyer
   `.trim()
 
   return layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('offer_received', listingTitle),
     preheader: `${buyerName} offered ${offerAmount} on your ${listingTitle} listing.`,
     title: 'New offer on your listing',
     subtitle: 'Review and respond when you are ready.',
@@ -138,10 +280,10 @@ export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyer
 }
 
 export function composeOfferAcceptedDynamicData({ baseUrl, offer, listing, buyerProfile, sellerProfile }) {
-  const sellerName = getProfileDisplayName(sellerProfile, 'The seller')
+  const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
-  const recipientFirstName = getFirstName(buyerProfile, 'there')
+  const recipientFirstName = getMarketplaceRecipientName(buyerProfile, { fallback: 'there' })
 
   const detailRows = {
     'Your offer': offerAmount,
@@ -157,6 +299,7 @@ export function composeOfferAcceptedDynamicData({ baseUrl, offer, listing, buyer
   `.trim()
 
   return layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('offer_accepted', listingTitle),
     preheader: `${sellerName} accepted your ${offerAmount} offer. Complete payment within ${PAYMENT_DEADLINE_LABEL}.`,
     title: 'Offer accepted',
     subtitle: 'Complete payment to secure your purchase.',
@@ -182,8 +325,8 @@ export function composePaymentSuccessfulDynamicData({
   const listingTitle = listing?.title?.trim() || 'your item'
   const orderNumber = formatOrderReference(order.id)
   const orderTotal = formatPricePence(order.buyer_total_pence ?? order.amount_pence)
-  const sellerName = getProfileDisplayName(sellerProfile, 'The seller')
-  const recipientFirstName = getFirstName(buyerProfile, 'there')
+  const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
+  const recipientFirstName = getMarketplaceRecipientName(buyerProfile, { fallback: 'there' })
 
   const body = `
     <p>Hi ${recipientFirstName},</p>
@@ -197,6 +340,7 @@ export function composePaymentSuccessfulDynamicData({
   `.trim()
 
   const dynamicData = layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('payment_successful', listingTitle),
     preheader: `Payment confirmed for order ${orderNumber} — ${listingTitle}.`,
     title: 'Payment successful',
     subtitle: 'Your order is confirmed.',
@@ -225,8 +369,8 @@ export function composeNewOrderReceivedDynamicData({
   const listingTitle = listing?.title?.trim() || 'your listing'
   const orderNumber = formatOrderReference(order.id)
   const saleAmount = formatPricePence(order.item_price_pence ?? order.amount_pence)
-  const buyerName = getProfileDisplayName(buyerProfile, 'The buyer')
-  const recipientFirstName = getFirstName(sellerProfile, 'there')
+  const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
+  const recipientFirstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
   const sellerServiceFeePence =
     order.seller_service_fee_pence ?? calculateSellerServiceFee(order.item_price_pence ?? order.amount_pence)
   const sellerNetPence =
@@ -248,6 +392,7 @@ export function composeNewOrderReceivedDynamicData({
   `.trim()
 
   return layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('new_order_received', listingTitle),
     preheader: `New paid order ${orderNumber} — ${buyerName} bought your ${listingTitle}.`,
     title: 'New order received',
     subtitle: 'A buyer has paid for your listing.',
@@ -265,6 +410,274 @@ export function composeNewOrderReceivedDynamicData({
   })
 }
 
+export function composeBuyerDeliveryDetailsAddedDynamicData({
+  baseUrl,
+  order,
+  listing,
+  buyerProfile,
+  sellerProfile,
+  deliveryDetails,
+}) {
+  const listingTitle = listing?.title?.trim() || 'your listing'
+  const orderNumber = formatOrderReference(order.id)
+  const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
+  const recipientFirstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
+  const deliveryContactName =
+    deliveryDetails?.delivery_contact_name?.trim() || buyerName
+
+  const body = `
+    <p>Hi ${recipientFirstName},</p>
+    <p><strong>${buyerName}</strong> has submitted delivery details for <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      'Order number': orderNumber,
+      'Delivery contact': deliveryContactName,
+      Buyer: buyerName,
+    })}
+    <p>Review the details in your order and arrange delivery when you are ready.</p>
+  `.trim()
+
+  return layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('buyer_delivery_details_added', listingTitle),
+    preheader: `${buyerName} added delivery details for ${listingTitle}.`,
+    title: 'Delivery details added',
+    subtitle: 'The buyer has submitted delivery information.',
+    body,
+    cta_text: 'View order',
+    cta_url: appUrl(baseUrl, `/orders/${order.id}`),
+    recipient_first_name: recipientFirstName,
+    buyer_name: buyerName,
+    listing_title: listingTitle,
+    order_id: order.id,
+    order_number: orderNumber,
+    delivery_contact_name: deliveryContactName,
+  })
+}
+
+export function composeCollectionConfirmedDynamicData({
+  baseUrl,
+  order,
+  listing,
+  buyerProfile,
+  sellerProfile,
+  recipientRole,
+}) {
+  const listingTitle = listing?.title?.trim() || 'your item'
+  const orderNumber = formatOrderReference(order.id)
+  const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
+  const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
+  const fulfilmentLabel = fulfilmentLabelTitleCase(order.order_type)
+  const fulfilmentVerb = fulfilmentLabelForOrderType(order.order_type)
+  const isBuyer = recipientRole === 'buyer'
+  const recipientProfile = isBuyer ? buyerProfile : sellerProfile
+  const counterpartyName = isBuyer ? sellerName : buyerName
+  const recipientFirstName = getMarketplaceRecipientName(recipientProfile, { fallback: 'there' })
+
+  const body = isBuyer
+    ? `
+    <p>Hi ${recipientFirstName},</p>
+    <p>You confirmed ${fulfilmentVerb} for <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      'Order number': orderNumber,
+      Seller: counterpartyName,
+    })}
+    <p>Your Buyer Protection window is now active. Open the order for full details.</p>
+  `.trim()
+    : `
+    <p>Hi ${recipientFirstName},</p>
+    <p><strong>${counterpartyName}</strong> has confirmed ${fulfilmentVerb} for <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      'Order number': orderNumber,
+      Buyer: counterpartyName,
+    })}
+    <p>Payout is held during the Buyer Protection window. Open the order for full details.</p>
+  `.trim()
+
+  const dynamicData = layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('collection_confirmed', listingTitle, {
+      recipientRole,
+      orderType: order.order_type,
+    }),
+    preheader: isBuyer
+      ? `You confirmed ${fulfilmentVerb} for ${listingTitle}.`
+      : `${fulfilmentLabel} confirmed for ${listingTitle} (order ${orderNumber}).`,
+    title: `${fulfilmentLabel} confirmed`,
+    subtitle: isBuyer
+      ? 'Your Buyer Protection window has started.'
+      : 'The buyer confirmed receipt of the item.',
+    body,
+    cta_text: 'View order',
+    cta_url: appUrl(baseUrl, `/orders/${order.id}`),
+    recipient_first_name: recipientFirstName,
+    listing_title: listingTitle,
+    order_id: order.id,
+    order_number: orderNumber,
+    counterparty_name: counterpartyName,
+    fulfilment_label: fulfilmentLabel,
+  })
+
+  if (isBuyer) {
+    assertBuyerEmailSafe(dynamicData)
+  }
+
+  return dynamicData
+}
+
+export function composeCourierDispatchedDynamicData({
+  baseUrl,
+  order,
+  listing,
+  buyerProfile,
+  sellerProfile,
+}) {
+  const listingTitle = listing?.title?.trim() || 'your item'
+  const orderNumber = formatOrderReference(order.id)
+  const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
+  const recipientFirstName = getMarketplaceRecipientName(buyerProfile, { fallback: 'there' })
+  const courierName = order.courier_name?.trim() || '—'
+  const courierCompany = order.courier_company?.trim() || '—'
+
+  const body = `
+    <p>Hi ${recipientFirstName},</p>
+    <p><strong>${sellerName}</strong> has dispatched <strong>${listingTitle}</strong> via courier. Your item is now in transit.</p>
+    ${detailRowsHtml({
+      'Order number': orderNumber,
+      Seller: sellerName,
+      Courier: courierName,
+      Company: courierCompany,
+    })}
+    <p>Confirm delivery in your order once the item arrives to start your Buyer Protection window.</p>
+  `.trim()
+
+  const dynamicData = layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('courier_dispatched', listingTitle),
+    preheader: `${listingTitle} is on its way — courier handover submitted.`,
+    title: 'Your order is on its way',
+    subtitle: 'The seller has dispatched your item via courier.',
+    body,
+    cta_text: 'View order',
+    cta_url: appUrl(baseUrl, `/orders/${order.id}`),
+    recipient_first_name: recipientFirstName,
+    listing_title: listingTitle,
+    order_id: order.id,
+    order_number: orderNumber,
+    seller_name: sellerName,
+    courier_name: courierName,
+    courier_company: courierCompany,
+  })
+
+  assertBuyerEmailSafe(dynamicData)
+  return dynamicData
+}
+
+export function composeDeliveryConfirmedDynamicData({
+  baseUrl,
+  order,
+  listing,
+  buyerProfile,
+  sellerProfile,
+  recipientRole,
+}) {
+  const listingTitle = listing?.title?.trim() || 'your item'
+  const orderNumber = formatOrderReference(order.id)
+  const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
+  const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
+  const isBuyer = recipientRole === 'buyer'
+  const recipientProfile = isBuyer ? buyerProfile : sellerProfile
+  const counterpartyName = isBuyer ? sellerName : buyerName
+  const recipientFirstName = getMarketplaceRecipientName(recipientProfile, { fallback: 'there' })
+  const buyerTrackingReference = order.courier_buyer_tracking_reference?.trim() || '—'
+
+  const detailRows = isBuyer
+    ? { 'Order number': orderNumber, Seller: counterpartyName }
+    : {
+        'Order number': orderNumber,
+        Buyer: counterpartyName,
+        'Tracking reference': buyerTrackingReference,
+      }
+
+  const body = isBuyer
+    ? `
+    <p>Hi ${recipientFirstName},</p>
+    <p>You confirmed delivery of <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml(detailRows)}
+    <p>Your Buyer Protection window is now active. Open the order for full details.</p>
+  `.trim()
+    : `
+    <p>Hi ${recipientFirstName},</p>
+    <p><strong>${counterpartyName}</strong> has confirmed delivery of <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml(detailRows)}
+    <p>Payout is held during the Buyer Protection window. Open the order for full details.</p>
+  `.trim()
+
+  const dynamicData = layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('delivery_confirmed', listingTitle, { recipientRole }),
+    preheader: isBuyer
+      ? `You confirmed delivery for ${listingTitle}.`
+      : `Delivery confirmed for ${listingTitle} (order ${orderNumber}).`,
+    title: 'Delivery confirmed',
+    subtitle: isBuyer
+      ? 'Your Buyer Protection window has started.'
+      : 'The buyer confirmed receipt of the item.',
+    body,
+    cta_text: 'View order',
+    cta_url: appUrl(baseUrl, `/orders/${order.id}`),
+    recipient_first_name: recipientFirstName,
+    listing_title: listingTitle,
+    order_id: order.id,
+    order_number: orderNumber,
+    counterparty_name: counterpartyName,
+    buyer_tracking_reference: buyerTrackingReference,
+  })
+
+  if (isBuyer) {
+    assertBuyerEmailSafe(dynamicData)
+  }
+
+  return dynamicData
+}
+
+export function composeBuyerProtectionStartedDynamicData({
+  baseUrl,
+  order,
+  listing,
+  buyerProfile,
+}) {
+  const listingTitle = listing?.title?.trim() || 'your item'
+  const orderNumber = formatOrderReference(order.id)
+  const recipientFirstName = getMarketplaceRecipientName(buyerProfile, { fallback: 'there' })
+  const protectionHours = String(order.dispute_window_hours ?? 24)
+  const protectionEndsAt = formatProtectionEndsAt(order.payout_release_at)
+
+  const body = `
+    <p>Hi ${recipientFirstName},</p>
+    <p>Your <strong>${protectionHours}-hour</strong> Buyer Protection window for <strong>${listingTitle}</strong> has started.</p>
+    ${detailRowsHtml({
+      'Order number': orderNumber,
+      'Protection ends': protectionEndsAt,
+    })}
+    <p>If something is not right with your order, open a case before the window ends.</p>
+  `.trim()
+
+  const dynamicData = layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('buyer_protection_started', listingTitle),
+    preheader: `Buyer Protection started for ${listingTitle} — ends ${protectionEndsAt}.`,
+    title: 'Buyer Protection started',
+    subtitle: 'Your protection window is now active.',
+    body,
+    cta_text: 'View order',
+    cta_url: appUrl(baseUrl, `/orders/${order.id}`),
+    recipient_first_name: recipientFirstName,
+    listing_title: listingTitle,
+    order_id: order.id,
+    order_number: orderNumber,
+    protection_hours: protectionHours,
+    protection_ends_at: protectionEndsAt,
+  })
+
+  assertBuyerEmailSafe(dynamicData)
+  return dynamicData
+}
+
 export async function resolveUserEmail(admin, userId) {
   const { data, error } = await admin.auth.admin.getUserById(userId)
   if (error) {
@@ -277,10 +690,41 @@ export async function resolveUserEmail(admin, userId) {
 async function fetchProfile(admin, userId) {
   const { data } = await admin
     .from('profiles')
-    .select('id, display_name, username')
+    .select('id, username, display_name')
     .eq('id', userId)
     .maybeSingle()
   return data
+}
+
+function profileNeedsEmailFallback(profile) {
+  return !profile?.username?.trim() && !profile?.display_name?.trim()
+}
+
+/** Load participant profiles once per email compose, with auth email only when needed for fallback. */
+export async function loadMarketplaceParticipants(admin, userIds) {
+  const ids = [...new Set(userIds.filter(Boolean))]
+  if (ids.length === 0) {
+    return {}
+  }
+
+  const profileRows = await Promise.all(ids.map((id) => fetchProfile(admin, id)))
+  const participants = {}
+
+  await Promise.all(
+    ids.map(async (id, index) => {
+      const profile = profileRows[index]
+      let email = null
+
+      if (!profile || profileNeedsEmailFallback(profile)) {
+        const resolved = await resolveUserEmail(admin, id)
+        email = resolved.email
+      }
+
+      participants[id] = profile ? { ...profile, email } : { id, email }
+    }),
+  )
+
+  return participants
 }
 
 async function loadOfferContext(admin, offerId) {
@@ -294,18 +738,17 @@ async function loadOfferContext(admin, offerId) {
     return { ok: false, error: error?.message || 'Offer not found' }
   }
 
-  const [{ data: listing }, buyerProfile, sellerProfile] = await Promise.all([
+  const [{ data: listing }, participants] = await Promise.all([
     admin.from('listings').select('id, title, price_pence').eq('id', offer.listing_id).maybeSingle(),
-    fetchProfile(admin, offer.buyer_id),
-    fetchProfile(admin, offer.seller_id),
+    loadMarketplaceParticipants(admin, [offer.buyer_id, offer.seller_id]),
   ])
 
   return {
     ok: true,
     offer,
     listing,
-    buyerProfile,
-    sellerProfile,
+    buyerProfile: participants[offer.buyer_id],
+    sellerProfile: participants[offer.seller_id],
   }
 }
 
@@ -313,7 +756,7 @@ async function loadOrderContext(admin, orderId) {
   const { data: order, error } = await admin
     .from('orders')
     .select(
-      'id, listing_id, buyer_id, seller_id, amount_pence, item_price_pence, buyer_total_pence, seller_service_fee_pence, seller_net_pence',
+      'id, listing_id, buyer_id, seller_id, amount_pence, item_price_pence, buyer_total_pence, seller_service_fee_pence, seller_net_pence, order_type, dispute_window_hours, payout_release_at, courier_name, courier_company, courier_buyer_tracking_reference, collection_confirmed_at, courier_evidence_submitted_at, courier_delivered_at',
     )
     .eq('id', orderId)
     .maybeSingle()
@@ -322,27 +765,37 @@ async function loadOrderContext(admin, orderId) {
     return { ok: false, error: error?.message || 'Order not found' }
   }
 
-  const [{ data: listing }, buyerProfile, sellerProfile] = await Promise.all([
+  const [{ data: listing }, participants] = await Promise.all([
     admin.from('listings').select('id, title, price_pence').eq('id', order.listing_id).maybeSingle(),
-    fetchProfile(admin, order.buyer_id),
-    fetchProfile(admin, order.seller_id),
+    loadMarketplaceParticipants(admin, [order.buyer_id, order.seller_id]),
   ])
 
   return {
     ok: true,
     order,
     listing,
-    buyerProfile,
-    sellerProfile,
+    buyerProfile: participants[order.buyer_id],
+    sellerProfile: participants[order.seller_id],
   }
+}
+
+async function loadOrderDeliveryDetails(admin, orderId) {
+  const { data } = await admin
+    .from('order_delivery_details')
+    .select('delivery_contact_name, delivery_contact_phone, buyer_delivery_address, delivery_details_submitted_at')
+    .eq('order_id', orderId)
+    .maybeSingle()
+
+  return data
 }
 
 export async function composeMarketplaceEmailDynamicData(eventKey, payload, getEnv) {
   const baseUrl = getEnv('APP_BASE_URL')?.trim() || getEnv('EQUIPD_APP_URL')?.trim() || 'https://equipd.co.uk'
-  const admin = payload.admin
+  const normalizedPayload = normalizeMarketplaceEmailPayload(payload)
+  const admin = normalizedPayload.admin
 
   if (eventKey === 'offer_received' || eventKey === 'offer_accepted') {
-    const context = await loadOfferContext(admin, payload.offerId)
+    const context = await loadOfferContext(admin, normalizedPayload.offerId)
     if (!context.ok) return context
 
     const { offer, listing, buyerProfile, sellerProfile } = context
@@ -395,7 +848,11 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
   }
 
   if (eventKey === 'payment_successful' || eventKey === 'new_order_received') {
-    const orderId = payload.orderId
+    const orderId = await resolveOrderIdForPayload(admin, normalizedPayload)
+    if (!orderId) {
+      return { ok: false, error: 'orderId or paymentId is required for order emails' }
+    }
+
     const context = await loadOrderContext(admin, orderId)
     if (!context.ok) return context
 
@@ -435,6 +892,152 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
         buyerProfile,
         sellerProfile,
       }),
+    }
+  }
+
+  if (FULFILMENT_ORDER_EVENT_KEYS.has(eventKey)) {
+    const orderId = await resolveOrderIdForPayload(admin, normalizedPayload)
+    if (!orderId) {
+      return { ok: false, error: 'orderId is required for fulfilment emails' }
+    }
+
+    const context = await loadOrderContext(admin, orderId)
+    if (!context.ok) return context
+
+    const { order, listing, buyerProfile, sellerProfile } = context
+    const recipientRole = normalizedPayload.recipientRole
+
+    if (DUAL_RECIPIENT_EVENT_KEYS.has(eventKey)) {
+      if (recipientRole !== 'buyer' && recipientRole !== 'seller') {
+        return { ok: false, error: 'recipientRole must be buyer or seller' }
+      }
+    }
+
+    if (eventKey === 'buyer_delivery_details_added') {
+      if (order.order_type !== 'seller_delivery') {
+        return { ok: false, skip: true, reason: 'not_seller_delivery_order' }
+      }
+
+      const deliveryDetails = await loadOrderDeliveryDetails(admin, orderId)
+      if (!deliveryDetails?.delivery_details_submitted_at) {
+        return { ok: false, skip: true, reason: 'delivery_details_not_submitted' }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: order.seller_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, sellerId: order.seller_id },
+        dynamicData: composeBuyerDeliveryDetailsAddedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          buyerProfile,
+          sellerProfile,
+          deliveryDetails,
+        }),
+      }
+    }
+
+    if (eventKey === 'collection_confirmed') {
+      if (!order.collection_confirmed_at) {
+        return { ok: false, skip: true, reason: 'collection_not_confirmed' }
+      }
+
+      const recipientUserId = recipientRole === 'buyer' ? order.buyer_id : order.seller_id
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, recipientUserId },
+        dynamicData: composeCollectionConfirmedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          buyerProfile,
+          sellerProfile,
+          recipientRole,
+        }),
+      }
+    }
+
+    if (eventKey === 'courier_dispatched') {
+      if (order.order_type !== 'buyer_courier') {
+        return { ok: false, skip: true, reason: 'not_buyer_courier_order' }
+      }
+      if (!order.courier_evidence_submitted_at) {
+        return { ok: false, skip: true, reason: 'courier_not_dispatched' }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: order.buyer_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, buyerId: order.buyer_id },
+        dynamicData: composeCourierDispatchedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          buyerProfile,
+          sellerProfile,
+        }),
+      }
+    }
+
+    if (eventKey === 'delivery_confirmed') {
+      if (order.order_type !== 'buyer_courier') {
+        return { ok: false, skip: true, reason: 'not_buyer_courier_order' }
+      }
+      if (!order.courier_delivered_at) {
+        return { ok: false, skip: true, reason: 'delivery_not_confirmed' }
+      }
+
+      const recipientUserId = recipientRole === 'buyer' ? order.buyer_id : order.seller_id
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, recipientUserId },
+        dynamicData: composeDeliveryConfirmedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          buyerProfile,
+          sellerProfile,
+          recipientRole,
+        }),
+      }
+    }
+
+    if (eventKey === 'buyer_protection_started') {
+      if (!order.payout_release_at) {
+        return { ok: false, skip: true, reason: 'protection_not_started' }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: order.buyer_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, buyerId: order.buyer_id },
+        dynamicData: composeBuyerProtectionStartedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          buyerProfile,
+        }),
+      }
     }
   }
 

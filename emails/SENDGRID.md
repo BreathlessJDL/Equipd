@@ -71,6 +71,9 @@ Each template key maps to an environment variable holding the SendGrid template 
 | `new_order_received` | `SENDGRID_TEMPLATE_NEW_ORDER_RECEIVED` |
 | `buyer_delivery_details_added` | `SENDGRID_TEMPLATE_BUYER_DELIVERY_DETAILS_ADDED` |
 | `collection_confirmed` | `SENDGRID_TEMPLATE_COLLECTION_CONFIRMED` |
+| `courier_dispatched` | `SENDGRID_TEMPLATE_COURIER_DISPATCHED` |
+| `delivery_confirmed` | `SENDGRID_TEMPLATE_DELIVERY_CONFIRMED` |
+| `buyer_protection_started` | `SENDGRID_TEMPLATE_BUYER_PROTECTION_STARTED` |
 | `dispute_opened` | `SENDGRID_TEMPLATE_DISPUTE_OPENED` |
 | `refund_completed` | `SENDGRID_TEMPLATE_REFUND_COMPLETED` |
 | `case_closed` | `SENDGRID_TEMPLATE_CASE_CLOSED` |
@@ -210,10 +213,19 @@ Or set `EMAIL_TEST_TO` in `.env.local` and run `npm run email:test-send`.
 3. **Create Dynamic Template** — Paste HTML from `emails/dist/master.html`.
 4. **Map Handlebars fields** — Ensure template uses the same placeholders: `{{title}}`, `{{subtitle}}`, `{{{body}}}`, `{{cta_text}}`, `{{cta_url}}`, `{{base_url}}`, `{{year}}`, etc.
 5. **Copy template ID** — Set `SENDGRID_TEMPLATE_MASTER_TEST=d-...` for the test template.
-6. **Create API key** — Restrict to Mail Send; store as `SENDGRID_API_KEY`.
-7. **Test** — `npm run email:test-send -- you@example.com`
+6. **Set template subject** — In each Dynamic Template version, set the **Subject** field to `{{subject}}`. Equipd supplies `subject` via the Mail Send API (`payload.subject`, `personalizations[0].subject`, and `dynamic_template_data.subject`). If the template subject is blank or locked to a static value, recipients may see a blank subject even when the API payload includes one.
+7. **Create API key** — Restrict to Mail Send; store as `SENDGRID_API_KEY`.
+8. **Test** — `npm run email:test-send -- you@example.com`
 
-Repeat step 3–5 for each transactional email in Phase 2, using the same master layout with different default copy.
+To verify API subject behaviour for `offer_received`:
+
+```powershell
+npm run email:test-sendgrid-subject -- you@example.com
+```
+
+This sends with hardcoded subject `TEST SUBJECT FROM API` and prints the exact JSON body plus the active SendGrid template version subject.
+
+Repeat step 3–6 for each transactional email in Phase 2, using the same master layout with different default copy.
 
 ---
 
@@ -238,6 +250,7 @@ Repeat step 3–5 for each transactional email in Phase 2, using the same master
 | `year` | Yes | Current year |
 | `tagline` | Default | Overridable |
 | `title` | No | Required |
+| `subject` | No | Required for marketplace emails; set SendGrid template subject to `{{subject}}` |
 | `preheader` | No | Required |
 | `body` | No | HTML, use `{{{body}}}` in SendGrid |
 | `subtitle`, `cta_*`, `secondary_*` | No | Optional Handlebars `{{#if}}` blocks |
@@ -257,7 +270,27 @@ See `emails/README.md` and `emails/DESIGN.md` for layout documentation.
 | `payment_successful` | `stripe-webhook` after `mark_payment_captured` | Buyer | `/orders/{order_id}` |
 | `new_order_received` | Same payment success flow | Seller | `/orders/{order_id}` |
 
-**Not wired yet:** disputes, refunds, payout, reviews, delivery/collection emails.
+**Not wired yet:** disputes, refunds, payout, reviews.
+
+### Phase 4 — Fulfilment events (wired)
+
+| Event key | Trigger | Recipient(s) | CTA |
+|-----------|---------|--------------|-----|
+| `buyer_delivery_details_added` | `order_delivery_details` first complete save | Seller | `/orders/{order_id}` |
+| `collection_confirmed` | `orders.collection_confirmed_at` set (QR handover) | Buyer + seller | `/orders/{order_id}` |
+| `courier_dispatched` | `orders.courier_evidence_submitted_at` set | Buyer | `/orders/{order_id}` |
+| `delivery_confirmed` | `orders.courier_delivered_at` set | Buyer + seller | `/orders/{order_id}` |
+| `buyer_protection_started` | `orders.payout_release_at` first set | Buyer | `/orders/{order_id}` |
+
+Dual-recipient events pass `recipientRole: 'buyer' | 'seller'` in the webhook payload.
+
+Idempotency keys: `{event}:{order_id}:{recipient_user_id}` (seller for `buyer_delivery_details_added`).
+
+Migration: `supabase/migrations/20260628200000_fulfilment_marketplace_emails.sql`
+
+Build SendGrid import files: `npm run email:build-master` → `emails/sendgrid/<key>.html` + `.txt`
+
+**Not wired yet:** disputes, refunds, payout, reviews, delivery/collection emails beyond the above.
 
 ### Central service
 

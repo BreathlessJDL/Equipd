@@ -1,13 +1,23 @@
 import { handleCors, errorResponse, jsonResponse } from '../_shared/cors.ts'
 import { sendMarketplaceEmail } from '../_shared/marketplaceEmail.ts'
-import { MARKETPLACE_EMAIL_EVENT_KEYS } from '../_shared/marketplaceEmailCore.js'
+import {
+  MARKETPLACE_EMAIL_EVENT_KEYS,
+  normalizeMarketplaceEmailPayload,
+} from '../_shared/marketplaceEmailCore.js'
+
+const FULFILMENT_EMAIL_EVENT_KEYS = new Set([
+  'buyer_delivery_details_added',
+  'collection_confirmed',
+  'courier_dispatched',
+  'delivery_confirmed',
+  'buyer_protection_started',
+])
+
+const DUAL_RECIPIENT_EVENT_KEYS = new Set(['collection_confirmed', 'delivery_confirmed'])
 
 type MarketplaceEmailRequest = {
   eventKey: string
-  payload?: {
-    offerId?: string
-    orderId?: string
-  }
+  payload?: Record<string, unknown>
 }
 
 function isMarketplaceEmailRequest(value: unknown): value is MarketplaceEmailRequest {
@@ -50,27 +60,34 @@ Deno.serve(async (req) => {
       return errorResponse('Invalid marketplace email payload', 400)
     }
 
-    const offerId = body.payload?.offerId
-    const orderId = body.payload?.orderId
+    const payload = normalizeMarketplaceEmailPayload(body.payload ?? {})
 
     if (
       (body.eventKey === 'offer_received' || body.eventKey === 'offer_accepted') &&
-      !offerId
+      !payload.offerId
     ) {
       return errorResponse('offerId is required for offer emails', 400)
     }
 
     if (
       (body.eventKey === 'payment_successful' || body.eventKey === 'new_order_received') &&
-      !orderId
+      !payload.orderId &&
+      !payload.paymentId
     ) {
-      return errorResponse('orderId is required for order emails', 400)
+      return errorResponse('orderId or paymentId is required for order emails', 400)
     }
 
-    const result = await sendMarketplaceEmail(body.eventKey, {
-      offerId,
-      orderId,
-    })
+    if (FULFILMENT_EMAIL_EVENT_KEYS.has(body.eventKey) && !payload.orderId) {
+      return errorResponse('orderId is required for fulfilment emails', 400)
+    }
+
+    if (DUAL_RECIPIENT_EVENT_KEYS.has(body.eventKey)) {
+      if (payload.recipientRole !== 'buyer' && payload.recipientRole !== 'seller') {
+        return errorResponse('recipientRole must be buyer or seller', 400)
+      }
+    }
+
+    const result = await sendMarketplaceEmail(body.eventKey, payload)
 
     if (!result.ok) {
       console.error('send-marketplace-email failed', body.eventKey, result.error)

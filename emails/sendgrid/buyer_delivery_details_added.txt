@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{buyer_name}} has submitted delivery details for {{listing_title}}.
+
+Order number: {{order_number}}
+Delivery contact: {{delivery_contact_name}}
+Buyer: {{buyer_name}}
+
+Review the details in your order and arrange delivery when you are ready.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

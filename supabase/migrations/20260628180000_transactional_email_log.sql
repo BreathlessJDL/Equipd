@@ -138,7 +138,7 @@ begin
 
   perform public.notify_marketplace_email(
     'offer_received',
-    jsonb_build_object('offer_id', new.id)
+    jsonb_build_object('offerId', new.id)
   );
 
   return new;
@@ -177,7 +177,7 @@ begin
 
   perform public.notify_marketplace_email(
     'offer_accepted',
-    jsonb_build_object('offer_id', new.id)
+    jsonb_build_object('offerId', new.id)
   );
 
   return new;

@@ -29,6 +29,7 @@
     "email:preview:template-screenshots": "node scripts/build-email-master.mjs && node scripts/screenshot-email-template-previews.mjs",
     "email:preview:template": "node scripts/email-preview-template.mjs",
     "email:test-send": "node scripts/email-test-send.mjs",
+    "email:test-sendgrid-subject": "node scripts/sendgrid-subject-api-test.mjs",
     "email:verify-logo": "node scripts/verify-email-logo-url.mjs",
     "test:marketplace-email": "node scripts/test-marketplace-email.mjs",
     "test:e2e": "playwright test",

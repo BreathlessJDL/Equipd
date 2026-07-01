@@ -1,4 +1,5 @@
 import { resolveAppBaseUrl, DEFAULT_EMAIL_LOGO_URL } from '../../supabase/functions/_shared/transactionalEmailCore.js'
+import { composeMarketplaceEmailSubject } from '../../supabase/functions/_shared/marketplaceEmailCore.js'
 import {
   PHASE2_EMAIL_TEMPLATES,
   buildPhase2PreviewData,
@@ -38,22 +39,6 @@ export const EMAIL_PREVIEW_MOCK_DATA = {
     cta_url: 'https://equipd.co.uk',
   }),
 
-  buyer_delivery_details_added: baseDefaults({
-    title: 'Delivery details added',
-    subtitle: 'The buyer has submitted delivery information.',
-    body: '<p>Review the details and continue fulfilment when ready.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  collection_confirmed: baseDefaults({
-    title: 'Collection confirmed',
-    subtitle: 'The buyer confirmed receipt of the item.',
-    body: '<p>Buyer Protection will end on schedule and payout will follow if eligible.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
   dispute_opened: baseDefaults({
     title: 'Case opened',
     subtitle: 'A Buyer Protection case has been opened.',
@@ -88,7 +73,11 @@ export const EMAIL_PREVIEW_MOCK_DATA = {
 }
 
 for (const template of PHASE2_EMAIL_TEMPLATES) {
-  EMAIL_PREVIEW_MOCK_DATA[template.key] = template.buildPreviewData('https://equipd.co.uk')
+  const mock = template.buildPreviewData('https://equipd.co.uk')
+  EMAIL_PREVIEW_MOCK_DATA[template.key] = {
+    ...mock,
+    subject: composeMarketplaceEmailSubject(template.key, mock.listing_title),
+  }
 }
 
 export function getPreviewMockData(templateKey, getEnv = (key) => process.env[key] ?? '') {
@@ -97,6 +86,7 @@ export function getPreviewMockData(templateKey, getEnv = (key) => process.env[ke
   if (phase2) {
     return {
       ...phase2,
+      subject: phase2.subject ?? composeMarketplaceEmailSubject(templateKey, phase2.listing_title),
       logo_url: DEFAULT_EMAIL_LOGO_URL,
       year: String(new Date().getFullYear()),
     }

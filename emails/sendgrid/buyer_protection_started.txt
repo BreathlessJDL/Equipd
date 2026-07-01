@@ -1,0 +1,21 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Your {{protection_hours}}-hour Buyer Protection window for {{listing_title}} has started.
+
+Order number: {{order_number}}
+Protection ends: {{protection_ends_at}}
+
+If something is not right with your order, open a case before the window ends.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd
