@@ -4,6 +4,10 @@ Equipd transactional emails use SendGrid **Dynamic Templates** built from the ap
 
 **Phase 1 scope:** plumbing only. Marketplace events are not wired yet.
 
+**Phase 2 scope:** local preview templates for `offer_received`, `offer_accepted`, `payment_successful`, and `new_order_received`. Build with `npm run email:build-master`. Paste each file from `emails/sendgrid/<key>.html` into its SendGrid dynamic template, plus `emails/sendgrid/<key>.txt` for plain text.
+
+**Phase 3 scope:** these four templates are wired to live marketplace events via `sendMarketplaceEmail()` with audit logging and idempotency. See [Phase 3 — Wired marketplace events](#phase-3--wired-marketplace-events) below.
+
 ---
 
 ### Logo not loading in email clients
@@ -239,3 +243,115 @@ Repeat step 3–5 for each transactional email in Phase 2, using the same master
 | `subtitle`, `cta_*`, `secondary_*` | No | Optional Handlebars `{{#if}}` blocks |
 
 See `emails/README.md` and `emails/DESIGN.md` for layout documentation.
+
+---
+
+## Phase 3 — Wired marketplace events
+
+### Events wired
+
+| Event key | Trigger | Recipient | CTA |
+|-----------|---------|-----------|-----|
+| `offer_received` | `offers` INSERT (buyer offer, not a counter) | Seller | `/hub?section=selling&tab=offers` |
+| `offer_accepted` | `offers` UPDATE → `accepted` (buyer offer) | Buyer | `/hub?section=buying&tab=awaiting_payment` |
+| `payment_successful` | `stripe-webhook` after `mark_payment_captured` | Buyer | `/orders/{order_id}` |
+| `new_order_received` | Same payment success flow | Seller | `/orders/{order_id}` |
+
+**Not wired yet:** disputes, refunds, payout, reviews, delivery/collection emails.
+
+### Central service
+
+```ts
+import { sendMarketplaceEmail } from '../_shared/marketplaceEmail.ts'
+
+await sendMarketplaceEmail('offer_received', { offerId })
+await sendMarketplaceEmail('payment_successful', { orderId })
+```
+
+Implementation: `supabase/functions/_shared/marketplaceEmailCore.js` (compose + idempotency + logging).
+
+Offer events are queued from Postgres via `notify_marketplace_email()` → `send-marketplace-email` Edge Function. Payment events run inside `stripe-webhook` after capture (non-blocking).
+
+### Idempotency keys
+
+| Event | Key format |
+|-------|------------|
+| `offer_received` | `offer_received:{offer_id}:{seller_id}` |
+| `offer_accepted` | `offer_accepted:{offer_id}:{buyer_id}` |
+| `payment_successful` | `payment_successful:{order_id}:{buyer_id}` |
+| `new_order_received` | `new_order_received:{order_id}:{seller_id}` |
+
+Unique constraint on `transactional_email_log.idempotency_key` prevents duplicate sends.
+
+### Email audit log
+
+Table: `public.transactional_email_log`
+
+Inspect in Supabase SQL editor (service role):
+
+```sql
+select template_key, recipient_email, status, idempotency_key, error_message, created_at, sent_at
+from public.transactional_email_log
+order by created_at desc
+limit 50;
+```
+
+Statuses: `pending`, `sent`, `skipped`, `failed`.
+
+- **skipped** — missing recipient email, dry-run, or duplicate idempotency key
+- **failed** — SendGrid error (marketplace action still succeeds)
+
+### Required template env vars (Phase 3)
+
+| Env var | Template key |
+|---------|--------------|
+| `SENDGRID_TEMPLATE_OFFER_RECEIVED` | `offer_received` |
+| `SENDGRID_TEMPLATE_OFFER_ACCEPTED` | `offer_accepted` |
+| `SENDGRID_TEMPLATE_PAYMENT_SUCCESSFUL` | `payment_successful` |
+| `SENDGRID_TEMPLATE_NEW_ORDER_RECEIVED` | `new_order_received` |
+
+Plus shared sender config: `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, `SENDGRID_FROM_NAME`, `SENDGRID_REPLY_TO_EMAIL`, `APP_BASE_URL`.
+
+### Supabase secrets (Edge Functions)
+
+```bash
+supabase secrets set \
+  SENDGRID_API_KEY=SG.xxx \
+  SENDGRID_FROM_EMAIL=notifications@equipd.co.uk \
+  SENDGRID_FROM_NAME=Equipd \
+  SENDGRID_REPLY_TO_EMAIL=support@equipd.co.uk \
+  APP_BASE_URL=https://equipd.co.uk \
+  MARKETPLACE_EMAIL_WEBHOOK_SECRET=your-secret \
+  SENDGRID_TEMPLATE_OFFER_RECEIVED=d-xxx \
+  SENDGRID_TEMPLATE_OFFER_ACCEPTED=d-xxx \
+  SENDGRID_TEMPLATE_PAYMENT_SUCCESSFUL=d-xxx \
+  SENDGRID_TEMPLATE_NEW_ORDER_RECEIVED=d-xxx
+```
+
+Configure `app_config.marketplace_email_webhook_secret` to match `MARKETPLACE_EMAIL_WEBHOOK_SECRET` (migration seeds a placeholder).
+
+Deploy Edge Functions: `send-marketplace-email`, `stripe-webhook`.
+
+Apply migration: `supabase/migrations/20260628180000_transactional_email_log.sql`
+
+### Buyer vs seller email safety
+
+- **Buyer emails** (`offer_accepted`, `payment_successful`) never include Seller Service Fee, payout amounts, or “You'll receive” copy.
+- **Seller emails** (`offer_received`, `new_order_received`) may include fee and net payout on `new_order_received`.
+
+### Manual resend (later)
+
+To resend, delete the row for that `idempotency_key` in `transactional_email_log`, then re-trigger the event or call:
+
+```bash
+npm run email:test-send -- offer_received you@example.com
+```
+
+(Test send uses mock data — for production resend, trigger the real event or add an admin tool later.)
+
+### Tests
+
+```bash
+npm run test:marketplace-email
+npm run email:test-send -- offer_received you@example.com
+```

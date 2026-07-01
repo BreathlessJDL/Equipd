@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Your payment for {{listing_title}} was successful. Your order is confirmed.
+
+Order number: {{order_number}}
+Total: {{order_total}}
+Seller: {{seller_name}}
+
+Follow the next steps in your order to arrange collection or delivery with the seller.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{buyer_name}} has paid for {{listing_title}}. You have a new order to fulfil.
+
+Order number: {{order_number}}
+Sale amount: {{order_total}}
+Buyer: {{buyer_name}}
+
+Open the order to confirm handover details and complete the next fulfilment steps.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

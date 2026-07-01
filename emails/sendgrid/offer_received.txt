@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{buyer_name}} has made an offer on {{listing_title}}.
+
+Offer: {{offer_amount}}
+Asking price: {{listing_price}}
+Buyer: {{buyer_name}}
+
+You can accept, decline, or counter in My Hub. Offers are not binding until you accept.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

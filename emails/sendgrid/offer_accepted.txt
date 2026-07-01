@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{seller_name}} accepted your offer on {{listing_title}}.
+
+Your offer: {{offer_amount}}
+Seller: {{seller_name}}
+Pay within: {{payment_deadline}}
+
+Complete payment to secure the item. If payment is not completed in time, the offer may be cancelled.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

@@ -1,4 +1,8 @@
 import { resolveAppBaseUrl, DEFAULT_EMAIL_LOGO_URL } from '../../supabase/functions/_shared/transactionalEmailCore.js'
+import {
+  PHASE2_EMAIL_TEMPLATES,
+  buildPhase2PreviewData,
+} from '../templates/index.js'
 
 const baseDefaults = (overrides = {}) => {
   const base_url = overrides.base_url ?? 'https://equipd.co.uk'
@@ -15,6 +19,7 @@ const baseDefaults = (overrides = {}) => {
     secondary_url: `${base_url}/help`,
     ...overrides,
     base_url,
+    logo_url: DEFAULT_EMAIL_LOGO_URL,
     year: String(new Date().getFullYear()),
   }
 }
@@ -31,38 +36,6 @@ export const EMAIL_PREVIEW_MOCK_DATA = {
     `.trim(),
     cta_text: 'Open Equipd',
     cta_url: 'https://equipd.co.uk',
-  }),
-
-  offer_received: baseDefaults({
-    title: 'New offer received',
-    subtitle: 'A buyer has made an offer on your listing.',
-    body: '<p>Review the offer in My Hub and respond when you are ready.</p>',
-    cta_text: 'View offer',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  offer_accepted: baseDefaults({
-    title: 'Offer accepted',
-    subtitle: 'The seller accepted your offer.',
-    body: '<p>Complete payment to secure the item.</p>',
-    cta_text: 'Complete payment',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  payment_successful: baseDefaults({
-    title: 'Payment successful',
-    subtitle: 'Your order is confirmed.',
-    body: '<p>Follow the next steps in your order to complete collection or delivery.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  new_order_received: baseDefaults({
-    title: 'New order received',
-    subtitle: 'A buyer has paid for your item.',
-    body: '<p>Prepare for fulfilment and follow the handover steps in your order.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
   }),
 
   buyer_delivery_details_added: baseDefaults({
@@ -114,11 +87,24 @@ export const EMAIL_PREVIEW_MOCK_DATA = {
   }),
 }
 
+for (const template of PHASE2_EMAIL_TEMPLATES) {
+  EMAIL_PREVIEW_MOCK_DATA[template.key] = template.buildPreviewData('https://equipd.co.uk')
+}
+
 export function getPreviewMockData(templateKey, getEnv = (key) => process.env[key] ?? '') {
+  const base_url = resolveAppBaseUrl(getEnv)
+  const phase2 = buildPhase2PreviewData(templateKey, base_url)
+  if (phase2) {
+    return {
+      ...phase2,
+      logo_url: DEFAULT_EMAIL_LOGO_URL,
+      year: String(new Date().getFullYear()),
+    }
+  }
+
   const mock = EMAIL_PREVIEW_MOCK_DATA[templateKey]
   if (!mock) return null
 
-  const base_url = resolveAppBaseUrl(getEnv)
   return {
     ...mock,
     base_url,

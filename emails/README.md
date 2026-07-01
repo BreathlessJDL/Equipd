@@ -1,92 +1,48 @@
-# Equipd transactional email — master layout
+# Equipd transactional email
 
-Reusable SendGrid-compatible master template for all Equipd transactional emails.
+Reusable SendGrid-compatible master layout plus Phase 2 transactional templates.
 
-**Do not add individual email content here yet.** This folder defines layout, branding, and composition only.
+Marketplace events are **not** wired yet — templates are built and previewed locally only.
 
 ## Structure
 
 ```
 emails/
-  components/
-    header.html    — Logo + optional tagline
-    hero.html      — Title + optional subtitle
-    content.html   — Rounded white content card ({{{body}}})
-    cta.html       — Primary orange button + optional secondary link
-    footer.html    — Help, support, legal, copyright
-  layouts/
-    master.html    — Shell, resets, dark mode, responsive CSS
+  components/          — Header, hero, content, CTA, footer partials
+  layouts/master.html  — Shell, resets, dark mode, responsive CSS
+  templates/           — Phase 2 copy + mock data per template key
+  sendgrid/            — SendGrid import files (HTML + plain text per template)
   dist/
-    master.html           — Composed SendGrid template (Handlebars placeholders)
-    master-preview.html   — Filled preview for browser review
-  DESIGN.md               — Typography, spacing, recommendations
+    master.html        — Composed master shell (reference)
+    preview-<key>.html — Filled browser previews (mock data)
+  preview/
+    <key>-desktop.png  — Desktop screenshots
+    <key>-mobile.png   — Mobile screenshots
 ```
 
 ## Build
 
 ```bash
-node scripts/build-email-master.mjs
-node scripts/screenshot-email-master-preview.mjs   # optional desktop/mobile PNGs
+npm run email:build-master
+npm run email:preview:template-screenshots
+npm run email:preview:template -- offer_received
 ```
 
-## SendGrid placeholders
+## SendGrid import files (after `npm run email:build-master`)
 
-| Placeholder | Required | Description |
-|-------------|----------|-------------|
-| `{{base_url}}` | Yes | App origin, e.g. `https://equipd.co.uk` |
-| `{{preheader}}` | Yes | Hidden inbox preview line (~90 chars) |
-| `{{title}}` | Yes | Hero heading |
-| `{{subtitle}}` | No | Hero supporting line |
-| `{{body}}` | Yes | HTML body inside content card (triple braces `{{{body}}}` if unescaped) |
-| `{{cta_text}}` | No | Primary button label |
-| `{{cta_url}}` | No | Primary button URL |
-| `{{secondary_text}}` | No | Text link below button |
-| `{{secondary_url}}` | No | Text link URL |
-| `{{tagline}}` | No | Header tagline under logo |
-| `{{year}}` | Yes | Footer copyright year |
+| Template | HTML (paste into SendGrid) | Plain text |
+|----------|----------------------------|------------|
+| Offer Received | `emails/sendgrid/offer_received.html` | `emails/sendgrid/offer_received.txt` |
+| Offer Accepted | `emails/sendgrid/offer_accepted.html` | `emails/sendgrid/offer_accepted.txt` |
+| Payment Successful | `emails/sendgrid/payment_successful.html` | `emails/sendgrid/payment_successful.txt` |
+| New Order Received | `emails/sendgrid/new_order_received.html` | `emails/sendgrid/new_order_received.txt` |
 
-Conditional blocks use Handlebars:
-
-```handlebars
-{{#if subtitle}}...{{/if}}
-{{#if cta_text}}...{{/if}}
-{{#if secondary_text}}...{{/if}}
-{{#if tagline}}...{{/if}}
-```
-
-## Server-side composition (future)
-
-When sending via Edge Functions, compose the same partials in code or render `emails/dist/master.html` with Handlebars. Keep transactional copy in separate template files — never hardcode order data in the layout.
-
-## Brand tokens
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| Navy | `#0f2137` | Headings, body text |
-| Muted | `#5c6570` | Subtitles, footer links |
-| Orange | `#e8622a` | Primary CTA, inline links |
-| Page bg | `#f7f8fa` | Email background |
-| Card bg | `#ffffff` | Content card |
-| Border | `#dde3ea` | Card + dividers |
-| Footer meta | `#9aa3ad` | Copyright, sent-by |
-
-Matches `src/styles/global.css`.
+Browser previews (filled mock data): `emails/dist/preview-<key>.html`
 
 ## Logo
 
-Hosted at `{{logo_url}}` (default `https://equipd.co.uk/email/equipd-full-logo.png` from `public/email/equipd-full-logo.png`).
+`{{logo_url}}` → `https://equipd.co.uk/email/equipd-full-logo.png`
 
-## Preview
+## SendGrid setup
 
-Open `emails/dist/master-preview.html` in a browser after running the build script.
-
-## SendGrid (Phase 1)
-
-Transactional email sending infrastructure is documented in [`SENDGRID.md`](./SENDGRID.md).
-
-Quick start:
-
-```bash
-npm run email:test-send -- you@example.com   # dry-run without SENDGRID_API_KEY
-npm run email:preview:template -- offer_received
-```
+See [`SENDGRID.md`](./SENDGRID.md).

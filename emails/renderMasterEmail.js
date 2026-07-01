@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const EMAILS_DIR = __dirname
 const DIST_DIR = path.join(EMAILS_DIR, 'dist')
+const SENDGRID_DIR = path.join(EMAILS_DIR, 'sendgrid')
 
 const COMPONENT_ORDER = ['header', 'hero', 'content', 'cta', 'footer']
 
@@ -33,8 +34,8 @@ export function renderMasterEmail(html, data, { forLocalPreview = false } = {}) 
   })
 
   for (const [key, value] of Object.entries(data)) {
-    output = output.replaceAll(`{{${key}}}`, String(value))
     output = output.replaceAll(`{{{${key}}}}`, String(value))
+    output = output.replaceAll(`{{${key}}}`, String(value))
   }
 
   return output
@@ -43,8 +44,16 @@ export function renderMasterEmail(html, data, { forLocalPreview = false } = {}) 
 export function getDistPaths() {
   return {
     distDir: DIST_DIR,
+    sendgridDir: SENDGRID_DIR,
     masterPath: path.join(DIST_DIR, 'master.html'),
     previewPath: path.join(DIST_DIR, 'master-preview.html'),
+  }
+}
+
+export function getSendGridOutputPaths(templateKey) {
+  return {
+    htmlPath: path.join(SENDGRID_DIR, `${templateKey}.html`),
+    plainPath: path.join(SENDGRID_DIR, `${templateKey}.txt`),
   }
 }
 

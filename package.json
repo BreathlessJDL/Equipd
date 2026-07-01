@@ -26,9 +26,11 @@
     "dry-run:delete-zero-image-imports": "node scripts/dry-run-delete-zero-image-import-listings.mjs",
     "email:build-master": "node scripts/build-email-master.mjs",
     "email:preview-screenshots": "node scripts/build-email-master.mjs && node scripts/screenshot-email-master-preview.mjs",
+    "email:preview:template-screenshots": "node scripts/build-email-master.mjs && node scripts/screenshot-email-template-previews.mjs",
     "email:preview:template": "node scripts/email-preview-template.mjs",
     "email:test-send": "node scripts/email-test-send.mjs",
     "email:verify-logo": "node scripts/verify-email-logo-url.mjs",
+    "test:marketplace-email": "node scripts/test-marketplace-email.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:pricing-status": "node scripts/test-pricing-status-regression.mjs"

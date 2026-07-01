@@ -128,6 +128,36 @@ Deno.serve(async (req) => {
           payment_status: capturedPayment?.status ?? null,
         })
 
+        try {
+          const { data: paidOrder, error: orderLookupError } = await admin
+            .from('orders')
+            .select('id')
+            .eq('payment_id', paymentId)
+            .maybeSingle()
+
+          if (orderLookupError) {
+            console.error(
+              'stripe-webhook marketplace email order lookup failed',
+              paymentId,
+              orderLookupError.message,
+            )
+          } else if (paidOrder?.id) {
+            const { sendPaymentCapturedMarketplaceEmails } = await import(
+              '../_shared/marketplaceEmail.ts'
+            )
+            const emailResults = await sendPaymentCapturedMarketplaceEmails(paidOrder.id)
+            console.log('stripe-webhook marketplace emails queued', {
+              order_id: paidOrder.id,
+              payment_successful: emailResults.buyerResult,
+              new_order_received: emailResults.sellerResult,
+            })
+          }
+        } catch (emailError) {
+          const message =
+            emailError instanceof Error ? emailError.message : 'Marketplace email send failed'
+          console.error('stripe-webhook marketplace email send failed (non-blocking)', message)
+        }
+
         break
       }
 

@@ -35,5 +35,7 @@ if (!mockData) {
 }
 
 const outputPath = await writeTemplatePreview(templateKey, mockData)
+const plainPath = path.join(path.dirname(outputPath), '..', 'sendgrid', `${templateKey}.txt`)
 console.log(`Wrote ${path.relative(ROOT, outputPath)}`)
-console.log('Open the file in a browser to preview the approved master layout.')
+console.log(`Plain text (if built): ${path.relative(ROOT, plainPath)}`)
+console.log('Open the HTML file in a browser to preview the approved master layout.')

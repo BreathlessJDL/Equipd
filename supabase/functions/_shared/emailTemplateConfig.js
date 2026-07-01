@@ -20,12 +20,50 @@ export const EMAIL_TEMPLATE_KEYS = {
 }
 
 /** Required dynamic_template_data fields per template (expand as templates are built). */
+const LAYOUT_REQUIRED_FIELDS = ['preheader', 'title', 'body', 'cta_text', 'cta_url']
+
+/** Fields used server-side to compose body HTML (also sent if useful for SendGrid analytics). */
+export const EMAIL_TEMPLATE_CONTENT_FIELDS = {
+  offer_received: [
+    'recipient_first_name',
+    'buyer_name',
+    'listing_title',
+    'offer_amount',
+    'listing_price',
+    'offer_id',
+  ],
+  offer_accepted: [
+    'recipient_first_name',
+    'seller_name',
+    'listing_title',
+    'offer_amount',
+    'payment_deadline',
+    'offer_id',
+  ],
+  payment_successful: [
+    'recipient_first_name',
+    'order_id',
+    'order_number',
+    'listing_title',
+    'order_total',
+    'seller_name',
+  ],
+  new_order_received: [
+    'recipient_first_name',
+    'order_id',
+    'order_number',
+    'listing_title',
+    'order_total',
+    'buyer_name',
+  ],
+}
+
 export const EMAIL_TEMPLATE_REQUIRED_FIELDS = {
   master_test: ['title', 'preheader', 'body'],
-  offer_received: ['title', 'preheader', 'body'],
-  offer_accepted: ['title', 'preheader', 'body'],
-  payment_successful: ['title', 'preheader', 'body'],
-  new_order_received: ['title', 'preheader', 'body'],
+  offer_received: LAYOUT_REQUIRED_FIELDS,
+  offer_accepted: LAYOUT_REQUIRED_FIELDS,
+  payment_successful: LAYOUT_REQUIRED_FIELDS,
+  new_order_received: LAYOUT_REQUIRED_FIELDS,
   buyer_delivery_details_added: ['title', 'preheader', 'body'],
   collection_confirmed: ['title', 'preheader', 'body'],
   dispute_opened: ['title', 'preheader', 'body'],
