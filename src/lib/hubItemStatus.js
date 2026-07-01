@@ -6,8 +6,7 @@ import {
 import { formatListingStatus, getConditionLabel } from './listings'
 import { formatListingLocationDetail } from './listingLocation'
 import { isPaymentComplete, isPaymentExpired } from './payments'
-import { getOrderTimelineCurrentStage } from './orderTimeline'
-import { getStatusBadgeFromOrderLifecycleStage } from './orderLifecycleStatus'
+import { getOrderStatusBadge } from './orderStatusBadge'
 import {
   getCollectionHubStatusLabel,
   getCourierDeliveryHubStatusLabel,
@@ -33,7 +32,10 @@ export function getHubFulfilmentLabel(order) {
   return HUB_FULFILMENT_LABELS[order.order_type] ?? null
 }
 
-export function getHubItemStatusBadge(offer, { orderStatusRole = null, showPaymentStatus = false } = {}) {
+export function getHubItemStatusBadge(
+  offer,
+  { orderStatusRole = null, showPaymentStatus = false, disputes = [], caseUpdates = [] } = {},
+) {
   const order = getOfferOrder(offer)
   const payment = offer.payment
 
@@ -42,16 +44,18 @@ export function getHubItemStatusBadge(offer, { orderStatusRole = null, showPayme
   }
 
   if (order && (orderStatusRole || (showPaymentStatus && payment))) {
-    const stage = getOrderTimelineCurrentStage({
+    const badge = getOrderStatusBadge({
       order,
       payment,
       offer,
       supportRequests: null,
+      disputes,
+      caseUpdates,
       viewerRole: orderStatusRole ?? 'buyer',
     })
 
-    if (stage) {
-      return getStatusBadgeFromOrderLifecycleStage(stage, { viewerRole: orderStatusRole })
+    if (badge) {
+      return badge
     }
 
     if (payment && isPaymentComplete(payment)) {

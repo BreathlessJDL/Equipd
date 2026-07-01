@@ -369,6 +369,7 @@ function HubBuyingSection({
   userReviews = [],
   handlers,
   payState,
+  disputesByOrderId = {},
 }) {
   return (
     <HubPanel title="Buying" lead="Offers you have made and purchases in progress.">
@@ -382,8 +383,10 @@ function HubBuyingSection({
       {tab === HUB_BUYING_TABS.offers.id ? (
         <HubOfferList
           highlightOfferId={highlightOfferId}
+          disputesByOrderId={disputesByOrderId}
           offers={pendingOffersMade}
           userId={userId}
+          orderStatusRole="buyer"
           partyRole="seller"
           showWithdraw
           onOfferUpdated={handlers.onOfferUpdated}
@@ -399,7 +402,9 @@ function HubBuyingSection({
           ) : null}
           <HubOfferList
             highlightOfferId={highlightOfferId}
+            disputesByOrderId={disputesByOrderId}
             offers={acceptedUnpaidOffers}
+            orderStatusRole="buyer"
             showPaymentStatus
             onPayStart={handlers.onPayStart}
             onPayComplete={handlers.onPayComplete}
@@ -418,6 +423,7 @@ function HubBuyingSection({
           ) : null}
           <HubOfferList
             highlightOfferId={highlightOfferId}
+            disputesByOrderId={disputesByOrderId}
             offers={[
               ...buyerAwaitingFulfilmentOrders,
               ...buyerAwaitingConfirmOrders,
@@ -436,6 +442,7 @@ function HubBuyingSection({
       {tab === HUB_BUYING_TABS.completed.id ? (
         <HubOfferList
           highlightOfferId={highlightOfferId}
+          disputesByOrderId={disputesByOrderId}
           offers={completedBuyerOrders}
           orderStatusRole="buyer"
           userId={userId}
@@ -449,7 +456,9 @@ function HubBuyingSection({
       {tab === HUB_BUYING_TABS.cancelled.id ? (
         <HubOfferList
           highlightOfferId={highlightOfferId}
+          disputesByOrderId={disputesByOrderId}
           offers={cancelledOffersMade}
+          orderStatusRole="buyer"
           loadError={buyerOffersLoadError}
           emptyState={HUB_EMPTY_STATES.buyingCancelled}
         />
@@ -474,6 +483,7 @@ function HubSellingSection({
   userId,
   userReviews = [],
   handlers,
+  disputesByOrderId = {},
 }) {
   return (
     <HubPanel title="Selling" lead="Offers on your listings and sales in progress.">
@@ -487,6 +497,7 @@ function HubSellingSection({
       {tab === HUB_SELLING_TABS.offers.id ? (
         <HubOfferList
           highlightOfferId={highlightOfferId}
+          disputesByOrderId={disputesByOrderId}
           offers={pendingOffersReceived}
           userId={userId}
           partyRole="buyer"
@@ -500,7 +511,9 @@ function HubSellingSection({
       {tab === HUB_SELLING_TABS.awaiting_payment.id ? (
         <HubOfferList
           highlightOfferId={highlightOfferId}
+          disputesByOrderId={disputesByOrderId}
           offers={sellerAcceptedUnpaidOffers}
+          orderStatusRole="seller"
           showSellerCancel
           onCancelOffer={handlers.onCancelOffer}
           loadError={sellerOffersLoadError}
@@ -515,6 +528,7 @@ function HubSellingSection({
           ) : null}
           <HubOfferList
             highlightOfferId={highlightOfferId}
+            disputesByOrderId={disputesByOrderId}
             offers={activeSellerSales}
             orderStatusRole="seller"
             onOfferUpdated={handlers.onOfferUpdated}
@@ -529,6 +543,7 @@ function HubSellingSection({
           {completedSellerOrders.length > 0 ? (
             <HubOfferList
               highlightOfferId={highlightOfferId}
+              disputesByOrderId={disputesByOrderId}
               offers={completedSellerOrders}
               orderStatusRole="seller"
               userId={userId}
@@ -560,6 +575,7 @@ function HubSellingSection({
       {tab === HUB_SELLING_TABS.cancelled.id ? (
         <HubOfferList
           highlightOfferId={highlightOfferId}
+          disputesByOrderId={disputesByOrderId}
           offers={cancelledOffersReceived}
           loadError={sellerOffersLoadError}
           emptyState={HUB_EMPTY_STATES.sellingCancelled}
@@ -621,6 +637,7 @@ function HubOffersSection({
   userId,
   handlers,
   payState,
+  disputesByOrderId = {},
 }) {
   const hasAwaitingPayment = acceptedUnpaidOffers.length > 0
   const hasPendingOffers = pendingOffersMade.length > 0
@@ -641,7 +658,9 @@ function HubOffersSection({
               <BuyerProtectionInfo variant="payment" compact />
               <HubOfferList
                 highlightOfferId={highlightOfferId}
+                disputesByOrderId={disputesByOrderId}
                 offers={acceptedUnpaidOffers}
+                orderStatusRole="buyer"
                 showPaymentStatus
                 onPayStart={handlers.onPayStart}
                 onPayComplete={handlers.onPayComplete}
@@ -658,8 +677,10 @@ function HubOffersSection({
               <h4 className="hub-offers-group__title">Pending</h4>
               <HubOfferList
                 highlightOfferId={highlightOfferId}
+                disputesByOrderId={disputesByOrderId}
                 offers={pendingOffersMade}
                 userId={userId}
+                orderStatusRole="buyer"
                 partyRole="seller"
                 showWithdraw
                 onOfferUpdated={handlers.onOfferUpdated}
@@ -693,6 +714,7 @@ function HubOrdersSection({
   userId,
   userReviews = [],
   payState,
+  disputesByOrderId = {},
 }) {
   const purchasesShowPaymentInfo = purchasesInProgressOrders.some(
     (offer) => !isPaymentComplete(offer.payment),
@@ -734,6 +756,7 @@ function HubOrdersSection({
               ) : null}
               <HubOfferList
                 highlightOfferId={highlightOfferId}
+                disputesByOrderId={disputesByOrderId}
                 offers={purchasesInProgressOrders}
                 orderStatusRole="buyer"
                 showBuyerConfirm
@@ -751,6 +774,7 @@ function HubOrdersSection({
           ) : (
             <HubOfferList
               highlightOfferId={highlightOfferId}
+              disputesByOrderId={disputesByOrderId}
               offers={completedPurchasesOrders}
               orderStatusRole="buyer"
               userId={userId}
@@ -774,6 +798,7 @@ function HubOrdersSection({
           {ordersSubTab === HUB_ORDERS_SUB_TABS.in_progress.id ? (
             <HubOfferList
               highlightOfferId={highlightOfferId}
+              disputesByOrderId={disputesByOrderId}
               offers={salesOrders}
               orderStatusRole="seller"
               onOfferUpdated={handlers.onOfferUpdated}
@@ -783,6 +808,7 @@ function HubOrdersSection({
           ) : (
             <HubOfferList
               highlightOfferId={highlightOfferId}
+              disputesByOrderId={disputesByOrderId}
               offers={completedSalesOrders}
               orderStatusRole="seller"
               userId={userId}

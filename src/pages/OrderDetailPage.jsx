@@ -83,7 +83,7 @@ import {
   getReviewErrorMessage,
   isOrderReviewable,
 } from '../lib/reviews'
-import { getStatusBadgeFromOrderLifecycleStage } from '../lib/orderLifecycleStatus'
+import { getOrderStatusBadge } from '../lib/orderStatusBadge'
 import { fetchPublicProfile, getProfileDisplayName } from '../lib/profiles'
 
 function formatOrderNumber(orderId) {
@@ -444,7 +444,13 @@ function OrderDetailPage() {
   const offer = order.offer
   const listingUrl = listing?.slug ? `/listings/${listing.slug}` : null
   const conversationUrl = offer?.conversation_id ? `/messages/${offer.conversation_id}` : null
-  const statusBadge = getStatusBadgeFromOrderLifecycleStage(timeline?.currentStage, {
+  const statusBadge = getOrderStatusBadge({
+    order,
+    payment,
+    offer,
+    supportRequests,
+    disputes,
+    caseUpdates,
     viewerRole,
   })
   const deliveryMethodLabel = getOrderDeliveryMethodLabel(order)

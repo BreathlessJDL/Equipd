@@ -14,8 +14,6 @@ import {
   getOfferErrorMessage,
 } from '../../lib/offers'
 import { canPayNow } from '../../lib/payments'
-import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
-import SellerPayoutSummary from '../SellerPayoutSummary'
 import PayNowWithFulfilment from '../PayNowWithFulfilment'
 import { formatMessageTimestamp } from '../../lib/messages'
 import CounterOfferModal from './CounterOfferModal'
@@ -119,22 +117,9 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
             ) : (
               <p className="message-offer-card__title">{listing?.title ?? 'Listing'}</p>
             )}
-            {isBuyer ? (
-              <BuyerProtectionPriceDisplay
-                payment={payment ?? null}
-                itemPricePence={payment ? null : offer.amount_pence}
-                compact
-                className="message-offer-card__amount-stack"
-              />
-            ) : (
-              <SellerPayoutSummary
-                itemPricePence={offer.amount_pence}
-                payment={payment}
-                compact
-                offerAmountLabel="Offer price"
-                receiveLabel="You'll receive"
-              />
-            )}
+            <p className="message-offer-card__amount">
+              {formatPricePence(offer.amount_pence)}
+            </p>
             {offer.message ? (
               <p className="message-offer-card__note">{offer.message}</p>
             ) : null}

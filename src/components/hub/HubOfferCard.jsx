@@ -5,6 +5,11 @@ import CounterOfferModal from '../messages/CounterOfferModal'
 import AcceptOfferConfirmationModal from '../listing/AcceptOfferConfirmationModal'
 import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
 import SellerPayoutSummary from '../SellerPayoutSummary'
+import {
+  shouldShowBuyerPricing,
+  shouldShowSellerPricing,
+} from '../../lib/pricingViewerRole'
+import { getDisputesForOrderFromMap } from '../../lib/orderDisputes'
 import CollectionQrPanel from '../CollectionQrPanel'
 import CollectionBuyerHandoverPanel from '../orders/CollectionBuyerHandoverPanel'
 import CourierDeliveryConfirmation from '../CourierDeliveryConfirmation'
@@ -90,6 +95,7 @@ function HubOfferCard({
   showSellerRespondActions = false,
   showPaymentStatus = false,
   orderStatusRole = null,
+  disputesByOrderId = null,
   showBuyerConfirm = false,
   showSellerCancel = false,
   onConfirmOrder,
@@ -164,7 +170,11 @@ function HubOfferCard({
     hasUserReviewedOrder(userReviews, order?.id, userId) &&
     !canLeaveReview
 
-  const statusBadge = getHubItemStatusBadge(offer, { orderStatusRole, showPaymentStatus })
+  const statusBadge = getHubItemStatusBadge(offer, {
+    orderStatusRole,
+    showPaymentStatus,
+    disputes: getDisputesForOrderFromMap(order?.id, disputesByOrderId),
+  })
   const metadata = formatHubOfferMetadata({
     partyLabel,
     partyName: partyProfile ? getProfileDisplayName(partyProfile) : null,
@@ -194,24 +204,33 @@ function HubOfferCard({
     .filter(Boolean)
     .join(' ')
 
-  const priceContent =
-    userId === offer.buyer_id ? (
-      <BuyerProtectionPriceDisplay
-        payment={payment ?? null}
-        itemPricePence={payment ? null : offer.amount_pence}
-        compact
-        className="hub-item-row__buyer-protection"
-      />
-    ) : (
-      <SellerPayoutSummary
-        itemPricePence={offer.amount_pence}
-        payment={payment}
-        compact
-        offerAmountLabel="Offer price"
-        receiveLabel="You'll receive"
-        className="hub-item-row__seller-payout"
-      />
-    )
+  const showBuyerPricing = shouldShowBuyerPricing({ userId, offer, orderStatusRole })
+  const showSellerPricing = shouldShowSellerPricing({ userId, offer, orderStatusRole })
+
+  const priceContent = showBuyerPricing ? (
+    <BuyerProtectionPriceDisplay
+      payment={payment ?? null}
+      itemPricePence={payment ? null : offer.amount_pence}
+      compact
+      className="hub-item-row__buyer-protection"
+    />
+  ) : showSellerPricing ? (
+    <SellerPayoutSummary
+      itemPricePence={offer.amount_pence}
+      payment={payment}
+      compact
+      offerAmountLabel="Offer price"
+      receiveLabel="You'll receive"
+      className="hub-item-row__seller-payout"
+    />
+  ) : (
+    <BuyerProtectionPriceDisplay
+      payment={payment ?? null}
+      itemPricePence={payment ? null : offer.amount_pence}
+      compact
+      className="hub-item-row__buyer-protection"
+    />
+  )
 
   const workflowPrimaryActions = (
     <>
@@ -466,6 +485,7 @@ function HubOfferList({
   showSellerRespondActions = false,
   showPaymentStatus = false,
   orderStatusRole = null,
+  disputesByOrderId = null,
   showBuyerConfirm = false,
   showSellerCancel = false,
   onConfirmOrder,
@@ -582,6 +602,7 @@ function HubOfferList({
               showSellerRespondActions={showSellerRespondActions}
               showPaymentStatus={showPaymentStatus}
               orderStatusRole={orderStatusRole}
+              disputesByOrderId={disputesByOrderId}
               showBuyerConfirm={showBuyerConfirm}
               showSellerCancel={showSellerCancel}
               onConfirmOrder={onConfirmOrder}

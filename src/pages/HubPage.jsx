@@ -32,6 +32,7 @@ import {
   logSupabaseError,
 } from '../lib/offers'
 import { isPaymentComplete } from '../lib/payments'
+import { fetchDisputesForOrders } from '../lib/orderDisputes'
 import {
   canBuyerConfirmOrder,
   getOfferOrder,
@@ -102,6 +103,7 @@ function HubPage() {
   const [leaveReviewTarget, setLeaveReviewTarget] = useState(null)
   const [leaveReviewSubmitting, setLeaveReviewSubmitting] = useState(false)
   const [leaveReviewError, setLeaveReviewError] = useState('')
+  const [disputesByOrderId, setDisputesByOrderId] = useState({})
 
   useHubScrollRestoration({
     enabled: shouldRestoreScroll,
@@ -240,6 +242,7 @@ function HubPage() {
       setCancelledOffersMade([])
       setCancelledOffersReceived([])
       setStripeOnboardingComplete(false)
+      setDisputesByOrderId({})
       setLoading(false)
       setRefreshing(false)
       setSavedLoading(false)
@@ -255,6 +258,24 @@ function HubPage() {
     setCancelledOffersMade(cancelledMadeResult.data ?? [])
     setCancelledOffersReceived(cancelledReceivedResult.data ?? [])
     setStripeOnboardingComplete(profileResult.data?.stripe_onboarding_complete ?? false)
+
+    const allHubOffers = [
+      ...(pendingMadeResult.data ?? []),
+      ...(acceptedMadeResult.data ?? []),
+      ...(receivedResult.data ?? []),
+      ...(acceptedReceivedResult.data ?? []),
+      ...(cancelledMadeResult.data ?? []),
+      ...(cancelledReceivedResult.data ?? []),
+    ]
+    const hubOrderIds = [
+      ...new Set(allHubOffers.map((offer) => getOfferOrder(offer)?.id).filter(Boolean)),
+    ]
+    const disputesResult = await fetchDisputesForOrders(hubOrderIds)
+    if (disputesResult.error) {
+      logSupabaseError('hub order disputes', disputesResult.error)
+    }
+    setDisputesByOrderId(disputesResult.data ?? {})
+
     hasLoadedRef.current = true
     setLoading(false)
     setRefreshing(false)
@@ -762,6 +783,7 @@ function HubPage() {
       userReviews: reviewsLeft,
       handlers,
       payState: { payingPaymentId, payError },
+      disputesByOrderId,
     }
 
     switch (section) {

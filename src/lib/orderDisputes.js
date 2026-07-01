@@ -368,6 +368,50 @@ export function isOrderDisputed(order) {
   return order?.fulfilment_status === ORDER_FULFILMENT_STATUSES.DISPUTED
 }
 
+/** True when a dispute/case is still open — false once resolved or closed. */
+export function isOrderDisputeOpen(order, disputes = []) {
+  if (getActiveOrderDispute(disputes)) return true
+
+  const latest = getLatestOrderDispute(disputes)
+  if (latest) {
+    return !isDisputeClosedForDisplay(latest)
+  }
+
+  if (!isOrderDisputed(order)) return false
+
+  if (order.protection_status === 'refunded') return false
+  if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.REFUNDED) return false
+
+  return true
+}
+
+export async function fetchDisputesForOrders(orderIds) {
+  const ids = [...new Set((orderIds ?? []).filter(Boolean))]
+
+  if (ids.length === 0) {
+    return { data: {}, error: null }
+  }
+
+  const results = await Promise.all(ids.map((orderId) => fetchDisputesForOrder(orderId)))
+  const data = {}
+
+  for (let index = 0; index < ids.length; index += 1) {
+    const { data: disputes, error } = results[index]
+    if (!error) {
+      data[ids[index]] = disputes ?? []
+    }
+  }
+
+  const firstError = results.find((result) => result.error)?.error ?? null
+
+  return { data, error: firstError }
+}
+
+export function getDisputesForOrderFromMap(orderId, disputesByOrderId = {}) {
+  if (!orderId) return []
+  return disputesByOrderId[orderId] ?? []
+}
+
 export function getDisputeBuyerMessage() {
   return 'Your dispute has been raised. Equipd support is reviewing the case and will contact you if anything else is needed.'
 }

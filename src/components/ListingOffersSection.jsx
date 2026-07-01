@@ -271,13 +271,19 @@ function ListingOffersSection({
                       compact
                       className="listing-detail__offer-buyer-protection"
                     />
-                  ) : (
+                  ) : isSeller || isOwner ? (
                     <SellerPayoutSummary
                       itemPricePence={offer.amount_pence}
                       payment={isAccepted ? payment : null}
                       compact
                       offerAmountLabel="Offer price"
                       receiveLabel="You'll receive"
+                    />
+                  ) : (
+                    <BuyerProtectionPriceDisplay
+                      itemPricePence={offer.amount_pence}
+                      compact
+                      className="listing-detail__offer-buyer-protection"
                     />
                   )}
                   <span className="listing-detail__offer-status">{formatOfferStatus(offer.status)}</span>

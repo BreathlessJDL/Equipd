@@ -15,6 +15,7 @@ import {
   getLatestOrderDispute,
   isDisputeActive,
   isBuyerProtectionWindowActive,
+  isOrderDisputeOpen,
   isOrderDisputed,
 } from './orderDisputes'
 import { CASE_OUTCOMES, isCaseClosed } from './caseClosure'
@@ -54,8 +55,7 @@ const DISPUTE_TIMELINE_STEP_ORDER = [
 ]
 
 function hasPausedDispute(order, disputes) {
-  if (getActiveOrderDispute(disputes)) return true
-  return isOrderDisputed(order)
+  return isOrderDisputeOpen(order, disputes)
 }
 
 function isBuyerProtectionCompleted(order, disputes = []) {
@@ -717,7 +717,7 @@ function getDisputeCurrentStage(order, disputes = [], caseUpdates = []) {
     case DISPUTE_STATUSES.RESOLVED_BUYER:
     case DISPUTE_STATUSES.RESOLVED_SELLER:
       return {
-        key: 'disputed',
+        key: 'case_closed',
         label: 'Case closed',
         eventKey: 'dispute_case_closed',
       }
