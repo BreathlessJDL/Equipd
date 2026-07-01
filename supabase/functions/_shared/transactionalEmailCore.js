@@ -6,9 +6,11 @@ import {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const DEFAULT_EMAIL_LOGO_PATH = '/email/equipd-full-logo.png'
+export const DEFAULT_EMAIL_LOGO_URL = 'https://equipd.co.uk/email/equipd-full-logo.png'
 
-export const DEFAULT_EMAIL_LOGO_URL = `https://equipd.co.uk${DEFAULT_EMAIL_LOGO_PATH}`
+function logoUrlForBase(baseUrl) {
+  return `${baseUrl.replace(/\/$/, '')}/email/equipd-full-logo.png`
+}
 
 export function resolveAppBaseUrl(getEnv) {
   const base =
@@ -28,7 +30,7 @@ export function resolveLogoUrl(getEnv, dynamicData = {}) {
 
   const baseUrl = resolveAppBaseUrl(getEnv)
   if (baseUrl && !/localhost|127\.0\.0\.1/i.test(baseUrl)) {
-    return `${baseUrl}${DEFAULT_EMAIL_LOGO_PATH}`
+    return logoUrlForBase(baseUrl)
   }
 
   return DEFAULT_EMAIL_LOGO_URL

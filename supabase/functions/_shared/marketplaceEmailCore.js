@@ -1,4 +1,4 @@
-import { appUrl, detailRowsHtml } from '../../../emails/templates/shared.js'
+import { appUrl, detailRowsHtml } from './emailFormatting.js'
 import { enrichDynamicData, isDryRunMode, sendTransactionalEmail } from './transactionalEmailCore.js'
 import { isEmailTemplateKey } from './emailTemplateConfig.js'
 
