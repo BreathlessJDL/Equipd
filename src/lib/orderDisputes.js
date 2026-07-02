@@ -76,17 +76,28 @@ export const ADMIN_DECISION_GROUP_LABELS = {
   CLOSE: 'Close',
 }
 
-export function getAdminInvestigationDecisionOptions(dispute) {
-  const groups = dispute ? getAdminDisputeDecisionGroups(dispute) : getAdminSupportDecisionGroups()
+export function getAdminInvestigationDecisionOptions(dispute, supportRequest = null) {
+  const groups = dispute
+    ? getAdminDisputeDecisionGroups(dispute)
+    : getAdminSupportDecisionGroups(supportRequest)
   return groups.find((group) => group.label === ADMIN_DECISION_GROUP_LABELS.INVESTIGATION)?.options ?? []
 }
 
-export function getAdminResolutionDecisionOptions(dispute) {
-  const groups = dispute ? getAdminDisputeDecisionGroups(dispute) : getAdminSupportDecisionGroups()
+export function getAdminResolutionDecisionOptions(dispute, supportRequest = null) {
+  const groups = dispute
+    ? getAdminDisputeDecisionGroups(dispute)
+    : getAdminSupportDecisionGroups(supportRequest)
   return groups.find((group) => group.label === ADMIN_DECISION_GROUP_LABELS.RESOLUTION)?.options ?? []
 }
 
 export function getAdminDisputeDecisionGroups(dispute) {
+  if (
+    dispute?.status === DISPUTE_STATUSES.REFUND_PENDING ||
+    dispute?.status === DISPUTE_STATUSES.PARTIAL_REFUND_PENDING
+  ) {
+    return []
+  }
+
   const inReturnWorkflow = isReturnWorkflowDispute(dispute)
 
   const investigation = [
@@ -119,7 +130,14 @@ export function getAdminDisputeDecisionGroups(dispute) {
   ]
 }
 
-export function getAdminSupportDecisionGroups() {
+export function getAdminSupportDecisionGroups(request = null) {
+  if (
+    request?.status === DISPUTE_STATUSES.REFUND_PENDING ||
+    request?.status === DISPUTE_STATUSES.PARTIAL_REFUND_PENDING
+  ) {
+    return []
+  }
+
   return [
     {
       label: ADMIN_DECISION_GROUP_LABELS.INVESTIGATION,
@@ -267,6 +285,34 @@ export function isDisputeActive(dispute) {
 
 export function getActiveOrderDispute(disputes) {
   return (disputes ?? []).find((dispute) => isDisputeActive(dispute)) ?? null
+}
+
+export function getRefundPendingOrderDispute(disputes) {
+  return (
+    (disputes ?? []).find(
+      (dispute) =>
+        dispute.status === DISPUTE_STATUSES.REFUND_PENDING ||
+        dispute.status === DISPUTE_STATUSES.PARTIAL_REFUND_PENDING,
+    ) ?? null
+  )
+}
+
+export function getManageableOrderDispute(disputes, order = null) {
+  const active = getActiveOrderDispute(disputes)
+  if (active) return active
+
+  const refundPending = getRefundPendingOrderDispute(disputes)
+  if (refundPending) return refundPending
+
+  if (isOrderRefundPending(order)) {
+    return getLatestOrderDispute(disputes)
+  }
+
+  return getLatestOrderDispute(disputes)
+}
+
+export function isOrderRefundPending(order) {
+  return order?.fulfilment_status === ORDER_FULFILMENT_STATUSES.REFUND_PENDING
 }
 
 export function isBuyerProtectionWindowActive(order) {

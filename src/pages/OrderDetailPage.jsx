@@ -66,7 +66,7 @@ import {
   ORDER_TYPES,
   isOrderParticipant,
 } from '../lib/orders'
-import { formatBuyerProtectionStatus, fetchDisputesForOrder, isBuyerProtectionWindowActive, isOrderDisputed } from '../lib/orderDisputes'
+import { formatBuyerProtectionStatus, fetchDisputesForOrder, isBuyerProtectionWindowActive, isOrderDisputed, isOrderRefundPending } from '../lib/orderDisputes'
 import { hasClosedBuyerProtectionCase } from '../lib/caseClosure'
 import { hasBuyerSubmittedDeliveryDetails } from '../lib/orderDeliveryDetails'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -522,6 +522,8 @@ function OrderDetailPage() {
     !isCancelled &&
     isPaymentComplete(payment) &&
     (isOrderDisputed(order) ||
+      isOrderRefundPending(order) ||
+      disputes.length > 0 ||
       (viewerRole === 'buyer' && buyerProtectionActive) ||
       (isAdminViewer && Boolean(activeSupportRequest)))
   const showCompactSupport =
@@ -972,6 +974,7 @@ function OrderDetailPage() {
             isAdmin={isAdmin}
             compact
             supportRequest={activeSupportRequest}
+            caseUpdates={caseUpdates}
             useCaseUpdateHistory={showCaseUpdatesHistory}
             onDisputeOpened={() => loadOrder({ refresh: true })}
             onDisputeUpdated={() => {

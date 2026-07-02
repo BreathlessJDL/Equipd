@@ -17,6 +17,7 @@ export const ORDER_FULFILMENT_STATUSES = {
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   DISPUTED: 'disputed',
+  REFUND_PENDING: 'refund_pending',
   REFUNDED: 'refunded',
 }
 

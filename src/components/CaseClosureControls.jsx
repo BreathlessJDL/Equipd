@@ -66,8 +66,11 @@ export function CaseRefundCompletedAction({
   record,
   isDispute,
   adminNote,
+  order = null,
+  caseUpdates = [],
   onUpdated,
 }) {
+  const closureContext = { order, caseUpdates }
   const [customerMessage, setCustomerMessage] = useState(() =>
     getDefaultRefundCompletedCustomerMessage(),
   )
@@ -76,7 +79,7 @@ export function CaseRefundCompletedAction({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  if (!canMarkRefundCompleted(record)) return null
+  if (!canMarkRefundCompleted(record, closureContext)) return null
 
   async function handleSubmit(event) {
     event.preventDefault()

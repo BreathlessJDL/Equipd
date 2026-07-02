@@ -17,10 +17,11 @@ import {
   getDisputeAdminMessage,
   getEquipdSupportUpdateFromDispute,
   getDisputeSingleReasonNote,
-  getLatestOrderDispute,
+  getManageableOrderDispute,
   isBuyerProtectionWindowActive,
   isDisputeActive,
   isOrderDisputed,
+  isOrderRefundPending,
   openOrderDispute,
 } from '../lib/orderDisputes'
 import { isCaseClosed, canCloseCase, canMarkRefundCompleted } from '../lib/caseClosure'
@@ -130,6 +131,7 @@ function OrderDisputeSection({
   compact = false,
   allowReport = true,
   supportRequest = null,
+  caseUpdates = [],
   useCaseUpdateHistory = false,
   onDisputeOpened,
   onDisputeUpdated,
@@ -146,8 +148,14 @@ function OrderDisputeSection({
   const [submitError, setSubmitError] = useState('')
 
   const activeDispute = useMemo(() => getActiveOrderDispute(disputes), [disputes])
-  const latestDispute = useMemo(() => getLatestOrderDispute(disputes), [disputes])
-  const displayDispute = activeDispute ?? latestDispute
+  const displayDispute = useMemo(
+    () => getManageableOrderDispute(disputes, order),
+    [disputes, order],
+  )
+  const closureContext = useMemo(
+    () => ({ order, caseUpdates }),
+    [order, caseUpdates],
+  )
   const protectionWindowActive = isBuyerProtectionWindowActive(order)
   const timeRemaining = getBuyerProtectionTimeRemaining(order)
   const canOpen = role === 'buyer' && canBuyerOpenDispute(order, payment, disputes)
@@ -155,9 +163,14 @@ function OrderDisputeSection({
     role === 'buyer' && protectionWindowActive && !activeDispute && !isOrderDisputed(order)
   const showDisputeSummary =
     Boolean(displayDispute) ||
+    isOrderRefundPending(order) ||
     (isOrderDisputed(order) && (isParticipantViewerRole(role) || isAdmin))
   const showAdminControls =
-    isAdmin && (Boolean(displayDispute) || Boolean(supportRequest) || isOrderDisputed(order))
+    isAdmin &&
+    (Boolean(displayDispute) ||
+      Boolean(supportRequest) ||
+      isOrderDisputed(order) ||
+      isOrderRefundPending(order))
   const disputeSupportUpdate = useMemo(
     () => (displayDispute ? getEquipdSupportUpdateFromDispute(displayDispute, role) : null),
     [displayDispute, role],
@@ -168,43 +181,45 @@ function OrderDisputeSection({
   )
   const disputeEvidenceCase = activeDispute ? { type: 'dispute', record: activeDispute } : null
   const canUploadDisputeEvidence =
-    !isCaseClosed(displayDispute) &&
+    !isCaseClosed(displayDispute, closureContext) &&
     canShowParticipantCaseEvidenceUpload(disputeEvidenceCase, order, role, userId)
   const showClosedDisputeMessage =
     Boolean(displayDispute) &&
     !activeDispute &&
     isParticipantViewerRole(role) &&
-    !isCaseClosed(displayDispute)
+    !isCaseClosed(displayDispute, closureContext)
 
   const isParticipantViewer = isParticipantViewerRole(role)
   const showReturnWorkflowForParticipant = Boolean(displayDispute && isParticipantViewer)
   const showReturnWorkflowForAdmin = Boolean(
-    isAdmin && displayDispute && !isParticipantViewer && !isCaseClosed(displayDispute),
+    isAdmin && displayDispute && !isParticipantViewer && !isCaseClosed(displayDispute, closureContext),
   )
   const disputeAccordionStatus = displayDispute
     ? formatDisputeStatus(displayDispute.status)
-    : isOrderDisputed(order)
+    : isOrderDisputed(order) || isOrderRefundPending(order)
       ? 'Under dispute'
       : null
   const disputeAccordionDefaultOpen = displayDispute
-    ? isDisputeActive(displayDispute) && !isCaseClosed(displayDispute)
-    : isOrderDisputed(order)
+    ? isDisputeActive(displayDispute) && !isCaseClosed(displayDispute, closureContext)
+    : isOrderDisputed(order) || isOrderRefundPending(order)
   const adminAccordionStatus = displayDispute
     ? formatDisputeStatus(displayDispute.status)
     : supportRequest
       ? formatSupportRequestStatus(supportRequest.status)
-      : 'Open case'
+      : isOrderRefundPending(order)
+        ? 'Refund pending'
+        : 'Open case'
   const adminAccordionDefaultOpen =
     (displayDispute &&
-      !isCaseClosed(displayDispute) &&
+      !isCaseClosed(displayDispute, closureContext) &&
       (canAdminManageDispute(displayDispute) ||
-        canCloseCase(displayDispute) ||
-        canMarkRefundCompleted(displayDispute))) ||
+        canCloseCase(displayDispute, closureContext) ||
+        canMarkRefundCompleted(displayDispute, closureContext))) ||
     (supportRequest &&
-      !isCaseClosed(supportRequest) &&
+      !isCaseClosed(supportRequest, closureContext) &&
       (canAdminManageSupportRequest(supportRequest) ||
-        canCloseCase(supportRequest) ||
-        canMarkRefundCompleted(supportRequest)))
+        canCloseCase(supportRequest, closureContext) ||
+        canMarkRefundCompleted(supportRequest, closureContext)))
 
   const refreshReturnWorkflow = useCallback(
     async (updatedDispute) => {
@@ -436,6 +451,8 @@ function OrderDisputeSection({
           <DisputeAdminControls
             dispute={displayDispute}
             supportRequest={supportRequest}
+            order={order}
+            caseUpdates={caseUpdates}
             returnLogistics={returnLogistics}
             userId={userId}
             showReturnWorkflow={showReturnWorkflowForAdmin}

@@ -93,8 +93,26 @@ export function isAdminCaseFinanceComplete(record) {
   return isAdminCaseWorkflowComplete(record)
 }
 
-export function canMarkRefundCompleted(record) {
+export function isRefundPendingCase(record) {
   return REFUND_PENDING_STATUSES.has(record?.status)
+}
+
+export function hasRefundCompletedTimeline(caseUpdates = [], record = null) {
+  const recordId = record?.id ?? null
+
+  return (caseUpdates ?? []).some((update) => {
+    if (update.event_type !== 'refund_completed') return false
+    if (!recordId) return true
+    return update.dispute_id === recordId || update.support_request_id === recordId
+  })
+}
+
+export function canMarkRefundCompleted(record, { order = null, caseUpdates = [] } = {}) {
+  if (!record) return false
+  if (hasRefundCompletedTimeline(caseUpdates, record)) return false
+  if (isRefundPendingCase(record)) return true
+  if (order?.fulfilment_status === 'refund_pending') return true
+  return false
 }
 
 export function formatCaseOutcomeLabel(outcome) {
@@ -113,9 +131,10 @@ const CLOSED_SUPPORT_STATUSES = new Set([
   SUPPORT_REQUEST_STATUSES.RESOLVED,
 ])
 
-export function isCaseClosed(record) {
+export function isCaseClosed(record, { order = null, caseUpdates = [] } = {}) {
   if (!record) return false
-  if (record.case_outcome) return true
+  if (canMarkRefundCompleted(record, { order, caseUpdates })) return false
+  if (record.case_outcome && !isRefundPendingCase(record)) return true
   if (CLOSED_DISPUTE_STATUSES.has(record.status)) return true
   if (CLOSED_SUPPORT_STATUSES.has(record.status)) return true
   return false
@@ -127,8 +146,8 @@ export function hasClosedBuyerProtectionCase(disputes = [], supportRequests = []
   return (supportRequests ?? []).some((request) => isCaseClosed(request))
 }
 
-export function canCloseCase(record) {
-  if (!record || isCaseClosed(record)) return false
+export function canCloseCase(record, options = {}) {
+  if (!record || isCaseClosed(record, options)) return false
   if (CLOSE_BLOCKED_STATUSES.has(record?.status)) return false
   return CLOSE_ALLOWED_STATUSES.has(record?.status)
 }

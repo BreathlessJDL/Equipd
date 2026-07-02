@@ -89,6 +89,8 @@ function AdminNoteField({ adminNote, submitting, onChange }) {
 function DisputeAdminControls({
   dispute,
   supportRequest,
+  order = null,
+  caseUpdates = [],
   returnLogistics = [],
   userId,
   showReturnWorkflow = false,
@@ -96,28 +98,33 @@ function DisputeAdminControls({
   onSupportUpdated,
   onReturnUpdated,
 }) {
+  const closureContext = { order, caseUpdates }
   const managingDispute = Boolean(
     dispute &&
-      (canAdminManageDispute(dispute) || canCloseCase(dispute) || isCaseClosed(dispute)),
+      (canAdminManageDispute(dispute) ||
+        canCloseCase(dispute, closureContext) ||
+        canMarkRefundCompleted(dispute, closureContext) ||
+        isCaseClosed(dispute, closureContext)),
   )
   const managingSupport = !managingDispute && Boolean(
     supportRequest &&
       (canAdminManageSupportRequest(supportRequest) ||
-        canCloseCase(supportRequest) ||
-        isCaseClosed(supportRequest)),
+        canCloseCase(supportRequest, closureContext) ||
+        canMarkRefundCompleted(supportRequest, closureContext) ||
+        isCaseClosed(supportRequest, closureContext)),
   )
   const activeRecord = managingDispute ? dispute : supportRequest
-  const recordClosed = isCaseClosed(activeRecord)
+  const recordClosed = isCaseClosed(activeRecord, closureContext)
   const canManage =
     (managingDispute && canAdminManageDispute(dispute) && !recordClosed) ||
     (managingSupport && canAdminManageSupportRequest(supportRequest) && !recordClosed)
 
   const investigationOptions = managingDispute
     ? getAdminInvestigationDecisionOptions(dispute)
-    : getAdminInvestigationDecisionOptions(null)
+    : getAdminInvestigationDecisionOptions(null, supportRequest)
   const resolutionOptions = managingDispute
     ? getAdminResolutionDecisionOptions(dispute)
-    : getAdminResolutionDecisionOptions(null)
+    : getAdminResolutionDecisionOptions(null, supportRequest)
 
   const [investigationDecision, setInvestigationDecision] = useState(() =>
     getInitialDecision(investigationOptions, ADMIN_DISPUTE_DECISIONS.REQUEST_MORE_EVIDENCE),
@@ -143,9 +150,11 @@ function DisputeAdminControls({
   const showIssueRefundAction =
     managingDispute && !recordClosed && canAdminIssueRefundAfterCollection(dispute)
   const showMarkRefundCompleted = Boolean(
-    activeRecord && !recordClosed && canMarkRefundCompleted(activeRecord),
+    activeRecord && !recordClosed && canMarkRefundCompleted(activeRecord, closureContext),
   )
-  const showCloseCase = Boolean(activeRecord && !recordClosed && canCloseCase(activeRecord))
+  const showCloseCase = Boolean(
+    activeRecord && !recordClosed && canCloseCase(activeRecord, closureContext),
+  )
   const showDecisionForm =
     !recordClosed &&
     !showIssueRefundAction &&
@@ -159,7 +168,24 @@ function DisputeAdminControls({
     showDecisionForm && !showWorkflowSummary && investigationOptions.length > 0
   const showResolutionSection =
     showDecisionForm && !showWorkflowSummary && resolutionOptions.length > 0
-  const showFinanceSection = !showWorkflowSummary && (showIssueRefundAction || showMarkRefundCompleted)
+  const showFinanceSection = !showWorkflowSummary && showIssueRefundAction
+  const showRefundCompletionSection = showMarkRefundCompleted
+
+  if (import.meta.env.DEV) {
+    console.debug('[DisputeAdminControls] refund completion visibility', {
+      disputeStatus: dispute?.status,
+      supportStatus: supportRequest?.status,
+      orderFulfilment: order?.fulfilment_status,
+      orderProtection: order?.protection_status,
+      orderPayout: order?.payout_status,
+      caseOutcome: activeRecord?.case_outcome,
+      recordClosed,
+      showMarkRefundCompleted,
+      canMarkRefund: activeRecord
+        ? canMarkRefundCompleted(activeRecord, closureContext)
+        : false,
+    })
+  }
 
   const statusLabel = managingDispute
     ? formatDisputeStatus(dispute.status)
@@ -532,6 +558,45 @@ function DisputeAdminControls({
         </section>
       ) : null}
 
+      {showRefundCompletionSection ? (
+        <section
+          className="order-dispute__admin-section order-dispute__admin-section--refund-complete"
+          aria-labelledby="admin-refund-complete-title"
+        >
+          <h4 id="admin-refund-complete-title" className="order-dispute__admin-section-title">
+            Complete refund
+          </h4>
+          <p className="order-case-return__lead" role="status">
+            Refund is pending. Once the bank or payment processor confirms the refund, mark it
+            completed here to close the case and notify the buyer and seller.
+          </p>
+
+          {!showInvestigationSection && !showResolutionSection ? (
+            <AdminNoteField
+              adminNote={adminNote}
+              submitting={submitting}
+              onChange={(event) => setAdminNote(event.target.value)}
+            />
+          ) : null}
+
+          <CaseRefundCompletedAction
+            record={activeRecord}
+            isDispute={managingDispute}
+            adminNote={adminNote}
+            order={order}
+            caseUpdates={caseUpdates}
+            onUpdated={(updated) => {
+              if (managingDispute) {
+                onDisputeUpdated?.(updated)
+                onReturnUpdated?.()
+              } else {
+                onSupportUpdated?.(updated)
+              }
+            }}
+          />
+        </section>
+      ) : null}
+
       {showFinanceSection ? (
         <section className="order-dispute__admin-section" aria-labelledby="admin-finance-title">
           <h4 id="admin-finance-title" className="order-dispute__admin-section-title">
@@ -554,22 +619,6 @@ function DisputeAdminControls({
               onUpdated={(updatedDispute) => {
                 onDisputeUpdated?.(updatedDispute)
                 onReturnUpdated?.()
-              }}
-            />
-          ) : null}
-
-          {showMarkRefundCompleted ? (
-            <CaseRefundCompletedAction
-              record={activeRecord}
-              isDispute={managingDispute}
-              adminNote={adminNote}
-              onUpdated={(updated) => {
-                if (managingDispute) {
-                  onDisputeUpdated?.(updated)
-                  onReturnUpdated?.()
-                } else {
-                  onSupportUpdated?.(updated)
-                }
               }}
             />
           ) : null}
