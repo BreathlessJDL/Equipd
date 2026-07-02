@@ -69,6 +69,7 @@ import {
   isOrderBuyerConfirmed,
   isOrderCourierDelivered,
   isOrderCompleted,
+  isOrderHubHistory,
   isSellerAwaitingPayout,
   PAYOUT_STATUSES,
   ORDER_TYPES,
@@ -144,6 +145,7 @@ function HubOfferCard({
     order?.id &&
     isPaymentComplete(payment) &&
     orderStatusRole &&
+    !isOrderHubHistory(order) &&
     (isOrderDisputed(order) ||
       (orderStatusRole === 'buyer' && isBuyerProtectionWindowActive(order)))
   const showCancel = showSellerCancel && canSellerCancelAcceptedOffer(offer)
@@ -162,6 +164,7 @@ function HubOfferCard({
   const canRespond = showSellerRespondActions && canSellerRespondToOffer(offer)
   const isActing = actingOfferId === offer.id
   const isCompletedOrderContext = Boolean(orderStatusRole && order && isOrderCompleted(order))
+  const isHubTerminalOrderContext = Boolean(orderStatusRole && order && isOrderHubHistory(order))
   const canLeaveReview =
     isCompletedOrderContext && userId && canUserLeaveReview(order, userReviews, userId)
   const reviewSubmitted =
@@ -463,10 +466,10 @@ function HubOfferCard({
       primaryActions={
         <>
           {completedDecisionActions}
-          {!isCompletedOrderContext ? workflowPrimaryActions : null}
+          {!isHubTerminalOrderContext ? workflowPrimaryActions : null}
         </>
       }
-      secondaryActions={!isCompletedOrderContext ? workflowSecondaryActions : null}
+      secondaryActions={!isHubTerminalOrderContext ? workflowSecondaryActions : null}
       iconActions={iconActions}
       details={hasDetails ? details : null}
     />

@@ -40,6 +40,7 @@ import {
   isOrderAwaitingFulfilment,
   isOrderBuyerConfirmed,
   isOrderCompleted,
+  isOrderHubHistory,
   isPaidHubOrder,
   isPayoutReleased,
   isSellerHubSaleInProgress,
@@ -437,7 +438,7 @@ function HubPage() {
         const payment = offer.payment
 
         if (!isPaidHubOrder(order, payment)) return false
-        if (isOrderCompleted(order)) return false
+        if (isOrderHubHistory(order)) return false
         if (isOrderBuyerConfirmed(order)) return false
         if (isOrderAwaitingFulfilment(order, payment)) return false
         if (canBuyerConfirmOrder(order, payment)) return false
@@ -451,7 +452,7 @@ function HubPage() {
     () =>
       acceptedOffersMade.filter(
         (offer) =>
-          isPaymentComplete(offer.payment) && isOrderCompleted(getOfferOrder(offer)),
+          isPaymentComplete(offer.payment) && isOrderHubHistory(getOfferOrder(offer)),
       ),
     [acceptedOffersMade],
   )
@@ -460,7 +461,7 @@ function HubPage() {
     () =>
       acceptedOffersReceived.filter((offer) => {
         const order = getOfferOrder(offer)
-        return isPaymentComplete(offer.payment) && isOrderCompleted(order)
+        return isPaymentComplete(offer.payment) && isOrderHubHistory(order)
       }),
     [acceptedOffersReceived],
   )
@@ -470,8 +471,9 @@ function HubPage() {
       acceptedOffersReceived.filter((offer) => {
         const order = getOfferOrder(offer)
         const payment = offer.payment
-        if (!isPaidHubOrder(order, payment)) return false
-        return !isOrderCompleted(order)
+        if (!isPaymentComplete(payment) || !order) return false
+        if (isOrderHubHistory(order)) return false
+        return isPaidHubOrder(order, payment)
       }),
     [acceptedOffersReceived],
   )

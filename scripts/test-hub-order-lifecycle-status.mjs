@@ -30,8 +30,10 @@ try {
     canSellerSubmitCourierEvidence,
     getOfferOrder,
     hasOfferLinkedOrder,
+    isOrderHubHistory,
+    isOrderRefundedForHub,
   } = await server.ssrLoadModule('/src/lib/orders.js')
-  const { PAYMENT_STATUSES } = await server.ssrLoadModule('/src/lib/payments.js')
+  const { PAYMENT_STATUSES, isPaymentComplete } = await server.ssrLoadModule('/src/lib/payments.js')
   const { isOrderDisputed } = await server.ssrLoadModule('/src/lib/orderDisputes.js')
 
   const paidCollectionOrder = {
@@ -165,6 +167,52 @@ try {
   )
   assert(completedBadge.label === 'Completed', `Expected Completed, got ${completedBadge.label}`)
   console.log('PASS: completed order badge')
+
+  const refundedOffer = {
+    status: 'accepted',
+    payment: { status: PAYMENT_STATUSES.PAID },
+    order: {
+      id: 'order-refunded',
+      order_type: ORDER_TYPES.COLLECTION,
+      fulfilment_status: ORDER_FULFILMENT_STATUSES.REFUNDED,
+      payout_status: 'cancelled',
+      protection_status: 'refunded',
+    },
+  }
+  assert(isOrderRefundedForHub(refundedOffer.order), 'Refunded order helper')
+  assert(isOrderHubHistory(refundedOffer.order), 'Refunded order is hub history')
+  const refundedBadge = getHubItemStatusBadge(refundedOffer, { orderStatusRole: 'buyer' })
+  assert(refundedBadge.label === 'Refunded', `Expected Refunded badge, got ${refundedBadge.label}`)
+  const sellerRefundedBadge = getHubItemStatusBadge(refundedOffer, { orderStatusRole: 'seller' })
+  assert(sellerRefundedBadge.label === 'Refunded', `Expected seller Refunded badge, got ${sellerRefundedBadge.label}`)
+  console.log('PASS: refunded order badge')
+
+  const inProgressOffers = [
+    refundedOffer,
+    {
+      status: 'accepted',
+      payment: { status: PAYMENT_STATUSES.PAID },
+      order: {
+        id: 'order-active',
+        fulfilment_status: ORDER_FULFILMENT_STATUSES.COLLECTED,
+      },
+    },
+  ]
+  const completedOffers = inProgressOffers.filter(
+    (offer) => isPaymentComplete(offer.payment) && isOrderHubHistory(getOfferOrder(offer)),
+  )
+  const activeOffers = inProgressOffers.filter((offer) => {
+    const order = getOfferOrder(offer)
+    const payment = offer.payment
+    return !(isPaymentComplete(payment) && isOrderHubHistory(order))
+  })
+  assert(completedOffers.length === 1, 'Refunded offer should appear in completed hub filter')
+  assert(activeOffers.length === 1, 'Only active offer should remain in in-progress hub filter')
+  assert(
+    completedOffers[0].order.id === 'order-refunded',
+    'Completed hub filter should include refunded order',
+  )
+  console.log('PASS: refunded order appears in completed hub filters')
 
   assert(
     canShowHandoverQr(null, { status: PAYMENT_STATUSES.PAID }) === false,

@@ -16,8 +16,10 @@ import {
   getSellerPayoutProcessingMessage,
   hasOfferLinkedOrder,
   isOrderCompleted,
+  isOrderRefundedForHub,
   isPayoutReleased,
   isSellerAwaitingPayout,
+  ORDER_FULFILMENT_STATUSES,
   ORDER_TYPES,
 } from './orders'
 
@@ -42,6 +44,10 @@ export function getHubItemStatusBadge(
 
   if (isOfferCancelled(offer)) {
     return { variant: 'cancelled', label: 'Cancelled' }
+  }
+
+  if (order && isOrderRefundedForHub(order)) {
+    return { variant: 'cancelled', label: 'Refunded' }
   }
 
   if (
@@ -137,6 +143,10 @@ export function getHubOrderStageHint(offer, orderStatusRole) {
   const payment = offer.payment
 
   if (!orderStatusRole || !order) return null
+
+  if (isOrderRefundedForHub(order)) {
+    return orderStatusRole === 'buyer' ? 'Refund completed' : 'Case closed'
+  }
 
   if (orderStatusRole === 'seller' && isSellerAwaitingPayout(order)) {
     return getSellerPayoutProcessingMessage(order)

@@ -46,6 +46,7 @@ const HUB_PAID_ACTIVE_FULFILMENT_STATUSES = new Set([
   ORDER_FULFILMENT_STATUSES.AWAITING_PAYOUT,
   ORDER_FULFILMENT_STATUSES.BUYER_CONFIRMED,
   ORDER_FULFILMENT_STATUSES.DISPUTED,
+  ORDER_FULFILMENT_STATUSES.REFUND_PENDING,
 ])
 
 export const PAYOUT_STATUSES = {
@@ -479,13 +480,14 @@ export function isSellerHubSale(order, payment) {
 
 export function isBuyerHubPurchaseInProgress(order, payment) {
   if (!isPaidHubOrder(order, payment)) return false
-  if (isOrderCompleted(order)) return false
+  if (isOrderHubHistory(order)) return false
   if (isOrderBuyerConfirmed(order)) return false
   return true
 }
 
 export function isSellerHubSaleInProgress(order, payment) {
   if (!isPaidHubOrder(order, payment)) return false
+  if (isOrderHubHistory(order)) return false
   return !isPayoutReleased(order)
 }
 
@@ -774,6 +776,17 @@ export function isOrderAwaitingFulfilment(order, payment) {
 
 export function isOrderCompleted(order) {
   return order?.fulfilment_status === ORDER_FULFILMENT_STATUSES.COMPLETED
+}
+
+export function isOrderRefundedForHub(order) {
+  return order?.fulfilment_status === ORDER_FULFILMENT_STATUSES.REFUNDED
+}
+
+/** Terminal orders shown in Hub completed/history (successful or refunded). */
+export function isOrderHubHistory(order) {
+  if (!order) return false
+
+  return isOrderCompleted(order) || isOrderRefundedForHub(order)
 }
 
 export function getOrderErrorMessage(error) {
