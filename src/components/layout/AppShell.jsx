@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCategories } from '../../lib/listings'
 import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
 import { isBrowseShellRoute, isMessagesThreadRoute } from '../../lib/siteHeaderRoutes'
+import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
 import GlobalSiteHeader from './GlobalSiteHeader'
 import SiteFooter from './SiteFooter'
 import './AppShell.css'
@@ -10,6 +11,7 @@ import './AppShell.css'
 function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
+  useActivityHeartbeat()
   const [categories, setCategories] = useState([])
   const [pageHeaderConfig, setPageHeaderConfig] = useState(null)
   const [fallbackSearch, setFallbackSearch] = useState('')

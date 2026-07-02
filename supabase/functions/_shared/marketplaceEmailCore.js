@@ -1,6 +1,28 @@
 import { appUrl, detailRowsHtml } from './emailFormatting.js'
 import { enrichDynamicData, isDryRunMode, sendTransactionalEmail } from './transactionalEmailCore.js'
 import { isEmailTemplateKey } from './emailTemplateConfig.js'
+import {
+  PHASE5_ACCOUNT_EMAIL_EVENT_KEYS,
+  PHASE5_CASE_EMAIL_EVENT_KEYS,
+  PHASE5_DUAL_RECIPIENT_EVENT_KEYS,
+  PHASE5_ORDER_EMAIL_EVENT_KEYS,
+  buildPhase5IdempotencyKey,
+  composeCaseClosedNoRefundDynamicData,
+  composeCollectionArrangedDynamicData,
+  composeDisputeOpenedDynamicData,
+  composeEmailChangedDynamicData,
+  composeEvidenceRequestedDynamicData,
+  composePasswordChangedDynamicData,
+  composePayoutReleasedDynamicData,
+  composePhase5EmailSubject,
+  composeRefundCompletedCaseClosedDynamicData,
+  composeRefundPendingDynamicData,
+  composeReturnAuthorisedDynamicData,
+  composeReviewAvailableDynamicData,
+  composeReviewReceivedDynamicData,
+  composeSellerOnboardingRequiredDynamicData,
+  composeWelcomeDynamicData,
+} from './marketplaceEmailComposePhase5.js'
 
 const SELLER_SERVICE_FEE_RATE = 0.02
 
@@ -30,6 +52,20 @@ export const MARKETPLACE_EMAIL_EVENT_KEYS = [
   'courier_dispatched',
   'delivery_confirmed',
   'buyer_protection_started',
+  'dispute_opened',
+  'evidence_requested',
+  'return_authorised',
+  'collection_arranged',
+  'refund_pending',
+  'refund_completed_case_closed',
+  'case_closed_no_refund',
+  'review_available',
+  'review_received',
+  'payout_released',
+  'seller_onboarding_required',
+  'welcome',
+  'email_changed',
+  'password_changed',
 ]
 
 const FULFILMENT_ORDER_EVENT_KEYS = new Set([
@@ -40,7 +76,11 @@ const FULFILMENT_ORDER_EVENT_KEYS = new Set([
   'buyer_protection_started',
 ])
 
-const DUAL_RECIPIENT_EVENT_KEYS = new Set(['collection_confirmed', 'delivery_confirmed'])
+const DUAL_RECIPIENT_EVENT_KEYS = new Set([
+  'collection_confirmed',
+  'delivery_confirmed',
+  ...PHASE5_DUAL_RECIPIENT_EVENT_KEYS,
+])
 
 const PAYMENT_DEADLINE_LABEL = '48 hours'
 
@@ -68,6 +108,13 @@ export function normalizeMarketplaceEmailPayload(payload = {}) {
     paymentId: readPayloadId(payload, 'paymentId', 'payment_id'),
     listingId: readPayloadId(payload, 'listingId', 'listing_id'),
     recipientRole: readPayloadId(payload, 'recipientRole', 'recipient_role'),
+    disputeId: readPayloadId(payload, 'disputeId', 'dispute_id'),
+    caseUpdateId: readPayloadId(payload, 'caseUpdateId', 'case_update_id'),
+    reviewId: readPayloadId(payload, 'reviewId', 'review_id'),
+    userId: readPayloadId(payload, 'userId', 'user_id'),
+    newEmail: readPayloadId(payload, 'newEmail', 'new_email'),
+    collectionDate: readPayloadId(payload, 'collectionDate', 'collection_date'),
+    changedAt: readPayloadId(payload, 'changedAt', 'changed_at'),
   }
 }
 
@@ -115,7 +162,7 @@ export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
     case 'buyer_protection_started':
       return `buyer_protection_started:${parts.orderId}:${parts.buyerId}`
     default:
-      return `${eventKey}:${parts.entityId ?? 'unknown'}`
+      return buildPhase5IdempotencyKey(eventKey, parts)
   }
 }
 
@@ -240,7 +287,7 @@ export function composeMarketplaceEmailSubject(eventKey, listingTitle, { recipie
     case 'buyer_protection_started':
       return `Buyer Protection started for ${itemTitle}`
     default:
-      return ''
+      return composePhase5EmailSubject(eventKey, listingTitle, { recipientRole, orderType })
   }
 }
 
@@ -756,7 +803,7 @@ async function loadOrderContext(admin, orderId) {
   const { data: order, error } = await admin
     .from('orders')
     .select(
-      'id, listing_id, buyer_id, seller_id, amount_pence, item_price_pence, buyer_total_pence, seller_service_fee_pence, seller_net_pence, order_type, dispute_window_hours, payout_release_at, courier_name, courier_company, courier_buyer_tracking_reference, collection_confirmed_at, courier_evidence_submitted_at, courier_delivered_at',
+      'id, listing_id, buyer_id, seller_id, amount_pence, item_price_pence, buyer_total_pence, seller_service_fee_pence, seller_net_pence, order_type, dispute_window_hours, payout_release_at, payout_status, fulfilment_status, courier_name, courier_company, courier_buyer_tracking_reference, collection_confirmed_at, courier_evidence_submitted_at, courier_delivered_at',
     )
     .eq('id', orderId)
     .maybeSingle()
@@ -787,6 +834,134 @@ async function loadOrderDeliveryDetails(admin, orderId) {
     .maybeSingle()
 
   return data
+}
+
+const phase5Helpers = {
+  formatOrderReference,
+  formatPricePence,
+  getMarketplaceUserName,
+  getMarketplaceRecipientName,
+  assertBuyerEmailSafe,
+  calculateSellerServiceFee,
+  calculateSellerNetPayout,
+}
+
+async function loadDisputeContext(admin, disputeId) {
+  const { data: dispute, error } = await admin
+    .from('order_disputes')
+    .select('id, order_id, buyer_id, seller_id, listing_id, status')
+    .eq('id', disputeId)
+    .maybeSingle()
+
+  if (error || !dispute) {
+    return { ok: false, error: error?.message || 'Dispute not found' }
+  }
+
+  const orderContext = await loadOrderContext(admin, dispute.order_id)
+  if (!orderContext.ok) {
+    return orderContext
+  }
+
+  return {
+    ok: true,
+    dispute,
+    ...orderContext,
+  }
+}
+
+async function loadReviewContext(admin, reviewId) {
+  const { data: review, error } = await admin
+    .from('reviews')
+    .select('id, order_id, reviewer_user_id, reviewed_user_id, rating, review_text')
+    .eq('id', reviewId)
+    .maybeSingle()
+
+  if (error || !review) {
+    return { ok: false, error: error?.message || 'Review not found' }
+  }
+
+  const orderContext = await loadOrderContext(admin, review.order_id)
+  if (!orderContext.ok) {
+    return orderContext
+  }
+
+  const participants = await loadMarketplaceParticipants(admin, [
+    review.reviewer_user_id,
+    review.reviewed_user_id,
+  ])
+
+  return {
+    ok: true,
+    review,
+    reviewerProfile: participants[review.reviewer_user_id],
+    reviewedProfile: participants[review.reviewed_user_id],
+    ...orderContext,
+  }
+}
+
+async function loadUserProfileContext(admin, userId) {
+  const participants = await loadMarketplaceParticipants(admin, [userId])
+  const profile = participants[userId]
+  if (!profile) {
+    return { ok: false, error: 'User profile not found' }
+  }
+
+  return { ok: true, profile, userId }
+}
+
+async function loadSellerOnboardingContext(admin, orderId) {
+  const orderContext = await loadOrderContext(admin, orderId)
+  if (!orderContext.ok) {
+    return orderContext
+  }
+
+  const { data: sellerProfile } = await admin
+    .from('profiles')
+    .select('id, username, display_name, stripe_onboarding_complete, stripe_account_id')
+    .eq('id', orderContext.order.seller_id)
+    .maybeSingle()
+
+  if (sellerProfile?.stripe_onboarding_complete) {
+    return { ok: false, skip: true, reason: 'seller_already_onboarded' }
+  }
+
+  return {
+    ok: true,
+    ...orderContext,
+    sellerProfile: sellerProfile ?? orderContext.sellerProfile,
+  }
+}
+
+function dualRecipientResult({
+  eventKey,
+  order,
+  listing,
+  buyerProfile,
+  sellerProfile,
+  recipientRole,
+  dynamicDataBuilder,
+  disputeId,
+  caseUpdateId,
+}) {
+  const recipientUserId = recipientRole === 'buyer' ? order.buyer_id : order.seller_id
+  const idempotencyParts = {
+    orderId: order.id,
+    recipientUserId,
+    disputeId,
+    caseUpdateId,
+    buyerId: order.buyer_id,
+    sellerId: order.seller_id,
+  }
+
+  return {
+    ok: true,
+    templateKey: eventKey,
+    recipientUserId,
+    relatedOrderId: order.id,
+    relatedListingId: listing?.id ?? order.listing_id,
+    idempotencyParts,
+    dynamicData: dynamicDataBuilder(),
+  }
 }
 
 export async function composeMarketplaceEmailDynamicData(eventKey, payload, getEnv) {
@@ -1036,6 +1211,340 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
           order,
           listing,
           buyerProfile,
+        }),
+      }
+    }
+  }
+
+  if (PHASE5_CASE_EMAIL_EVENT_KEYS.has(eventKey)) {
+    const normalized = normalizeMarketplaceEmailPayload(payload)
+    const disputeId = normalized.disputeId
+    if (!disputeId) {
+      return { ok: false, error: 'disputeId is required for case emails' }
+    }
+
+    const context = await loadDisputeContext(admin, disputeId)
+    if (!context.ok) return context
+
+    const { dispute, order, listing, buyerProfile, sellerProfile } = context
+    const recipientRole = normalized.recipientRole
+    const baseArgs = {
+      baseUrl,
+      order,
+      listing,
+      buyerProfile,
+      sellerProfile,
+      helpers: phase5Helpers,
+    }
+
+    if (PHASE5_DUAL_RECIPIENT_EVENT_KEYS.has(eventKey)) {
+      if (recipientRole !== 'buyer' && recipientRole !== 'seller') {
+        return { ok: false, error: 'recipientRole must be buyer or seller' }
+      }
+    }
+
+    if (eventKey === 'dispute_opened') {
+      return dualRecipientResult({
+        eventKey,
+        order,
+        listing,
+        buyerProfile,
+        sellerProfile,
+        recipientRole,
+        disputeId: dispute.id,
+        dynamicDataBuilder: () =>
+          composeDisputeOpenedDynamicData({ ...baseArgs, recipientRole }),
+      })
+    }
+
+    if (eventKey === 'evidence_requested') {
+      if (recipientRole !== 'buyer' && recipientRole !== 'seller') {
+        return { ok: false, error: 'recipientRole must be buyer or seller' }
+      }
+      const recipientProfile = recipientRole === 'buyer' ? buyerProfile : sellerProfile
+      const recipientUserId = recipientRole === 'buyer' ? order.buyer_id : order.seller_id
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId,
+        relatedOrderId: order.id,
+        relatedListingId: listing?.id ?? order.listing_id,
+        idempotencyParts: {
+          disputeId: dispute.id,
+          recipientUserId,
+          caseUpdateId: normalized.caseUpdateId ?? dispute.id,
+        },
+        dynamicData: composeEvidenceRequestedDynamicData({
+          ...baseArgs,
+          recipientProfile,
+        }),
+      }
+    }
+
+    if (eventKey === 'return_authorised') {
+      return dualRecipientResult({
+        eventKey,
+        order,
+        listing,
+        buyerProfile,
+        sellerProfile,
+        recipientRole,
+        disputeId: dispute.id,
+        dynamicDataBuilder: () =>
+          composeReturnAuthorisedDynamicData({ ...baseArgs, recipientRole }),
+      })
+    }
+
+    if (eventKey === 'collection_arranged') {
+      return dualRecipientResult({
+        eventKey,
+        order,
+        listing,
+        buyerProfile,
+        sellerProfile,
+        recipientRole,
+        disputeId: dispute.id,
+        dynamicDataBuilder: () =>
+          composeCollectionArrangedDynamicData({
+            ...baseArgs,
+            recipientRole,
+            collectionDate: normalized.collectionDate,
+          }),
+      })
+    }
+
+    if (eventKey === 'refund_pending') {
+      return dualRecipientResult({
+        eventKey,
+        order,
+        listing,
+        buyerProfile,
+        sellerProfile,
+        recipientRole,
+        disputeId: dispute.id,
+        dynamicDataBuilder: () =>
+          composeRefundPendingDynamicData({ ...baseArgs, recipientRole }),
+      })
+    }
+
+    if (eventKey === 'refund_completed_case_closed') {
+      return dualRecipientResult({
+        eventKey,
+        order,
+        listing,
+        buyerProfile,
+        sellerProfile,
+        recipientRole,
+        disputeId: dispute.id,
+        dynamicDataBuilder: () =>
+          composeRefundCompletedCaseClosedDynamicData({ ...baseArgs, recipientRole }),
+      })
+    }
+
+    if (eventKey === 'case_closed_no_refund') {
+      return dualRecipientResult({
+        eventKey,
+        order,
+        listing,
+        buyerProfile,
+        sellerProfile,
+        recipientRole,
+        disputeId: dispute.id,
+        dynamicDataBuilder: () =>
+          composeCaseClosedNoRefundDynamicData({ ...baseArgs, recipientRole }),
+      })
+    }
+  }
+
+  if (PHASE5_ORDER_EMAIL_EVENT_KEYS.has(eventKey)) {
+    const normalized = normalizeMarketplaceEmailPayload(payload)
+
+    if (eventKey === 'review_available') {
+      const orderId = await resolveOrderIdForPayload(admin, normalized)
+      if (!orderId) {
+        return { ok: false, error: 'orderId is required for review_available' }
+      }
+
+      const context = await loadOrderContext(admin, orderId)
+      if (!context.ok) return context
+
+      const { order, listing, buyerProfile, sellerProfile } = context
+      if (order.fulfilment_status !== 'completed') {
+        return { ok: false, skip: true, reason: 'order_not_completed' }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: order.buyer_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, buyerId: order.buyer_id },
+        dynamicData: composeReviewAvailableDynamicData({
+          baseUrl,
+          order,
+          listing,
+          buyerProfile,
+          sellerProfile,
+          helpers: phase5Helpers,
+        }),
+      }
+    }
+
+    if (eventKey === 'review_received') {
+      if (!normalized.reviewId) {
+        return { ok: false, error: 'reviewId is required for review_received' }
+      }
+
+      const context = await loadReviewContext(admin, normalized.reviewId)
+      if (!context.ok) return context
+
+      const { review, order, listing, reviewerProfile, reviewedProfile } = context
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: review.reviewed_user_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: {
+          reviewId: review.id,
+          reviewedUserId: review.reviewed_user_id,
+        },
+        dynamicData: composeReviewReceivedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          reviewerProfile,
+          reviewedProfile,
+          review,
+          helpers: phase5Helpers,
+        }),
+      }
+    }
+
+    if (eventKey === 'payout_released') {
+      const orderId = await resolveOrderIdForPayload(admin, normalized)
+      if (!orderId) {
+        return { ok: false, error: 'orderId is required for payout_released' }
+      }
+
+      const context = await loadOrderContext(admin, orderId)
+      if (!context.ok) return context
+
+      const { order, listing, sellerProfile } = context
+      if (order.payout_status !== 'paid') {
+        return { ok: false, skip: true, reason: 'payout_not_released' }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: order.seller_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, sellerId: order.seller_id },
+        dynamicData: composePayoutReleasedDynamicData({
+          baseUrl,
+          order,
+          listing,
+          sellerProfile,
+          helpers: phase5Helpers,
+        }),
+      }
+    }
+
+    if (eventKey === 'seller_onboarding_required') {
+      const orderId = await resolveOrderIdForPayload(admin, normalized)
+      if (!orderId) {
+        return { ok: false, error: 'orderId is required for seller_onboarding_required' }
+      }
+
+      const context = await loadSellerOnboardingContext(admin, orderId)
+      if (!context.ok) {
+        if (context.skip) {
+          return { ok: false, skip: true, reason: context.reason }
+        }
+        return context
+      }
+
+      const { order, listing, sellerProfile } = context
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: order.seller_id,
+        relatedOrderId: order.id,
+        relatedListingId: order.listing_id,
+        idempotencyParts: { orderId: order.id, sellerId: order.seller_id },
+        dynamicData: composeSellerOnboardingRequiredDynamicData({
+          baseUrl,
+          order,
+          listing,
+          sellerProfile,
+          helpers: phase5Helpers,
+        }),
+      }
+    }
+  }
+
+  if (PHASE5_ACCOUNT_EMAIL_EVENT_KEYS.has(eventKey)) {
+    const normalized = normalizeMarketplaceEmailPayload(payload)
+    const userId = normalized.userId
+    if (!userId) {
+      return { ok: false, error: 'userId is required for account emails' }
+    }
+
+    const context = await loadUserProfileContext(admin, userId)
+    if (!context.ok) return context
+
+    if (eventKey === 'welcome') {
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: userId,
+        idempotencyParts: { userId },
+        dynamicData: composeWelcomeDynamicData({
+          baseUrl,
+          profile: context.profile,
+          helpers: phase5Helpers,
+        }),
+      }
+    }
+
+    if (eventKey === 'email_changed') {
+      if (!normalized.newEmail) {
+        return { ok: false, error: 'newEmail is required for email_changed' }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: userId,
+        idempotencyParts: { userId, newEmail: normalized.newEmail },
+        dynamicData: composeEmailChangedDynamicData({
+          baseUrl,
+          profile: context.profile,
+          newEmail: normalized.newEmail,
+          helpers: phase5Helpers,
+        }),
+      }
+    }
+
+    if (eventKey === 'password_changed') {
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: userId,
+        idempotencyParts: {
+          userId,
+          changedAt: normalized.changedAt ?? new Date().toISOString(),
+        },
+        dynamicData: composePasswordChangedDynamicData({
+          baseUrl,
+          profile: context.profile,
+          helpers: phase5Helpers,
         }),
       }
     }

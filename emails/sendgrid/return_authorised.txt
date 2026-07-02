@@ -1,0 +1,20 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Equipd has authorised a return for {{listing_title}}.
+
+Order number: {{order_number}}
+
+The seller must arrange and pay for collection within 7 calendar days. Make the equipment reasonably available for collection.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

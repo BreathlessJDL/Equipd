@@ -1,0 +1,20 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+A refund for {{listing_title}} has been approved and is being processed.
+
+Order number: {{order_number}}
+
+Funds will return according to your payment provider timelines. No further action is required unless Equipd contacts you.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

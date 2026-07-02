@@ -1,0 +1,21 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Return collection has been arranged for {{listing_title}}.
+
+Order number: {{order_number}}
+Collection date: {{collection_date}}
+
+Please make the equipment available for collection on the agreed date.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

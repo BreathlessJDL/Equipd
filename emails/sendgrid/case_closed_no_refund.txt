@@ -1,0 +1,20 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Your Buyer Protection case for {{listing_title}} has been closed.
+
+Order number: {{order_number}}
+
+No refund was issued for this case. Open the order for the full outcome and any next steps.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

@@ -9,7 +9,7 @@ const PROFILE_FIELDS_WITH_LOCATION_COLUMNS = `${PROFILE_FIELDS_BASE}, city, coun
 
 const PROFILE_FIELDS_WITH_USERNAME = `${PROFILE_FIELDS_WITH_LOCATION_COLUMNS}, username, username_last_changed_at`
 
-const PUBLIC_PROFILE_FIELDS_BASE = 'id, display_name, location, avatar_url, created_at'
+const PUBLIC_PROFILE_FIELDS_BASE = 'id, display_name, location, avatar_url, created_at, last_active_at'
 
 const PUBLIC_PROFILE_FIELDS_WITH_USERNAME = `${PUBLIC_PROFILE_FIELDS_BASE}, username`
 
@@ -34,6 +34,36 @@ export function notifyProfileUpdated(userId) {
       }),
     )
   }
+}
+
+/** Friendly public label — no exact timestamps. */
+export function formatLastActiveLabel(lastActiveAt) {
+  if (!lastActiveAt) return null
+
+  const then = new Date(lastActiveAt)
+  if (Number.isNaN(then.getTime())) return null
+
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfThen = new Date(then.getFullYear(), then.getMonth(), then.getDate())
+  const dayDiff = Math.floor((startOfToday - startOfThen) / (24 * 60 * 60 * 1000))
+
+  if (dayDiff <= 0) return 'Last active today'
+  if (dayDiff === 1) return 'Last active yesterday'
+  if (dayDiff <= 30) return `Last active ${dayDiff} days ago`
+  return 'Last active over 30 days ago'
+}
+
+export async function touchUserActivity() {
+  if (!supabase) return { error: new Error('Supabase is not configured.') }
+
+  const { error } = await supabase.rpc('touch_user_activity')
+
+  if (error) {
+    console.warn('[profiles] touch_user_activity', error.message)
+  }
+
+  return { error }
 }
 
 export const USERNAME_MIN_LENGTH = 3
@@ -98,6 +128,25 @@ function isMissingUsernameColumnError(error) {
     || combined.includes('column profiles.username does not exist')
     || (combined.includes('username') && combined.includes('does not exist'))
   )
+}
+
+function isMissingLastActiveColumnError(error) {
+  if (!error) return false
+
+  const combined = `${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`.toLowerCase()
+
+  return (
+    (error.code === '42703' || error.code === 'PGRST204')
+    && combined.includes('last_active_at')
+  )
+}
+
+function publicProfileFieldsWithoutLastActive(fields) {
+  return fields
+    .split(',')
+    .map((field) => field.trim())
+    .filter((field) => field && field !== 'last_active_at')
+    .join(', ')
 }
 
 function withUsernameField(profile, supported) {
@@ -522,6 +571,15 @@ export async function fetchPublicProfile(userId) {
   if (error && isMissingUsernameColumnError(error)) {
     usernameColumnAvailable = false
     fields = PUBLIC_PROFILE_FIELDS_BASE
+    ;({ data, error } = await supabase
+      .from('profiles_public')
+      .select(fields)
+      .eq('id', userId)
+      .maybeSingle())
+  }
+
+  if (error && isMissingLastActiveColumnError(error)) {
+    fields = publicProfileFieldsWithoutLastActive(fields)
     ;({ data, error } = await supabase
       .from('profiles_public')
       .select(fields)

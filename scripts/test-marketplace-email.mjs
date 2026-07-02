@@ -24,6 +24,14 @@ import {
   reserveEmailLog,
 } from '../supabase/functions/_shared/marketplaceEmailCore.js'
 import { buildSendGridPayload } from '../supabase/functions/_shared/transactionalEmailCore.js'
+import {
+  buildFulfilmentTestDynamicData,
+  FULFILMENT_EMAIL_TEMPLATE_KEYS,
+} from './fulfilmentEmailTestData.mjs'
+import {
+  buildRemainingTestDynamicData,
+  REMAINING_EMAIL_TEMPLATE_KEYS,
+} from './remainingEmailTestData.mjs'
 
 let passed = 0
 let failed = 0
@@ -518,6 +526,31 @@ const mockAdmin = {
     }
   },
 }
+
+for (const templateKey of FULFILMENT_EMAIL_TEMPLATE_KEYS) {
+  const testData = buildFulfilmentTestDynamicData(templateKey, () => baseUrl)
+  assert(testData?.subject?.trim(), `fulfilment test data subject populated for ${templateKey}`)
+  assert(testData?.cta_url?.includes(fulfilmentOrderId), `fulfilment test data CTA for ${templateKey}`)
+}
+
+for (const templateKey of REMAINING_EMAIL_TEMPLATE_KEYS) {
+  const testData = buildRemainingTestDynamicData(templateKey, () => baseUrl, { recipientRole: 'buyer' })
+  assert(testData?.subject?.trim(), `remaining test data subject populated for ${templateKey}`)
+  if (testData?.order_id && testData.cta_url?.includes(testData.order_id)) {
+    assert(true, `remaining test data CTA for ${templateKey}`)
+  } else if (!testData?.order_id || templateKey === 'seller_onboarding_required') {
+    assert(Boolean(testData?.cta_url), `remaining test data CTA for ${templateKey}`)
+  } else {
+    assert(false, `remaining test data CTA for ${templateKey}`)
+  }
+}
+
+const payoutData = buildRemainingTestDynamicData('payout_released', () => baseUrl)
+assert(payoutData.seller_service_fee === '£8.50', 'payout_released includes seller service fee')
+assert(payoutData.seller_net_payout === '£416.50', 'payout_released includes net payout')
+
+const reviewBuyerData = buildRemainingTestDynamicData('review_available', () => baseUrl)
+assert(!/seller service fee|you'll receive/i.test(reviewBuyerData.body), 'review_available avoids seller payout copy')
 
 async function runAsyncTests() {
   const first = await reserveEmailLog(mockAdmin, {

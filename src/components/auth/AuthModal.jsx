@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthModal } from '../../hooks/useAuthModal'
+import ForgotPasswordForm from './ForgotPasswordForm'
 import LoginForm from './LoginForm'
 import SignupEmailConfirmation from './SignupEmailConfirmation'
 import SignupForm from './SignupForm'
@@ -58,9 +59,12 @@ function AuthModal() {
 
   const isLogin = mode === 'login'
   const isSignupConfirmation = mode === 'signup-confirmation'
+  const isForgotPassword = mode === 'forgot-password'
 
   const dialogLabelId = isLogin
     ? 'auth-modal-login-heading'
+    : isForgotPassword
+      ? 'auth-modal-forgot-password-heading'
     : isSignupConfirmation
       ? 'auth-modal-signup-confirmation-heading'
       : 'auth-modal-signup-heading'
@@ -96,6 +100,13 @@ function AuthModal() {
               redirectTo={redirectTo}
               onSuccess={handleAuthSuccess}
               onSwitchToSignup={() => switchAuthModal('signup')}
+              onForgotPassword={() => switchAuthModal('forgot-password')}
+            />
+          ) : isForgotPassword ? (
+            <ForgotPasswordForm
+              idPrefix="auth-modal-forgot-password"
+              compact
+              onBackToLogin={() => switchAuthModal('login')}
             />
           ) : isSignupConfirmation ? (
             <SignupEmailConfirmation

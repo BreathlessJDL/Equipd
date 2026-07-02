@@ -9,6 +9,7 @@
  * Examples:
  *   npm run email:test-send -- jlinnell95@gmail.com
  *   npm run email:test-send -- offer_received jlinnell95@gmail.com
+ *   npm run email:test-send -- buyer_delivery_details_added jlinnell95@gmail.com
  */
 
 import path from 'node:path'
@@ -28,6 +29,10 @@ import {
   listEmailTemplateKeys,
 } from '../supabase/functions/_shared/emailTemplateConfig.js'
 import { getDistPaths } from '../emails/renderMasterEmail.js'
+import { isFulfilmentEmailTemplateKey } from './fulfilmentEmailTestData.mjs'
+import { sendFulfilmentTestEmail } from './fulfilmentEmailTestSend.mjs'
+import { isRemainingEmailTemplateKey } from './remainingEmailTestData.mjs'
+import { sendRemainingTestEmail } from './remainingEmailTestSend.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.join(__dirname, '..')
@@ -128,6 +133,34 @@ if (!parsed.ok) {
 }
 
 const { templateKey, to } = parsed
+
+if (isFulfilmentEmailTemplateKey(templateKey)) {
+  const fulfilmentResult = await sendFulfilmentTestEmail({ templateKey, to, getEnv })
+  if (!fulfilmentResult.ok) {
+    console.error('Fulfilment test send failed:', fulfilmentResult.error)
+    process.exit(1)
+  }
+  if (fulfilmentResult.dryRun) {
+    console.log('Dry-run complete. Payload logged above.')
+  } else {
+    console.log('Fulfilment test email sent successfully.')
+  }
+  process.exit(0)
+}
+
+if (isRemainingEmailTemplateKey(templateKey)) {
+  const remainingResult = await sendRemainingTestEmail({ templateKey, to, getEnv })
+  if (!remainingResult.ok) {
+    console.error('Remaining template test send failed:', remainingResult.error)
+    process.exit(1)
+  }
+  if (remainingResult.dryRun) {
+    console.log('Dry-run complete. Payload logged above.')
+  } else {
+    console.log('Remaining template test email sent successfully.')
+  }
+  process.exit(0)
+}
 
 const dynamicData = getPreviewMockData(templateKey, getEnv)
 if (!dynamicData) {

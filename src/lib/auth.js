@@ -1,8 +1,8 @@
 import { supabase } from './supabase'
-import { getEmailAuthRedirectUrl, getOAuthCallbackUrl, validateOAuthRedirectUrl } from './siteUrl'
+import { getEmailAuthRedirectUrl, getOAuthCallbackUrl, getPasswordResetRedirectUrl, validateOAuthRedirectUrl } from './siteUrl'
 import { PASSWORD_POLICY_SUMMARY } from './passwordPolicy'
 
-export { getAuthRedirectUrl, getEmailAuthRedirectUrl, getOAuthCallbackUrl, OAUTH_CALLBACK_PATH, EMAIL_AUTH_CALLBACK_PATH } from './siteUrl'
+export { getAuthRedirectUrl, getEmailAuthRedirectUrl, getOAuthCallbackUrl, OAUTH_CALLBACK_PATH, EMAIL_AUTH_CALLBACK_PATH, getPasswordResetRedirectUrl, RESET_PASSWORD_PATH, FORGOT_PASSWORD_PATH } from './siteUrl'
 
 export const OAUTH_REDIRECT_KEY = 'equipd:oauth-redirect'
 export const OAUTH_PENDING_KEY = 'equipd:oauth-pending'
@@ -165,6 +165,35 @@ export async function resendSignupConfirmationEmail(email) {
       emailRedirectTo: getEmailAuthRedirectUrl(),
     },
   })
+
+  return { error }
+}
+
+export async function requestPasswordReset(email) {
+  if (!supabase) {
+    return { error: new Error('Supabase is not configured.') }
+  }
+
+  const validation = validateEmailAddress(email)
+  if (!validation.valid) {
+    return { error: new Error(validation.error) }
+  }
+
+  const redirectTo = getPasswordResetRedirectUrl()
+
+  const { error } = await supabase.auth.resetPasswordForEmail(validation.email, {
+    redirectTo,
+  })
+
+  return { error }
+}
+
+export async function updatePasswordAfterReset(password) {
+  if (!supabase) {
+    return { error: new Error('Supabase is not configured.') }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password })
 
   return { error }
 }

@@ -1,0 +1,18 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Welcome to Equipd — the UK marketplace for used gym equipment.
+
+Browse listings, make offers, and buy or sell with Buyer Protection on every order.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

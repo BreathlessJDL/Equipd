@@ -13,7 +13,35 @@ const FULFILMENT_EMAIL_EVENT_KEYS = new Set([
   'buyer_protection_started',
 ])
 
-const DUAL_RECIPIENT_EVENT_KEYS = new Set(['collection_confirmed', 'delivery_confirmed'])
+const CASE_EMAIL_EVENT_KEYS = new Set([
+  'dispute_opened',
+  'evidence_requested',
+  'return_authorised',
+  'collection_arranged',
+  'refund_pending',
+  'refund_completed_case_closed',
+  'case_closed_no_refund',
+])
+
+const DUAL_RECIPIENT_EVENT_KEYS = new Set([
+  'collection_confirmed',
+  'delivery_confirmed',
+  'dispute_opened',
+  'return_authorised',
+  'collection_arranged',
+  'refund_pending',
+  'refund_completed_case_closed',
+  'case_closed_no_refund',
+])
+
+const ORDER_EMAIL_EVENT_KEYS = new Set([
+  'review_available',
+  'review_received',
+  'payout_released',
+  'seller_onboarding_required',
+])
+
+const ACCOUNT_EMAIL_EVENT_KEYS = new Set(['welcome', 'email_changed', 'password_changed'])
 
 type MarketplaceEmailRequest = {
   eventKey: string
@@ -81,7 +109,38 @@ Deno.serve(async (req) => {
       return errorResponse('orderId is required for fulfilment emails', 400)
     }
 
+    if (CASE_EMAIL_EVENT_KEYS.has(body.eventKey) && !payload.disputeId) {
+      return errorResponse('disputeId is required for case emails', 400)
+    }
+
+    if (body.eventKey === 'review_received' && !payload.reviewId) {
+      return errorResponse('reviewId is required for review_received', 400)
+    }
+
+    if (
+      (body.eventKey === 'review_available' ||
+        body.eventKey === 'payout_released' ||
+        body.eventKey === 'seller_onboarding_required') &&
+      !payload.orderId
+    ) {
+      return errorResponse('orderId is required for this order email', 400)
+    }
+
+    if (ACCOUNT_EMAIL_EVENT_KEYS.has(body.eventKey) && !payload.userId) {
+      return errorResponse('userId is required for account emails', 400)
+    }
+
+    if (body.eventKey === 'email_changed' && !payload.newEmail) {
+      return errorResponse('newEmail is required for email_changed', 400)
+    }
+
     if (DUAL_RECIPIENT_EVENT_KEYS.has(body.eventKey)) {
+      if (payload.recipientRole !== 'buyer' && payload.recipientRole !== 'seller') {
+        return errorResponse('recipientRole must be buyer or seller', 400)
+      }
+    }
+
+    if (body.eventKey === 'evidence_requested') {
       if (payload.recipientRole !== 'buyer' && payload.recipientRole !== 'seller') {
         return errorResponse('recipientRole must be buyer or seller', 400)
       }

@@ -4,6 +4,12 @@ export const EQUIPD_PRODUCTION_HOSTS = ['equipd.co.uk', 'www.equipd.co.uk']
 /** Fixed path Supabase redirects to after Google OAuth (must be allow-listed). */
 export const OAUTH_CALLBACK_PATH = '/auth/callback'
 
+/** Password reset landing page (must be allow-listed in Supabase Auth). */
+export const RESET_PASSWORD_PATH = '/auth/reset-password'
+
+/** Forgot password request page. */
+export const FORGOT_PASSWORD_PATH = '/forgot-password'
+
 /**
  * Redirect target for email auth links (confirm signup, reset password, magic link).
  * Reuses the OAuth callback route; PKCE + detectSessionInUrl complete the session.
@@ -35,6 +41,11 @@ export function getOAuthCallbackUrl() {
 /** redirectTo for signUp, resetPasswordForEmail, signInWithOtp, updateUser email change. */
 export function getEmailAuthRedirectUrl() {
   return getAuthRedirectUrl(EMAIL_AUTH_CALLBACK_PATH)
+}
+
+/** redirectTo for password reset emails. */
+export function getPasswordResetRedirectUrl() {
+  return getAuthRedirectUrl(RESET_PASSWORD_PATH)
 }
 
 /**

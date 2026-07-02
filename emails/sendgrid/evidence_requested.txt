@@ -1,0 +1,20 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Equipd needs more evidence from you for {{listing_title}} before this case can be resolved.
+
+Order number: {{order_number}}
+
+Upload supporting photos or documents in your order case as soon as you can.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

@@ -1,0 +1,20 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{counterparty_name}} has reported a problem with {{listing_title}}.
+
+Order number: {{order_number}}
+
+Payout is on hold while Equipd reviews the issue. Open the order for case updates.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

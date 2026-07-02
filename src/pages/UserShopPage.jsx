@@ -19,6 +19,7 @@ import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../lib/marketplaceMessageValida
 import { getMessageErrorMessage, resolveMessageThreadNavigation } from '../lib/messages'
 import {
   fetchPublicProfile,
+  formatLastActiveLabel,
   formatProfileJoinDate,
   buildAvatarProfile,
   getProfileDisplayName,
@@ -165,6 +166,7 @@ function UserShopPage({ userId }) {
     profile?.location?.trim(),
     joinDate ? `Joined ${joinDate}` : null,
   ].filter(Boolean).join(' · ')
+  const lastActiveLabel = formatLastActiveLabel(profile?.last_active_at)
 
   if (loading) {
     return (
@@ -210,6 +212,9 @@ function UserShopPage({ userId }) {
               </p>
               {profileSubline ? (
                 <p className="user-shop__subline">{profileSubline}</p>
+              ) : null}
+              {lastActiveLabel ? (
+                <p className="user-shop__last-active">{lastActiveLabel}</p>
               ) : null}
             </div>
           </div>

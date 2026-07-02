@@ -15,22 +15,35 @@ Manual dashboard configuration only — not applied by migrations or deploy scri
 
 ### 2. Custom SMTP (required for production “from” branding)
 
-Default Supabase mail (`noreply@mail.app.supabase.io`) cannot show **Equipd** as sender or use `@equipd.co.uk`.
+**This is a Dashboard-only setting — app code cannot change the sender name.**
+
+Default Supabase mail (`noreply@mail.app.supabase.io`, sender name **Supabase**) cannot show **Equipd** as the from name or use `@equipd.co.uk`. There is no separate “sender name only” toggle on the built-in mailer; you must enable custom SMTP.
 
 **Authentication → Emails → SMTP Settings → Enable Custom SMTP**
 
-Recommended (Resend — already used for support alerts):
-
 | Field | Value |
 |-------|--------|
-| Sender name | `Equipd` |
-| Sender email | `auth@equipd.co.uk` (or `notifications@equipd.co.uk` if one inbox) |
-| Host | `smtp.resend.com` |
+| **Sender name** | `Equipd` |
+| **Sender email** | `auth@equipd.co.uk` (or `notifications@equipd.co.uk` if one inbox) |
+| Host | `smtp.resend.com` (or `smtp.sendgrid.net` if using SendGrid) |
 | Port | `465` (SSL) or `587` (STARTTLS) |
-| Username | `resend` |
-| Password | Resend API key (`re_...`) |
+| Username | `resend` (Resend) or `apikey` (SendGrid) |
+| Password | Provider API key |
 
-Prerequisites in Resend: verify domain `equipd.co.uk`, add DNS records, optionally create `auth@` as allowed from-address.
+Applies to **all** Auth system emails once saved:
+
+| Template (Authentication → Emails → Templates) | When sent |
+|------------------------------------------------|-----------|
+| Confirm signup | `signUp` email confirmation |
+| Reset password | `resetPasswordForEmail` (forgot-password flow) |
+| Magic link | `signInWithOtp` (not enabled in app yet) |
+| Change email address | `updateUser({ email })` from Settings |
+
+Prerequisites: verify domain `equipd.co.uk` with your SMTP provider (SPF/DKIM). Resend/SendGrid dashboards show DNS records.
+
+**After saving:** trigger a test signup or password reset and confirm the inbox shows `Equipd <auth@equipd.co.uk>` (or your chosen address), not `Supabase`.
+
+Optional API equivalent (Management API): `smtp_sender_name`, `smtp_admin_email`, `smtp_host`, etc. on `PATCH /v1/projects/{ref}/config/auth` — still Dashboard/config, not app runtime code.
 
 ### 3. Email templates
 
@@ -70,7 +83,7 @@ Use `{{ .ConfirmationURL }}` for action links (do not hardcode domains). Subject
 <p>— The Equipd team</p>
 ```
 
-*App note: password reset UI is not implemented yet; template is ready when `resetPasswordForEmail` is added with `redirectTo: getEmailAuthRedirectUrl()`.*
+*App: `requestPasswordReset()` uses `resetPasswordForEmail` with `redirectTo: /auth/reset-password` (see `getPasswordResetRedirectUrl()` in `src/lib/siteUrl.js`).*
 
 ---
 
@@ -112,4 +125,5 @@ Use `{{ .ConfirmationURL }}` for action links (do not hardcode domains). Subject
 
 - `signUp` passes `emailRedirectTo: getEmailAuthRedirectUrl()` → `https://equipd.co.uk/auth/callback` in production.
 - Google OAuth uses the same `/auth/callback` path.
-- Future `resetPasswordForEmail` / magic link should use `getEmailAuthRedirectUrl()` from `src/lib/auth.js`.
+- `resetPasswordForEmail` uses `getPasswordResetRedirectUrl()` → `https://equipd.co.uk/auth/reset-password` in production.
+- Future magic link should use `getEmailAuthRedirectUrl()` from `src/lib/auth.js`.

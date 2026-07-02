@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { touchUserActivity } from '../lib/profiles'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
@@ -28,10 +29,14 @@ export function AuthProvider({ children }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
       setUser(nextSession?.user ?? null)
       setLoading(false)
+
+      if (event === 'SIGNED_IN' && nextSession?.user?.id) {
+        touchUserActivity()
+      }
     })
 
     return () => {

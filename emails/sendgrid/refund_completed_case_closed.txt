@@ -1,0 +1,20 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+The refund for {{listing_title}} has been completed and your Buyer Protection case is now closed.
+
+Order number: {{order_number}}
+
+Funds should appear according to your payment provider timelines. Open the order if you need the full case history.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

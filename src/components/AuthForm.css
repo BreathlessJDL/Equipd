@@ -34,6 +34,27 @@
   font-weight: 500;
 }
 
+.auth-form__field-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.auth-form__inline-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-orange);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.auth-form__inline-link:hover {
+  text-decoration: underline;
+}
+
 .auth-form__hint {
   margin: 0.35rem 0 0;
   font-size: 0.8125rem;

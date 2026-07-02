@@ -27,6 +27,8 @@ import CollectOrderPage from './pages/CollectOrderPage'
 import OrderDetailPage from './pages/OrderDetailPage'
 import LocationListingsPage from './pages/LocationListingsPage'
 import LoginPage from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import MessagesPage from './pages/MessagesPage'
 import MyListingsPage from './pages/MyListingsPage'
@@ -62,6 +64,8 @@ function App() {
             <Route path="help/:slug" element={<HelpArticlePage />} />
             <Route path="support" element={<SupportFlowPage />} />
             <Route path="login" element={<LoginPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="auth/reset-password" element={<ResetPasswordPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route path="auth/callback" element={<AuthCallbackPage />} />
             <Route

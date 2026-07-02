@@ -1,0 +1,18 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+You have a paid order for {{listing_title}}, but your payout account setup is not complete.
+
+Complete Stripe Connect onboarding in your Hub so Equipd can release your payout when the order completes.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

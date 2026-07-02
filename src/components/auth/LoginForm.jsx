@@ -10,6 +10,7 @@ function LoginForm({
   redirectTo = '/',
   onSuccess,
   onSwitchToSignup,
+  onForgotPassword,
   showSwitchLink = true,
   compact = false,
 }) {
@@ -92,6 +93,21 @@ function LoginForm({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
+          <div className="auth-form__field-footer">
+            {onForgotPassword ? (
+              <button
+                type="button"
+                className="auth-form__inline-link"
+                onClick={onForgotPassword}
+              >
+                Forgot password?
+              </button>
+            ) : (
+              <Link className="auth-form__inline-link" to="/forgot-password">
+                Forgot password?
+              </Link>
+            )}
+          </div>
         </div>
 
         {error ? (

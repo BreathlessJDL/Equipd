@@ -1,7 +1,8 @@
 import { resolveAppBaseUrl, DEFAULT_EMAIL_LOGO_URL } from '../../supabase/functions/_shared/transactionalEmailCore.js'
 import { composeMarketplaceEmailSubject } from '../../supabase/functions/_shared/marketplaceEmailCore.js'
 import {
-  PHASE2_EMAIL_TEMPLATES,
+  ALL_EMAIL_TEMPLATES,
+  buildEmailPreviewData,
   buildPhase2PreviewData,
 } from '../templates/index.js'
 
@@ -39,54 +40,31 @@ export const EMAIL_PREVIEW_MOCK_DATA = {
     cta_url: 'https://equipd.co.uk',
   }),
 
-  dispute_opened: baseDefaults({
-    title: 'Case opened',
-    subtitle: 'A Buyer Protection case has been opened.',
-    body: '<p>Review the case details and respond with any requested information.</p>',
-    cta_text: 'View case',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  refund_completed: baseDefaults({
-    title: 'Refund completed',
-    subtitle: 'A refund has been processed for this order.',
-    body: '<p>Funds should return to the buyer according to their payment provider timelines.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  case_closed: baseDefaults({
-    title: 'Case closed',
-    subtitle: 'The support case for this order has been closed.',
-    body: '<p>No further action is required unless Equipd Support contacts you.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
-
-  payout_released: baseDefaults({
-    title: 'Payout released',
-    subtitle: 'Your seller payout has been released.',
-    body: '<p>Funds are on the way to your connected payout account.</p>',
-    cta_text: 'View order',
-    cta_url: 'https://equipd.co.uk/hub',
-  }),
 }
 
-for (const template of PHASE2_EMAIL_TEMPLATES) {
+for (const template of ALL_EMAIL_TEMPLATES) {
   const mock = template.buildPreviewData('https://equipd.co.uk')
   EMAIL_PREVIEW_MOCK_DATA[template.key] = {
     ...mock,
-    subject: composeMarketplaceEmailSubject(template.key, mock.listing_title),
+    subject:
+      mock.subject ??
+      composeMarketplaceEmailSubject(template.key, mock.listing_title, {
+        recipientRole: mock.recipient_role,
+      }),
   }
 }
 
 export function getPreviewMockData(templateKey, getEnv = (key) => process.env[key] ?? '') {
   const base_url = resolveAppBaseUrl(getEnv)
-  const phase2 = buildPhase2PreviewData(templateKey, base_url)
-  if (phase2) {
+  const preview = buildEmailPreviewData(templateKey, base_url) ?? buildPhase2PreviewData(templateKey, base_url)
+  if (preview) {
     return {
-      ...phase2,
-      subject: phase2.subject ?? composeMarketplaceEmailSubject(templateKey, phase2.listing_title),
+      ...preview,
+      subject:
+        preview.subject ??
+        composeMarketplaceEmailSubject(templateKey, preview.listing_title, {
+          recipientRole: preview.recipient_role,
+        }),
       logo_url: DEFAULT_EMAIL_LOGO_URL,
       year: String(new Date().getFullYear()),
     }

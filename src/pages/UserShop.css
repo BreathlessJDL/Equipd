@@ -59,6 +59,13 @@
   overflow-wrap: anywhere;
 }
 
+.user-shop__last-active {
+  margin: 0.2rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
 .user-shop__reviews {
   display: flex;
   flex-wrap: wrap;

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './ListingImageGallery.css'
+
+const SWIPE_THRESHOLD_PX = 48
 
 function ListingImageGallery({
   images = [],
@@ -8,6 +10,7 @@ function ListingImageGallery({
   savedCountOverlay = null,
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const touchStartXRef = useRef(null)
   const hasImages = images.length > 0
   const hasMultiple = images.length > 1
   const safeIndex = hasImages ? Math.min(selectedIndex, images.length - 1) : 0
@@ -27,6 +30,36 @@ function ListingImageGallery({
   function showNext() {
     if (!hasMultiple) return
     setSelectedIndex((index) => (index === images.length - 1 ? 0 : index + 1))
+  }
+
+  function handleTouchStart(event) {
+    if (!hasMultiple || event.touches.length !== 1) return
+    touchStartXRef.current = event.touches[0].clientX
+  }
+
+  function handleTouchEnd(event) {
+    if (!hasMultiple || touchStartXRef.current == null) return
+
+    const touchEndX = event.changedTouches[0]?.clientX
+    if (touchEndX == null) {
+      touchStartXRef.current = null
+      return
+    }
+
+    const deltaX = touchEndX - touchStartXRef.current
+    touchStartXRef.current = null
+
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return
+
+    if (deltaX < 0) {
+      showNext()
+    } else {
+      showPrevious()
+    }
+  }
+
+  function handleTouchCancel() {
+    touchStartXRef.current = null
   }
 
   return (
@@ -52,7 +85,12 @@ function ListingImageGallery({
           </div>
         ) : null}
 
-        <div className="listing-gallery__main-wrap">
+        <div
+          className="listing-gallery__main-wrap"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchCancel}
+        >
           {saveButton || savedCountOverlay ? (
             <div className="listing-gallery__main-overlays">
               {saveButton ? <div className="listing-gallery__save">{saveButton}</div> : null}
@@ -86,6 +124,19 @@ function ListingImageGallery({
                   >
                     ›
                   </button>
+                  <div
+                    className="listing-gallery__dots"
+                    aria-label={`Photo ${safeIndex + 1} of ${images.length}`}
+                  >
+                    {images.map((image, index) => (
+                      <span
+                        key={image.id}
+                        className={`listing-gallery__dot${
+                          index === safeIndex ? ' listing-gallery__dot--active' : ''
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </>
               ) : null}
             </>

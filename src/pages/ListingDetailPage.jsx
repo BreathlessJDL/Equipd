@@ -19,7 +19,7 @@ import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import BuyerOrderConfirmation from '../components/BuyerOrderConfirmation'
 import ListingImageGallery from '../components/listing/ListingImageGallery'
 import ListingItemSummary from '../components/listing/ListingItemSummary'
-import ListingOffersSection from '../components/ListingOffersSection'
+import ListingDetailSaveButton from '../components/listing/ListingDetailSaveButton'
 import ListingRecommendations from '../components/listing/ListingRecommendations'
 import ListingSavedCountOverlay from '../components/listing/ListingSavedCountOverlay'
 import MakeOfferModal from '../components/listing/MakeOfferModal'
@@ -351,6 +351,10 @@ function ListingDetailPage() {
         </button>
       ) : null}
 
+      {canContactSeller ? (
+        <ListingDetailSaveButton listing={listing} onSavedChange={handleSavedChange} />
+      ) : null}
+
       {messageError ? (
         <p className="listing-detail__message listing-detail__message--error" role="alert">
           {messageError}
@@ -402,19 +406,6 @@ function ListingDetailPage() {
           }
         />
       </div>
-
-      {user ? (
-        <ListingOffersSection
-          listing={listing}
-          user={user}
-          isOwner={isOwner}
-          offers={offers}
-          loadingOffers={false}
-          offersError=""
-          onOffersChange={setOffers}
-          onOfferAccepted={reloadOffers}
-        />
-      ) : null}
 
       {!isOwner && buyerConfirmableOffer?.order?.id ? (
         <section className="listing-detail__section listing-detail__panel">

@@ -1,0 +1,21 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Your order for {{listing_title}} is complete.
+
+Order number: {{order_number}}
+Seller: {{seller_name}}
+
+Leave a review to help other buyers and recognise a great seller experience.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

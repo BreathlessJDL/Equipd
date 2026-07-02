@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import UserAvatar from '../UserAvatar'
-import { fetchPublicProfile, getProfileDisplayName, buildAvatarProfile } from '../../lib/profiles'
+import { fetchPublicProfile, formatLastActiveLabel, getProfileDisplayName, buildAvatarProfile } from '../../lib/profiles'
 import {
   fetchUserCompletedSalesCount,
   fetchUserReviewSummary,
@@ -74,6 +74,7 @@ function ListingSummarySeller({ sellerId }) {
   const hasReviews = reviewSummary.reviewCount > 0 && reviewSummary.averageRating != null
   const compactRating = formatReviewCompact(reviewSummary.averageRating, reviewSummary.reviewCount)
   const salesLabel = formatCompletedSales(completedSalesCount)
+  const lastActiveLabel = formatLastActiveLabel(profile?.last_active_at)
   const avatarProfile = buildAvatarProfile(profile) ?? { initial: '?' }
 
   let secondaryLine = null
@@ -122,6 +123,9 @@ function ListingSummarySeller({ sellerId }) {
               <ChevronIcon className="listing-summary__seller-chevron" />
             </span>
             <span className="listing-summary__seller-meta">{secondaryLine}</span>
+            {lastActiveLabel ? (
+              <span className="listing-summary__seller-last-active">{lastActiveLabel}</span>
+            ) : null}
           </span>
         </Link>
       )}

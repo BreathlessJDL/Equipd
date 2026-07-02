@@ -388,6 +388,17 @@
   color: var(--color-muted);
 }
 
+.listing-summary__seller-last-active {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.listing-detail-save-button--saved {
+  border-color: color-mix(in srgb, var(--color-orange) 45%, var(--color-border));
+  color: var(--color-navy);
+}
+
 .listing-summary__seller-rating {
   display: inline-flex;
   flex-wrap: wrap;

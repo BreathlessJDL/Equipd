@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+Your payout for {{listing_title}} has been released.
+
+Order number: {{order_number}}
+Seller Service Fee: {{seller_service_fee}}
+You'll receive: {{seller_net_payout}}
+
+Funds are on the way to your connected payout account. Open the order for full details.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

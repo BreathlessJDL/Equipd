@@ -17,7 +17,7 @@ import {
   renderMasterEmail,
 } from '../emails/renderMasterEmail.js'
 import {
-  PHASE2_EMAIL_TEMPLATES,
+  ALL_EMAIL_TEMPLATES,
 } from '../emails/templates/index.js'
 import {
   DEFAULT_EMAIL_LOGO_URL,
@@ -79,7 +79,7 @@ async function main() {
 
   const baseUrl = resolveAppBaseUrl((key) => process.env[key] ?? '')
 
-  for (const template of PHASE2_EMAIL_TEMPLATES) {
+  for (const template of ALL_EMAIL_TEMPLATES) {
     const mockData = enrichPreviewData(template.buildPreviewData(baseUrl))
     const { htmlPath, plainPath } = getSendGridOutputPaths(template.key)
     const filledPreviewPath = path.join(distDir, `preview-${template.key}.html`)
@@ -98,7 +98,7 @@ async function main() {
   }
 
   console.log('\nSendGrid HTML import files:')
-  for (const template of PHASE2_EMAIL_TEMPLATES) {
+  for (const template of ALL_EMAIL_TEMPLATES) {
     const { htmlPath, plainPath } = getSendGridOutputPaths(template.key)
     console.log(`  ${path.relative(ROOT, htmlPath)}`)
     console.log(`  ${path.relative(ROOT, plainPath)}`)
