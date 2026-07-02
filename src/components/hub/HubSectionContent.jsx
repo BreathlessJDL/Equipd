@@ -1016,9 +1016,10 @@ export function buildHubNeedsAttention({
     })
   }
 
-  const courierEvidenceCount = activeSellerSales.filter((offer) =>
-    canSellerSubmitCourierEvidence(getOfferOrder(offer), offer.payment),
-  ).length
+  const courierEvidenceCount = activeSellerSales.filter((offer) => {
+    const order = getOfferOrder(offer)
+    return order && canSellerSubmitCourierEvidence(order, offer.payment)
+  }).length
 
   if (courierEvidenceCount > 0) {
     items.push({
@@ -1030,9 +1031,10 @@ export function buildHubNeedsAttention({
     })
   }
 
-  const disputeCount = activeSellerSales.filter((offer) =>
-    isOrderDisputed(getOfferOrder(offer)),
-  ).length
+  const disputeCount = activeSellerSales.filter((offer) => {
+    const order = getOfferOrder(offer)
+    return order && isOrderDisputed(order)
+  }).length
 
   if (disputeCount > 0) {
     items.push({
@@ -1083,6 +1085,7 @@ export function filterHubPurchasesCompletedOffers(offers = []) {
 function isBuyerPurchaseActionRequired(offer) {
   const order = getOfferOrder(offer)
   const payment = offer.payment
+  if (!order) return false
 
   return (
     canBuyerConfirmOrder(order, payment) ||
@@ -1094,6 +1097,7 @@ function isBuyerPurchaseActionRequired(offer) {
 function isSellerSaleActionRequired(offer) {
   const order = getOfferOrder(offer)
   const payment = offer.payment
+  if (!order) return false
 
   return (
     canShowHandoverQr(order, payment) ||

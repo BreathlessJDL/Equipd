@@ -471,7 +471,7 @@ export function hasBuyerTakenPossession(order) {
 }
 
 export function isAwaitingInPersonHandover(order, payment) {
-  if (!isPaymentComplete(payment) || !isInPersonHandoverOrder(order)) {
+  if (!order || !isPaymentComplete(payment) || !isInPersonHandoverOrder(order)) {
     return false
   }
 

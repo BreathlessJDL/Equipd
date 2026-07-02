@@ -22,7 +22,11 @@ try {
   const { getStatusBadgeFromOrderLifecycleStage } = await server.ssrLoadModule(
     '/src/lib/orderLifecycleStatus.js',
   )
-  const { ORDER_FULFILMENT_STATUSES, ORDER_TYPES } = await server.ssrLoadModule('/src/lib/orders.js')
+  const {
+    ORDER_FULFILMENT_STATUSES,
+    ORDER_TYPES,
+    canShowHandoverQr,
+  } = await server.ssrLoadModule('/src/lib/orders.js')
   const { PAYMENT_STATUSES } = await server.ssrLoadModule('/src/lib/payments.js')
 
   const paidOffer = {
@@ -61,6 +65,26 @@ try {
   assert(disputeBadge.label === 'Dispute Open', 'Dispute label')
   assert(disputeBadge.variant === 'disputed', 'Dispute variant')
   console.log('PASS: dispute badge styling')
+
+  assert(
+    canShowHandoverQr(null, { status: PAYMENT_STATUSES.PAID }) === false,
+    'canShowHandoverQr must not throw when order is null',
+  )
+  console.log('PASS: null order handover check')
+
+  const missingOrderBadge = getHubItemStatusBadge(
+    {
+      status: 'accepted',
+      payment: { status: PAYMENT_STATUSES.PAID },
+      order: null,
+    },
+    { orderStatusRole: 'buyer' },
+  )
+  assert(
+    missingOrderBadge.label === 'In progress',
+    `Missing order should fall back safely, got ${missingOrderBadge.label}`,
+  )
+  console.log('PASS: missing linked order badge fallback')
 
   console.log('\nAll hub lifecycle status checks passed.')
 } catch (error) {

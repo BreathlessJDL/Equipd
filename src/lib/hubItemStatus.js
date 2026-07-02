@@ -29,7 +29,7 @@ const HUB_FULFILMENT_LABELS = {
 export function getHubFulfilmentLabel(order) {
   if (!order?.order_type) return null
 
-  return HUB_FULFILMENT_LABELS[order.order_type] ?? null
+  return HUB_FULFILMENT_LABELS[order.order_type] ?? 'Order'
 }
 
 export function getHubItemStatusBadge(
@@ -41,6 +41,10 @@ export function getHubItemStatusBadge(
 
   if (isOfferCancelled(offer)) {
     return { variant: 'cancelled', label: 'Cancelled' }
+  }
+
+  if (orderStatusRole && payment && isPaymentComplete(payment) && !order) {
+    return { variant: 'buyer_protection', label: 'In progress' }
   }
 
   if (order && (orderStatusRole || (showPaymentStatus && payment))) {
