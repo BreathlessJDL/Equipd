@@ -46,6 +46,8 @@ import {
   canShowHandoverQr,
   getOfferOrder,
   hasOfferLinkedOrder,
+  isHubCompletedOffer,
+  isHubPurchasesInProgressOffer,
   isOrderAwaitingFulfilment,
   isOrderCompleted,
   isOrderHubHistory,
@@ -1071,17 +1073,11 @@ export function buildHubNeedsAttention({
 }
 
 export function filterHubPurchasesInProgressOffers(offers = []) {
-  return offers.filter((offer) => {
-    const order = getOfferOrder(offer)
-    const payment = offer.payment
-    return !(isPaymentComplete(payment) && isOrderHubHistory(order))
-  })
+  return offers.filter(isHubPurchasesInProgressOffer)
 }
 
 export function filterHubPurchasesCompletedOffers(offers = []) {
-  return offers.filter(
-    (offer) => isPaymentComplete(offer.payment) && isOrderHubHistory(getOfferOrder(offer)),
-  )
+  return offers.filter(isHubCompletedOffer)
 }
 
 function isBuyerPurchaseActionRequired(offer) {

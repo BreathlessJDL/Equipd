@@ -1,5 +1,5 @@
 import { enrichListingWithImages } from './listingImages'
-import { isPaymentComplete, paymentFields } from './payments'
+import { getOfferPayment, isPaymentComplete, paymentFields } from './payments'
 import { supabase } from './supabase'
 
 export const ORDER_FULFILMENT_STATUSES = {
@@ -787,6 +787,146 @@ export function isOrderHubHistory(order) {
   if (!order) return false
 
   return isOrderCompleted(order) || isOrderRefundedForHub(order)
+}
+
+/** Paid checkout or terminal refund — Hub history does not require payout_status = paid. */
+export function isHubTransactionSettled(payment, order) {
+  return isPaymentComplete(payment) || isOrderRefundedForHub(order)
+}
+
+export function isHubCompletedOffer(offer) {
+  const order = getOfferOrder(offer)
+  if (!order?.id) return false
+
+  const payment = getOfferPayment(offer)
+  if (!isHubTransactionSettled(payment, order)) return false
+
+  return isOrderHubHistory(order)
+}
+
+export function isHubPurchasesInProgressOffer(offer) {
+  return !isHubCompletedOffer(offer)
+}
+
+export function applyOrdersToOffers(offers, orders) {
+  if (!offers?.length) return offers ?? []
+
+  const ordersByOfferId = new Map(
+    (orders ?? [])
+      .filter((order) => order?.offer_id && order?.id)
+      .map((order) => [order.offer_id, order]),
+  )
+
+  return offers.map((offer) => {
+    const fetched = ordersByOfferId.get(offer.id)
+    if (!fetched) return enrichOfferWithOrder(offer)
+
+    return enrichOfferWithOrder({ ...offer, order: fetched })
+  })
+}
+
+export function diagnoseHubOfferPipeline(offer) {
+  const order = getOfferOrder(offer)
+  const payment = getOfferPayment(offer)
+  const exclusionReasons = []
+
+  if (!order?.id) {
+    exclusionReasons.push('missing_linked_order')
+  }
+
+  if (order?.id && !isHubTransactionSettled(payment, order)) {
+    exclusionReasons.push('payment_not_settled')
+  }
+
+  if (order?.id && isHubTransactionSettled(payment, order) && !isOrderHubHistory(order)) {
+    exclusionReasons.push('order_not_terminal_history')
+  }
+
+  if (order?.id && isOrderRefundedForHub(order) && !isHubCompletedOffer(offer)) {
+    exclusionReasons.push('refunded_order_failed_completed_filter')
+  }
+
+  return {
+    offerId: offer?.id ?? null,
+    orderId: order?.id ?? null,
+    fulfilmentStatus: order?.fulfilment_status ?? null,
+    paymentStatus: payment?.status ?? null,
+    payoutStatus: order?.payout_status ?? null,
+    buckets: {
+      completed: isHubCompletedOffer(offer),
+      purchasesInProgress: isHubPurchasesInProgressOffer(offer),
+      buyerInProgressNarrow: Boolean(
+        order?.id &&
+          isPaidHubOrder(order, payment) &&
+          !isOrderHubHistory(order),
+      ),
+      sellerInProgressNarrow: Boolean(
+        order?.id &&
+          isPaymentComplete(payment) &&
+          !isOrderHubHistory(order) &&
+          isPaidHubOrder(order, payment),
+      ),
+    },
+    exclusionReasons,
+  }
+}
+
+export function logHubOfferPipelineDiagnostics({
+  acceptedBuyerOffers = [],
+  acceptedSellerOffers = [],
+  requestedOfferIds = [],
+  orders = [],
+  orderFetchError = null,
+} = {}) {
+  if (!import.meta.env?.DEV) return
+
+  const refundedOrders = (orders ?? []).filter(isOrderRefundedForHub)
+  const paidAcceptedWithoutOrder = [...acceptedBuyerOffers, ...acceptedSellerOffers].filter(
+    (offer) => isPaymentComplete(getOfferPayment(offer)) && !getOfferOrder(offer)?.id,
+  )
+
+  console.group('[hub] offer/order pipeline')
+  console.log('accepted buyer offers loaded', acceptedBuyerOffers.length)
+  console.log('accepted seller offers loaded', acceptedSellerOffers.length)
+  console.log('order IDs requested (offer ids)', requestedOfferIds.length)
+  console.log('orders returned', orders.length)
+  if (orderFetchError) {
+    console.warn('order fetch error', orderFetchError.message ?? orderFetchError)
+  }
+  if (refundedOrders.length) {
+    console.log(
+      'refunded orders in batch',
+      refundedOrders.map((order) => ({
+        orderId: order.id,
+        offerId: order.offer_id,
+        fulfilmentStatus: order.fulfilment_status,
+        payoutStatus: order.payout_status,
+      })),
+    )
+  }
+
+  for (const offer of [...acceptedBuyerOffers, ...acceptedSellerOffers]) {
+    const order = getOfferOrder(offer)
+    if (!order?.id || !isOrderRefundedForHub(order)) continue
+
+    const diagnosis = diagnoseHubOfferPipeline(offer)
+    console.log('refunded offer pipeline', diagnosis)
+    if (!diagnosis.buckets.completed) {
+      console.warn('refunded offer excluded from completed/history', diagnosis.exclusionReasons)
+    }
+    if (diagnosis.buckets.buyerInProgressNarrow || diagnosis.buckets.sellerInProgressNarrow) {
+      console.warn('refunded offer still in narrow in-progress bucket', diagnosis.buckets)
+    }
+  }
+
+  for (const offer of paidAcceptedWithoutOrder) {
+    console.warn('[hub] paid accepted offer missing linked order after merge', {
+      offerId: offer.id,
+      paymentStatus: getOfferPayment(offer)?.status,
+    })
+  }
+
+  console.groupEnd()
 }
 
 export function getOrderErrorMessage(error) {

@@ -35,15 +35,17 @@ import { isPaymentComplete } from '../lib/payments'
 import { fetchDisputesForOrders } from '../lib/orderDisputes'
 import {
   canBuyerConfirmOrder,
+  applyOrdersToOffers,
   fetchOrdersByOfferIds,
   getOfferOrder,
+  isHubCompletedOffer,
   isOrderAwaitingFulfilment,
   isOrderBuyerConfirmed,
-  isOrderCompleted,
   isOrderHubHistory,
   isPaidHubOrder,
   isPayoutReleased,
   isSellerHubSaleInProgress,
+  logHubOfferPipelineDiagnostics,
 } from '../lib/orders'
 import { fetchProfile } from '../lib/profiles'
 import {
@@ -252,15 +254,6 @@ function HubPage() {
       return
     }
 
-    setMyListings(listingsResult.data ?? [])
-    setPendingOffersMade(pendingMadeResult.data ?? [])
-    setAcceptedOffersMade(acceptedMadeResult.data ?? [])
-    setOffersReceived(receivedResult.data ?? [])
-    setAcceptedOffersReceived(acceptedReceivedResult.data ?? [])
-    setCancelledOffersMade(cancelledMadeResult.data ?? [])
-    setCancelledOffersReceived(cancelledReceivedResult.data ?? [])
-    setStripeOnboardingComplete(profileResult.data?.stripe_onboarding_complete ?? false)
-
     const allHubOffers = [
       ...(pendingMadeResult.data ?? []),
       ...(acceptedMadeResult.data ?? []),
@@ -270,14 +263,51 @@ function HubPage() {
       ...(cancelledReceivedResult.data ?? []),
     ]
     const allHubOfferIds = [...new Set(allHubOffers.map((offer) => offer.id).filter(Boolean))]
+
     const hubOrdersResult = await fetchOrdersByOfferIds(allHubOfferIds)
     if (hubOrdersResult.error) {
       logSupabaseError('hub orders lookup', hubOrdersResult.error)
     }
+    const hubOrders = hubOrdersResult.data ?? []
+    const attachHubOrders = (offers) => applyOrdersToOffers(offers ?? [], hubOrders)
+
+    const mergedPendingMade = attachHubOrders(pendingMadeResult.data)
+    const mergedAcceptedMade = attachHubOrders(acceptedMadeResult.data)
+    const mergedReceived = attachHubOrders(receivedResult.data)
+    const mergedAcceptedReceived = attachHubOrders(acceptedReceivedResult.data)
+    const mergedCancelledMade = attachHubOrders(cancelledMadeResult.data)
+    const mergedCancelledReceived = attachHubOrders(cancelledReceivedResult.data)
+
+    setMyListings(listingsResult.data ?? [])
+    setPendingOffersMade(mergedPendingMade)
+    setAcceptedOffersMade(mergedAcceptedMade)
+    setOffersReceived(mergedReceived)
+    setAcceptedOffersReceived(mergedAcceptedReceived)
+    setCancelledOffersMade(mergedCancelledMade)
+    setCancelledOffersReceived(mergedCancelledReceived)
+    setStripeOnboardingComplete(profileResult.data?.stripe_onboarding_complete ?? false)
+
+    logHubOfferPipelineDiagnostics({
+      acceptedBuyerOffers: mergedAcceptedMade,
+      acceptedSellerOffers: mergedAcceptedReceived,
+      requestedOfferIds: allHubOfferIds,
+      orders: hubOrders,
+      orderFetchError: hubOrdersResult.error,
+    })
+
     const hubOrderIds = [
       ...new Set([
-        ...(hubOrdersResult.data ?? []).map((order) => order.id).filter(Boolean),
-        ...allHubOffers.map((offer) => getOfferOrder(offer)?.id).filter(Boolean),
+        ...hubOrders.map((order) => order.id).filter(Boolean),
+        ...[
+          ...mergedPendingMade,
+          ...mergedAcceptedMade,
+          ...mergedReceived,
+          ...mergedAcceptedReceived,
+          ...mergedCancelledMade,
+          ...mergedCancelledReceived,
+        ]
+          .map((offer) => getOfferOrder(offer)?.id)
+          .filter(Boolean),
       ]),
     ]
     const disputesResult = await fetchDisputesForOrders(hubOrderIds)
@@ -449,20 +479,12 @@ function HubPage() {
   )
 
   const completedBuyerOrders = useMemo(
-    () =>
-      acceptedOffersMade.filter(
-        (offer) =>
-          isPaymentComplete(offer.payment) && isOrderHubHistory(getOfferOrder(offer)),
-      ),
+    () => acceptedOffersMade.filter(isHubCompletedOffer),
     [acceptedOffersMade],
   )
 
   const completedSalesOrders = useMemo(
-    () =>
-      acceptedOffersReceived.filter((offer) => {
-        const order = getOfferOrder(offer)
-        return isPaymentComplete(offer.payment) && isOrderHubHistory(order)
-      }),
+    () => acceptedOffersReceived.filter(isHubCompletedOffer),
     [acceptedOffersReceived],
   )
 
