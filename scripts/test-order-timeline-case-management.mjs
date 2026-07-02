@@ -6,7 +6,13 @@
  *   node scripts/test-order-timeline-case-management.mjs
  */
 
-import { buildOrderTimeline, buildDisputeTimelineSteps, isOrderRefunded } from '../src/lib/orderTimeline.js'
+import {
+  buildOrderTimeline,
+  buildDisputeTimelineSteps,
+  buildOrderTimelineEvents,
+  isOrderRefunded,
+  orderHasClosedRefundDisputeTimeline,
+} from '../src/lib/orderTimeline.js'
 import { DISPUTE_STATUSES } from '../src/lib/orderDisputes.js'
 import { ORDER_FULFILMENT_STATUSES, ORDER_TYPES, PAYOUT_STATUSES } from '../src/lib/orders.js'
 import { PAYMENT_STATUSES } from '../src/lib/payments.js'
@@ -516,6 +522,80 @@ function testDisputedNotRefundedKeepsProtectionSteps() {
   logPass('Disputed but not refunded order keeps protection steps without payout milestones')
 }
 
+function testLiveResolvedRefundWithoutRpcEnrichmentFields() {
+  const caseUpdates = [
+    {
+      id: '1',
+      dispute_id: DISPUTE_ID,
+      event_type: 'case_opened',
+      status: 'evidence_received',
+      created_at: '2026-01-10T10:00:00Z',
+    },
+    {
+      id: '2',
+      dispute_id: DISPUTE_ID,
+      event_type: 'refund_pending',
+      status: DISPUTE_STATUSES.REFUND_PENDING,
+      created_at: '2026-01-12T10:00:00Z',
+    },
+    {
+      id: '3',
+      dispute_id: DISPUTE_ID,
+      event_type: 'refund_completed',
+      status: DISPUTE_STATUSES.REFUND_COMPLETED,
+      created_at: '2026-01-13T10:00:00Z',
+    },
+    {
+      id: '4',
+      dispute_id: DISPUTE_ID,
+      event_type: 'case_closed',
+      status: DISPUTE_STATUSES.RESOLVED,
+      created_at: '2026-01-14T10:00:00Z',
+    },
+  ]
+
+  const order = baseOrder({
+    fulfilment_status: ORDER_FULFILMENT_STATUSES.REFUND_PENDING,
+    protection_status: 'refunded',
+    payout_status: PAYOUT_STATUSES.ON_HOLD,
+  })
+  const disputes = [
+    buildDispute(DISPUTE_STATUSES.RESOLVED, {
+      resolved_at: '2026-01-14T10:00:00Z',
+    }),
+  ]
+
+  assert(
+    isOrderRefunded(order, disputes, caseUpdates),
+    'Expected refunded detection from case updates without RPC enrichment fields',
+  )
+  assert(
+    orderHasClosedRefundDisputeTimeline(order, disputes, caseUpdates),
+    'Expected closed refund dispute timeline detection',
+  )
+
+  const timeline = buildTimeline({ order, disputes, caseUpdates, viewerRole: 'admin' })
+  assertTimelineEndsAt(timeline, 'dispute_case_closed')
+  assertNoPostSuccessMilestones(timeline, 'live-like resolved refund')
+
+  const rawEvents = buildOrderTimelineEvents({
+    order,
+    payment: basePayment(),
+    offer: null,
+    supportRequests: [],
+    disputes,
+    caseUpdates,
+    viewerRole: 'admin',
+    userId: 'admin-1',
+  })
+  assert(
+    !rawEvents.some((event) => event.key === 'buyer_protection_completed'),
+    'buildOrderTimelineEvents should strip post-success milestones for refunded orders',
+  )
+
+  logPass('Live-like resolved refund hides payout milestones without RPC enrichment fields')
+}
+
 function testCompletedOrderWithoutDispute() {
   const order = baseOrder({
     fulfilment_status: ORDER_FULFILMENT_STATUSES.COMPLETED,
@@ -748,6 +828,7 @@ function main() {
   testRefundWithoutReturn()
   testRefundCompletedAndCaseClosed()
   testRefundedOrderNoPayoutMilestonesForSeller()
+  testLiveResolvedRefundWithoutRpcEnrichmentFields()
   testDisputedNotRefundedKeepsProtectionSteps()
   testRejectedClaimClosed()
   testResolvedWithoutCaseOutcomeUsesClosedStage()

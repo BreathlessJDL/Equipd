@@ -7,6 +7,8 @@ function OrderTimeline({
   payment,
   offer,
   supportRequests,
+  disputes = [],
+  caseUpdates = [],
   viewerRole,
   userId,
   timeline: timelineProp = null,
@@ -22,10 +24,12 @@ function OrderTimeline({
       payment,
       offer,
       supportRequests,
+      disputes,
+      caseUpdates,
       viewerRole,
       userId,
     })
-  }, [timelineProp, order, payment, offer, supportRequests, viewerRole, userId])
+  }, [timelineProp, order, payment, offer, supportRequests, disputes, caseUpdates, viewerRole, userId])
 
   if (!timeline || timeline.events.length === 0) return null
 

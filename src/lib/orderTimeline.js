@@ -81,26 +81,41 @@ function hasPausedDispute(order, disputes) {
 export function isOrderRefunded(order, disputes = [], caseUpdates = []) {
   if (!order) return false
 
-  if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.REFUNDED) return true
-  if (order.payout_status === PAYOUT_STATUSES.CANCELLED) return true
+  if (
+    order.fulfilment_status === ORDER_FULFILMENT_STATUSES.REFUNDED ||
+    order.payout_status === PAYOUT_STATUSES.CANCELLED
+  ) {
+    return true
+  }
+
+  if ((caseUpdates ?? []).some((update) => update.event_type === 'refund_completed')) {
+    return true
+  }
 
   const dispute = getLatestOrderDispute(disputes)
   if (dispute?.refund_completed_at) return true
 
-  const refundCompletedInTimeline = (caseUpdates ?? []).some(
-    (update) => update.event_type === 'refund_completed',
-  )
-  if (refundCompletedInTimeline) return true
+  const disputeUpdates = dispute?.id
+    ? (caseUpdates ?? []).filter((update) => update.dispute_id === dispute.id)
+    : (caseUpdates ?? [])
 
-  if (dispute && REFUND_CASE_OUTCOMES.has(dispute.case_outcome)) {
-    return (
-      dispute.status === DISPUTE_STATUSES.RESOLVED ||
-      dispute.status === DISPUTE_STATUSES.RESOLVED_BUYER ||
-      refundCompletedInTimeline
-    )
+  if (
+    disputeUpdates.some((update) => update.event_type === 'refund_pending') &&
+    disputeUpdates.some((update) => update.event_type === 'case_closed')
+  ) {
+    return true
   }
 
-  return false
+  if (dispute && REFUND_CASE_OUTCOMES.has(dispute.case_outcome)) {
+    if (
+      dispute.status === DISPUTE_STATUSES.RESOLVED ||
+      dispute.status === DISPUTE_STATUSES.RESOLVED_BUYER
+    ) {
+      return true
+    }
+  }
+
+  return orderHasClosedRefundDisputeTimeline(order, disputes, caseUpdates)
 }
 
 function shouldSuppressPostSuccessMilestones(order, disputes = [], caseUpdates = []) {
@@ -692,6 +707,12 @@ export function buildDisputeTimelineSteps(order, disputes = [], caseUpdates = []
   const disputeUpdates = getDisputeCaseUpdates(caseUpdates, dispute?.id)
   const steps = buildSimplifiedDisputeTimelineSteps(order, dispute, disputeUpdates)
   return applyDisputeMilestoneTimestamps(steps, disputeUpdates)
+}
+
+export function orderHasClosedRefundDisputeTimeline(order, disputes = [], caseUpdates = []) {
+  const steps = buildDisputeTimelineSteps(order, disputes, caseUpdates)
+  const stepKeys = new Set(steps.map((step) => step.key))
+  return stepKeys.has('dispute_refund_completed') && stepKeys.has('dispute_case_closed')
 }
 
 function getDisputeCurrentStage(order, disputes = [], caseUpdates = []) {
@@ -1316,7 +1337,8 @@ function truncateAfterOrderCompleted(events, order, viewerRole) {
 }
 
 function filterTimelineEventsForRefundedOrder(events, order, disputes, caseUpdates) {
-  if (!isOrderRefunded(order, disputes, caseUpdates)) {
+  const refunded = isOrderRefunded(order, disputes, caseUpdates)
+  if (!refunded) {
     return events
   }
 
@@ -1339,6 +1361,14 @@ function filterTimelineEventsForRefundedOrder(events, order, disputes, caseUpdat
   }
 
   return filtered
+}
+
+function stripPostSuccessMilestoneEvents(events, order, disputes, caseUpdates) {
+  if (!isOrderRefunded(order, disputes, caseUpdates)) {
+    return events
+  }
+
+  return events.filter((event) => !POST_SUCCESS_MILESTONE_KEYS.has(event.key))
 }
 
 export function applyDuplicateTimestampLabels(events) {
@@ -1401,7 +1431,12 @@ export function buildOrderTimelineEvents({
 
   events = truncateAfterOrderCompleted(events, order, viewerRole)
 
-  return filterTimelineEventsForViewer(events, viewerRole)
+  return stripPostSuccessMilestoneEvents(
+    filterTimelineEventsForViewer(events, viewerRole),
+    order,
+    disputes,
+    caseUpdates,
+  )
 }
 
 export function buildOrderTimeline({
@@ -1451,6 +1486,21 @@ export function buildOrderTimeline({
     disputes,
     caseUpdates,
   )
+
+  if (import.meta.env.DEV) {
+    console.debug('[buildOrderTimeline] refund timeline', {
+      fulfilment_status: order?.fulfilment_status,
+      protection_status: order?.protection_status,
+      payout_status: order?.payout_status,
+      dispute_status: getLatestOrderDispute(disputes)?.status ?? null,
+      case_update_events: (caseUpdates ?? []).map((update) => update.event_type),
+      isOrderRefunded: isOrderRefunded(order, disputes, caseUpdates),
+      hasClosedRefundTimeline: orderHasClosedRefundDisputeTimeline(order, disputes, caseUpdates),
+      before_filter: eventsWithStates.map((event) => `${event.key}:${event.state}`),
+      after_filter: filteredEvents.map((event) => `${event.key}:${event.state}`),
+    })
+  }
+
   const eventsWithTimestamps = applyDuplicateTimestampLabels(filteredEvents)
 
   return {
