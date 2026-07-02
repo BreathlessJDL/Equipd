@@ -45,6 +45,7 @@ import {
   canSellerSubmitCourierEvidence,
   canShowHandoverQr,
   getOfferOrder,
+  hasOfferLinkedOrder,
   isOrderAwaitingFulfilment,
   isOrderCompleted,
 } from '../../lib/orders'
@@ -1017,8 +1018,8 @@ export function buildHubNeedsAttention({
   }
 
   const courierEvidenceCount = activeSellerSales.filter((offer) => {
-    const order = getOfferOrder(offer)
-    return order && canSellerSubmitCourierEvidence(order, offer.payment)
+    if (!hasOfferLinkedOrder(offer)) return false
+    return canSellerSubmitCourierEvidence(getOfferOrder(offer), offer.payment)
   }).length
 
   if (courierEvidenceCount > 0) {
@@ -1032,8 +1033,8 @@ export function buildHubNeedsAttention({
   }
 
   const disputeCount = activeSellerSales.filter((offer) => {
-    const order = getOfferOrder(offer)
-    return order && isOrderDisputed(order)
+    if (!hasOfferLinkedOrder(offer)) return false
+    return isOrderDisputed(getOfferOrder(offer))
   }).length
 
   if (disputeCount > 0) {
@@ -1083,9 +1084,10 @@ export function filterHubPurchasesCompletedOffers(offers = []) {
 }
 
 function isBuyerPurchaseActionRequired(offer) {
+  if (!hasOfferLinkedOrder(offer)) return false
+
   const order = getOfferOrder(offer)
   const payment = offer.payment
-  if (!order) return false
 
   return (
     canBuyerConfirmOrder(order, payment) ||
@@ -1095,9 +1097,10 @@ function isBuyerPurchaseActionRequired(offer) {
 }
 
 function isSellerSaleActionRequired(offer) {
+  if (!hasOfferLinkedOrder(offer)) return false
+
   const order = getOfferOrder(offer)
   const payment = offer.payment
-  if (!order) return false
 
   return (
     canShowHandoverQr(order, payment) ||

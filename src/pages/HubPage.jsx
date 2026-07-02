@@ -35,6 +35,7 @@ import { isPaymentComplete } from '../lib/payments'
 import { fetchDisputesForOrders } from '../lib/orderDisputes'
 import {
   canBuyerConfirmOrder,
+  fetchOrdersByOfferIds,
   getOfferOrder,
   isOrderAwaitingFulfilment,
   isOrderBuyerConfirmed,
@@ -267,8 +268,16 @@ function HubPage() {
       ...(cancelledMadeResult.data ?? []),
       ...(cancelledReceivedResult.data ?? []),
     ]
+    const allHubOfferIds = [...new Set(allHubOffers.map((offer) => offer.id).filter(Boolean))]
+    const hubOrdersResult = await fetchOrdersByOfferIds(allHubOfferIds)
+    if (hubOrdersResult.error) {
+      logSupabaseError('hub orders lookup', hubOrdersResult.error)
+    }
     const hubOrderIds = [
-      ...new Set(allHubOffers.map((offer) => getOfferOrder(offer)?.id).filter(Boolean)),
+      ...new Set([
+        ...(hubOrdersResult.data ?? []).map((order) => order.id).filter(Boolean),
+        ...allHubOffers.map((offer) => getOfferOrder(offer)?.id).filter(Boolean),
+      ]),
     ]
     const disputesResult = await fetchDisputesForOrders(hubOrderIds)
     if (disputesResult.error) {

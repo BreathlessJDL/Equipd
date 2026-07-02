@@ -171,7 +171,7 @@ async function attachOrdersToOffers(offers) {
     return { data: null, error }
   }
 
-  const ordersByOfferId = new Map(orders.map((order) => [order.offer_id, order]))
+  const ordersByOfferId = new Map((orders ?? []).map((order) => [order.offer_id, order]))
 
   return {
     data: offers.map((offer) => ({
@@ -189,7 +189,7 @@ async function enrichOffersResponse(offers) {
   if (error) {
     logSupabaseError('attachOrdersToOffers', error)
     return {
-      data: withListingFields.map((offer) => enrichOfferWithOrder({ ...offer, order: null })),
+      data: withListingFields.map(enrichOfferWithOrder),
       error: null,
     }
   }

@@ -99,6 +99,47 @@ const orderFields = `
   updated_at
 `
 
+/** Subset aligned with orders_client migrations — used when extended columns are unavailable. */
+const orderHubFields = `
+  id,
+  offer_id,
+  payment_id,
+  listing_id,
+  buyer_id,
+  seller_id,
+  amount_pence,
+  item_price_pence,
+  buyer_protection_fee_pence,
+  buyer_total_pence,
+  platform_fee_pence,
+  seller_net_pence,
+  order_type,
+  fulfilment_status,
+  payout_status,
+  buyer_confirmed_at,
+  payout_release_at,
+  payout_released_at,
+  dispute_window_hours,
+  protection_status,
+  collected_at,
+  delivered_at,
+  collection_confirmed_at,
+  collection_confirmed_by,
+  collection_rejected_at,
+  collection_rejection_reason,
+  courier_name,
+  courier_company,
+  courier_tracking_reference,
+  courier_buyer_tracking_reference,
+  courier_evidence_notes,
+  courier_collected_at,
+  courier_evidence_submitted_at,
+  courier_delivered_at,
+  stripe_transfer_id,
+  created_at,
+  updated_at
+`
+
 const orderDetailListingSelect = `
   id,
   slug,
@@ -269,7 +310,7 @@ export function getSellerPayoutProcessingMessage(order) {
   )
 }
 
-export async function fetchOrdersByOfferIds(offerIds) {
+export async function fetchOrdersByOfferIds(offerIds, { fields } = {}) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -280,9 +321,27 @@ export async function fetchOrdersByOfferIds(offerIds) {
     return { data: [], error: null }
   }
 
-  const { data, error } = await supabase.from('orders_client').select(orderFields).in('offer_id', ids)
+  const fieldSets = fields ? [fields] : [orderFields, orderHubFields]
+  let lastError = null
 
-  return { data: data ?? [], error }
+  for (const selectFields of fieldSets) {
+    const { data, error } = await supabase
+      .from('orders_client')
+      .select(selectFields)
+      .in('offer_id', ids)
+
+    if (!error) {
+      return { data: data ?? [], error: null }
+    }
+
+    lastError = error
+    console.warn('[orders] fetchOrdersByOfferIds failed; retrying with narrower select', {
+      message: error.message,
+      code: error.code,
+    })
+  }
+
+  return { data: null, error: lastError }
 }
 
 export function formatOrderFulfilmentStatus(status) {
@@ -393,7 +452,14 @@ export function getOrderDeliveryMethodDescription(order) {
 
 export function getOfferOrder(offer) {
   if (!offer?.order) return null
-  return Array.isArray(offer.order) ? (offer.order[0] ?? null) : offer.order
+
+  const order = Array.isArray(offer.order) ? (offer.order[0] ?? null) : offer.order
+
+  return order?.id ? order : null
+}
+
+export function hasOfferLinkedOrder(offer) {
+  return Boolean(getOfferOrder(offer)?.id)
 }
 
 export function isPaidHubOrder(order, payment) {
@@ -771,4 +837,4 @@ export function enrichOfferWithOrder(offer) {
   }
 }
 
-export { orderFields }
+export { orderFields, orderHubFields }

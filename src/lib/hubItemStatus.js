@@ -14,6 +14,7 @@ import {
   getOfferOrder,
   getSellerDeliveryHubStatusLabel,
   getSellerPayoutProcessingMessage,
+  hasOfferLinkedOrder,
   isOrderCompleted,
   isPayoutReleased,
   isSellerAwaitingPayout,
@@ -43,7 +44,12 @@ export function getHubItemStatusBadge(
     return { variant: 'cancelled', label: 'Cancelled' }
   }
 
-  if (orderStatusRole && payment && isPaymentComplete(payment) && !order) {
+  if (
+    orderStatusRole &&
+    payment &&
+    isPaymentComplete(payment) &&
+    !hasOfferLinkedOrder(offer)
+  ) {
     return { variant: 'buyer_protection', label: 'In progress' }
   }
 
