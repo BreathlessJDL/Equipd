@@ -81,6 +81,7 @@ function BuyerProtectionPriceDisplay({
   order = null,
   amountInput = '',
   compact = false,
+  hubFinance = false,
   className = '',
 }) {
   const [modalOpen, setModalOpen] = useState(false)
@@ -103,12 +104,38 @@ function BuyerProtectionPriceDisplay({
       <div
         className={`buyer-protection-price${
           compact ? ' buyer-protection-price--compact' : ''
-        }${className ? ` ${className}` : ''}`}
+        }${hubFinance ? ' buyer-protection-price--hub-finance' : ''}${
+          className ? ` ${className}` : ''
+        }`}
       >
         <p className="buyer-protection-price__item buyer-protection-price__item--primary">
           {formatPricePence(normalizeListingPricePence(itemPricePence))}
         </p>
       </div>
+    )
+  }
+
+  if (hubFinance) {
+    return (
+      <>
+        <div
+          className={`buyer-protection-price buyer-protection-price--hub-finance${
+            className ? ` ${className}` : ''
+          }`}
+        >
+          <dl className="buyer-protection-price__finance-rows hub-item-finance">
+            <div className="hub-item-finance__row">
+              <dt>Offer price</dt>
+              <dd>{formatPricePence(totals.itemPricePence)}</dd>
+            </div>
+            <div className="hub-item-finance__row hub-item-finance__row--total">
+              <dt>Total</dt>
+              <dd>{formatBuyerProtectionPricePence(totals.buyerTotalPence)}</dd>
+            </div>
+          </dl>
+        </div>
+        <BuyerProtectionModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      </>
     )
   }
 

@@ -69,7 +69,7 @@ export function HubItemReviewSubmitted({ label = 'Review submitted' }) {
 }
 
 export function HubViewListingAction({ to }) {
-  return <HubNavAction to={to} label="Listing" icon={EyeIcon} />
+  return <HubNavAction to={to} label="View listing" icon={EyeIcon} />
 }
 
 export function HubViewConversationAction({ to }) {
@@ -77,7 +77,7 @@ export function HubViewConversationAction({ to }) {
 }
 
 export function HubViewOrderAction({ to }) {
-  return <HubNavAction to={to} label="Order" icon={ReceiptIcon} />
+  return <HubNavAction to={to} label="View order" icon={ReceiptIcon} />
 }
 
 export function HubEditListingAction({ to, label = 'Edit' }) {

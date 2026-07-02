@@ -42,6 +42,7 @@ function SellerPayoutSummary({
   order = null,
   amountInput = '',
   compact = false,
+  hubFinance = false,
   showNote = false,
   offerAmountLabel = 'Offer price',
   receiveLabel = "You'll receive",
@@ -58,11 +59,15 @@ function SellerPayoutSummary({
     return null
   }
 
+  const feeLabel = hubFinance ? 'Seller service fee' : `${SELLER_SERVICE_FEE_LABEL} (2%)`
+
   return (
     <div
       className={`seller-payout-summary${
         compact ? ' seller-payout-summary--compact' : ''
-      }${className ? ` ${className}` : ''}`}
+      }${hubFinance ? ' seller-payout-summary--hub-finance' : ''}${
+        className ? ` ${className}` : ''
+      }`}
     >
       <dl className="seller-payout-summary__rows">
         <div className="seller-payout-summary__row">
@@ -70,7 +75,7 @@ function SellerPayoutSummary({
           <dd>{formatPricePence(totals.itemPricePence)}</dd>
         </div>
         <div className="seller-payout-summary__row">
-          <dt>{SELLER_SERVICE_FEE_LABEL} (2%)</dt>
+          <dt>{feeLabel}</dt>
           <dd>{formatBuyerProtectionPricePence(totals.sellerServiceFeePence)}</dd>
         </div>
         <div className="seller-payout-summary__row seller-payout-summary__row--total">

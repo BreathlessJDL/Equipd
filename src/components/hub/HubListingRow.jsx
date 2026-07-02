@@ -47,8 +47,8 @@ function HubListingRow({
           label={statusLabel ?? badge.label}
         />
       }
-      metadata={metadata || null}
-      price={<HubItemPrice amount={formatPricePence(listing.price_pence)} />}
+      metadata={metadata ? <p className="hub-item-row__metadata">{metadata}</p> : null}
+      finance={<HubItemPrice amount={formatPricePence(listing.price_pence)} label="Price" />}
       iconActions={
         <HubItemNavActions>
           {canEdit ? (

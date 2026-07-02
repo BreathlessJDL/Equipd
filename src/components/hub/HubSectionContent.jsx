@@ -16,6 +16,7 @@ import { HubOfferList } from './HubOfferCard'
 import { HubListingList } from './HubListingRow'
 import {
   HubItemList,
+  HubItemMetadata,
   HubItemPrice,
   HubItemRow,
   HubItemStatusBadge,
@@ -868,8 +869,12 @@ function HubPendingReviewRow({ entry, onOpenLeaveReview }) {
       media={<HubItemThumbnail src={entry.thumbnailUrl} href={listingUrl} alt="" />}
       title={<HubItemTitle href={listingUrl}>{entry.title}</HubItemTitle>}
       status={<HubItemStatusBadge variant="completed" label={entry.roleLabel} />}
-      metadata={entry.completedLabel}
-      price={<HubItemPrice amount={formatPricePence(entry.amountPence)} />}
+      metadata={
+        entry.completedLabel ? (
+          <HubItemMetadata items={[{ type: 'date', text: entry.completedLabel }]} />
+        ) : null
+      }
+      finance={<HubItemPrice amount={formatPricePence(entry.amountPence)} label="Offer price" />}
       primaryActions={
         <HubItemReviewButton
           onClick={() =>

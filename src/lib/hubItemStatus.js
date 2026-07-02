@@ -47,7 +47,7 @@ export function getHubItemStatusBadge(
   }
 
   if (order && isOrderRefundedForHub(order)) {
-    return { variant: 'cancelled', label: 'Refunded' }
+    return { variant: 'refunded', label: 'Refunded' }
   }
 
   if (
@@ -105,7 +105,7 @@ export function getHubItemStatusBadge(
   }
 }
 
-export function formatHubOfferMetadata({
+export function getHubOfferMetadataItems({
   partyLabel,
   partyName,
   order = null,
@@ -113,24 +113,39 @@ export function formatHubOfferMetadata({
   datePrefix = 'Submitted',
   date,
 }) {
-  const lines = []
+  const items = []
 
   if (partyLabel && partyName) {
-    lines.push(`${partyLabel}: ${partyName}`)
+    items.push({
+      type: 'party',
+      text: `${partyLabel}: ${partyName}`,
+    })
   }
 
   if (isOrderContext && order) {
     const fulfilment = getHubFulfilmentLabel(order)
     if (fulfilment) {
-      lines.push(fulfilment)
+      items.push({
+        type: 'fulfilment',
+        text: fulfilment,
+      })
     }
   }
 
   if (date) {
-    lines.push(`${datePrefix} ${formatOfferTimestamp(date)}`)
+    items.push({
+      type: 'date',
+      text: `${datePrefix} ${formatOfferTimestamp(date)}`,
+    })
   }
 
-  return lines.join('\n')
+  return items
+}
+
+export function formatHubOfferMetadata(args) {
+  return getHubOfferMetadataItems(args)
+    .map((item) => item.text)
+    .join('\n')
 }
 
 /** @deprecated Use formatHubOfferMetadata */

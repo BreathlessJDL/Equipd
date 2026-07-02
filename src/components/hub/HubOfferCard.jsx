@@ -27,6 +27,7 @@ import {
 import {
   HubItemButton,
   HubItemList,
+  HubItemMetadata,
   HubItemRow,
   HubItemStatusBadge,
   HubItemThumbnail,
@@ -37,8 +38,8 @@ import { HubEmptyState } from './HubEmptyState'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
 import { getProfileDisplayName } from '../../lib/profiles'
 import {
-  formatHubOfferMetadata,
   getHubItemStatusBadge,
+  getHubOfferMetadataItems,
   getHubOrderStageHint,
   getHubPaymentHint,
 } from '../../lib/hubItemStatus'
@@ -178,7 +179,7 @@ function HubOfferCard({
     showPaymentStatus,
     disputes: getDisputesForOrderFromMap(order?.id, disputesByOrderId),
   })
-  const metadata = formatHubOfferMetadata({
+  const metadataItems = getHubOfferMetadataItems({
     partyLabel,
     partyName: partyProfile ? getProfileDisplayName(partyProfile) : null,
     order,
@@ -188,6 +189,10 @@ function HubOfferCard({
   })
 
   const stageHint = getHubOrderStageHint(offer, orderStatusRole)
+  const cardStageHint =
+    stageHint && stageHint.length <= 56 && !stageHint.includes('scheduled payout run')
+      ? stageHint
+      : null
   const paymentHint =
     showPaymentStatus && payment && !isPaymentComplete(payment)
       ? getHubPaymentHint(payment)
@@ -199,7 +204,7 @@ function HubOfferCard({
       ? 'Complete payout setup in Settings to receive funds.'
       : null
 
-  const hint = [stageHint, paymentHint, payoutHint, showBuyerHandoverAction
+  const hint = [cardStageHint, paymentHint, payoutHint, showBuyerHandoverAction
     ? isSellerDeliveryOrder
       ? 'Inspect the equipment after delivery, then scan the seller handover QR code.'
       : 'Scan the seller collection QR when you collect this item.'
@@ -210,30 +215,23 @@ function HubOfferCard({
   const showBuyerPricing = shouldShowBuyerPricing({ userId, offer, orderStatusRole })
   const showSellerPricing = shouldShowSellerPricing({ userId, offer, orderStatusRole })
 
-  const priceContent = showBuyerPricing ? (
+  const financeContent = showBuyerPricing ? (
     <BuyerProtectionPriceDisplay
       payment={payment ?? null}
+      order={order}
       itemPricePence={payment ? null : offer.amount_pence}
-      compact
-      className="hub-item-row__buyer-protection"
+      hubFinance
     />
   ) : showSellerPricing ? (
     <SellerPayoutSummary
       itemPricePence={offer.amount_pence}
       payment={payment}
-      compact
+      order={order}
+      hubFinance
       offerAmountLabel="Offer price"
       receiveLabel="You'll receive"
-      className="hub-item-row__seller-payout"
     />
-  ) : (
-    <BuyerProtectionPriceDisplay
-      payment={payment ?? null}
-      itemPricePence={payment ? null : offer.amount_pence}
-      compact
-      className="hub-item-row__buyer-protection"
-    />
-  )
+  ) : null
 
   const workflowPrimaryActions = (
     <>
@@ -459,10 +457,10 @@ function HubOfferCard({
         </HubItemTitle>
       }
       status={<HubItemStatusBadge variant={statusBadge.variant} label={statusBadge.label} />}
-      metadata={metadata}
+      metadata={<HubItemMetadata items={metadataItems} />}
       hint={hint || null}
       message={offer.message?.trim() || null}
-      price={priceContent}
+      finance={financeContent}
       primaryActions={
         <>
           {completedDecisionActions}
