@@ -866,6 +866,7 @@ function HubPendingReviewRow({ entry, onOpenLeaveReview }) {
   return (
     <HubItemRow
       centerActions
+      statusAccent="completed"
       media={<HubItemThumbnail src={entry.thumbnailUrl} href={listingUrl} alt="" />}
       title={<HubItemTitle href={listingUrl}>{entry.title}</HubItemTitle>}
       status={<HubItemStatusBadge variant="completed" label={entry.roleLabel} />}

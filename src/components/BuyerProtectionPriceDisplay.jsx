@@ -128,6 +128,10 @@ function BuyerProtectionPriceDisplay({
               <dt>Offer price</dt>
               <dd>{formatPricePence(totals.itemPricePence)}</dd>
             </div>
+            <div className="hub-item-finance__row">
+              <dt>Buyer Protection</dt>
+              <dd>{formatBuyerProtectionPricePence(totals.buyerProtectionFeePence)}</dd>
+            </div>
             <div className="hub-item-finance__row hub-item-finance__row--total">
               <dt>Total</dt>
               <dd>{formatBuyerProtectionPricePence(totals.buyerTotalPence)}</dd>

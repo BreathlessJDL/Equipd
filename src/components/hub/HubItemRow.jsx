@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { getHubStatusAccentClass } from '../../lib/hubItemStatus'
 import './HubItemRow.css'
 
 export function HubItemStatusBadge({ variant, label }) {
@@ -96,6 +97,7 @@ export function HubItemMetadata({ items = [] }) {
 export function HubItemRow({
   id,
   highlighted = false,
+  statusAccent = null,
   media,
   title,
   status,
@@ -114,13 +116,14 @@ export function HubItemRow({
 }) {
   const financeBlock = finance ?? price
   const hasActionStack = Boolean(primaryActions || secondaryActions || iconActions || links)
+  const accentClass = getHubStatusAccentClass(statusAccent)
 
   return (
     <li
       id={id}
-      className={`hub-item-row${highlighted ? ' hub-item-row--highlighted' : ''}${
+      className={`hub-item-row ${accentClass}${highlighted ? ' hub-item-row--highlighted' : ''}${
         centerActions ? ' hub-item-row--center-actions' : ''
-      }`}
+      }${financeBlock ? ' hub-item-row--has-finance' : ''}${hasActionStack ? ' hub-item-row--has-actions' : ''}`}
     >
       <div className="hub-item-row__main">
         <div className="hub-item-row__media">{media}</div>
@@ -133,15 +136,15 @@ export function HubItemRow({
           {message ? <p className="hub-item-row__message">{message}</p> : null}
         </div>
 
-        <div className="hub-item-row__aside">
-          {financeBlock || priceNote ? (
-            <div className="hub-item-row__finance">
-              {financeBlock ? <div className="hub-item-row__finance-block">{financeBlock}</div> : null}
-              {priceNote ? <p className="hub-item-row__price-note">{priceNote}</p> : null}
-            </div>
-          ) : null}
+        {financeBlock || priceNote ? (
+          <div className="hub-item-row__finance">
+            {financeBlock ? <div className="hub-item-row__finance-block">{financeBlock}</div> : null}
+            {priceNote ? <p className="hub-item-row__price-note">{priceNote}</p> : null}
+          </div>
+        ) : null}
 
-          {hasActionStack ? (
+        {hasActionStack ? (
+          <div className="hub-item-row__actions-col">
             <div className="hub-item-row__action-stack">
               {primaryActions ? (
                 <div className="hub-item-row__primary-actions">{primaryActions}</div>
@@ -152,8 +155,8 @@ export function HubItemRow({
               {iconActions ? <div className="hub-item-row__nav-row">{iconActions}</div> : null}
               {links ? <div className="hub-item-row__links">{links}</div> : null}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       {details ? <div className="hub-item-row__details">{details}</div> : null}

@@ -450,6 +450,7 @@ function HubOfferCard({
     <HubItemRow
       id={`hub-offer-${offer.id}`}
       highlighted={highlightOfferId === offer.id}
+      statusAccent={statusBadge.variant}
       media={<HubItemThumbnail src={thumbnailUrl} href={listingUrl} alt="" />}
       title={
         <HubItemTitle href={listingUrl}>

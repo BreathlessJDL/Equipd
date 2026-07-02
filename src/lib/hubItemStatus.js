@@ -29,6 +29,36 @@ const HUB_FULFILMENT_LABELS = {
   [ORDER_TYPES.SELLER_DELIVERY]: 'Seller delivery',
 }
 
+export function getHubStatusAccentClass(badgeVariant) {
+  if (!badgeVariant) return 'hub-item-row--accent-muted'
+
+  if (['completed', 'paid', 'accepted'].includes(badgeVariant)) {
+    return 'hub-item-row--accent-success'
+  }
+
+  if (['refunded', 'disputed', 'rejected', 'withdrawn'].includes(badgeVariant)) {
+    return 'hub-item-row--accent-danger'
+  }
+
+  if (
+    ['pending', 'awaiting_payment', 'awaiting_collection', 'awaiting_payout'].includes(
+      badgeVariant,
+    )
+  ) {
+    return 'hub-item-row--accent-warning'
+  }
+
+  if (['buyer_protection', 'in_transit'].includes(badgeVariant)) {
+    return 'hub-item-row--accent-info'
+  }
+
+  if (badgeVariant === 'cancelled') {
+    return 'hub-item-row--accent-muted'
+  }
+
+  return 'hub-item-row--accent-warning'
+}
+
 export function getHubFulfilmentLabel(order) {
   if (!order?.order_type) return null
 

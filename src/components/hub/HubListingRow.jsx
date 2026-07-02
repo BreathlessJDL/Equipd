@@ -39,6 +39,7 @@ function HubListingRow({
 
   return (
     <HubItemRow
+      statusAccent={statusVariant ?? badge.variant}
       media={<HubItemThumbnail src={thumbnailUrl} href={isDraft ? editUrl : listingUrl} alt="" />}
       title={<HubItemTitle href={isDraft ? editUrl : listingUrl}>{listing.title}</HubItemTitle>}
       status={

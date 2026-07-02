@@ -5,26 +5,52 @@ import './HubLayout.css'
 
 const HUB_TABS_NUDGE_STORAGE_KEY = 'equipd-hub-tabs-scroll-nudge-v1'
 
+const HUB_NAV_ICON_FILES = {
+  summary: 'summary icon menu.png',
+  buying: 'buying icon menu.png',
+  selling: 'selling icon menu.png',
+  listings: 'listing icon menu.png',
+  offers: 'my offers icon menu.png',
+  orders: 'orders icon menu.png',
+  saved: 'saved icon menu.png',
+  reviews: 'reviews icon menu.png',
+  settings: 'settings icon menu.png',
+}
+
+function getHubNavIconSrc(sectionId) {
+  const filename = HUB_NAV_ICON_FILES[sectionId]
+  if (!filename) return null
+
+  return `/design-reference/${encodeURIComponent(filename)}`
+}
+
 function HubNavItem({ item, active, onSelect, badge }) {
+  const iconSrc = getHubNavIconSrc(item.id)
+  const className = `hub-nav__item${active ? ' hub-nav__item--active' : ''}`
+
+  const content = (
+    <>
+      {iconSrc ? (
+        <span className="hub-nav__icon" aria-hidden="true">
+          <img src={iconSrc} alt="" className="hub-nav__icon-img" />
+        </span>
+      ) : null}
+      <span className="hub-nav__label">{item.label}</span>
+      {badge > 0 ? <span className="hub-nav__badge">{badge}</span> : null}
+    </>
+  )
+
   if (item.href) {
     return (
-      <Link
-        to={item.href}
-        className={`hub-nav__item${active ? ' hub-nav__item--active' : ''}`}
-      >
-        <span className="hub-nav__label">{item.label}</span>
+      <Link to={item.href} className={className}>
+        {content}
       </Link>
     )
   }
 
   return (
-    <button
-      type="button"
-      className={`hub-nav__item${active ? ' hub-nav__item--active' : ''}`}
-      onClick={() => onSelect(item.id)}
-    >
-      <span className="hub-nav__label">{item.label}</span>
-      {badge > 0 ? <span className="hub-nav__badge">{badge}</span> : null}
+    <button type="button" className={className} onClick={() => onSelect(item.id)}>
+      {content}
     </button>
   )
 }
