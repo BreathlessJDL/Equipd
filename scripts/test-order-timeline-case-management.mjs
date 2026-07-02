@@ -6,9 +6,9 @@
  *   node scripts/test-order-timeline-case-management.mjs
  */
 
-import { buildOrderTimeline, buildDisputeTimelineSteps } from '../src/lib/orderTimeline.js'
+import { buildOrderTimeline, buildDisputeTimelineSteps, isOrderRefunded } from '../src/lib/orderTimeline.js'
 import { DISPUTE_STATUSES } from '../src/lib/orderDisputes.js'
-import { ORDER_FULFILMENT_STATUSES, ORDER_TYPES } from '../src/lib/orders.js'
+import { ORDER_FULFILMENT_STATUSES, ORDER_TYPES, PAYOUT_STATUSES } from '../src/lib/orders.js'
 import { PAYMENT_STATUSES } from '../src/lib/payments.js'
 const DISPUTE_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 
@@ -80,6 +80,28 @@ function assertNoDetailedEvidenceSteps(timeline) {
   for (const key of detailedKeys) {
     assert(!keys.includes(key), `Detailed step ${key} should not appear in order progress`)
   }
+}
+
+const POST_SUCCESS_KEYS = [
+  'buyer_protection_completed',
+  'awaiting_payout',
+  'payout_released',
+  'order_completed',
+  'seller_paid',
+]
+
+function assertNoPostSuccessMilestones(timeline, context) {
+  for (const key of POST_SUCCESS_KEYS) {
+    assert(
+      !timeline.events.some((event) => event.key === key),
+      `${context}: ${key} should not appear on refunded timeline`,
+    )
+  }
+}
+
+function assertTimelineEndsAt(timeline, expectedKey) {
+  const lastEvent = timeline.events.at(-1)
+  assert(lastEvent?.key === expectedKey, `Expected timeline to end at ${expectedKey}, got ${lastEvent?.key}`)
 }
 
 function assertRefundNotBeforeReturn(timeline) {
@@ -409,6 +431,91 @@ function testBuyerAndSellerTimelinesMatch() {
   logPass('Buyer and seller dispute timelines match during return workflow')
 }
 
+function testRefundedOrderNoPayoutMilestonesForSeller() {
+  const caseUpdates = [
+    {
+      id: '1',
+      dispute_id: DISPUTE_ID,
+      event_type: 'case_opened',
+      status: 'evidence_received',
+      created_at: '2026-01-10T10:00:00Z',
+    },
+    {
+      id: '2',
+      dispute_id: DISPUTE_ID,
+      event_type: 'refund_pending',
+      status: DISPUTE_STATUSES.REFUND_PENDING,
+      created_at: '2026-01-12T10:00:00Z',
+    },
+    {
+      id: '3',
+      dispute_id: DISPUTE_ID,
+      event_type: 'refund_completed',
+      status: DISPUTE_STATUSES.REFUND_COMPLETED,
+      created_at: '2026-01-13T10:00:00Z',
+    },
+    {
+      id: '4',
+      dispute_id: DISPUTE_ID,
+      event_type: 'case_closed',
+      status: DISPUTE_STATUSES.RESOLVED,
+      created_at: '2026-01-14T10:00:00Z',
+    },
+  ]
+
+  const order = baseOrder({
+    fulfilment_status: ORDER_FULFILMENT_STATUSES.REFUNDED,
+    protection_status: 'refunded',
+    payout_status: PAYOUT_STATUSES.CANCELLED,
+  })
+  const disputes = [
+    buildDispute(DISPUTE_STATUSES.RESOLVED, {
+      case_outcome: 'buyer_upheld_full_refund',
+      refund_completed_at: '2026-01-13T10:00:00Z',
+      resolved_at: '2026-01-14T10:00:00Z',
+    }),
+  ]
+
+  for (const viewerRole of ['buyer', 'seller', 'admin']) {
+    const timeline = buildTimeline({ order, disputes, caseUpdates, viewerRole })
+    assertNoPostSuccessMilestones(timeline, `refunded ${viewerRole} view`)
+    assertTimelineEndsAt(timeline, 'dispute_case_closed')
+    assert(
+      timeline.currentStage?.key === 'case_closed',
+      `Expected case_closed current stage for ${viewerRole}`,
+    )
+  }
+
+  logPass('Refunded order hides payout milestones for buyer, seller, and admin')
+}
+
+function testDisputedNotRefundedKeepsProtectionSteps() {
+  const timeline = buildTimeline({
+    order: baseOrder({
+      fulfilment_status: ORDER_FULFILMENT_STATUSES.DISPUTED,
+      protection_status: 'active',
+    }),
+    disputes: [buildDispute(DISPUTE_STATUSES.UNDER_REVIEW)],
+    caseUpdates: [
+      {
+        id: '1',
+        dispute_id: DISPUTE_ID,
+        event_type: 'case_opened',
+        status: 'evidence_received',
+        created_at: '2026-01-10T10:00:00Z',
+      },
+    ],
+    viewerRole: 'buyer',
+  })
+
+  assert(
+    timeline.events.some((event) => event.key === 'buyer_protection_active'),
+    'Disputed order should still show buyer protection step',
+  )
+  assertNoPostSuccessMilestones(timeline, 'active dispute')
+  logPass('Disputed but not refunded order keeps protection steps without payout milestones')
+}
+
 function testCompletedOrderWithoutDispute() {
   const order = baseOrder({
     fulfilment_status: ORDER_FULFILMENT_STATUSES.COMPLETED,
@@ -429,6 +536,10 @@ function testCompletedOrderWithoutDispute() {
   assert(
     timeline.events.some((event) => event.key === 'order_completed'),
     'Completed order should still show standard completion timeline',
+  )
+  assert(
+    timeline.events.some((event) => event.key === 'buyer_protection_completed'),
+    'Completed order should still show buyer protection completed',
   )
   logPass('Normal completed order keeps standard completion timeline')
 }
@@ -499,7 +610,11 @@ function testRefundCompletedAndCaseClosed() {
   ]
 
   const timeline = buildTimeline({
-    order: baseOrder({ fulfilment_status: ORDER_FULFILMENT_STATUSES.REFUND_PENDING }),
+    order: baseOrder({
+      fulfilment_status: ORDER_FULFILMENT_STATUSES.REFUNDED,
+      protection_status: 'refunded',
+      payout_status: PAYOUT_STATUSES.CANCELLED,
+    }),
     disputes: [
       buildDispute(DISPUTE_STATUSES.RESOLVED, {
         case_outcome: 'buyer_upheld_full_refund',
@@ -520,6 +635,19 @@ function testRefundCompletedAndCaseClosed() {
   assert(
     getCurrentDisputeEvent(timeline)?.label === 'Full refund approved',
     'Expected full refund approved label',
+  )
+  assertTimelineEndsAt(timeline, 'dispute_case_closed')
+  assertNoPostSuccessMilestones(timeline, 'refund completed order')
+  assert(
+    isOrderRefunded(
+      baseOrder({
+        fulfilment_status: ORDER_FULFILMENT_STATUSES.REFUNDED,
+        payout_status: PAYOUT_STATUSES.CANCELLED,
+      }),
+      [buildDispute(DISPUTE_STATUSES.RESOLVED, { refund_completed_at: '2026-01-13T10:00:00Z' })],
+      caseUpdates,
+    ),
+    'Expected refunded order helper to match',
   )
   logPass('Refund completed and case closed appear as high-level resolution steps')
 }
@@ -619,6 +747,8 @@ function main() {
   testRefundPendingAfterReturnFlow()
   testRefundWithoutReturn()
   testRefundCompletedAndCaseClosed()
+  testRefundedOrderNoPayoutMilestonesForSeller()
+  testDisputedNotRefundedKeepsProtectionSteps()
   testRejectedClaimClosed()
   testResolvedWithoutCaseOutcomeUsesClosedStage()
   testBuyerAndSellerTimelinesMatch()

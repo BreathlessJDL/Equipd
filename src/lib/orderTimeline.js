@@ -17,6 +17,7 @@ import {
   isBuyerProtectionWindowActive,
   isOrderDisputeOpen,
   isOrderDisputed,
+  isOrderRefundPending,
 } from './orderDisputes'
 import { CASE_OUTCOMES, isCaseClosed } from './caseClosure'
 import {
@@ -39,6 +40,25 @@ const POST_PROTECTION_STEP_ORDER = [
   'order_completed',
 ]
 
+const POST_SUCCESS_MILESTONE_KEYS = new Set([
+  ...POST_PROTECTION_STEP_ORDER,
+  'payout_ready',
+  'payout_processing',
+  'seller_paid',
+])
+
+const REFUND_TERMINAL_TIMELINE_KEYS = new Set([
+  'dispute_case_closed',
+  'dispute_refund_completed',
+  'dispute_rejected',
+  'support_closed',
+])
+
+const REFUND_CASE_OUTCOMES = new Set([
+  CASE_OUTCOMES.BUYER_UPHELD_FULL_REFUND,
+  CASE_OUTCOMES.BUYER_UPHELD_PARTIAL_REFUND,
+])
+
 function isBuyerProtectionActive(order) {
   return isBuyerProtectionWindowActive(order)
 }
@@ -56,6 +76,54 @@ const DISPUTE_TIMELINE_STEP_ORDER = [
 
 function hasPausedDispute(order, disputes) {
   return isOrderDisputeOpen(order, disputes)
+}
+
+export function isOrderRefunded(order, disputes = [], caseUpdates = []) {
+  if (!order) return false
+
+  if (order.fulfilment_status === ORDER_FULFILMENT_STATUSES.REFUNDED) return true
+  if (order.payout_status === PAYOUT_STATUSES.CANCELLED) return true
+
+  const dispute = getLatestOrderDispute(disputes)
+  if (dispute?.refund_completed_at) return true
+
+  const refundCompletedInTimeline = (caseUpdates ?? []).some(
+    (update) => update.event_type === 'refund_completed',
+  )
+  if (refundCompletedInTimeline) return true
+
+  if (dispute && REFUND_CASE_OUTCOMES.has(dispute.case_outcome)) {
+    return (
+      dispute.status === DISPUTE_STATUSES.RESOLVED ||
+      dispute.status === DISPUTE_STATUSES.RESOLVED_BUYER ||
+      refundCompletedInTimeline
+    )
+  }
+
+  return false
+}
+
+function shouldSuppressPostSuccessMilestones(order, disputes = [], caseUpdates = []) {
+  if (isOrderRefunded(order, disputes, caseUpdates)) return true
+  if (isOrderRefundPending(order)) return true
+
+  const dispute = getLatestOrderDispute(disputes)
+  if (
+    dispute?.status === DISPUTE_STATUSES.REFUND_PENDING ||
+    dispute?.status === DISPUTE_STATUSES.PARTIAL_REFUND_PENDING
+  ) {
+    return true
+  }
+
+  return hasPausedDispute(order, disputes)
+}
+
+function isFulfilmentPlaceholderStep(eventKey) {
+  return (
+    FULFILMENT_TIMELINE_STEP_KEYS.has(eventKey) ||
+    eventKey === 'awaiting_collection' ||
+    eventKey === 'collection_rejected'
+  )
 }
 
 function isBuyerProtectionCompleted(order, disputes = []) {
@@ -334,12 +402,12 @@ function getFulfilmentSteps(order) {
   ]
 }
 
-function getFinalLifecycleSteps(order, payment, cancelled, disputes = []) {
+function getFinalLifecycleSteps(order, payment, cancelled, disputes = [], caseUpdates = []) {
   if (cancelled || payment?.status !== PAYMENT_STATUSES.PAID || !order) {
     return []
   }
 
-  if (hasPausedDispute(order, disputes)) {
+  if (shouldSuppressPostSuccessMilestones(order, disputes, caseUpdates)) {
     return []
   }
 
@@ -803,7 +871,7 @@ function buildTransactionStepDefinitions({
       })
     }
 
-    for (const step of getFinalLifecycleSteps(order, payment, cancelled, disputes)) {
+    for (const step of getFinalLifecycleSteps(order, payment, cancelled, disputes, caseUpdates)) {
       definitions.push({
         key: step.key,
         label: step.label,
@@ -950,6 +1018,17 @@ export function getOrderTimelineCurrentStage({
       key: 'support_open',
       label: 'Support issue open',
       eventKey: 'support_opened',
+    }
+  }
+
+  if (isOrderRefunded(order, disputes, caseUpdates)) {
+    const disputeStage = getDisputeCurrentStage(order, disputes, caseUpdates)
+    if (disputeStage) return disputeStage
+
+    return {
+      key: 'case_closed',
+      label: 'Case closed',
+      eventKey: 'dispute_case_closed',
     }
   }
 
@@ -1236,6 +1315,32 @@ function truncateAfterOrderCompleted(events, order, viewerRole) {
   return events.slice(0, completeIndex + 1)
 }
 
+function filterTimelineEventsForRefundedOrder(events, order, disputes, caseUpdates) {
+  if (!isOrderRefunded(order, disputes, caseUpdates)) {
+    return events
+  }
+
+  let filtered = events.filter((event) => !POST_SUCCESS_MILESTONE_KEYS.has(event.key))
+
+  filtered = filtered.filter((event) => {
+    if (event.state !== 'upcoming') return true
+    return !isFulfilmentPlaceholderStep(event.key)
+  })
+
+  let lastTerminalIndex = -1
+  for (let index = 0; index < filtered.length; index += 1) {
+    if (REFUND_TERMINAL_TIMELINE_KEYS.has(filtered[index].key)) {
+      lastTerminalIndex = index
+    }
+  }
+
+  if (lastTerminalIndex >= 0) {
+    filtered = filtered.slice(0, lastTerminalIndex + 1)
+  }
+
+  return filtered
+}
+
 export function applyDuplicateTimestampLabels(events) {
   let lastTimestamp = null
 
@@ -1340,7 +1445,13 @@ export function buildOrderTimeline({
     disputes,
     caseUpdates,
   )
-  const eventsWithTimestamps = applyDuplicateTimestampLabels(eventsWithStates)
+  const filteredEvents = filterTimelineEventsForRefundedOrder(
+    eventsWithStates,
+    order,
+    disputes,
+    caseUpdates,
+  )
+  const eventsWithTimestamps = applyDuplicateTimestampLabels(filteredEvents)
 
   return {
     currentStage,
