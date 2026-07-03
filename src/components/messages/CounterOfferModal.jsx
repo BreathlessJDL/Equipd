@@ -5,7 +5,14 @@ import SellerPayoutSummary from '../SellerPayoutSummary'
 import '../auth/AuthModal.css'
 import '../listing/MakeOfferModal.css'
 
-function CounterOfferModal({ open, listingPricePence, submitting = false, onClose, onSubmit }) {
+function CounterOfferModal({
+  open,
+  listingPricePence,
+  submitting = false,
+  counterPartyRole = 'seller',
+  onClose,
+  onSubmit,
+}) {
   const amountId = useId()
   const [amount, setAmount] = useState('')
 
@@ -86,12 +93,16 @@ function CounterOfferModal({ open, listingPricePence, submitting = false, onClos
             />
           </div>
 
-          <SellerPayoutSummary
-            amountInput={amount}
-            compact
-            offerAmountLabel="Counter-offer price"
-            receiveLabel="You'll receive"
-          />
+          {counterPartyRole === 'seller' ? (
+            <SellerPayoutSummary
+              amountInput={amount}
+              compact
+              offerAmountLabel="Counter-offer price"
+              receiveLabel="You'll receive"
+            />
+          ) : (
+            <BuyerProtectionOfferSummary amountInput={amount} compact />
+          )}
 
           <div className="make-offer-modal__actions">
             <button

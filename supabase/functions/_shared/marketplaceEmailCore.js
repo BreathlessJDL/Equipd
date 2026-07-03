@@ -42,6 +42,23 @@ function calculateSellerNetPayout(itemPricePence) {
   return Math.max(0, itemPricePence - calculateSellerServiceFee(itemPricePence))
 }
 
+const BUYER_PROTECTION_FEE_MIN_PENCE = 500
+const BUYER_PROTECTION_FEE_MAX_PENCE = 25000
+const BUYER_PROTECTION_FEE_RATE = 0.05
+
+function calculateBuyerProtectionFee(itemPricePence) {
+  if (!itemPricePence || itemPricePence <= 0) {
+    return 0
+  }
+
+  const rawFee = Math.round(itemPricePence * BUYER_PROTECTION_FEE_RATE)
+
+  return Math.min(
+    BUYER_PROTECTION_FEE_MAX_PENCE,
+    Math.max(BUYER_PROTECTION_FEE_MIN_PENCE, rawFee),
+  )
+}
+
 export const MARKETPLACE_EMAIL_EVENT_KEYS = [
   'offer_received',
   'counter_offer_received',
@@ -149,7 +166,7 @@ export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
     case 'counter_offer_received':
       return `counter_offer_received:${parts.offerId}:${parts.recipientUserId}`
     case 'offer_accepted':
-      return `offer_accepted:${parts.offerId}:${parts.buyerId}`
+      return `offer_accepted:${parts.offerId}:${parts.recipientUserId}`
     case 'payment_successful':
       return `payment_successful:${parts.orderId}:${parts.buyerId}`
     case 'new_order_received':
@@ -271,7 +288,10 @@ export function composeMarketplaceEmailSubject(eventKey, listingTitle, { recipie
     case 'counter_offer_received':
       return `New counter offer on ${title}`
     case 'offer_accepted':
-      return `Your offer on ${title} has been accepted`
+      if (recipientRole === 'seller') {
+        return `Your counter offer on ${title} was accepted`
+      }
+      return `Your offer on ${title} was accepted`
     case 'payment_successful':
       return `Payment confirmed for ${title}`
     case 'new_order_received':
@@ -352,7 +372,7 @@ export function composeCounterOfferReceivedDynamicData({
   })
   const recipientFirstName = getMarketplaceRecipientName(recipientProfile, { fallback: 'there' })
   const hubPath = isSellerCounter
-    ? `/hub?section=buying&tab=offers&offerId=${offer.id}`
+    ? `/hub?section=offers&offerId=${offer.id}`
     : `/hub?section=selling&tab=offers&offerId=${offer.id}`
 
   const body = `
@@ -387,25 +407,31 @@ export function composeOfferAcceptedDynamicData({ baseUrl, offer, listing, buyer
   const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
+  const buyerProtectionFeePence = calculateBuyerProtectionFee(offer.amount_pence)
+  const buyerProtectionFee = formatPricePence(buyerProtectionFeePence)
+  const buyerTotal = formatPricePence(offer.amount_pence + buyerProtectionFeePence)
   const recipientFirstName = getMarketplaceRecipientName(buyerProfile, { fallback: 'there' })
-
-  const detailRows = {
-    'Your offer': offerAmount,
-    Seller: sellerName,
-    'Pay within': PAYMENT_DEADLINE_LABEL,
-  }
+  const subject = composeMarketplaceEmailSubject('offer_accepted', listingTitle, {
+    recipientRole: 'buyer',
+  })
 
   const body = `
     <p>Hi ${recipientFirstName},</p>
-    <p><strong>${sellerName}</strong> accepted your offer on <strong>${listingTitle}</strong>.</p>
-    ${detailRowsHtml(detailRows)}
+    <p>The seller accepted your offer on <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      'Your offer': offerAmount,
+      'Buyer Protection fee': buyerProtectionFee,
+      'Total to pay': buyerTotal,
+      Seller: sellerName,
+      'Pay within': PAYMENT_DEADLINE_LABEL,
+    })}
     <p>Complete payment to secure the item. If payment is not completed in time, the offer may be cancelled.</p>
   `.trim()
 
-  return layoutFields(baseUrl, {
-    subject: composeMarketplaceEmailSubject('offer_accepted', listingTitle),
-    preheader: `${sellerName} accepted your ${offerAmount} offer. Complete payment within ${PAYMENT_DEADLINE_LABEL}.`,
-    title: 'Offer accepted',
+  const dynamicData = layoutFields(baseUrl, {
+    subject,
+    preheader: `The seller accepted your ${offerAmount} offer on ${listingTitle}. Pay within ${PAYMENT_DEADLINE_LABEL}.`,
+    title: 'Your offer was accepted',
     subtitle: 'Complete payment to secure your purchase.',
     body,
     cta_text: 'Complete payment',
@@ -415,6 +441,59 @@ export function composeOfferAcceptedDynamicData({ baseUrl, offer, listing, buyer
     listing_title: listingTitle,
     offer_amount: offerAmount,
     payment_deadline: PAYMENT_DEADLINE_LABEL,
+    offer_id: offer.id,
+  })
+
+  assertBuyerEmailSafe(dynamicData)
+
+  return dynamicData
+}
+
+export function composeCounterOfferAcceptedSellerDynamicData({
+  baseUrl,
+  offer,
+  listing,
+  buyerProfile,
+  sellerProfile,
+}) {
+  const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
+  const listingTitle = listing?.title?.trim() || 'your listing'
+  const offerAmount = formatPricePence(offer.amount_pence)
+  const sellerServiceFeePence = calculateSellerServiceFee(offer.amount_pence)
+  const sellerNetPence = calculateSellerNetPayout(offer.amount_pence)
+  const sellerServiceFee = formatPricePence(sellerServiceFeePence)
+  const sellerNetPayout = formatPricePence(sellerNetPence)
+  const recipientFirstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
+  const subject = composeMarketplaceEmailSubject('offer_accepted', listingTitle, {
+    recipientRole: 'seller',
+  })
+
+  const body = `
+    <p>Hi ${recipientFirstName},</p>
+    <p>The buyer accepted your counter offer on <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      'Counter offer': offerAmount,
+      Buyer: buyerName,
+      'Seller Service Fee': sellerServiceFee,
+      "You'll receive": sellerNetPayout,
+    })}
+    <p>The buyer now has ${PAYMENT_DEADLINE_LABEL} to complete payment. You will be notified when payment is received.</p>
+  `.trim()
+
+  return layoutFields(baseUrl, {
+    subject,
+    preheader: `${buyerName} accepted your ${offerAmount} counter offer on ${listingTitle}.`,
+    title: 'Your counter offer was accepted',
+    subtitle: 'Waiting for the buyer to complete payment.',
+    body,
+    cta_text: 'View offer',
+    cta_url: appUrl(baseUrl, `/hub?section=selling&tab=offers&offerId=${offer.id}`),
+    recipient_first_name: recipientFirstName,
+    buyer_name: buyerName,
+    listing_title: listingTitle,
+    offer_amount: offerAmount,
+    seller_service_fee: sellerServiceFee,
+    seller_net_payout: sellerNetPayout,
     offer_id: offer.id,
   })
 }
@@ -1080,29 +1159,49 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
       }
     }
 
-    if (offer.status !== 'accepted') {
-      return { ok: false, skip: true, reason: 'offer_not_accepted' }
-    }
+    if (eventKey === 'offer_accepted') {
+      if (offer.status !== 'accepted') {
+        return { ok: false, skip: true, reason: 'offer_not_accepted' }
+      }
 
-    const direction = offer.direction ?? 'buyer_to_seller'
-    if (direction !== 'buyer_to_seller' && direction !== 'seller_to_buyer') {
-      return { ok: false, skip: true, reason: 'unsupported_offer_direction' }
-    }
+      const direction = offer.direction ?? 'buyer_to_seller'
+      if (direction !== 'buyer_to_seller' && direction !== 'seller_to_buyer') {
+        return { ok: false, skip: true, reason: 'unsupported_offer_direction' }
+      }
 
-    return {
-      ok: true,
-      templateKey: eventKey,
-      recipientUserId: offer.buyer_id,
-      relatedOfferId: offer.id,
-      relatedListingId: offer.listing_id,
-      idempotencyParts: { offerId: offer.id, buyerId: offer.buyer_id },
-      dynamicData: composeOfferAcceptedDynamicData({
-        baseUrl,
-        offer,
-        listing,
-        buyerProfile,
-        sellerProfile,
-      }),
+      if (direction === 'seller_to_buyer') {
+        return {
+          ok: true,
+          templateKey: eventKey,
+          recipientUserId: offer.seller_id,
+          relatedOfferId: offer.id,
+          relatedListingId: offer.listing_id,
+          idempotencyParts: { offerId: offer.id, recipientUserId: offer.seller_id },
+          dynamicData: composeCounterOfferAcceptedSellerDynamicData({
+            baseUrl,
+            offer,
+            listing,
+            buyerProfile,
+            sellerProfile,
+          }),
+        }
+      }
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId: offer.buyer_id,
+        relatedOfferId: offer.id,
+        relatedListingId: offer.listing_id,
+        idempotencyParts: { offerId: offer.id, recipientUserId: offer.buyer_id },
+        dynamicData: composeOfferAcceptedDynamicData({
+          baseUrl,
+          offer,
+          listing,
+          buyerProfile,
+          sellerProfile,
+        }),
+      }
     }
   }
 
@@ -1660,6 +1759,25 @@ export async function reserveEmailLog(admin, row) {
 
   if (fetchError) {
     return { action: 'error', error: fetchError.message }
+  }
+
+  if (existing?.status === 'failed' && existing.id) {
+    const { error: retryError } = await admin
+      .from('transactional_email_log')
+      .update({
+        status: 'pending',
+        error_message: null,
+        failed_at: null,
+        sent_at: null,
+        provider_message_id: null,
+      })
+      .eq('id', existing.id)
+
+    if (retryError) {
+      return { action: 'error', error: retryError.message }
+    }
+
+    return { action: 'send', logId: existing.id, retry: true }
   }
 
   return {

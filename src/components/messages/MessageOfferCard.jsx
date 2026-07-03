@@ -9,12 +9,18 @@ import {
   canSellerRespondToOffer,
   counterOffer,
   declineOffer,
-  formatOfferStatus,
   formatOfferTimestamp,
+  getOfferDisplayStatus,
   getOfferErrorMessage,
 } from '../../lib/offers'
 import { canPayNow } from '../../lib/payments'
+import {
+  shouldShowBuyerPricing,
+  shouldShowSellerPricing,
+} from '../../lib/pricingViewerRole'
 import PayNowWithFulfilment from '../PayNowWithFulfilment'
+import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
+import SellerPayoutSummary from '../SellerPayoutSummary'
 import { formatMessageTimestamp } from '../../lib/messages'
 import CounterOfferModal from './CounterOfferModal'
 import AcceptOfferConfirmationModal from '../listing/AcceptOfferConfirmationModal'
@@ -38,6 +44,10 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
   const showSellerActions = isSeller && canSellerRespondToOffer(offer)
   const showBuyerCounterActions = isBuyer && canBuyerRespondToCounterOffer(offer)
   const showPayNow = isBuyer && offer.status === 'accepted' && canPayNow(payment)
+  const displayStatus = getOfferDisplayStatus(offer)
+  const counterPartyRole = isBuyer ? 'buyer' : 'seller'
+  const showBuyerPricing = shouldShowBuyerPricing({ userId: user?.id, offer })
+  const showSellerPricing = shouldShowSellerPricing({ userId: user?.id, offer })
 
   async function runAction(action) {
     setActing(true)
@@ -92,8 +102,10 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
       >
         <div className="message-offer-card__header">
           <span className="message-offer-card__badge">Offer</span>
-          <span className={`message-offer-card__status message-offer-card__status--${offer.status}`}>
-            {formatOfferStatus(offer.status)}
+          <span
+            className={`message-offer-card__status message-offer-card__status--${displayStatus.variant}`}
+          >
+            {displayStatus.label}
           </span>
         </div>
 
@@ -122,6 +134,21 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
             </p>
             {offer.message ? (
               <p className="message-offer-card__note">{offer.message}</p>
+            ) : null}
+            {showBuyerPricing ? (
+              <BuyerProtectionPriceDisplay
+                payment={payment ?? null}
+                itemPricePence={payment ? null : offer.amount_pence}
+              />
+            ) : null}
+            {showSellerPricing ? (
+              <SellerPayoutSummary
+                itemPricePence={offer.amount_pence}
+                payment={payment ?? null}
+                compact
+                offerAmountLabel="Offer price"
+                receiveLabel="You'll receive"
+              />
             ) : null}
           </div>
         </div>
@@ -179,15 +206,18 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               type="button"
               className="message-offer-card__button message-offer-card__button--secondary"
               disabled={acting}
+              onClick={() => setCounterModalOpen(true)}
+            >
+              Counter offer
+            </button>
+            <button
+              type="button"
+              className="message-offer-card__button message-offer-card__button--secondary"
+              disabled={acting}
               onClick={() => runAction('decline')}
             >
               Decline
             </button>
-            {listing?.slug ? (
-              <Link to={`/listings/${listing.slug}`} className="message-offer-card__link">
-                Make another offer
-              </Link>
-            ) : null}
           </div>
         ) : null}
 
@@ -213,6 +243,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
         open={counterModalOpen}
         listingPricePence={listing?.price_pence}
         submitting={acting}
+        counterPartyRole={counterPartyRole}
         onClose={() => setCounterModalOpen(false)}
         onSubmit={handleCounterSubmit}
       />

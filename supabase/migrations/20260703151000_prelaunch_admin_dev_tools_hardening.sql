@@ -1,8 +1,4 @@
--- DEPRECATED: Use supabase/migrations/20260703151000_prelaunch_admin_dev_tools_hardening.sql
--- Do not run this file manually on production. Use: supabase db push
---
--- Pre-launch hardening: admin-only dev order tools + notification RPC restrictions
--- Run after dev-end-buyer-protection-bypass.sql and notifications.sql
+-- Pre-launch admin/dev tools hardening (promoted from prelaunch-admin-dev-tools-hardening.sql)
 --
 -- Tightens dev bypass RPCs to is_admin() only (removes buyer + app_config bypass).
 -- Revokes client access to create_notification (use triggers / service_role only).

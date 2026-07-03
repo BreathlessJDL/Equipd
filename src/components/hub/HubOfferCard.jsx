@@ -660,6 +660,9 @@ function HubOfferList({
         open={Boolean(counteringOffer)}
         listingPricePence={counteringOffer?.listing?.price_pence}
         submitting={Boolean(actingOfferId)}
+        counterPartyRole={
+          counteringOffer && userId === counteringOffer.buyer_id ? 'buyer' : 'seller'
+        }
         onClose={() => setCounteringOffer(null)}
         onSubmit={handleCounterSubmit}
       />

@@ -4,9 +4,11 @@
  *
  * Usage:
  *   node scripts/sendgrid-patch-template-subjects.mjs
+ *   node scripts/sendgrid-patch-template-subjects.mjs counter_offer_received
  *   node scripts/sendgrid-patch-template-subjects.mjs dispute_opened payout_released
  *   npm run email:patch-sendgrid-subjects
  *   npm run email:patch-sendgrid-subjects -- --phase5
+ *   npm run email:patch-sendgrid-subjects -- --all-marketplace
  */
 
 import { loadEnvFiles } from '../emails/node/loadEnv.mjs'
@@ -14,6 +16,19 @@ import { EMAIL_TEMPLATE_KEYS } from '../supabase/functions/_shared/emailTemplate
 
 const TARGET_SUBJECT = '{{subject}}'
 const getEnv = (key) => process.env[key] ?? ''
+
+const PHASE2_TEMPLATE_KEYS = [
+  'offer_received',
+  'counter_offer_received',
+  'offer_accepted',
+  'payment_successful',
+  'new_order_received',
+  'buyer_delivery_details_added',
+  'collection_confirmed',
+  'courier_dispatched',
+  'delivery_confirmed',
+  'buyer_protection_started',
+]
 
 const PHASE5_TEMPLATE_KEYS = [
   'dispute_opened',
@@ -35,7 +50,11 @@ const PHASE5_TEMPLATE_KEYS = [
 loadEnvFiles()
 
 function parseTemplateKeys() {
-  const args = process.argv.slice(2).filter((arg) => arg !== '--phase5')
+  const flags = new Set(['--phase5', '--all-marketplace'])
+  const args = process.argv.slice(2).filter((arg) => !flags.has(arg))
+  if (process.argv.includes('--all-marketplace')) {
+    return [...PHASE2_TEMPLATE_KEYS, ...PHASE5_TEMPLATE_KEYS]
+  }
   if (process.argv.includes('--phase5') || args.length === 0) {
     return PHASE5_TEMPLATE_KEYS
   }

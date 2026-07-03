@@ -54,6 +54,10 @@
   color: var(--color-muted);
 }
 
+.message-offer-card__status--counter {
+  color: #1d4ed8;
+}
+
 .message-offer-card__body {
   display: flex;
   gap: var(--space-md);

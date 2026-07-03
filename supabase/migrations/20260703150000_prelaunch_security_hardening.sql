@@ -1,13 +1,10 @@
--- DEPRECATED: Use supabase/migrations/20260703150000_prelaunch_security_hardening.sql
--- Do not run this file manually on production. Use: supabase db push
+-- Pre-launch security hardening (promoted from prelaunch-security-fixes.sql)
+-- profiles_public: 20260701140000_profile_last_active_at.sql
+-- orders_client: 20260701160000_orders_client_seller_service_fee.sql
 --
--- Pre-launch security fixes
--- Run after: profile-username.sql, profile-location-columns.sql, collection-qr-expiry-30-days.sql,
---            message-attachments-phase3c-step2.sql, admin-support-tools.sql
---
--- 1. Public profiles: profiles_public view + owner/admin-only profiles SELECT
--- 2. QR token: revoke client SELECT on orders.collection_qr_token
--- 3. Messages: server-side validation + revoke direct text INSERT
+-- 1. Owner/admin-only profiles SELECT (public reads via profiles_public view)
+-- 2. Revoke client SELECT on public.orders (QR token protection)
+-- 3. Server-side message validation + revoke direct text INSERT
 
 -- ---------------------------------------------------------------------------
 -- Priority 1: Safe public profile access
@@ -27,82 +24,10 @@ create policy "Admins can read all profiles"
   to authenticated
   using (public.is_admin());
 
-create or replace view public.profiles_public
-with (security_barrier = true)
-as
-select
-  p.id,
-  p.username,
-  p.display_name,
-  p.location,
-  p.avatar_url,
-  p.created_at
-from public.profiles p;
-
-grant select on public.profiles_public to anon, authenticated;
-
 -- ---------------------------------------------------------------------------
 -- Priority 2: Hide collection QR token from client SELECT
 -- ---------------------------------------------------------------------------
--- Column-level REVOKE is insufficient when roles hold table-level SELECT;
--- expose a client-safe view and revoke direct table reads for API roles.
-
--- Client-safe view: omits QR token columns; row filter replaces security_invoker + table SELECT.
-create or replace view public.orders_client
-as
-select
-  o.id,
-  o.offer_id,
-  o.payment_id,
-  o.listing_id,
-  o.buyer_id,
-  o.seller_id,
-  o.amount_pence,
-  o.platform_fee_pence,
-  o.seller_net_pence,
-  o.fulfilment_status,
-  o.payout_status,
-  o.buyer_confirmed_at,
-  o.payout_released_at,
-  o.stripe_transfer_id,
-  o.created_at,
-  o.updated_at,
-  o.order_type,
-  o.buyer_protection_fee_pence,
-  o.item_price_pence,
-  o.buyer_total_pence,
-  o.payout_release_at,
-  o.dispute_window_hours,
-  o.protection_status,
-  o.collected_at,
-  o.delivered_at,
-  o.collection_confirmed_by,
-  o.collection_confirmed_at,
-  o.collection_confirmation_checks,
-  o.collection_confirmation_ip,
-  o.collection_confirmation_user_agent,
-  o.courier_evidence_video_url,
-  o.courier_pre_collection_photo_url,
-  o.courier_handover_photo_url,
-  o.courier_name,
-  o.courier_company,
-  o.courier_tracking_reference,
-  o.courier_signature_name,
-  o.courier_signature_data,
-  o.courier_signed_at,
-  o.courier_collected_at,
-  o.courier_evidence_submitted_at,
-  o.courier_evidence_submitted_by,
-  o.courier_delivered_at,
-  o.courier_delivery_confirmed_by,
-  o.courier_delivery_confirmation_checks,
-  o.courier_delivery_confirmation_user_agent
-from public.orders o
-where o.buyer_id = auth.uid()
-   or o.seller_id = auth.uid()
-   or public.is_admin();
-
-grant select on public.orders_client to authenticated;
+-- orders_client view is maintained by 20260701160000_orders_client_seller_service_fee.sql
 
 revoke select on public.orders from anon, authenticated;
 
@@ -726,3 +651,5 @@ create policy "Participants can send offer and system messages"
         and (c.buyer_id = auth.uid() or c.seller_id = auth.uid())
     )
   );
+
+notify pgrst, 'reload schema';

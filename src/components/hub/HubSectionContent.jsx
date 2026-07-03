@@ -1134,7 +1134,8 @@ export function buildHubAttentionBadges({
   const buyerPurchaseAttentionCount = countActionableBuyerPurchaseOffers(purchaseOrders)
   const sellerSaleAttentionCount = countActionableSellerSaleOffers(salesInProgressOrders)
   const payoutAttention = showPayoutSetupBanner ? 1 : 0
-  const myOffersAttentionCount = acceptedUnpaidOffers.length
+  const myOffersAttentionCount =
+    acceptedUnpaidOffers.length + pendingBuyerCounterOffers.length
 
   const buyingTabs = {
     offers: pendingBuyerCounterOffers.length,

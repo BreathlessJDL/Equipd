@@ -1,4 +1,19 @@
 import { supabase } from './supabase'
+import {
+  buildHubMyOffersPath,
+  buildHubSellingOffersPath,
+  extractOfferIdFromNotificationLink,
+  getOfferNotificationNavigationPath,
+  resolveHubOfferPathFromLink,
+} from './notificationNavigation.js'
+
+export {
+  buildHubMyOffersPath,
+  buildHubSellingOffersPath,
+  extractOfferIdFromNotificationLink,
+  resolveHubOfferPathFromLink,
+  getOfferNotificationNavigationPath,
+} from './notificationNavigation.js'
 
 const notificationFields = 'id, user_id, type, title, body, link_url, is_read, created_at'
 
@@ -49,10 +64,6 @@ const OFFER_NOTIFICATION_TYPES = new Set([
   NOTIFICATION_TYPES.NEW_OFFER,
 ])
 
-const PRESERVED_NOTIFICATION_PATH_PREFIXES = ['/orders/', '/messages']
-
-// Message unread state is handled by conversation_reads (see messages.js).
-// Bell notifications intentionally exclude messages to avoid duplicating the envelope badge.
 const BELL_EXCLUDED_NOTIFICATION_TYPES = [NOTIFICATION_TYPES.MESSAGE_RECEIVED]
 
 function applyBellNotificationFilter(query) {
@@ -76,20 +87,6 @@ export function formatNotificationTimestamp(value) {
   }).format(new Date(value))
 }
 
-export function extractOfferIdFromNotificationLink(linkUrl) {
-  if (!linkUrl) return null
-
-  try {
-    const url = linkUrl.startsWith('http')
-      ? new URL(linkUrl)
-      : new URL(linkUrl, 'http://equipd.local')
-
-    return url.searchParams.get('offerId') ?? url.searchParams.get('offer_id')
-  } catch {
-    return null
-  }
-}
-
 export function isOfferNotification(notification) {
   if (!notification) return false
 
@@ -110,60 +107,13 @@ export function isOfferNotification(notification) {
   return Boolean(extractOfferIdFromNotificationLink(notification.link_url))
 }
 
-const SELLER_OFFER_NOTIFICATION_TYPES = new Set([
-  NOTIFICATION_TYPES.OFFER_RECEIVED,
-  NOTIFICATION_TYPES.NEW_OFFER,
-])
-
-export function buildHubMyOffersPath(offerId) {
-  const params = new URLSearchParams({ section: 'offers' })
-
-  if (offerId) {
-    params.set('offerId', offerId)
-  }
-
-  return `/hub?${params.toString()}`
-}
-
-export function buildHubSellingOffersPath(offerId) {
-  const params = new URLSearchParams({ section: 'selling', tab: 'offers' })
-
-  if (offerId) {
-    params.set('offerId', offerId)
-  }
-
-  return `/hub?${params.toString()}`
-}
-
 /** @deprecated Use buildHubMyOffersPath or buildHubSellingOffersPath */
 export function buildHubOffersPath(offerId) {
   return buildHubMyOffersPath(offerId)
 }
 
 export function getNotificationNavigationPath(notification) {
-  if (!notification) return null
-
-  const linkUrl = notification.link_url?.trim() ?? ''
-
-  if (
-    linkUrl &&
-    PRESERVED_NOTIFICATION_PATH_PREFIXES.some((prefix) => linkUrl.startsWith(prefix))
-  ) {
-    return linkUrl
-  }
-
-  if (isOfferNotification(notification)) {
-    const offerId = extractOfferIdFromNotificationLink(linkUrl)
-    const type = (notification.type ?? '').toLowerCase()
-
-    if (SELLER_OFFER_NOTIFICATION_TYPES.has(type)) {
-      return buildHubSellingOffersPath(offerId)
-    }
-
-    return buildHubMyOffersPath(offerId)
-  }
-
-  return linkUrl || null
+  return getOfferNotificationNavigationPath(notification)
 }
 
 export async function fetchNotifications(userId, { limit, unreadOnly = false } = {}) {

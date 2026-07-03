@@ -377,6 +377,24 @@ export function isSellerCounterOffer(offer) {
   return offer?.direction === 'seller_to_buyer'
 }
 
+/** Pending offer that is part of a counter-offer chain (not the original buyer offer). */
+export function isActiveCounterOffer(offer) {
+  return offer?.status === 'pending' && offer?.parent_offer_id != null
+}
+
+export function getOfferDisplayStatus(offer) {
+  if (isActiveCounterOffer(offer)) {
+    return { label: 'Counter offer', variant: 'counter' }
+  }
+
+  const status = offer?.status ?? 'pending'
+
+  return {
+    label: formatOfferStatus(status) || 'Pending',
+    variant: status === 'pending' ? 'pending' : status,
+  }
+}
+
 export function canSellerRespondToOffer(offer) {
   return isBuyerOffer(offer) && offer?.status === 'pending'
 }

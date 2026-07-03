@@ -17,13 +17,16 @@ import {
   composeMarketplaceEmailSubject,
   composeNewOrderReceivedDynamicData,
   composeOfferAcceptedDynamicData,
+  composeCounterOfferAcceptedSellerDynamicData,
   composeOfferReceivedDynamicData,
+  composeCounterOfferReceivedDynamicData,
   composePaymentSuccessfulDynamicData,
   getMarketplaceUserName,
   normalizeMarketplaceEmailPayload,
   reserveEmailLog,
 } from '../supabase/functions/_shared/marketplaceEmailCore.js'
 import { buildSendGridPayload } from '../supabase/functions/_shared/transactionalEmailCore.js'
+import { getTemplateEnvVarName } from '../supabase/functions/_shared/emailTemplateConfig.js'
 import {
   buildFulfilmentTestDynamicData,
   FULFILMENT_EMAIL_TEMPLATE_KEYS,
@@ -84,6 +87,52 @@ assert(
     sellerId: 'seller-1',
   }) === 'offer_received:off-1:seller-1',
   'offer_received idempotency key',
+)
+assert(
+  buildMarketplaceEmailIdempotencyKey('counter_offer_received', {
+    offerId: 'counter-1',
+    recipientUserId: 'buyer-1',
+  }) === 'counter_offer_received:counter-1:buyer-1',
+  'counter_offer_received idempotency key',
+)
+assert(
+  getTemplateEnvVarName('counter_offer_received') === 'SENDGRID_TEMPLATE_COUNTER_OFFER_RECEIVED',
+  'counter_offer_received maps to SENDGRID_TEMPLATE_COUNTER_OFFER_RECEIVED',
+)
+
+function isActiveCounterOffer(offer) {
+  return offer?.status === 'pending' && offer?.parent_offer_id != null
+}
+
+function getOfferDisplayStatus(offer) {
+  if (isActiveCounterOffer(offer)) {
+    return { label: 'Counter offer', variant: 'counter' }
+  }
+  return { label: offer?.status ?? 'pending', variant: offer?.status ?? 'pending' }
+}
+
+assert(
+  isActiveCounterOffer({
+    status: 'pending',
+    parent_offer_id: 'parent-1',
+    direction: 'seller_to_buyer',
+  }),
+  'isActiveCounterOffer true for pending counter chain offer',
+)
+assert(
+  !isActiveCounterOffer({
+    status: 'pending',
+    direction: 'buyer_to_seller',
+  }),
+  'isActiveCounterOffer false for initial buyer offer',
+)
+assert(
+  getOfferDisplayStatus({
+    status: 'pending',
+    parent_offer_id: 'parent-1',
+    direction: 'seller_to_buyer',
+  }).label === 'Counter offer',
+  'getOfferDisplayStatus labels counter offers',
 )
 
 assert(
@@ -225,12 +274,140 @@ assert(
   'offer_accepted seller_name uses seller username',
 )
 assert(
+  offerAcceptedData.title === 'Your offer was accepted',
+  'offer_accepted buyer title is context-aware',
+)
+assert(
+  offerAcceptedData.body.includes('The seller accepted your offer on'),
+  'offer_accepted buyer body names seller acceptance',
+)
+assert(
+  offerAcceptedData.body.includes('Buyer Protection fee'),
+  'offer_accepted buyer body includes Buyer Protection fee',
+)
+assert(
+  !offerAcceptedData.body.includes("You'll receive"),
+  'offer_accepted buyer body excludes seller payout copy',
+)
+assert(
+  !offerAcceptedData.seller_service_fee,
+  'offer_accepted buyer dynamic data excludes seller_service_fee',
+)
+
+const counterAcceptedSellerData = composeCounterOfferAcceptedSellerDynamicData({
+  baseUrl,
+  offer: { id: 'counter-accepted-1', amount_pence: 17500, direction: 'seller_to_buyer' },
+  listing: { title: 'Rogue Ohio Bar', price_pence: 49500 },
+  buyerProfile: buyerProfileWithUsername,
+  sellerProfile: sellerProfileWithUsername,
+})
+
+assert(
+  counterAcceptedSellerData.recipient_first_name === 'sarahlifts',
+  'counter accepted seller email uses seller username',
+)
+assert(
+  counterAcceptedSellerData.title === 'Your counter offer was accepted',
+  'counter accepted seller title is context-aware',
+)
+assert(
+  counterAcceptedSellerData.body.includes('The buyer accepted your counter offer on'),
+  'counter accepted seller body names buyer acceptance',
+)
+assert(
+  counterAcceptedSellerData.body.includes('Seller Service Fee'),
+  'counter accepted seller body includes Seller Service Fee',
+)
+assert(
+  counterAcceptedSellerData.body.includes("You'll receive"),
+  'counter accepted seller body includes net payout',
+)
+assert(
+  !counterAcceptedSellerData.body.includes('Buyer Protection'),
+  'counter accepted seller body excludes buyer protection copy',
+)
+assert(
+  counterAcceptedSellerData.cta_url.includes('/hub?section=selling&tab=offers&offerId=counter-accepted-1'),
+  'counter accepted seller CTA URL',
+)
+assert(
+  buildMarketplaceEmailIdempotencyKey('offer_accepted', {
+    offerId: 'off-2',
+    recipientUserId: 'buyer-1',
+  }) === 'offer_accepted:off-2:buyer-1',
+  'offer_accepted idempotency key uses recipientUserId',
+)
+assert(
+  buildMarketplaceEmailIdempotencyKey('offer_accepted', {
+    offerId: 'counter-accepted-1',
+    recipientUserId: 'seller-1',
+  }) === 'offer_accepted:counter-accepted-1:seller-1',
+  'offer_accepted seller idempotency key uses recipientUserId',
+)
+
+const sellerCounterData = composeCounterOfferReceivedDynamicData({
+  baseUrl,
+  offer: { id: 'counter-1', amount_pence: 17500, direction: 'seller_to_buyer' },
+  listing: { title: 'Rogue Ohio Bar', price_pence: 49500 },
+  buyerProfile: buyerProfileWithUsername,
+  sellerProfile: sellerProfileWithUsername,
+})
+
+assert(
+  sellerCounterData.recipient_first_name === 'jamesgym',
+  'counter_offer_received seller counter notifies buyer username',
+)
+assert(
+  sellerCounterData.sender_name === 'sarahlifts',
+  'counter_offer_received seller counter sender_name uses seller username',
+)
+assert(
+  sellerCounterData.cta_url.includes('/hub?section=offers&offerId=counter-1'),
+  'counter_offer_received buyer CTA URL',
+)
+assert(
+  sellerCounterData.subject === 'New counter offer on Rogue Ohio Bar',
+  'counter_offer_received subject includes listing title',
+)
+
+const buyerCounterData = composeCounterOfferReceivedDynamicData({
+  baseUrl,
+  offer: { id: 'counter-2', amount_pence: 16000, direction: 'buyer_to_seller' },
+  listing: { title: 'Rogue Ohio Bar', price_pence: 49500 },
+  buyerProfile: buyerProfileWithUsername,
+  sellerProfile: sellerProfileWithUsername,
+})
+
+assert(
+  buyerCounterData.recipient_first_name === 'sarahlifts',
+  'counter_offer_received buyer counter notifies seller username',
+)
+assert(
+  buyerCounterData.cta_url.includes('/hub?section=selling&tab=offers&offerId=counter-2'),
+  'counter_offer_received seller CTA URL',
+)
+
+assert(
   offerReceivedData.subject === 'You have a new offer on Rogue Ohio Bar',
   'offer_received subject includes listing title',
 )
 assert(
-  offerAcceptedData.subject === 'Your offer on Rogue Ohio Bar has been accepted',
+  offerAcceptedData.subject === 'Your offer on Rogue Ohio Bar was accepted',
   'offer_accepted subject includes listing title',
+)
+assert(
+  counterAcceptedSellerData.subject === 'Your counter offer on Rogue Ohio Bar was accepted',
+  'counter accepted seller subject includes listing title',
+)
+assert(
+  composeMarketplaceEmailSubject('offer_accepted', 'Rogue Ohio Bar', { recipientRole: 'buyer' }) ===
+    'Your offer on Rogue Ohio Bar was accepted',
+  'composeMarketplaceEmailSubject offer_accepted buyer',
+)
+assert(
+  composeMarketplaceEmailSubject('offer_accepted', 'Rogue Ohio Bar', { recipientRole: 'seller' }) ===
+    'Your counter offer on Rogue Ohio Bar was accepted',
+  'composeMarketplaceEmailSubject offer_accepted seller',
 )
 assert(
   buyerPaymentData.subject === 'Payment confirmed for Test listing',
@@ -267,6 +444,26 @@ assert(
 assert(
   sendGridPayload.personalizations[0].dynamic_template_data.subject === buyerPaymentData.subject,
   'buildSendGridPayload keeps subject in dynamic_template_data',
+)
+
+const counterOfferSendGridPayload = buildSendGridPayload({
+  recipients: ['buyer@example.com'],
+  templateId: 'd-test',
+  dynamicTemplateData: sellerCounterData,
+  from: { email: 'notifications@equipd.co.uk', name: 'Equipd' },
+})
+assert(
+  counterOfferSendGridPayload.subject === 'New counter offer on Rogue Ohio Bar',
+  'counter_offer_received buildSendGridPayload top-level subject',
+)
+assert(
+  counterOfferSendGridPayload.personalizations[0].subject === 'New counter offer on Rogue Ohio Bar',
+  'counter_offer_received buildSendGridPayload personalization subject',
+)
+assert(
+  counterOfferSendGridPayload.personalizations[0].dynamic_template_data.subject ===
+    'New counter offer on Rogue Ohio Bar',
+  'counter_offer_received buildSendGridPayload dynamic_template_data subject',
 )
 
 assert(
@@ -516,9 +713,13 @@ const mockAdmin = {
           },
         }
       },
-      update() {
+      update(patch) {
         return {
-          eq() {
+          eq(_column, logId) {
+            const entry = [...logs.values()].find((item) => item.id === logId)
+            if (entry) {
+              Object.assign(entry, patch)
+            }
             return Promise.resolve({ error: null })
           },
         }
@@ -566,6 +767,21 @@ async function runAsyncTests() {
     status: 'pending',
   })
   assert(second.action === 'skip', 'duplicate offer_received idempotency key skips second send')
+
+  logs.set('counter_offer_received:counter-failed:buyer-1', {
+    id: 'log-failed',
+    idempotency_key: 'counter_offer_received:counter-failed:buyer-1',
+    status: 'failed',
+    template_key: 'counter_offer_received',
+  })
+
+  const retry = await reserveEmailLog(mockAdmin, {
+    template_key: 'counter_offer_received',
+    idempotency_key: 'counter_offer_received:counter-failed:buyer-1',
+    status: 'pending',
+  })
+  assert(retry.action === 'send', 'failed email log reservation retries send')
+  assert(retry.retry === true, 'failed email log reservation marks retry')
 }
 
 await runAsyncTests()

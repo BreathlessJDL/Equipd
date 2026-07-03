@@ -57,10 +57,13 @@ export const EMAIL_TEMPLATE_CONTENT_FIELDS = {
   offer_accepted: [
     'recipient_first_name',
     'seller_name',
+    'buyer_name',
     'listing_title',
     'offer_amount',
     'payment_deadline',
     'offer_id',
+    'seller_service_fee',
+    'seller_net_payout',
   ],
   payment_successful: [
     'recipient_first_name',

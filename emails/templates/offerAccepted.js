@@ -23,9 +23,11 @@ export const offerAcceptedTemplate = {
 
     const body = `
       <p>Hi James,</p>
-      <p><strong>${seller_name}</strong> accepted your offer on <strong>${listing_title}</strong>.</p>
+      <p>The seller accepted your offer on <strong>${listing_title}</strong>.</p>
       ${detailRowsHtml({
         'Your offer': offer_amount,
+        'Buyer Protection fee': '£21.25',
+        'Total to pay': '£446.25',
         Seller: seller_name,
         'Pay within': payment_deadline,
       })}
@@ -33,8 +35,8 @@ export const offerAcceptedTemplate = {
     `.trim()
 
     return layoutDefaults(baseUrl, {
-      preheader: `${seller_name} accepted your ${offer_amount} offer. Complete payment within ${payment_deadline}.`,
-      title: 'Offer accepted',
+      preheader: `The seller accepted your ${offer_amount} offer on ${listing_title}. Complete payment within ${payment_deadline}.`,
+      title: 'Your offer was accepted',
       subtitle: 'Complete payment to secure your purchase.',
       body,
       cta_text: 'Complete payment',
@@ -53,10 +55,9 @@ export const offerAcceptedTemplate = {
 
 Hi {{recipient_first_name}},
 
-{{seller_name}} accepted your offer on {{listing_title}}.
+The seller accepted your offer on {{listing_title}}.
 
 Your offer: {{offer_amount}}
-Seller: {{seller_name}}
 Pay within: {{payment_deadline}}
 
 Complete payment to secure the item. If payment is not completed in time, the offer may be cancelled.

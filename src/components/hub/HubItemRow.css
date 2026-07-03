@@ -161,6 +161,12 @@
   border-color: color-mix(in srgb, #ea580c 24%, transparent);
 }
 
+.hub-item-status--counter {
+  background: color-mix(in srgb, #2563eb 12%, #fff);
+  color: #1d4ed8;
+  border-color: color-mix(in srgb, #2563eb 24%, transparent);
+}
+
 .hub-item-status--accepted,
 .hub-item-status--paid,
 .hub-item-status--completed {

@@ -1,6 +1,7 @@
 import {
   formatOfferStatus,
   formatOfferTimestamp,
+  isActiveCounterOffer,
   isOfferCancelled,
 } from './offers'
 import { formatListingStatus, getConditionLabel } from './listings'
@@ -38,6 +39,10 @@ export function getHubStatusAccentClass(badgeVariant) {
 
   if (['refunded', 'disputed', 'rejected', 'withdrawn'].includes(badgeVariant)) {
     return 'hub-item-row--accent-danger'
+  }
+
+  if (badgeVariant === 'counter') {
+    return 'hub-item-row--accent-info'
   }
 
   if (
@@ -115,6 +120,10 @@ export function getHubItemStatusBadge(
     }
 
     return { variant: 'awaiting_payment', label: 'Awaiting Payment' }
+  }
+
+  if (offer.status === 'pending' && isActiveCounterOffer(offer)) {
+    return { variant: 'counter', label: 'Counter offer' }
   }
 
   if (offer.status === 'pending') {

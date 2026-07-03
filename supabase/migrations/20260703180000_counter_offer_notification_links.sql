@@ -1,12 +1,4 @@
--- Offer notification improvements: counter-offers, direction-aware status changes.
--- Run in Supabase SQL Editor on existing databases.
--- Safe to re-run (CREATE OR REPLACE).
--- Superseded for deployed environments by:
---   supabase/migrations/20260703180000_counter_offer_notification_links.sql
-
--- ---------------------------------------------------------------------------
--- New offer inserted (buyer offer vs seller/buyer counter-offer)
--- ---------------------------------------------------------------------------
+-- Counter-offer notification deep links: route buyers and sellers to the correct Hub section.
 
 create or replace function public.notify_offer_received()
 returns trigger
@@ -84,10 +76,6 @@ begin
   return new;
 end;
 $$;
-
--- ---------------------------------------------------------------------------
--- Offer status updated (accept / decline / cancel — not countered / withdrawn)
--- ---------------------------------------------------------------------------
 
 create or replace function public.notify_offer_status_change()
 returns trigger
@@ -197,3 +185,5 @@ begin
   return new;
 end;
 $$;
+
+notify pgrst, 'reload schema';
