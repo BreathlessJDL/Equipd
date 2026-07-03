@@ -8,6 +8,7 @@
 export const EMAIL_TEMPLATE_KEYS = {
   master_test: 'SENDGRID_TEMPLATE_MASTER_TEST',
   offer_received: 'SENDGRID_TEMPLATE_OFFER_RECEIVED',
+  counter_offer_received: 'SENDGRID_TEMPLATE_COUNTER_OFFER_RECEIVED',
   offer_accepted: 'SENDGRID_TEMPLATE_OFFER_ACCEPTED',
   payment_successful: 'SENDGRID_TEMPLATE_PAYMENT_SUCCESSFUL',
   new_order_received: 'SENDGRID_TEMPLATE_NEW_ORDER_RECEIVED',
@@ -40,6 +41,14 @@ export const EMAIL_TEMPLATE_CONTENT_FIELDS = {
   offer_received: [
     'recipient_first_name',
     'buyer_name',
+    'listing_title',
+    'offer_amount',
+    'listing_price',
+    'offer_id',
+  ],
+  counter_offer_received: [
+    'recipient_first_name',
+    'sender_name',
     'listing_title',
     'offer_amount',
     'listing_price',
@@ -177,6 +186,7 @@ export const EMAIL_TEMPLATE_CONTENT_FIELDS = {
 export const EMAIL_TEMPLATE_REQUIRED_FIELDS = {
   master_test: ['title', 'preheader', 'body'],
   offer_received: LAYOUT_REQUIRED_FIELDS,
+  counter_offer_received: LAYOUT_REQUIRED_FIELDS,
   offer_accepted: LAYOUT_REQUIRED_FIELDS,
   payment_successful: LAYOUT_REQUIRED_FIELDS,
   new_order_received: LAYOUT_REQUIRED_FIELDS,

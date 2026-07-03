@@ -59,6 +59,7 @@
   background: color-mix(in srgb, var(--color-bg) 70%, var(--color-surface));
   overflow: hidden;
   touch-action: pan-y pinch-zoom;
+  overscroll-behavior-x: contain;
 }
 
 .listing-gallery__main-image {

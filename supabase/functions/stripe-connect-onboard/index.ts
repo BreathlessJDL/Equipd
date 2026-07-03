@@ -1,3 +1,7 @@
+import {
+  buildSellerBusinessProfileUrl,
+  STRIPE_BUSINESS_PROFILE_PRODUCT_DESCRIPTION,
+} from '../_shared/sellerShopUrl.ts'
 import { handleCors, errorResponse, jsonResponse } from '../_shared/cors.ts'
 import { getAppBaseUrl, getStripe } from '../_shared/stripe.ts'
 import { getAuthenticatedUser, getSupabaseAdmin } from '../_shared/supabase-admin.ts'
@@ -23,12 +27,17 @@ Deno.serve(async (req) => {
 
     const { data: profile, error: profileError } = await admin
       .from('profiles')
-      .select('id, stripe_account_id, stripe_onboarding_complete')
+      .select('id, username, stripe_account_id, stripe_onboarding_complete')
       .eq('id', user.id)
       .single()
 
     if (profileError || !profile) {
       return errorResponse('Profile not found', 404)
+    }
+
+    const businessProfile = {
+      url: buildSellerBusinessProfileUrl(profile, appBaseUrl),
+      product_description: STRIPE_BUSINESS_PROFILE_PRODUCT_DESCRIPTION,
     }
 
     let accountId = profile.stripe_account_id
@@ -48,6 +57,7 @@ Deno.serve(async (req) => {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
+        business_profile: businessProfile,
         metadata: {
           equipd_user_id: user.id,
         },
@@ -63,6 +73,10 @@ Deno.serve(async (req) => {
       if (syncError) {
         return errorResponse(syncError.message, 500)
       }
+    } else {
+      await stripe.accounts.update(accountId, {
+        business_profile: businessProfile,
+      })
     }
 
     const accountLink = await stripe.accountLinks.create({

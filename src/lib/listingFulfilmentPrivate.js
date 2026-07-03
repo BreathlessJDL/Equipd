@@ -136,7 +136,7 @@ export async function deleteListingFulfilmentPrivate(listingId) {
 
 export async function persistListingFulfilmentPrivate(listingId, form) {
   if (!needsCollectionPrivateDetails(form.deliveryOptions)) {
-    return { data: null, error: null }
+    return deleteListingFulfilmentPrivate(listingId)
   }
 
   return upsertListingFulfilmentPrivate(listingId, fulfilmentPrivateFromForm(form))

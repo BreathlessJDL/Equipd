@@ -410,7 +410,11 @@ export function canBuyerWithdrawOffer(offer, userId) {
 }
 
 export function filterBuyerPendingOffers(offers = []) {
-  return offers.filter((offer) => offer.status === 'pending' && isBuyerOffer(offer))
+  return offers.filter((offer) => offer.status === 'pending')
+}
+
+export function filterBuyerCounterOffers(offers = []) {
+  return offers.filter((offer) => offer.status === 'pending' && isSellerCounterOffer(offer))
 }
 
 export function filterSellerReceivedPendingOffers(offers = []) {

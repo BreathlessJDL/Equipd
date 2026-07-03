@@ -1,27 +1,43 @@
 .fulfilment-method-selector {
-  border: 1px solid var(--color-border, #ddd);
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   margin: 0 0 1rem;
-  padding: 1rem;
+  padding: 0;
 }
 
 .fulfilment-method-selector__title {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.65rem;
   padding: 0;
 }
 
 .fulfilment-method-selector__options {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .fulfilment-method-selector__option {
+  position: relative;
   align-items: flex-start;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  min-height: 100%;
+  padding: 0.75rem 0.7rem;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.fulfilment-method-selector__option:has(input:checked) {
+  background: color-mix(in srgb, var(--color-orange, #e8622a) 6%, var(--color-surface, #fff));
+  border-color: color-mix(in srgb, var(--color-orange, #e8622a) 45%, var(--color-border, #ddd));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-orange, #e8622a) 20%, transparent);
 }
 
 .fulfilment-method-selector__option--disabled {
@@ -32,24 +48,37 @@
 .fulfilment-method-selector__copy {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
   min-width: 0;
 }
 
 .fulfilment-method-selector__label {
-  line-height: 1.4;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .fulfilment-method-selector__hint {
   color: var(--color-muted, #666);
-  font-size: 0.8125rem;
-  line-height: 1.4;
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 
 .fulfilment-method-selector__option input {
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
 }
 
-.fulfilment-method-selector--compact {
-  padding: 0.75rem;
+.fulfilment-method-selector--compact .fulfilment-method-selector__options {
+  gap: 0.45rem;
+}
+
+.fulfilment-method-selector--compact .fulfilment-method-selector__option {
+  padding: 0.65rem 0.6rem;
+}
+
+@media (max-width: 720px) {
+  .fulfilment-method-selector__options {
+    grid-template-columns: 1fr;
+  }
 }

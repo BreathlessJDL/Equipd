@@ -85,6 +85,7 @@ import {
 } from '../lib/reviews'
 import { getOrderStatusBadge } from '../lib/orderStatusBadge'
 import { fetchPublicProfile, getProfileDisplayName } from '../lib/profiles'
+import { getSellerShopPath } from '../lib/sellerShopUrls'
 
 function formatOrderNumber(orderId) {
   return formatOrderReference(orderId)
@@ -156,7 +157,7 @@ function OrderParticipantProfileLink({ label, userId, profile }) {
   return (
     <p className="order-detail__overview-meta">
       {label}:{' '}
-      <Link to={`/shop/${userId}`} className="order-detail__participant-link">
+      <Link to={getSellerShopPath({ id: userId, username: profile?.username })} className="order-detail__participant-link">
         {linkLabel}
       </Link>
     </p>

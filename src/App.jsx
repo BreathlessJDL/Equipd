@@ -8,6 +8,7 @@ import AppShell from './components/layout/AppShell'
 import ScrollToTop from './components/routing/ScrollToTop'
 import { AuthProvider } from './hooks/useAuth'
 import { AuthModalProvider } from './hooks/useAuthModal'
+import { StripeConnectOnboardingProvider } from './hooks/useStripeConnectOnboarding'
 import { CookieConsentProvider } from './hooks/useCookieConsent'
 import AdminCasesPage from './pages/AdminCasesPage'
 import AdminOrdersPage from './pages/AdminOrdersPage'
@@ -49,6 +50,7 @@ function App() {
         <ScrollToTop />
         <CookieConsentProvider>
           <AuthModalProvider>
+            <StripeConnectOnboardingProvider>
             <OAuthSessionHandler />
             <Routes>
           <Route element={<AppShell />}>
@@ -84,7 +86,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="shop/:userId" element={<ShopRoutePage />} />
+            <Route path="shop/:shopParam" element={<ShopRoutePage />} />
             <Route
               path="my-listings"
               element={
@@ -207,6 +209,7 @@ function App() {
             </Routes>
             <AuthModal />
             <CookieConsentShell />
+            </StripeConnectOnboardingProvider>
           </AuthModalProvider>
         </CookieConsentProvider>
       </BrowserRouter>

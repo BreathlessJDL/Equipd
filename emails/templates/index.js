@@ -1,4 +1,5 @@
 import { offerReceivedTemplate } from './offerReceived.js'
+import { counterOfferReceivedTemplate } from './counterOfferReceived.js'
 import { offerAcceptedTemplate } from './offerAccepted.js'
 import { paymentSuccessfulTemplate } from './paymentSuccessful.js'
 import { newOrderReceivedTemplate } from './newOrderReceived.js'
@@ -26,6 +27,7 @@ import { renderPlainTextEmail } from './shared.js'
 /** Transactional templates built on the approved master layout. */
 export const PHASE2_EMAIL_TEMPLATES = [
   offerReceivedTemplate,
+  counterOfferReceivedTemplate,
   offerAcceptedTemplate,
   paymentSuccessfulTemplate,
   newOrderReceivedTemplate,

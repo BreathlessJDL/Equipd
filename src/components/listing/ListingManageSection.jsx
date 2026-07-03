@@ -6,8 +6,16 @@ import {
   isListingOwner,
   updateListing,
 } from '../../lib/listings'
+import { deleteListingFulfilmentPrivate } from '../../lib/listingFulfilmentPrivate'
 
-function ListingManageSection({ listing, userId, onListingChange, onDeleted }) {
+function ListingManageSection({
+  listing,
+  userId,
+  onListingChange,
+  onDeleteStart,
+  onDeleteEnd,
+  onDeleted,
+}) {
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -76,13 +84,17 @@ function ListingManageSection({ listing, userId, onListingChange, onDeleted }) {
 
     if (!confirmed) return
 
+    onDeleteStart?.()
     setUpdating(true)
     setError('')
     setSuccess('')
 
+    await deleteListingFulfilmentPrivate(listing.id)
+
     const { error: deleteError } = await deleteListing(listing.id)
 
     setUpdating(false)
+    onDeleteEnd?.()
 
     if (deleteError) {
       setError(getListingErrorMessage(deleteError))

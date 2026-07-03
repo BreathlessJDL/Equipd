@@ -45,6 +45,7 @@ function EditListingPage() {
   const [existingImages, setExistingImages] = useState([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [imageError, setImageError] = useState('')
+  const [deletingListing, setDeletingListing] = useState(false)
 
   useEffect(() => {
     if (!slug) return undefined
@@ -176,7 +177,7 @@ function EditListingPage() {
   }
 
   async function persistListing({ targetStatus, validateForPublish = false, redirect = false, successMessage }) {
-    if (!listing || !form || !user?.id) {
+    if (!listing || !form || !user?.id || deletingListing) {
       return { ok: false }
     }
 
@@ -434,6 +435,8 @@ function EditListingPage() {
         listing={listing}
         userId={user?.id}
         onListingChange={setListing}
+        onDeleteStart={() => setDeletingListing(true)}
+        onDeleteEnd={() => setDeletingListing(false)}
         onDeleted={() => navigate('/my-listings', { replace: true })}
       />
     </div>

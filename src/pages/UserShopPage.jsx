@@ -17,8 +17,9 @@ import {
 } from '../lib/listings'
 import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../lib/marketplaceMessageValidation'
 import { getMessageErrorMessage, resolveMessageThreadNavigation } from '../lib/messages'
+import { fetchPublicProfileByShopParam } from '../lib/sellerShopResolve'
+import { getSellerShopPath, isProfileUuid } from '../lib/sellerShopUrls'
 import {
-  fetchPublicProfile,
   formatLastActiveLabel,
   formatProfileJoinDate,
   buildAvatarProfile,
@@ -37,11 +38,13 @@ import {
 } from '../lib/reviews'
 import { TRUST_LINKS } from '../lib/trustMessaging'
 
-function UserShopPage({ userId }) {
+function UserShopPage({ shopParam }) {
   const { user } = useAuth()
   const { requireAuth } = useRequireAuth()
   const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
+  const sellerId = profile?.id ?? (isProfileUuid(shopParam) ? shopParam : null)
+  const shopPath = profile ? getSellerShopPath(profile) : getSellerShopPath(shopParam)
   const [listings, setListings] = useState([])
   const [reviewSummary, setReviewSummary] = useState({ averageRating: null, reviewCount: 0 })
   const [reviews, setReviews] = useState([])
@@ -58,7 +61,7 @@ function UserShopPage({ userId }) {
   useEffect(() => {
     function handleProfileUpdated(event) {
       const updatedUserId = event.detail?.userId
-      if (updatedUserId && updatedUserId !== userId) return
+      if (updatedUserId && sellerId && updatedUserId !== sellerId) return
       setProfileRefreshNonce((current) => current + 1)
     }
 
@@ -66,10 +69,10 @@ function UserShopPage({ userId }) {
     return () => {
       window.removeEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated)
     }
-  }, [userId])
+  }, [sellerId])
 
   useEffect(() => {
-    if (!userId) return undefined
+    if (!shopParam) return undefined
 
     let active = true
 
@@ -78,24 +81,12 @@ function UserShopPage({ userId }) {
       setError('')
       setReviewsError('')
 
-      const [
-        profileResult,
-        listingsResult,
-        reviewsSummaryResult,
-        reviewsResult,
-        soldCountResult,
-      ] = await Promise.all([
-        fetchPublicProfile(userId),
-        fetchSellerActiveListings(userId),
-        fetchUserReviewSummary(userId),
-        fetchReviewsForUser(userId, { limit: 6 }),
-        fetchUserCompletedSalesCount(userId),
-      ])
+      const profileResult = await fetchPublicProfileByShopParam(shopParam)
 
       if (!active) return
 
-      if (profileResult.error) {
-        setError(getProfileErrorMessage(profileResult.error))
+      if (profileResult.error || !profileResult.data) {
+        setError(getProfileErrorMessage(profileResult.error ?? new Error('Profile not found.')))
         setProfile(null)
         setListings([])
         setReviewSummary({ averageRating: null, reviewCount: 0 })
@@ -104,6 +95,29 @@ function UserShopPage({ userId }) {
         setLoading(false)
         return
       }
+
+      const resolvedProfile = profileResult.data
+
+      if (resolvedProfile.username && isProfileUuid(shopParam)) {
+        navigate(getSellerShopPath(resolvedProfile), { replace: true })
+        return
+      }
+
+      const resolvedSellerId = resolvedProfile.id
+
+      const [
+        listingsResult,
+        reviewsSummaryResult,
+        reviewsResult,
+        soldCountResult,
+      ] = await Promise.all([
+        fetchSellerActiveListings(resolvedSellerId),
+        fetchUserReviewSummary(resolvedSellerId),
+        fetchReviewsForUser(resolvedSellerId, { limit: 6 }),
+        fetchUserCompletedSalesCount(resolvedSellerId),
+      ])
+
+      if (!active) return
 
       if (listingsResult.error) {
         setError(getListingErrorMessage(listingsResult.error))
@@ -115,7 +129,7 @@ function UserShopPage({ userId }) {
         )
       }
 
-      setProfile(profileResult.data)
+      setProfile(resolvedProfile)
       setListings(listingsResult.error ? [] : (listingsResult.data ?? []))
       setReviewSummary(reviewsSummaryResult.data ?? { averageRating: null, reviewCount: 0 })
       setReviews(reviewsResult.error ? [] : (reviewsResult.data ?? []))
@@ -128,13 +142,13 @@ function UserShopPage({ userId }) {
     return () => {
       active = false
     }
-  }, [userId, profileRefreshNonce])
+  }, [shopParam, profileRefreshNonce, navigate])
 
   async function handleMessageSeller() {
     const firstListing = listings[0]
     if (!firstListing) return
-    if (!requireAuth(`/shop/${userId}`)) return
-    if (!user?.id) return
+    if (!requireAuth(shopPath)) return
+    if (!user?.id || !sellerId) return
 
     setStartingConversation(true)
     setMessageError('')
@@ -142,7 +156,7 @@ function UserShopPage({ userId }) {
     const { path, error: conversationError } = await resolveMessageThreadNavigation({
       listingId: firstListing.id,
       buyerId: user.id,
-      sellerId: userId,
+      sellerId,
     })
 
     setStartingConversation(false)
@@ -155,7 +169,7 @@ function UserShopPage({ userId }) {
     navigate(path)
   }
 
-  const isOwnShop = Boolean(user?.id && user.id === userId)
+  const isOwnShop = Boolean(user?.id && sellerId && user.id === sellerId)
   const displayName = getProfileDisplayName(profile)
   const joinDate = formatProfileJoinDate(profile?.created_at)
   const avatarProfile = buildAvatarProfile(profile, isOwnShop ? user : null)
@@ -237,10 +251,10 @@ function UserShopPage({ userId }) {
                   </button>
                 ) : null}
 
-                {canReportUser(userId, user?.id) ? (
+                {sellerId && canReportUser(sellerId, user?.id) ? (
                   <ReportTrigger
                     reportType={REPORT_TYPES.USER}
-                    reportedUserId={userId}
+                    reportedUserId={sellerId}
                     label="Report user"
                     className="report-trigger user-shop__report"
                   />

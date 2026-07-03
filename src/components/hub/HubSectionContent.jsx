@@ -26,6 +26,14 @@ import {
 import { HubItemReviewButton } from './HubItemActions'
 import './HubItemRow.css'
 import { HubSectionTabs } from './HubLayout'
+import HubMobileSummary from './HubMobileSummary'
+import './HubMobileSummary.css'
+import {
+  HUB_ATTENTION_DISPLAY,
+  HUB_TRANSACTION_ACTION_CARDS,
+  HubAttentionChevron,
+  HubTransactionActionIcon,
+} from './HubSummaryShared'
 import { HubEmptyState } from './HubEmptyState'
 import { HUB_EMPTY_STATES } from '../../lib/hubEmptyStates'
 import {
@@ -52,6 +60,7 @@ import {
   isOrderAwaitingFulfilment,
   isOrderCompleted,
   isOrderHubHistory,
+  isOrderRefundedForHub,
 } from '../../lib/orders'
 import { isOrderDisputed } from '../../lib/orderDisputes'
 
@@ -93,87 +102,6 @@ const HUB_SUMMARY_CARDS = [
   },
 ]
 
-const HUB_TRANSACTION_ACTION_CARDS = [
-  {
-    key: 'orders-in-progress',
-    label: 'Orders in progress',
-    section: 'orders',
-    tab: HUB_ORDERS_TABS.purchases.id,
-    subTab: HUB_ORDERS_SUB_TABS.in_progress.id,
-    countKey: 'ordersInProgress',
-    getSubtitle: (count) =>
-      count === 0
-        ? 'No active purchases'
-        : `${count} active purchase${count === 1 ? '' : 's'}`,
-  },
-  {
-    key: 'sales-in-progress',
-    label: 'Sales in progress',
-    section: 'orders',
-    tab: HUB_ORDERS_TABS.sales.id,
-    subTab: HUB_ORDERS_SUB_TABS.in_progress.id,
-    countKey: 'salesInProgress',
-    getSubtitle: (count) =>
-      count === 0 ? 'No active sales' : `${count} active sale${count === 1 ? '' : 's'}`,
-  },
-]
-
-const HUB_ATTENTION_DISPLAY = {
-  'offers-received': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} offer${count === 1 ? '' : 's'} need accepting, declining, or countering.`,
-    actionLabel: 'Review offers',
-  },
-  'buyer-pay': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} accepted offer${count === 1 ? '' : 's'} waiting for your payment.`,
-    actionLabel: 'Complete payment',
-  },
-  'seller-awaiting-pay': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} buyer${count === 1 ? '' : 's'} still need to complete checkout.`,
-    actionLabel: 'View sales',
-  },
-  'buyer-collection': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} order${count === 1 ? '' : 's'} ready for collection or delivery.`,
-    actionLabel: 'View orders',
-  },
-  'courier-evidence': {
-    actionRequired: true,
-    description: () => 'Upload handover evidence before courier collection.',
-    actionLabel: 'Submit evidence',
-  },
-  disputes: {
-    description: (count) =>
-      `${count} open dispute${count === 1 ? '' : 's'} need your attention.`,
-    actionLabel: 'View disputes',
-    urgent: true,
-  },
-  'payout-setup': {
-    description: () => 'Connect your payout account to receive funds from reserved listings.',
-    actionLabel: 'Set up payouts',
-    urgent: true,
-  },
-  'pending-reviews': {
-    actionRequired: true,
-    description: () => 'Leave a review for completed orders.',
-    actionLabel: 'Review orders',
-  },
-}
-
-function HubAttentionChevron() {
-  return (
-    <span className="hub-attention__chevron" aria-hidden="true">
-      <ArrowRightIcon />
-    </span>
-  )
-}
-
 function HubSummaryCardIcon({ cardKey }) {
   if (cardKey === 'buying') {
     return (
@@ -201,32 +129,16 @@ function HubSummaryCardIcon({ cardKey }) {
   )
 }
 
-function HubTransactionActionIcon({ cardKey }) {
-  if (cardKey === 'orders-in-progress') {
-    return (
-      <HubScopedPngIcon
-        src={HUB_PNG_ICONS.orderInProgress}
-        className="hub-transaction-action__icon hub-transaction-action__icon--orders-png"
-      />
-    )
-  }
-
+function HubSummarySection({ counts, needsAttention, recentActivity = [], sectionBadges = {}, onNavigate }) {
   return (
-    <EquipdTypeIcon
-      variant={HUB_SUMMARY_ICON_VARIANT[cardKey]}
-      className="hub-transaction-action__icon"
-    />
-  )
-}
-
-function HubSummarySection({ counts, needsAttention, onNavigate }) {
-  return (
-    <HubPanel
-      title="Summary"
-      lead="Quick overview of your buying and selling activity."
-      className="hub-panel--summary"
-    >
-      <div className="hub-summary-panel__body">
+    <>
+      <div className="hub-summary--desktop">
+        <HubPanel
+          title="Summary"
+          lead="Quick overview of your buying and selling activity."
+          className="hub-panel--summary"
+        >
+          <div className="hub-summary-panel__body">
         <div className="hub-summary-cards">
           {HUB_SUMMARY_CARDS.map((card) => (
             <button
@@ -352,8 +264,18 @@ function HubSummarySection({ counts, needsAttention, onNavigate }) {
         ) : (
           <HubEmptyState {...HUB_EMPTY_STATES.summaryAttention} />
         )}
+          </div>
+        </HubPanel>
       </div>
-    </HubPanel>
+
+      <HubMobileSummary
+        className="hub-summary--mobile"
+        needsAttention={needsAttention}
+        recentActivity={recentActivity}
+        sectionBadges={sectionBadges}
+        onNavigate={onNavigate}
+      />
+    </>
   )
 }
 
@@ -394,6 +316,7 @@ function HubBuyingSection({
           orderStatusRole="buyer"
           partyRole="seller"
           showWithdraw
+          showBuyerCounterActions
           onOfferUpdated={handlers.onOfferUpdated}
           loadError={buyerOffersLoadError}
           emptyState={HUB_EMPTY_STATES.buyingOffers}
@@ -978,6 +901,7 @@ function HubReviewsSection({
 
 export function buildHubNeedsAttention({
   pendingOffersFromBuyers,
+  pendingBuyerCounterOffers = [],
   acceptedUnpaidOffers,
   sellerAcceptedUnpaidOffers,
   buyerAwaitingFulfilmentOrders,
@@ -993,6 +917,16 @@ export function buildHubNeedsAttention({
       label: 'Offers awaiting your response',
       count: pendingOffersFromBuyers.length,
       section: 'selling',
+      tab: 'offers',
+    })
+  }
+
+  if (pendingBuyerCounterOffers.length > 0) {
+    items.push({
+      id: 'counter-offers-received',
+      label: 'Counter offers awaiting your response',
+      count: pendingBuyerCounterOffers.length,
+      section: 'buying',
       tab: 'offers',
     })
   }
@@ -1078,6 +1012,56 @@ export function buildHubNeedsAttention({
   return items
 }
 
+export function buildHubRecentActivity({
+  completedBuyerOffers = [],
+  completedSellerOffers = [],
+  limit = 5,
+}) {
+  const entries = []
+
+  function pushEntry(offer, role) {
+    const order = getOfferOrder(offer)
+    if (!order?.id) return
+
+    const listing = offer.listing ?? {}
+    const refunded = isOrderRefundedForHub(order)
+    const completedAt = order.updated_at ?? order.created_at ?? offer.updated_at ?? offer.created_at
+    const dateStr = completedAt ? formatReviewDateShort(completedAt) : null
+
+    entries.push({
+      id: `${role}-${order.id}`,
+      activityType:
+        role === 'buyer'
+          ? refunded
+            ? 'refund_completed'
+            : 'purchase_completed'
+          : refunded
+            ? 'refund_completed'
+            : 'sale_completed',
+      title: listing.title ?? (role === 'buyer' ? 'Purchase' : 'Sale'),
+      secondaryText:
+        role === 'buyer'
+          ? dateStr
+            ? `Delivered ${dateStr}`
+            : 'Completed recently'
+          : dateStr
+            ? `Sold ${dateStr}`
+            : 'Completed recently',
+      amountLabel: offer.amount_pence != null ? formatPricePence(offer.amount_pence) : null,
+      statusLabel: refunded ? 'Refunded' : 'Completed',
+      statusVariant: refunded ? 'refunded' : 'completed',
+      thumbnailUrl: listing.listing_images?.[0]?.url ?? null,
+      orderId: order.id,
+      completedAt: completedAt ? new Date(completedAt).getTime() : 0,
+    })
+  }
+
+  completedBuyerOffers.forEach((offer) => pushEntry(offer, 'buyer'))
+  completedSellerOffers.forEach((offer) => pushEntry(offer, 'seller'))
+
+  return entries.sort((a, b) => b.completedAt - a.completedAt).slice(0, limit)
+}
+
 export function filterHubPurchasesInProgressOffers(offers = []) {
   return offers.filter(isHubPurchasesInProgressOffer)
 }
@@ -1131,6 +1115,8 @@ function sumTabBadgeValues(tabs) {
 export function buildHubAttentionBadges({
   acceptedUnpaidOffers,
   pendingOffersFromBuyers,
+  pendingBuyerCounterOffers = [],
+  sellerAcceptedUnpaidOffers = [],
   purchaseOrders,
   salesInProgressOrders,
   showPayoutSetupBanner,
@@ -1150,8 +1136,8 @@ export function buildHubAttentionBadges({
   const myOffersAttentionCount = acceptedUnpaidOffers.length
 
   const buyingTabs = {
-    offers: 0,
-    awaiting_payment: 0,
+    offers: pendingBuyerCounterOffers.length,
+    awaiting_payment: acceptedUnpaidOffers.length,
     in_progress: buyerPurchaseAttentionCount,
     completed: pendingBuyerReviewCount,
     cancelled: 0,
@@ -1159,7 +1145,7 @@ export function buildHubAttentionBadges({
 
   const sellingTabs = {
     offers: pendingOffersFromBuyers.length,
-    awaiting_payment: 0,
+    awaiting_payment: sellerAcceptedUnpaidOffers?.length ?? 0,
     active: sellerSaleAttentionCount + payoutAttention,
     sold: pendingSellerReviewCount,
     cancelled: 0,

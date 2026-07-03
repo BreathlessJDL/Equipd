@@ -1,27 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HUB_SECTIONS } from '../../lib/hubNavigation'
+import { getHubMenuIconSrc } from '../../lib/hubMenuIcons'
 import './HubLayout.css'
 
 const HUB_TABS_NUDGE_STORAGE_KEY = 'equipd-hub-tabs-scroll-nudge-v1'
 
-const HUB_NAV_ICON_FILES = {
-  summary: 'summary icon menu.png',
-  buying: 'buying icon menu.png',
-  selling: 'selling icon menu.png',
-  listings: 'listing icon menu.png',
-  offers: 'my offers icon menu.png',
-  orders: 'orders icon menu.png',
-  saved: 'saved icon menu.png',
-  reviews: 'reviews icon menu.png',
-  settings: 'settings icon menu.png',
-}
-
 function getHubNavIconSrc(sectionId) {
-  const filename = HUB_NAV_ICON_FILES[sectionId]
-  if (!filename) return null
-
-  return `/design-reference/${encodeURIComponent(filename)}`
+  return getHubMenuIconSrc(sectionId)
 }
 
 function HubNavItem({ item, active, onSelect, badge }) {
@@ -165,7 +151,7 @@ function HubLayout({
   const showMobileBack = section !== 'summary'
 
   return (
-    <section className="hub-page hub-dashboard">
+    <section className={`hub-page hub-dashboard${section === 'summary' ? ' hub-dashboard--summary-view' : ''}`}>
       <header className="hub-dashboard__header">
         <div>
           <h2 className="hub-page__title">{title ?? 'Hub'}</h2>

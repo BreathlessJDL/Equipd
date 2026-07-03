@@ -14,6 +14,7 @@ import {
   buildHubAttentionBadges,
   buildHubCounts,
   buildHubNeedsAttention,
+  buildHubRecentActivity,
   filterHubPurchasesInProgressOffers,
   groupListingsByTab,
 } from '../components/hub/HubSectionContent'
@@ -22,11 +23,13 @@ import '../components/ListingBrowse.css'
 import { useHubScrollRestoration, scrollHubToTop } from '../hooks/useHubScrollRestoration'
 import { useAuth } from '../hooks/useAuth'
 import { buildHubSearchParams, getHubSectionLead, getHubSectionMeta, parseHubNavigation, HUB_ORDERS_SUB_TABS } from '../lib/hubNavigation'
+import { STRIPE_SETUP_SETTINGS_PATH } from '../lib/stripeConnectOnboarding'
 import { fetchMyListings, getListingErrorMessage } from '../lib/listings'
 import {
   fetchBuyerOffers,
   fetchSellerOffers,
   filterBuyerPendingOffers,
+  filterBuyerCounterOffers,
   filterSellerReceivedPendingOffers,
   getOfferErrorMessage,
   logSupabaseError,
@@ -433,6 +436,11 @@ function HubPage() {
     [pendingOffersMade],
   )
 
+  const pendingBuyerCounterOffers = useMemo(
+    () => filterBuyerCounterOffers(pendingOffersMade),
+    [pendingOffersMade],
+  )
+
   const pendingOffersFromBuyers = useMemo(
     () => filterSellerReceivedPendingOffers(offersReceived),
     [offersReceived],
@@ -646,6 +654,7 @@ function HubPage() {
     () =>
       buildHubNeedsAttention({
         pendingOffersFromBuyers,
+        pendingBuyerCounterOffers,
         acceptedUnpaidOffers,
         sellerAcceptedUnpaidOffers,
         buyerAwaitingFulfilmentOrders,
@@ -655,6 +664,7 @@ function HubPage() {
       }),
     [
       pendingOffersFromBuyers,
+      pendingBuyerCounterOffers,
       acceptedUnpaidOffers,
       sellerAcceptedUnpaidOffers,
       buyerAwaitingFulfilmentOrders,
@@ -684,11 +694,22 @@ function HubPage() {
     ],
   )
 
+  const recentActivity = useMemo(
+    () =>
+      buildHubRecentActivity({
+        completedBuyerOffers: completedBuyerOrders,
+        completedSellerOffers: completedSalesOrders,
+      }),
+    [completedBuyerOrders, completedSalesOrders],
+  )
+
   const attentionBadges = useMemo(
     () =>
       buildHubAttentionBadges({
         acceptedUnpaidOffers,
         pendingOffersFromBuyers,
+        pendingBuyerCounterOffers,
+        sellerAcceptedUnpaidOffers,
         purchaseOrders: purchasesInProgressOrders,
         salesInProgressOrders,
         showPayoutSetupBanner,
@@ -697,6 +718,8 @@ function HubPage() {
     [
       acceptedUnpaidOffers,
       pendingOffersFromBuyers,
+      pendingBuyerCounterOffers,
+      sellerAcceptedUnpaidOffers,
       purchasesInProgressOrders,
       salesInProgressOrders,
       showPayoutSetupBanner,
@@ -727,7 +750,7 @@ function HubPage() {
     scrollHubToTop()
 
     if (nextSection === 'settings') {
-      navigate('/settings')
+      navigate(STRIPE_SETUP_SETTINGS_PATH)
       return
     }
 
@@ -802,7 +825,7 @@ function HubPage() {
     }
 
     if (nextSection === 'settings') {
-      navigate('/settings')
+      navigate(STRIPE_SETUP_SETTINGS_PATH)
       return
     }
 
@@ -921,6 +944,8 @@ function HubPage() {
           <HubSummarySection
             counts={hubCounts}
             needsAttention={needsAttention}
+            recentActivity={recentActivity}
+            sectionBadges={sectionBadges}
             onNavigate={handleNavigate}
           />
         )
@@ -962,7 +987,7 @@ function HubPage() {
       {showPayoutSetupBanner ? (
         <p className="hub-page__message hub-page__message--notice" role="status">
           A buyer is waiting to pay on a reserved listing.{' '}
-          <Link to="/settings">Complete payout setup</Link> so checkout can begin.
+          <Link to={STRIPE_SETUP_SETTINGS_PATH}>Complete payout setup</Link> so checkout can begin.
         </p>
       ) : null}
 

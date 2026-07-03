@@ -3,6 +3,7 @@ import {
   EMAIL_TEMPLATE_REQUIRED_FIELDS,
   isEmailTemplateKey,
 } from './emailTemplateConfig.js'
+import { normalizeEmailSubject } from './emailFormatting.js'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -156,7 +157,7 @@ export function buildSendGridPayload({
   from,
   replyTo,
 }) {
-  const subject = dynamicTemplateData.subject?.trim()
+  const subject = normalizeEmailSubject(dynamicTemplateData.subject)
   const personalization = {
     to: recipients.map((email) => ({ email })),
     dynamic_template_data: dynamicTemplateData,

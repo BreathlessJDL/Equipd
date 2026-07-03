@@ -4,6 +4,22 @@
  */
 
 /**
+ * Decode HTML entities that must not appear in plain-text email subjects.
+ * @param {unknown} value
+ */
+export function normalizeEmailSubject(value) {
+  return String(value ?? '')
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .trim()
+}
+
+/**
  * @param {string} baseUrl
  * @param {string} path
  */

@@ -14,9 +14,9 @@ export const FULFILMENT_OPTION_TO_ORDER_TYPE = {
 }
 
 export const FULFILMENT_METHOD_LABELS = {
-  [ORDER_TYPES.COLLECTION]: 'I will collect this item',
-  [ORDER_TYPES.BUYER_COURIER]: 'I will arrange a courier / collection service',
-  [ORDER_TYPES.SELLER_DELIVERY]: 'Seller will deliver this item',
+  [ORDER_TYPES.COLLECTION]: 'Collection',
+  [ORDER_TYPES.BUYER_COURIER]: 'Buyer courier',
+  [ORDER_TYPES.SELLER_DELIVERY]: 'Seller delivery',
 }
 
 function isListingOwner(listing, viewerUserId) {

@@ -597,6 +597,52 @@ export async function fetchPublicProfile(userId) {
   }
 }
 
+export async function fetchPublicProfileByUsername(username) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const normalized = normalizeUsername(username)
+
+  if (!normalized || !USERNAME_PATTERN.test(normalized)) {
+    return { data: null, error: new Error('Profile not found.') }
+  }
+
+  let fields = await publicProfileSelectFields()
+  let { data, error } = await supabase
+    .from('profiles_public')
+    .select(fields)
+    .ilike('username', normalized)
+    .maybeSingle()
+
+  if (error && isMissingUsernameColumnError(error)) {
+    usernameColumnAvailable = false
+    return { data: null, error: new Error('Profile not found.') }
+  }
+
+  if (error && isMissingLastActiveColumnError(error)) {
+    fields = publicProfileFieldsWithoutLastActive(fields)
+    ;({ data, error } = await supabase
+      .from('profiles_public')
+      .select(fields)
+      .ilike('username', normalized)
+      .maybeSingle())
+  }
+
+  if (error) {
+    return { data: null, error }
+  }
+
+  if (!data) {
+    return { data: null, error: new Error('Profile not found.') }
+  }
+
+  return {
+    data: withUsernameField(data, usernameColumnAvailable),
+    error: null,
+  }
+}
+
 export async function updateProfile(
   userId,
   {

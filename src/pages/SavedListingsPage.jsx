@@ -54,6 +54,27 @@ function SavedListingsPage() {
     }
   }, [user?.id])
 
+  async function handleActiveListingUnsaved(listingId, saved) {
+    if (!saved) {
+      setActiveListings((current) => current.filter((listing) => listing.id !== listingId))
+      return
+    }
+
+    const { data, error: reloadError } = await fetchSavedListings(user?.id)
+    if (reloadError) {
+      setError(getSavedListingErrorMessage(reloadError))
+      return
+    }
+
+    const listing = (data ?? []).find((entry) => entry.listing?.id === listingId)?.listing
+    if (listing) {
+      setActiveListings((current) => {
+        if (current.some((entry) => entry.id === listingId)) return current
+        return [listing, ...current]
+      })
+    }
+  }
+
   async function handleRemoveUnavailable(listingId) {
     if (!user?.id || removingListingId) return
 
@@ -107,7 +128,12 @@ function SavedListingsPage() {
       {!loading && !error && activeListings.length > 0 ? (
         <div className="listing-browse__grid">
           {activeListings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} variant="home" />
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="home"
+              onSavedChange={(saved) => handleActiveListingUnsaved(listing.id, saved)}
+            />
           ))}
         </div>
       ) : null}

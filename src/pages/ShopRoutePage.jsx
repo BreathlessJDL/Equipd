@@ -2,9 +2,9 @@ import { useParams } from 'react-router-dom'
 import UserShopPage from './UserShopPage'
 
 function ShopRoutePage() {
-  const { userId } = useParams()
+  const { shopParam } = useParams()
 
-  return <UserShopPage userId={userId} />
+  return <UserShopPage shopParam={shopParam} />
 }
 
 export default ShopRoutePage

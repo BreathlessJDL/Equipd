@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './ListingImageGallery.css'
 
-const SWIPE_THRESHOLD_PX = 48
+const SWIPE_THRESHOLD_PX = 40
+const SWIPE_MAX_VERTICAL_DRIFT_PX = 80
 
 function ListingImageGallery({
   images = [],
@@ -10,7 +11,8 @@ function ListingImageGallery({
   savedCountOverlay = null,
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const touchStartXRef = useRef(null)
+  const mainWrapRef = useRef(null)
+  const touchStartRef = useRef(null)
   const hasImages = images.length > 0
   const hasMultiple = images.length > 1
   const safeIndex = hasImages ? Math.min(selectedIndex, images.length - 1) : 0
@@ -22,6 +24,73 @@ function ListingImageGallery({
     }
   }, [images.length, selectedIndex])
 
+  useEffect(() => {
+    const element = mainWrapRef.current
+    if (!element || !hasMultiple) return undefined
+
+    function handleTouchStart(event) {
+      if (event.touches.length !== 1) {
+        touchStartRef.current = null
+        return
+      }
+
+      touchStartRef.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      }
+    }
+
+    function handleTouchMove(event) {
+      const start = touchStartRef.current
+      if (!start || event.touches.length !== 1) return
+
+      const deltaX = event.touches[0].clientX - start.x
+      const deltaY = event.touches[0].clientY - start.y
+
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 8) {
+        event.preventDefault()
+      }
+    }
+
+    function handleTouchEnd(event) {
+      const start = touchStartRef.current
+      touchStartRef.current = null
+      if (!start) return
+
+      const touchEndX = event.changedTouches[0]?.clientX
+      const touchEndY = event.changedTouches[0]?.clientY
+      if (touchEndX == null || touchEndY == null) return
+
+      const deltaX = touchEndX - start.x
+      const deltaY = touchEndY - start.y
+
+      if (Math.abs(deltaY) > SWIPE_MAX_VERTICAL_DRIFT_PX) return
+      if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return
+
+      if (deltaX < 0) {
+        setSelectedIndex((index) => (index === images.length - 1 ? 0 : index + 1))
+      } else {
+        setSelectedIndex((index) => (index === 0 ? images.length - 1 : index - 1))
+      }
+    }
+
+    function handleTouchCancel() {
+      touchStartRef.current = null
+    }
+
+    element.addEventListener('touchstart', handleTouchStart, { passive: true })
+    element.addEventListener('touchmove', handleTouchMove, { passive: false })
+    element.addEventListener('touchend', handleTouchEnd, { passive: true })
+    element.addEventListener('touchcancel', handleTouchCancel, { passive: true })
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart)
+      element.removeEventListener('touchmove', handleTouchMove)
+      element.removeEventListener('touchend', handleTouchEnd)
+      element.removeEventListener('touchcancel', handleTouchCancel)
+    }
+  }, [hasMultiple, images.length])
+
   function showPrevious() {
     if (!hasMultiple) return
     setSelectedIndex((index) => (index === 0 ? images.length - 1 : index - 1))
@@ -30,36 +99,6 @@ function ListingImageGallery({
   function showNext() {
     if (!hasMultiple) return
     setSelectedIndex((index) => (index === images.length - 1 ? 0 : index + 1))
-  }
-
-  function handleTouchStart(event) {
-    if (!hasMultiple || event.touches.length !== 1) return
-    touchStartXRef.current = event.touches[0].clientX
-  }
-
-  function handleTouchEnd(event) {
-    if (!hasMultiple || touchStartXRef.current == null) return
-
-    const touchEndX = event.changedTouches[0]?.clientX
-    if (touchEndX == null) {
-      touchStartXRef.current = null
-      return
-    }
-
-    const deltaX = touchEndX - touchStartXRef.current
-    touchStartXRef.current = null
-
-    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return
-
-    if (deltaX < 0) {
-      showNext()
-    } else {
-      showPrevious()
-    }
-  }
-
-  function handleTouchCancel() {
-    touchStartXRef.current = null
   }
 
   return (
@@ -85,12 +124,7 @@ function ListingImageGallery({
           </div>
         ) : null}
 
-        <div
-          className="listing-gallery__main-wrap"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchCancel}
-        >
+        <div ref={mainWrapRef} className="listing-gallery__main-wrap">
           {saveButton || savedCountOverlay ? (
             <div className="listing-gallery__main-overlays">
               {saveButton ? <div className="listing-gallery__save">{saveButton}</div> : null}

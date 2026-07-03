@@ -33,9 +33,11 @@ import {
 import { getAuthErrorMessage, updateUserEmailWithPassword } from '../lib/auth'
 import {
   getStripeApiErrorMessage,
-  startStripeConnectOnboarding,
   syncStripeConnectStatus,
 } from '../lib/stripe-api'
+import { useStripeConnectOnboarding } from '../hooks/useStripeConnectOnboarding'
+import { STRIPE_SETUP_QUERY_PARAM } from '../lib/stripeConnectOnboarding'
+import { getSellerShopPath } from '../lib/sellerShopUrls'
 import {
   COOKIE_POLICY_PATH,
   PRIVACY_POLICY_PATH,
@@ -65,10 +67,10 @@ function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState('')
-  const [stripeLoading, setStripeLoading] = useState(false)
   const [stripeSyncing, setStripeSyncing] = useState(false)
   const [stripeError, setStripeError] = useState('')
   const [stripeNotice, setStripeNotice] = useState('')
+  const { openOnboarding, loading: stripeOnboardingLoading } = useStripeConnectOnboarding()
   const [usernameSupported, setUsernameSupported] = useState(true)
   const [newEmail, setNewEmail] = useState('')
   const [emailPassword, setEmailPassword] = useState('')
@@ -205,6 +207,21 @@ function SettingsPage() {
       active = false
     }
   }, [searchParams, setSearchParams, user?.id])
+
+  useEffect(() => {
+    if (loading || stripeOnboardingComplete) return undefined
+    if (searchParams.get(STRIPE_SETUP_QUERY_PARAM) !== '1') return undefined
+
+    openOnboarding({
+      onError: setStripeError,
+    })
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete(STRIPE_SETUP_QUERY_PARAM)
+    setSearchParams(nextParams, { replace: true })
+
+    return undefined
+  }, [loading, openOnboarding, searchParams, setSearchParams, stripeOnboardingComplete])
 
   function handleAvatarFileSelected(file, validationError) {
     setSaveSuccess('')
@@ -356,20 +373,12 @@ function SettingsPage() {
     }
   }
 
-  async function handleStripeSetup() {
-    setStripeLoading(true)
+  function handleStripeSetup() {
     setStripeError('')
     setStripeNotice('')
-
-    const { url, error } = await startStripeConnectOnboarding()
-
-    if (error) {
-      setStripeLoading(false)
-      setStripeError(getStripeApiErrorMessage(error))
-      return
-    }
-
-    globalThis.location.assign(url)
+    openOnboarding({
+      onError: setStripeError,
+    })
   }
 
   async function handleEmailChangeSubmit(event) {
@@ -719,10 +728,10 @@ function SettingsPage() {
               <button
                 type="button"
                 className="settings-payout__button"
-                disabled={stripeLoading || stripeSyncing}
+                disabled={stripeOnboardingLoading || stripeSyncing}
                 onClick={handleStripeSetup}
               >
-                {stripeLoading ? 'Opening Stripe…' : 'Complete Stripe setup'}
+                Complete Stripe setup
               </button>
             ) : null}
           </div>
@@ -738,7 +747,10 @@ function SettingsPage() {
                 <p className="settings-preview__meta">No username set</p>
               ) : null}
             </div>
-            <Link className="settings-preview__link" to={`/shop/${user.id}`}>
+            <Link
+              className="settings-preview__link"
+              to={getSellerShopPath({ id: user.id, username: trimmedUsername || profileData?.username })}
+            >
               View public profile
             </Link>
           </div>
@@ -769,7 +781,7 @@ function SettingsPage() {
           </div>
         </aside>
       </div>
-    </section>
+      </section>
   )
 }
 

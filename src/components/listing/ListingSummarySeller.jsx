@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import UserAvatar from '../UserAvatar'
 import { fetchPublicProfile, formatLastActiveLabel, getProfileDisplayName, buildAvatarProfile } from '../../lib/profiles'
+import { getSellerShopPath } from '../../lib/sellerShopUrls'
 import {
   fetchUserCompletedSalesCount,
   fetchUserReviewSummary,
@@ -115,7 +116,7 @@ function ListingSummarySeller({ sellerId }) {
       {loading ? (
         <p className="listing-summary__seller-loading">Loading seller…</p>
       ) : (
-        <Link to={`/shop/${sellerId}`} className="listing-summary__seller-row">
+        <Link to={getSellerShopPath(profile ?? { id: sellerId })} className="listing-summary__seller-row">
           <UserAvatar profile={avatarProfile} size="sm" className="listing-summary__seller-avatar" />
           <span className="listing-summary__seller-body">
             <span className="listing-summary__seller-name-row">

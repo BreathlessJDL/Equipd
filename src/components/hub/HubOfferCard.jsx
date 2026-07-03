@@ -44,7 +44,9 @@ import {
   getHubPaymentHint,
 } from '../../lib/hubItemStatus'
 import {
+  acceptCounterOffer,
   acceptOffer,
+  canBuyerRespondToCounterOffer,
   canBuyerWithdrawOffer,
   canSellerRespondToOffer,
   counterOffer,
@@ -54,6 +56,7 @@ import {
   withdrawOffer,
 } from '../../lib/offers'
 import { canPayNow, isAwaitingSellerSetup, isPaymentComplete } from '../../lib/payments'
+import { STRIPE_SETUP_SETTINGS_PATH } from '../../lib/stripeConnectOnboarding'
 import {
   canBuyerConfirmCourierDelivery,
   canBuyerConfirmOrder,
@@ -95,6 +98,7 @@ function HubOfferCard({
   partyRole = null,
   showWithdraw = false,
   showSellerRespondActions = false,
+  showBuyerCounterActions = false,
   showPaymentStatus = false,
   orderStatusRole = null,
   disputesByOrderId = null,
@@ -163,6 +167,7 @@ function HubOfferCard({
   const thumbnailUrl = listing?.listing_images?.[0]?.url
   const canWithdraw = showWithdraw && canBuyerWithdrawOffer(offer, userId)
   const canRespond = showSellerRespondActions && canSellerRespondToOffer(offer)
+  const canRespondToCounter = showBuyerCounterActions && canBuyerRespondToCounterOffer(offer)
   const isActing = actingOfferId === offer.id
   const isCompletedOrderContext = Boolean(orderStatusRole && order && isOrderCompleted(order))
   const isHubTerminalOrderContext = Boolean(orderStatusRole && order && isOrderHubHistory(order))
@@ -235,6 +240,16 @@ function HubOfferCard({
 
   const workflowPrimaryActions = (
     <>
+      {canRespondToCounter ? (
+        <HubItemButton
+          variant="primary"
+          disabled={isActing}
+          onClick={() => onRunOfferAction(offer.id, 'acceptCounter')}
+        >
+          {isActing ? 'Accepting…' : 'Accept counter'}
+        </HubItemButton>
+      ) : null}
+
       {canRespond ? (
         <HubItemButton
           variant="primary"
@@ -271,6 +286,20 @@ function HubOfferCard({
 
   const workflowSecondaryActions = (
     <>
+      {canRespondToCounter ? (
+        <>
+          <HubItemButton disabled={isActing} onClick={() => onOpenCounter(offer)}>
+            Counter offer
+          </HubItemButton>
+          <HubItemButton
+            disabled={isActing}
+            onClick={() => onRunOfferAction(offer.id, 'decline')}
+          >
+            {isActing ? 'Declining…' : 'Decline'}
+          </HubItemButton>
+        </>
+      ) : null}
+
       {canRespond ? (
         <>
           <HubItemButton disabled={isActing} onClick={() => onOpenCounter(offer)}>
@@ -427,7 +456,7 @@ function HubOfferCard({
       isOrderBuyerConfirmed(order) &&
       order.payout_status === PAYOUT_STATUSES.AWAITING_SELLER_SETUP ? (
         <p className="hub-item-row__details-hint">
-          <Link to="/settings">Complete payout setup</Link>
+          <Link to={STRIPE_SETUP_SETTINGS_PATH}>Complete payout setup</Link>
         </p>
       ) : null}
     </>
@@ -485,6 +514,7 @@ function HubOfferList({
   partyRole = null,
   showWithdraw = false,
   showSellerRespondActions = false,
+  showBuyerCounterActions = false,
   showPaymentStatus = false,
   orderStatusRole = null,
   disputesByOrderId = null,
@@ -537,6 +567,7 @@ function HubOfferList({
     const actionMap = {
       withdraw: () => withdrawOffer(offerId),
       accept: () => acceptOffer(offerId),
+      acceptCounter: () => acceptCounterOffer(offerId),
       decline: () => declineOffer(offerId),
     }
 
@@ -549,7 +580,7 @@ function HubOfferList({
       return
     }
 
-    if (action === 'accept' && acceptedOffer) {
+    if ((action === 'accept' || action === 'acceptCounter') && acceptedOffer) {
       setAcceptedOfferConfirmation(acceptedOffer)
     }
 
@@ -602,6 +633,7 @@ function HubOfferList({
               partyRole={partyRole}
               showWithdraw={showWithdraw}
               showSellerRespondActions={showSellerRespondActions}
+              showBuyerCounterActions={showBuyerCounterActions}
               showPaymentStatus={showPaymentStatus}
               orderStatusRole={orderStatusRole}
               disputesByOrderId={disputesByOrderId}

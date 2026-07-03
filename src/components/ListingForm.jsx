@@ -2,7 +2,6 @@ import ListingImageUpload from './ListingImageUpload'
 import CollectionAddressAutocomplete from './listing/CollectionAddressAutocomplete'
 import ListingLocationAutocomplete from './listing/ListingLocationAutocomplete'
 import { LISTING_CONDITIONS } from '../lib/constants'
-import { shouldAutoFillListingLocationFromAddress } from '../lib/listingLocation'
 import {
   buildBrandSelectOptions,
   buildCategorySelectOptions,
@@ -126,11 +125,7 @@ function ListingForm({
   function handleCollectionAddressPlaceSelected({ formattedAddress, publicLocation }) {
     const updates = { collectionAddress: formattedAddress }
 
-    if (
-      publicLocation?.latitude != null &&
-      publicLocation?.longitude != null &&
-      shouldAutoFillListingLocationFromAddress(form)
-    ) {
+    if (publicLocation?.latitude != null && publicLocation?.longitude != null) {
       updates.locationSearch = publicLocation.displayLabel
       updates.locationPlace = publicLocation
     }

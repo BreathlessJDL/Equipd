@@ -1,0 +1,22 @@
+{{title}}
+{{subtitle}}
+
+Hi {{recipient_first_name}},
+
+{{sender_name}} sent a counter offer on {{listing_title}}.
+
+Counter offer: {{offer_amount}}
+Asking price: {{listing_price}}
+From: {{sender_name}}
+
+Review the counter offer in My Hub to accept, decline, or respond.
+
+{{cta_text}}: {{cta_url}}
+
+{{secondary_text}}: {{secondary_url}}
+
+—
+Equipd — The UK marketplace for used gym equipment.
+Help Centre: {{base_url}}/help
+Contact Support: {{base_url}}/support
+© {{year}} Equipd

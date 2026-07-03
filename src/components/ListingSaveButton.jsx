@@ -68,12 +68,17 @@ function ListingSaveButton({ listing, className = '', onSavedChange }) {
     setLoading(true)
 
     if (saved) {
+      const previousSaved = saved
+      setSaved(false)
+      onSavedChange?.(false)
+
       const { error } = await unsaveListing(user.id, listing.id)
       setLoading(false)
 
-      if (!error) {
-        setSaved(false)
-        onSavedChange?.(false)
+      if (error) {
+        setSaved(previousSaved)
+        onSavedChange?.(true)
+        window.alert(getSavedListingErrorMessage(error))
       }
 
       return

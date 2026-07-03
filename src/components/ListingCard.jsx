@@ -33,7 +33,7 @@ function ListingCardImage({ listing }) {
   return <div className="listing-card__image listing-card__image--placeholder">No photo</div>
 }
 
-function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null }) {
+function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null, onSavedChange }) {
   const showBadge = showNewBadge && isRecentListing(listing)
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
@@ -46,7 +46,7 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
           <ListingCardImage listing={listing} />
         </Link>
         {showBadge ? <span className="listing-card__badge">New</span> : null}
-        <ListingSaveButton listing={listing} />
+        <ListingSaveButton listing={listing} onSavedChange={onSavedChange} />
       </div>
 
       <Link to={listingHref} className="listing-card__body">
@@ -102,7 +102,7 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
   )
 }
 
-function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null }) {
+function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onSavedChange }) {
   const hasCollection = listing.collection_available !== false
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
@@ -114,7 +114,7 @@ function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null }) {
         <Link to={listingHref} className="listing-row__image-link" tabIndex={-1}>
           <ListingCardImage listing={listing} />
         </Link>
-        <ListingSaveButton listing={listing} />
+        <ListingSaveButton listing={listing} onSavedChange={onSavedChange} />
       </div>
 
       <div className="listing-row__content">
@@ -187,9 +187,17 @@ function ListingCard({
   variant = 'grid',
   showNewBadge = false,
   primaryLinkTo = null,
+  onSavedChange,
 }) {
   if (variant === 'row') {
-    return <ListingCardRow listing={listing} showStatus={showStatus} primaryLinkTo={primaryLinkTo} />
+    return (
+      <ListingCardRow
+        listing={listing}
+        showStatus={showStatus}
+        primaryLinkTo={primaryLinkTo}
+        onSavedChange={onSavedChange}
+      />
+    )
   }
 
   return (
@@ -198,6 +206,7 @@ function ListingCard({
       showStatus={showStatus}
       showNewBadge={showNewBadge}
       primaryLinkTo={primaryLinkTo}
+      onSavedChange={onSavedChange}
     />
   )
 }

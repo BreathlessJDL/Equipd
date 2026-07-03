@@ -1,4 +1,4 @@
-import { appUrl, detailRowsHtml } from './emailFormatting.js'
+import { appUrl, detailRowsHtml, normalizeEmailSubject } from './emailFormatting.js'
 import { enrichDynamicData, isDryRunMode, sendTransactionalEmail } from './transactionalEmailCore.js'
 import { isEmailTemplateKey } from './emailTemplateConfig.js'
 import {
@@ -44,6 +44,7 @@ function calculateSellerNetPayout(itemPricePence) {
 
 export const MARKETPLACE_EMAIL_EVENT_KEYS = [
   'offer_received',
+  'counter_offer_received',
   'offer_accepted',
   'payment_successful',
   'new_order_received',
@@ -145,6 +146,8 @@ export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
   switch (eventKey) {
     case 'offer_received':
       return `offer_received:${parts.offerId}:${parts.sellerId}`
+    case 'counter_offer_received':
+      return `counter_offer_received:${parts.offerId}:${parts.recipientUserId}`
     case 'offer_accepted':
       return `offer_accepted:${parts.offerId}:${parts.buyerId}`
     case 'payment_successful':
@@ -247,11 +250,14 @@ export function assertBuyerEmailSafe(dynamicData) {
 }
 
 function layoutFields(baseUrl, fields) {
+  const subject = fields.subject ? normalizeEmailSubject(fields.subject) : fields.subject
+
   return {
     tagline: 'The UK marketplace for used gym equipment.',
     secondary_text: 'Visit the Help Centre',
     secondary_url: appUrl(baseUrl, '/help'),
     ...fields,
+    ...(subject ? { subject } : {}),
   }
 }
 
@@ -262,6 +268,8 @@ export function composeMarketplaceEmailSubject(eventKey, listingTitle, { recipie
   switch (eventKey) {
     case 'offer_received':
       return `You have a new offer on ${title}`
+    case 'counter_offer_received':
+      return `New counter offer on ${title}`
     case 'offer_accepted':
       return `Your offer on ${title} has been accepted`
     case 'payment_successful':
@@ -319,6 +327,55 @@ export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyer
     cta_url: appUrl(baseUrl, '/hub?section=selling&tab=offers'),
     recipient_first_name: recipientFirstName,
     buyer_name: buyerName,
+    listing_title: listingTitle,
+    offer_amount: offerAmount,
+    listing_price: listingPrice,
+    offer_id: offer.id,
+  })
+}
+
+export function composeCounterOfferReceivedDynamicData({
+  baseUrl,
+  offer,
+  listing,
+  buyerProfile,
+  sellerProfile,
+}) {
+  const listingTitle = listing?.title?.trim() || 'your listing'
+  const offerAmount = formatPricePence(offer.amount_pence)
+  const listingPrice = formatPricePence(listing?.price_pence)
+  const isSellerCounter = offer.direction === 'seller_to_buyer'
+  const senderProfile = isSellerCounter ? sellerProfile : buyerProfile
+  const recipientProfile = isSellerCounter ? buyerProfile : sellerProfile
+  const senderName = getMarketplaceUserName(senderProfile, {
+    fallback: isSellerCounter ? 'The seller' : 'A buyer',
+  })
+  const recipientFirstName = getMarketplaceRecipientName(recipientProfile, { fallback: 'there' })
+  const hubPath = isSellerCounter
+    ? `/hub?section=buying&tab=offers&offerId=${offer.id}`
+    : `/hub?section=selling&tab=offers&offerId=${offer.id}`
+
+  const body = `
+    <p>Hi ${recipientFirstName},</p>
+    <p><strong>${senderName}</strong> sent a counter offer on <strong>${listingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      'Counter offer': offerAmount,
+      'Asking price': listingPrice,
+      From: senderName,
+    })}
+    <p>Review the counter offer in My Hub to accept, decline, or respond.</p>
+  `.trim()
+
+  return layoutFields(baseUrl, {
+    subject: composeMarketplaceEmailSubject('counter_offer_received', listingTitle),
+    preheader: `${senderName} countered with ${offerAmount} on ${listingTitle}.`,
+    title: 'New counter offer',
+    subtitle: 'Review and respond when you are ready.',
+    body,
+    cta_text: 'View counter offer',
+    cta_url: appUrl(baseUrl, hubPath),
+    recipient_first_name: recipientFirstName,
+    sender_name: senderName,
     listing_title: listingTitle,
     offer_amount: offerAmount,
     listing_price: listingPrice,
@@ -969,11 +1026,36 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
   const normalizedPayload = normalizeMarketplaceEmailPayload(payload)
   const admin = normalizedPayload.admin
 
-  if (eventKey === 'offer_received' || eventKey === 'offer_accepted') {
+  if (eventKey === 'offer_received' || eventKey === 'offer_accepted' || eventKey === 'counter_offer_received') {
     const context = await loadOfferContext(admin, normalizedPayload.offerId)
     if (!context.ok) return context
 
     const { offer, listing, buyerProfile, sellerProfile } = context
+
+    if (eventKey === 'counter_offer_received') {
+      if (!offer.parent_offer_id) {
+        return { ok: false, skip: true, reason: 'not_counter_offer' }
+      }
+
+      const isSellerCounter = offer.direction === 'seller_to_buyer'
+      const recipientUserId = isSellerCounter ? offer.buyer_id : offer.seller_id
+
+      return {
+        ok: true,
+        templateKey: eventKey,
+        recipientUserId,
+        relatedOfferId: offer.id,
+        relatedListingId: offer.listing_id,
+        idempotencyParts: { offerId: offer.id, recipientUserId },
+        dynamicData: composeCounterOfferReceivedDynamicData({
+          baseUrl,
+          offer,
+          listing,
+          buyerProfile,
+          sellerProfile,
+        }),
+      }
+    }
 
     if (eventKey === 'offer_received') {
       if (offer.parent_offer_id) return { ok: false, skip: true, reason: 'counter_offer' }
@@ -1001,8 +1083,10 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
     if (offer.status !== 'accepted') {
       return { ok: false, skip: true, reason: 'offer_not_accepted' }
     }
-    if ((offer.direction ?? 'buyer_to_seller') !== 'buyer_to_seller') {
-      return { ok: false, skip: true, reason: 'not_buyer_to_seller' }
+
+    const direction = offer.direction ?? 'buyer_to_seller'
+    if (direction !== 'buyer_to_seller' && direction !== 'seller_to_buyer') {
+      return { ok: false, skip: true, reason: 'unsupported_offer_direction' }
     }
 
     return {

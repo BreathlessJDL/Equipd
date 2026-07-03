@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import UserAvatar from '../UserAvatar'
 import { getProfileDisplayName } from '../../lib/profiles'
+import { getSellerShopPath } from '../../lib/sellerShopUrls'
 import './ProfileAvatarLink.css'
 
 export function getProfileLinkLabel(profile, fallbackName = '') {
@@ -17,7 +18,7 @@ function ProfileAvatarLink({ profile, size = 'sm', className = '' }) {
 
   return (
     <Link
-      to={`/shop/${userId}`}
+      to={getSellerShopPath(profile)}
       className={`profile-avatar-link${className ? ` ${className}` : ''}`}
       aria-label={getProfileLinkLabel(profile)}
     >
