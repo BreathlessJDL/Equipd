@@ -364,3 +364,257 @@ create trigger auth_users_email_account_changes
   execute function public.notify_auth_account_emails();
 
 notify pgrst, 'reload schema';
+
+80 x 13
+Please add a manual test script for fulfilment emails so we can test SendGrid delivery without creating fake marketplace orders.
+
+
+
+Create/extend a script like:
+
+
+
+npm run email:test-send -- <template_key> <recipient_email>
+
+
+
+It should support:
+
+- buyer_delivery_details_added
+
+- collection_confirmed
+
+- courier_dispatched
+
+- delivery_confirmed
+
+- buyer_protection_started
+
+
+
+Requirements:
+
+- Use realistic mock dynamic data for each template.
+
+- Use the real SendGrid template IDs from env vars.
+
+- Send to the recipient email passed in.
+
+- Print the template key, template ID, subject, recipient, and SendGrid response.
+
+- Confirm the subject is populated.
+
+- Do not write to marketplace tables.
+
+- Do not create fake orders/offers.
+
+- Do not trigger real business logic.
+
+
+
+Also add a convenience command to send all fulfilment test emails:
+
+
+
+npm run email:test-fulfilment -- <recipient_email>
+
+
+
+This should send all 5 fulfilment templates to the same recipient.
+
+
+
+Run:
+
+npm run test:marketplace-email
+
+npm run build
+
+
+
+Report the exact PowerShell commands I should run.
+
+Phase 5: Finish the remaining transactional emails.
+
+
+
+Use the existing approved Equipd master email layout, SendGrid infrastructure, dynamic subjects, username identity rules, audit logging and idempotency.
+
+
+
+Do not redesign the email template.
+
+
+
+Create templates, previews, SendGrid-ready HTML/plain text, tests, and wiring for the remaining emails:
+
+
+
+Buyer Protection / cases:
+
+1. dispute_opened
+
+2. evidence_requested
+
+3. return_authorised
+
+4. collection_arranged
+
+5. refund_pending
+
+6. refund_completed_case_closed
+
+7. case_closed_no_refund
+
+
+
+Reviews:
+
+8. review_available
+
+9. review_received
+
+
+
+Seller payouts:
+
+10. payout_released
+
+11. seller_onboarding_required
+
+
+
+Account/security:
+
+12. welcome
+
+13. email_changed
+
+14. password_changed
+
+
+
+For each email, provide a clear upload checklist:
+
+- SendGrid template name
+
+- template key
+
+- env var
+
+- HTML file to paste
+
+- TXT file to paste
+
+- subject pattern
+
+- recipient
+
+- trigger
+
+
+
+Important rules:
+
+- Buyer emails must never show Seller Service Fee, “You’ll receive”, seller payout, or payout amount.
+
+- Seller payout emails may show Seller Service Fee and net payout.
+
+- Use Equipd usernames, not email local-parts.
+
+- Use `{{subject}}` subject patch via API, not manual SendGrid UI.
+
+- Add manual test-send support for all new templates.
+
+- Add batch command:
+
+  npm run email:test-all-remaining -- <recipient_email>
+
+- Add/extend SQL migrations and triggers where needed.
+
+- Do not automate Stripe refunds.
+
+- Do not change payment, payout, QR, or case workflow logic.
+
+
+
+Run:
+
+npm run test:marketplace-email
+
+npm run build
+
+
+
+Report:
+
+1. Files changed
+
+2. SendGrid upload checklist
+
+3. SQL migrations to apply
+
+4. Supabase secrets to add
+
+5. Functions to redeploy
+
+6. Manual test commands
+
+import {
+  buildRemainingTestDynamicData,
+  REMAINING_EMAIL_TEMPLATE_KEYS,
+dist/index.html                     1.14 kB │ gzip:   0.53 kB
+dist/assets/index-C_YrjJ97.css    330.52 kB │ gzip:  45.92 kB
+dist/assets/index-CRfWZtCn.js   1,289.79 kB │ gzip: 341.70 kB
+
+✓ built in 2.39s
+  assert(testData?.subject?.trim(), `remaining test data subject populated for ${templateKey}`)
+  if (testData?.order_id) {
+    assert(testData.cta_url?.includes(testData.order_id), `remaining test data CTA for ${templateKey}`)
+  if (testData?.order_id && testData.cta_url?.includes(testData.order_id)) {
+ok: review_available avoids seller payout copy
+ok: first email log reservation sends
+ok: duplicate offer_received idempotency key skips second send
+
+107 passed, 0 failed
+?? scripts/fulfilmentEmailTestSend.mjs
+?? scripts/remainingEmailTestData.mjs
+?? scripts/remainingEmailTestSend.mjs
+?? supabase/functions/_shared/marketplaceEmailComposePhase5.js
+?? supabase/migrations/20260701120000_phase5_marketplace_emails.sql
+Phase 5 transactional emails are implemented end-to-end. npm run test:marketplace-email (107 passed) and npm run build both succeeded.
+
+1. Files changed
+Template definitions (14 new)
+
+emails/templates/disputeOpened.js … passwordChanged.js
+emails/templates/index.js — PHASE5_EMAIL_TEMPLATES, ALL_EMAIL_TEMPLATES
+SendGrid assets (generated)
+
+emails/sendgrid/<key>.html + .txt for all 14 keys
+emails/dist/preview-<key>.html previews
+Runtime / compose
+
+supabase/functions/_shared/marketplaceEmailComposePhase5.js — compose + subjects + idempotency
+supabase/functions/_shared/marketplaceEmailCore.js — event keys, loaders, send wiring
+supabase/functions/_shared/emailTemplateConfig.js — all keys/env vars/fields
+supabase/functions/send-marketplace-email/index.ts — payload validation
+SQL
+
+supabase/migrations/20260701120000_phase5_marketplace_emails.sql
+Test / manual send
+
+scripts/remainingEmailTestData.mjs, scripts/remainingEmailTestSend.mjs
+scripts/email-test-all-remaining.mjs
+scripts/email-test-send.mjs — routes Phase 5 keys
+scripts/test-marketplace-email.mjs — Phase 5 assertions
+scripts/build-email-master.mjs, emails/preview/mockData.js, package.json
+2. SendGrid upload checklist
+Set each template subject to {{subject}} in SendGrid (API sends the real subject).
+
+#	SendGrid template name	Template key	Env var	HTML	TXT	Subject pattern	Recipient	Trigger
+1
+Equipd — Dispute opened
+dispute_opened
+SENDGRID_TEMPLATE_DISPUTE_OPENED
+emails/sendgrid/dispute_opened.html

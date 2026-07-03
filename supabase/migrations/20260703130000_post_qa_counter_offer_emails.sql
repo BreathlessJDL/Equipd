@@ -95,18 +95,18 @@ begin
     return;
   end if;
 
-  if v_secret is null then
+  if v_secret is null or v_secret = 'YOUR_MARKETPLACE_EMAIL_SECRET' then
     raise warning 'notify_marketplace_email skipped: marketplace_email_webhook_secret is not configured in app_config';
     return;
   end if;
 
-  v_url := v_base_url || '/functions/v1/send-marketplace-email';
+  v_url := rtrim(v_base_url, '/') || '/send-marketplace-email';
 
   perform net.http_post(
     url := v_url,
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || v_secret
+      'x-marketplace-email-secret', v_secret
     ),
     body := jsonb_build_object(
       'eventKey', p_event_key,

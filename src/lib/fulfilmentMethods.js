@@ -19,6 +19,12 @@ export const FULFILMENT_METHOD_LABELS = {
   [ORDER_TYPES.SELLER_DELIVERY]: 'Seller delivery',
 }
 
+export const FULFILMENT_METHOD_DESCRIPTIONS = {
+  [ORDER_TYPES.COLLECTION]: 'Pick up from the seller',
+  [ORDER_TYPES.SELLER_DELIVERY]: 'Seller delivers to you',
+  [ORDER_TYPES.BUYER_COURIER]: 'Arrange your own courier',
+}
+
 function isListingOwner(listing, viewerUserId) {
   return Boolean(viewerUserId && listing?.seller_id && listing.seller_id === viewerUserId)
 }

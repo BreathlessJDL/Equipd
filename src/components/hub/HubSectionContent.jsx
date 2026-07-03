@@ -611,6 +611,7 @@ function HubOffersSection({
                 orderStatusRole="buyer"
                 partyRole="seller"
                 showWithdraw
+                showBuyerCounterActions
                 onOfferUpdated={handlers.onOfferUpdated}
                 loadError={buyerOffersLoadError}
                 emptyState={HUB_EMPTY_STATES.buyingOffers}

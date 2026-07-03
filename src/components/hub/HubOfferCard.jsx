@@ -580,7 +580,7 @@ function HubOfferList({
       return
     }
 
-    if ((action === 'accept' || action === 'acceptCounter') && acceptedOffer) {
+    if (action === 'accept' && acceptedOffer && showSellerRespondActions) {
       setAcceptedOfferConfirmation(acceptedOffer)
     }
 

@@ -2,7 +2,7 @@
   display: block;
 }
 
-.hub-summary--mobile {
+.hub-summary--mobile.hub-mobile-summary {
   display: none;
 }
 
@@ -11,8 +11,11 @@
     display: none;
   }
 
-  .hub-summary--mobile {
-    display: block;
+  .hub-summary--mobile.hub-mobile-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+    padding-bottom: var(--space-md);
   }
 
   .hub-dashboard--summary-view .hub-page__lead {
@@ -23,8 +26,6 @@
 }
 
 .hub-mobile-summary {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-xl);
   padding-bottom: var(--space-md);
 }
