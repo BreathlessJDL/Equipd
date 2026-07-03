@@ -3,6 +3,10 @@ import {
   STRIPE_BUSINESS_PROFILE_PRODUCT_DESCRIPTION,
 } from '../_shared/sellerShopUrl.ts'
 import { handleCors, errorResponse, jsonResponse } from '../_shared/cors.ts'
+import {
+  isStripeInvalidConnectAccountError,
+  resetSellerStripeConnectOnboarding,
+} from '../_shared/stripe-connect-account.ts'
 import { getAppBaseUrl, getStripe } from '../_shared/stripe.ts'
 import { getAuthenticatedUser, getSupabaseAdmin } from '../_shared/supabase-admin.ts'
 
@@ -42,6 +46,25 @@ Deno.serve(async (req) => {
 
     let accountId = profile.stripe_account_id
 
+    if (accountId) {
+      try {
+        await stripe.accounts.update(accountId, {
+          business_profile: businessProfile,
+        })
+      } catch (err) {
+        if (isStripeInvalidConnectAccountError(err)) {
+          await resetSellerStripeConnectOnboarding(admin, user.id, { notify: false })
+          accountId = null
+          console.warn(
+            'stripe-connect-onboard cleared invalid Connect account before creating live account',
+            user.id,
+          )
+        } else {
+          throw err
+        }
+      }
+    }
+
     if (!accountId) {
       const { data: authUser, error: authError } = await admin.auth.admin.getUserById(user.id)
 
@@ -68,15 +91,12 @@ Deno.serve(async (req) => {
       const { error: syncError } = await admin.rpc('sync_seller_stripe_onboarding', {
         p_seller_id: user.id,
         p_stripe_account_id: accountId,
+        p_onboarding_complete: false,
       })
 
       if (syncError) {
         return errorResponse(syncError.message, 500)
       }
-    } else {
-      await stripe.accounts.update(accountId, {
-        business_profile: businessProfile,
-      })
     }
 
     const accountLink = await stripe.accountLinks.create({

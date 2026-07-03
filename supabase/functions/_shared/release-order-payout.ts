@@ -1,5 +1,9 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import type Stripe from 'npm:stripe@17.7.0'
+import {
+  isStripeInvalidConnectAccountError,
+  resetSellerStripeConnectOnboarding,
+} from './stripe-connect-account.ts'
 import { isConnectAccountReady } from './stripe.ts'
 
 type OrderRow = {
@@ -64,6 +68,32 @@ function normalizeRpcJsonbArray(data: unknown): PayoutQueueEntry[] {
   }
 
   return [data as PayoutQueueEntry]
+}
+
+async function handleInvalidSellerConnectAccount(
+  admin: SupabaseClient,
+  sellerId: string,
+  orderId: string,
+  { notify = true }: { notify?: boolean } = {},
+): Promise<ReleaseOrderPayoutResult> {
+  await resetSellerStripeConnectOnboarding(admin, sellerId, { notify })
+
+  const { data: order, error } = await admin.rpc('mark_order_payout_awaiting_seller_setup', {
+    p_order_id: orderId,
+  })
+
+  if (error) {
+    console.error('mark_order_payout_awaiting_seller_setup failed', orderId, error.message)
+  }
+
+  return {
+    order_id: orderId,
+    payout_status: order?.payout_status ?? 'awaiting_seller_setup',
+    stripe_transfer_id: null,
+    listing_status: null,
+    released: false,
+    skipped: 'seller_stripe_setup_required',
+  }
 }
 
 async function attemptReleaseOrderPayout(
@@ -152,7 +182,17 @@ export async function releaseOrderPayout(
     throw new Error('Seller payout setup is not complete')
   }
 
-  const account = await stripe.accounts.retrieve(accountId)
+  let account: Stripe.Account
+
+  try {
+    account = await stripe.accounts.retrieve(accountId)
+  } catch (err) {
+    if (isStripeInvalidConnectAccountError(err)) {
+      return handleInvalidSellerConnectAccount(admin, row.seller_id, orderId, { notify: true })
+    }
+
+    throw err
+  }
 
   if (!isConnectAccountReady(account)) {
     throw new Error('Seller Stripe account is not ready for payouts')
@@ -188,6 +228,10 @@ export async function releaseOrderPayout(
       },
     )
   } catch (err) {
+    if (isStripeInvalidConnectAccountError(err)) {
+      return handleInvalidSellerConnectAccount(admin, row.seller_id, orderId, { notify: true })
+    }
+
     const message = err instanceof Error ? err.message : 'Stripe transfer failed'
 
     const { error: failedError } = await admin.rpc('mark_order_payout_failed', {

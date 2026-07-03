@@ -1,5 +1,9 @@
 import { handleCors, errorResponse, jsonResponse } from '../_shared/cors.ts'
 import { releaseReadyOrdersForSeller } from '../_shared/release-order-payout.ts'
+import {
+  isStripeInvalidConnectAccountError,
+  resetSellerStripeConnectOnboarding,
+} from '../_shared/stripe-connect-account.ts'
 import { getStripe, isConnectAccountReady } from '../_shared/stripe.ts'
 import { getAuthenticatedUser, getSupabaseAdmin } from '../_shared/supabase-admin.ts'
 
@@ -38,7 +42,32 @@ Deno.serve(async (req) => {
       })
     }
 
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id)
+    let account
+
+    try {
+      account = await stripe.accounts.retrieve(profile.stripe_account_id)
+    } catch (err) {
+      if (isStripeInvalidConnectAccountError(err)) {
+        const reset = await resetSellerStripeConnectOnboarding(admin, user.id, {
+          notify: false,
+        })
+
+        console.warn(
+          'stripe-connect-sync cleared invalid Connect account',
+          user.id,
+          reset,
+        )
+
+        return jsonResponse({
+          stripe_onboarding_complete: false,
+          stripe_account_reset: true,
+          payments_promoted: 0,
+        })
+      }
+
+      throw err
+    }
+
     const onboardingComplete = isConnectAccountReady(account)
 
     const { data: updatedProfile, error: syncError } = await admin.rpc(

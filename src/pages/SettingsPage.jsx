@@ -189,11 +189,17 @@ function SettingsPage() {
         setStripeError(getStripeApiErrorMessage(error))
       } else {
         setStripeOnboardingComplete(data?.stripe_onboarding_complete ?? false)
-        setStripeNotice(
-          data?.stripe_onboarding_complete
-            ? 'Payout setup complete. Buyers can now pay for accepted offers.'
-            : 'Stripe setup is not complete yet. Continue setup to receive payments.',
-        )
+        if (data?.stripe_account_reset) {
+          setStripeNotice(
+            'Your previous Stripe test account is no longer valid in live mode. Complete live Stripe setup to receive payouts.',
+          )
+        } else {
+          setStripeNotice(
+            data?.stripe_onboarding_complete
+              ? 'Payout setup complete. Buyers can now pay for accepted offers.'
+              : 'Stripe setup is not complete yet. Continue setup to receive payments.',
+          )
+        }
       }
 
       const nextParams = new URLSearchParams(searchParams)
@@ -207,6 +213,44 @@ function SettingsPage() {
       active = false
     }
   }, [searchParams, setSearchParams, user?.id])
+
+  useEffect(() => {
+    if (loading || !user?.id) return undefined
+    if (searchParams.get('stripe')) return undefined
+    if (!stripeOnboardingComplete) return undefined
+
+    let active = true
+
+    async function validateStripeConnectAccount() {
+      setStripeSyncing(true)
+      setStripeError('')
+
+      const { data, error } = await syncStripeConnectStatus()
+
+      if (!active) return
+
+      setStripeSyncing(false)
+
+      if (error) {
+        setStripeError(getStripeApiErrorMessage(error))
+        return
+      }
+
+      setStripeOnboardingComplete(data?.stripe_onboarding_complete ?? false)
+
+      if (data?.stripe_account_reset) {
+        setStripeNotice(
+          'Your previous Stripe test account is no longer valid in live mode. Complete live Stripe setup to receive payouts.',
+        )
+      }
+    }
+
+    validateStripeConnectAccount()
+
+    return () => {
+      active = false
+    }
+  }, [loading, searchParams, stripeOnboardingComplete, user?.id])
 
   useEffect(() => {
     if (loading || stripeOnboardingComplete) return undefined

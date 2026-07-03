@@ -171,7 +171,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               disabled={acting}
               onClick={() => runAction('accept')}
             >
-              Accept offer
+              {acting ? 'Accepting…' : 'Accept offer'}
             </button>
             <button
               type="button"
@@ -187,7 +187,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               disabled={acting}
               onClick={() => runAction('decline')}
             >
-              Decline
+              {acting ? 'Declining…' : 'Decline'}
             </button>
           </div>
         ) : null}
@@ -200,7 +200,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               disabled={acting}
               onClick={() => runAction('acceptCounter')}
             >
-              Accept counter-offer
+              {acting ? 'Accepting…' : 'Accept counter-offer'}
             </button>
             <button
               type="button"
@@ -216,7 +216,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               disabled={acting}
               onClick={() => runAction('decline')}
             >
-              Decline
+              {acting ? 'Declining…' : 'Decline'}
             </button>
           </div>
         ) : null}

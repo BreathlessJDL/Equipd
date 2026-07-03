@@ -10,6 +10,8 @@ function logFunctionInvocationDiagnostics(
   functionName,
   { mode, url, method, hasAccessToken, accessTokenLength, requestBody },
 ) {
+  if (!import.meta.env.DEV) return
+
   console.group(`[stripe-api] invoke ${functionName}`)
   console.log('VITE_SUPABASE_FUNCTIONS_URL set:', Boolean(localFunctionsUrl))
   console.log('VITE_SUPABASE_FUNCTIONS_URL raw:', import.meta.env.VITE_SUPABASE_FUNCTIONS_URL ?? '(undefined)')
@@ -178,7 +180,9 @@ export async function syncStripeConnectStatus() {
 }
 
 export async function createCheckoutSession(paymentId) {
-  console.log('[stripe-api] createCheckoutSession payment_id:', paymentId)
+  if (import.meta.env.DEV) {
+    console.log('[stripe-api] createCheckoutSession payment_id:', paymentId)
+  }
 
   const { data, error } = await invokeFunction('stripe-create-checkout', {
     body: { payment_id: paymentId },
