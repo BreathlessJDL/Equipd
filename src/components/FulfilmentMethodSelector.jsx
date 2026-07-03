@@ -15,6 +15,8 @@ function FulfilmentMethodSelector({
   name = 'fulfilment-method',
   disabled = false,
   compact = false,
+  hideLegend = false,
+  modal = false,
 }) {
   if (!options?.length) return null
 
@@ -22,11 +24,14 @@ function FulfilmentMethodSelector({
     <fieldset
       className={`fulfilment-method-selector${
         compact ? ' fulfilment-method-selector--compact' : ''
-      }`}
+      }${modal ? ' fulfilment-method-selector--modal' : ''}`}
+      aria-label={hideLegend ? 'Fulfilment options' : undefined}
     >
-      <legend className="fulfilment-method-selector__title">
-        How will you receive this item?
-      </legend>
+      {hideLegend ? null : (
+        <legend className="fulfilment-method-selector__title">
+          How will you receive this item?
+        </legend>
+      )}
       <div className="fulfilment-method-selector__options">
         {options.map(({ orderType, label, disabled: optionDisabled, disabledReason }) => {
           const isDisabled = disabled || optionDisabled

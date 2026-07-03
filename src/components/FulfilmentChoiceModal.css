@@ -1,0 +1,47 @@
+.fulfilment-choice-modal__dialog {
+  width: min(100%, 44rem);
+  padding: 1.5rem;
+}
+
+.fulfilment-choice-modal__title {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.fulfilment-choice-modal__error {
+  margin: 0.75rem 0 0;
+  color: var(--color-error, #b00020);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.fulfilment-choice-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+}
+
+.fulfilment-choice-modal__button {
+  width: 100%;
+  justify-content: center;
+}
+
+.fulfilment-choice-modal .fulfilment-method-selector {
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .fulfilment-choice-modal__dialog {
+    padding: 1.25rem;
+  }
+
+  .fulfilment-choice-modal__title {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+  }
+}

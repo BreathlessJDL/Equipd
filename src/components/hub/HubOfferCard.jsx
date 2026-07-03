@@ -266,6 +266,7 @@ function HubOfferCard({
             offer={offer}
             payment={payment}
             payingPaymentId={payingPaymentId}
+            fulfilmentInModal
             onPayStart={onPayStart}
             onPayComplete={onPayComplete}
           />

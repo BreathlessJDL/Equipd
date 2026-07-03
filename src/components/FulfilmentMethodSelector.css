@@ -117,6 +117,14 @@
   padding: 0.85rem;
 }
 
+.fulfilment-method-selector--modal .fulfilment-method-selector__options {
+  gap: 0.75rem;
+}
+
+.fulfilment-method-selector--modal .fulfilment-method-selector__option {
+  min-height: 6.75rem;
+}
+
 @media (max-width: 720px) {
   .fulfilment-method-selector__options {
     grid-template-columns: 1fr;
