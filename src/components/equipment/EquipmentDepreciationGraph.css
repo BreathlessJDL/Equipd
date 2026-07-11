@@ -1,0 +1,257 @@
+.equipment-depreciation-graph {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
+.equipment-depreciation-graph__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.85rem 1.5rem;
+}
+
+.equipment-depreciation-graph__heading {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+.equipment-depreciation-graph__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+}
+
+.equipment-depreciation-graph__subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.equipment-depreciation-graph__current-badge {
+  display: grid;
+  gap: 0.15rem;
+  flex: 0 1 auto;
+  min-width: min(100%, 10.5rem);
+  padding: 0.7rem 0.95rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-orange) 28%, var(--color-border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--color-orange) 8%, #fff),
+      color-mix(in srgb, var(--color-bg) 55%, #fff)
+    );
+  text-align: right;
+}
+
+.equipment-depreciation-graph__current-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.equipment-depreciation-graph__current-badge strong {
+  font-size: clamp(1.35rem, 2.6vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--color-navy);
+}
+
+.equipment-depreciation-graph__chart-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: clamp(300px, 38vw, 380px);
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.equipment-depreciation-graph__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.equipment-depreciation-graph__axis {
+  stroke: color-mix(in srgb, var(--color-border) 55%, var(--color-muted));
+  stroke-width: 1.25;
+}
+
+.equipment-depreciation-graph__grid-line {
+  stroke: color-mix(in srgb, var(--color-border) 22%, transparent);
+  stroke-width: 1;
+}
+
+.equipment-depreciation-graph__line {
+  fill: none;
+  stroke: var(--color-orange);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.equipment-depreciation-graph__point {
+  fill: color-mix(in srgb, var(--color-orange) 55%, #fff);
+  stroke: #fff;
+  stroke-width: 2;
+  cursor: pointer;
+  outline: none;
+}
+
+.equipment-depreciation-graph__point:focus-visible {
+  stroke: var(--color-navy);
+  stroke-width: 3;
+}
+
+.equipment-depreciation-graph__point--highlighted {
+  fill: var(--color-orange);
+}
+
+.equipment-depreciation-graph__point--current {
+  fill: var(--color-navy);
+  stroke: #fff;
+  stroke-width: 3;
+}
+
+.equipment-depreciation-graph__current-point-label {
+  fill: var(--color-navy);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.equipment-depreciation-graph__axis-label {
+  fill: color-mix(in srgb, var(--color-navy) 72%, var(--color-muted));
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.equipment-depreciation-graph__axis-label--y {
+  text-anchor: end;
+}
+
+.equipment-depreciation-graph__axis-label--x {
+  font-size: 12.5px;
+}
+
+.equipment-depreciation-graph__tooltip {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -120%);
+  display: grid;
+  gap: 0.1rem;
+  min-width: 5.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, #fff);
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(15, 33, 55, 0.12);
+  pointer-events: none;
+  text-align: center;
+}
+
+.equipment-depreciation-graph__tooltip span {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.equipment-depreciation-graph__tooltip strong {
+  font-size: 0.95rem;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.equipment-depreciation-graph__caption {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+@media (min-width: 900px) {
+  .equipment-depreciation-graph__chart-wrap {
+    height: 370px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .equipment-depreciation-graph__chart-wrap {
+    height: 390px;
+  }
+}
+
+@media (max-width: 720px) {
+  .equipment-depreciation-graph,
+  .equipment-depreciation-graph--compact {
+    gap: 0.85rem;
+  }
+
+  .equipment-depreciation-graph__header {
+    display: grid;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .equipment-depreciation-graph__current-badge {
+    order: 1;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+  }
+
+  .equipment-depreciation-graph__heading {
+    order: 2;
+  }
+
+  .equipment-depreciation-graph__chart-wrap {
+    height: 270px;
+  }
+
+  .equipment-depreciation-graph__line {
+    stroke-width: 3.75;
+  }
+
+  .equipment-depreciation-graph__axis-label {
+    font-size: 12px;
+  }
+
+  .equipment-depreciation-graph__axis-label--x {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 430px) {
+  .equipment-depreciation-graph__chart-wrap {
+    height: 260px;
+  }
+}
+
+@media (max-width: 360px) {
+  .equipment-depreciation-graph__chart-wrap {
+    height: 250px;
+  }
+}

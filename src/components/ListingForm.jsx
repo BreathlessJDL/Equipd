@@ -9,32 +9,10 @@ import {
 } from '../lib/listingOptions'
 import { parsePriceToPence } from '../lib/listings'
 import SellerPayoutSummary from './SellerPayoutSummary'
+import { emptyListingForm } from '../lib/createListingForm'
 import './ListingForm.css'
 
-export const emptyListingForm = {
-  title: '',
-  description: '',
-  categoryId: '',
-  brand: '',
-  condition: '',
-  rating: '',
-  model: '',
-  colour: '',
-  length: '',
-  width: '',
-  height: '',
-  locationSearch: '',
-  locationPlace: null,
-  deliveryOptions: [],
-  deliveryRangeMiles: '',
-  collectionAddress: '',
-  collectionPhone: '',
-  collectionInstructions: '',
-  price: '',
-  collectionAvailable: true,
-  courierAvailable: false,
-  deliveryNotes: '',
-}
+export { emptyListingForm }
 
 const DELIVERY_OPTIONS = [
   {

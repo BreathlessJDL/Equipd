@@ -1,15 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import LeaveListingDraftModal from '../components/listing/LeaveListingDraftModal'
-import ListingForm, { emptyListingForm } from '../components/ListingForm'
+import ListingForm from '../components/ListingForm'
 import '../components/ListingForm.css'
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 import { usePageTitle } from '../hooks/usePageTitle'
 import {
   createListingFormSnapshot,
+  emptyListingForm,
   isCreateListingFormChangedSinceSave,
   isCreateListingFormDirty,
 } from '../lib/createListingForm'
+import {
+  buildListingFormPrefillFromEquipmentProduct,
+  buildListingFormPrefillFromValuation,
+  mergeListingFormPrefill,
+  parseValuationListingSearchParams,
+} from '../lib/createListingFromEquipment'
+import { fetchEquipmentProductByKey } from '../lib/equipmentProducts'
 import {
   getImageErrorMessage,
   uploadListingImages,
@@ -32,11 +40,24 @@ import { useAuth } from '../hooks/useAuth'
 function AddListingPage() {
   usePageTitle('Create Listing')
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const valuationParams = useMemo(
+    () => parseValuationListingSearchParams(searchParams),
+    [searchParams],
+  )
+  const equipmentKeyParam = valuationParams?.equipmentKey
+    || searchParams.get('equipment')?.trim()
+    || ''
+  const isValuationPrefill = Boolean(valuationParams)
   const { user } = useAuth()
   const [form, setForm] = useState(emptyListingForm)
   const [categories, setCategories] = useState([])
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [categoriesError, setCategoriesError] = useState('')
+  const [equipmentPrefillLoading, setEquipmentPrefillLoading] = useState(
+    Boolean(equipmentKeyParam || isValuationPrefill),
+  )
+  const [equipmentPrefillError, setEquipmentPrefillError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
@@ -112,6 +133,61 @@ function AddListingPage() {
       active = false
     }
   }, [])
+
+  useEffect(() => {
+    if (loadingCategories) return undefined
+
+    if (!equipmentKeyParam && !isValuationPrefill) return undefined
+
+    let active = true
+
+    async function prefillFromEquipment() {
+      setEquipmentPrefillLoading(true)
+      setEquipmentPrefillError('')
+
+      if (!equipmentKeyParam) {
+        if (!active) return
+        setForm((current) => mergeListingFormPrefill(
+          current,
+          buildListingFormPrefillFromValuation({ valuationParams, categories }),
+        ))
+        setEquipmentPrefillLoading(false)
+        return
+      }
+
+      const result = await fetchEquipmentProductByKey(equipmentKeyParam)
+      if (!active) return
+
+      if (result.error) {
+        setEquipmentPrefillError(result.error.message || 'Unable to load equipment product.')
+        setEquipmentPrefillLoading(false)
+        return
+      }
+
+      if (result.notFound || !result.product) {
+        setEquipmentPrefillError('We could not find that equipment product.')
+        setEquipmentPrefillLoading(false)
+        return
+      }
+
+      const prefill = isValuationPrefill
+        ? buildListingFormPrefillFromValuation({
+          product: result.product,
+          categories,
+          valuationParams,
+        })
+        : buildListingFormPrefillFromEquipmentProduct(result.product, categories)
+
+      setForm((current) => mergeListingFormPrefill(current, prefill))
+      setEquipmentPrefillLoading(false)
+    }
+
+    prefillFromEquipment()
+
+    return () => {
+      active = false
+    }
+  }, [equipmentKeyParam, isValuationPrefill, loadingCategories, categories, valuationParams])
 
   function updateField(field, value) {
     if (field && typeof field === 'object' && !Array.isArray(field)) {
@@ -351,11 +427,13 @@ function AddListingPage() {
     setLeaveModalError('')
   }
 
-  if (loadingCategories) {
+  if (loadingCategories || equipmentPrefillLoading) {
     return (
       <div className="listing-form-page">
         <h1 className="listing-form-page__title">Sell equipment</h1>
-        <p className="listing-form__footnote">Loading categories…</p>
+        <p className="listing-form__footnote">
+          {loadingCategories ? 'Loading categories…' : 'Loading equipment details…'}
+        </p>
       </div>
     )
   }
@@ -374,6 +452,12 @@ function AddListingPage() {
   return (
     <div className="listing-form-page">
       <h1 className="listing-form-page__title">Sell equipment</h1>
+
+      {equipmentPrefillError ? (
+        <p className="listing-form__message listing-form__message--error" role="status">
+          {equipmentPrefillError}
+        </p>
+      ) : null}
 
       <ListingForm
         form={form}

@@ -1,4 +1,32 @@
-import { emptyListingForm } from '../components/ListingForm'
+export const emptyListingForm = {
+  title: '',
+  description: '',
+  categoryId: '',
+  brand: '',
+  condition: '',
+  rating: '',
+  model: '',
+  colour: '',
+  length: '',
+  width: '',
+  height: '',
+  locationSearch: '',
+  locationPlace: null,
+  deliveryOptions: [],
+  deliveryRangeMiles: '',
+  collectionAddress: '',
+  collectionPhone: '',
+  collectionInstructions: '',
+  price: '',
+  collectionAvailable: true,
+  courierAvailable: false,
+  deliveryNotes: '',
+  equipmentProductId: '',
+  equipmentProductKey: '',
+  equipmentProductFamily: '',
+  estimatedOriginalRrp: null,
+  estimatedOriginalRrpCurrency: 'GBP',
+}
 
 function hasText(value) {
   return Boolean(String(value ?? '').trim())
