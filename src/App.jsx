@@ -11,14 +11,33 @@ import { AuthModalProvider } from './hooks/useAuthModal'
 import { StripeConnectOnboardingProvider } from './hooks/useStripeConnectOnboarding'
 import { CookieConsentProvider } from './hooks/useCookieConsent'
 import AdminCasesPage from './pages/AdminCasesPage'
+import AdminIntelligencePage from './pages/AdminIntelligencePage'
+import AdminIntelligenceImportPage from './pages/AdminIntelligenceImportPage'
+import AdminIntelligenceBatchSyncPage from './pages/AdminIntelligenceBatchSyncPage'
+import AdminIntelligenceMarketSyncPage from './pages/AdminIntelligenceMarketSyncPage'
+import AdminIntelligenceEvidencePage from './pages/AdminIntelligenceEvidencePage'
+import AdminIntelligenceCoreProductsPage from './pages/AdminIntelligenceCoreProductsPage'
+import AdminIntelligenceProductsPage from './pages/AdminIntelligenceProductsPage'
+import AdminIntelligenceProductContentPage from './pages/AdminIntelligenceProductContentPage'
+import AdminEquipmentCatalogueNeedsAttentionPage from './pages/AdminEquipmentCatalogueNeedsAttentionPage'
+import AdminEquipmentCatalogueAddProductPage from './pages/AdminEquipmentCatalogueAddProductPage'
+import AdminEquipmentCatalogueImportsPage from './pages/AdminEquipmentCatalogueImportsPage'
+import AdminEquipmentCatalogueConsolesPage from './pages/AdminEquipmentCatalogueConsolesPage'
 import AdminOrdersPage from './pages/AdminOrdersPage'
+import AdminPriceGuideImportPage from './pages/AdminPriceGuideImportPage'
 import AdminSupportPage from './pages/AdminSupportPage'
 import AddListingPage from './pages/AddListingPage'
 import BrowsePage from './pages/BrowsePage'
+import BrandsPage from './pages/BrandsPage'
+import BrandPage from './pages/BrandPage'
 import EditListingPage from './pages/EditListingPage'
 import AboutPage from './pages/AboutPage'
+import EquipmentModelPage from './pages/EquipmentModelPage'
 import HelpCentrePage from './pages/HelpCentrePage'
 import HelpArticlePage from './pages/HelpArticlePage'
+import PriceGuidePage from './pages/PriceGuidePage'
+import SellRedirectPage from './pages/SellRedirectPage'
+import ValuationPage from './pages/ValuationPage'
 import SupportFlowPage from './pages/SupportFlowPage'
 import HomePage from './pages/HomePage'
 import ListingDetailPage from './pages/ListingDetailPage'
@@ -56,12 +75,18 @@ function App() {
           <Route element={<AppShell />}>
             <Route index element={<HomePage />} />
             <Route path="browse" element={<BrowsePage />} />
+            <Route path="brands" element={<BrandsPage />} />
+            <Route path="brands/:brandSlug" element={<BrandPage />} />
             <Route
               path="buyer-protection"
               element={<Navigate to={BUYER_PROTECTION_HELP_PATH} replace />}
             />
             <Route path="how-it-works" element={<Navigate to="/help" replace />} />
             <Route path="about" element={<AboutPage />} />
+            <Route path="price-guide" element={<PriceGuidePage />} />
+            <Route path="equipment/:canonical_product_key" element={<EquipmentModelPage />} />
+            <Route path="valuation" element={<ValuationPage />} />
+            <Route path="sell" element={<SellRedirectPage />} />
             <Route path="help" element={<HelpCentrePage />} />
             <Route path="help/:slug" element={<HelpArticlePage />} />
             <Route path="support" element={<SupportFlowPage />} />
@@ -178,6 +203,118 @@ function App() {
               element={
                 <AdminProtectedRoute>
                   <AdminOrdersPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/price-guide/import"
+              element={
+                <AdminProtectedRoute>
+                  <AdminPriceGuideImportPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence"
+              element={
+                <AdminProtectedRoute>
+                  <Navigate to="/admin/intelligence/products" replace />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/source-rows"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligencePage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/import"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceImportPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/imports"
+              element={
+                <AdminProtectedRoute>
+                  <AdminEquipmentCatalogueImportsPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/needs-attention"
+              element={
+                <AdminProtectedRoute>
+                  <AdminEquipmentCatalogueNeedsAttentionPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/consoles"
+              element={
+                <AdminProtectedRoute>
+                  <AdminEquipmentCatalogueConsolesPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/add-product"
+              element={
+                <AdminProtectedRoute>
+                  <AdminEquipmentCatalogueAddProductPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/market-sync"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceMarketSyncPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/batch-sync"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceBatchSyncPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/products"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceProductsPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/product-content"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceProductContentPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/core-products"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceCoreProductsPage />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/intelligence/original-prices-lifecycle"
+              element={
+                <AdminProtectedRoute>
+                  <AdminIntelligenceEvidencePage />
                 </AdminProtectedRoute>
               }
             />
