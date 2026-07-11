@@ -50,3 +50,4 @@ technogym-model-variant-report.md
 # Build-generated sitemap (created by npm run build)
 /public/sitemap.xml
 
+.vercel
