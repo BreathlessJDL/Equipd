@@ -1,11 +1,14 @@
-import { appUrl, detailRowsHtml } from './emailFormatting.js'
+import { appUrl, detailRowsHtml, normalizeEmailSubject } from './emailFormatting.js'
 
 function layoutFields(baseUrl, fields) {
+  const subject = fields.subject ? normalizeEmailSubject(fields.subject) : fields.subject
+
   return {
     tagline: 'The UK marketplace for used gym equipment.',
     secondary_text: 'Visit the Help Centre',
     secondary_url: appUrl(baseUrl, '/help'),
     ...fields,
+    ...(subject ? { subject } : {}),
   }
 }
 
