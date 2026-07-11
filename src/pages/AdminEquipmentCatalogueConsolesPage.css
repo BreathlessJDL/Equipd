@@ -1,0 +1,117 @@
+.admin-consoles__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+  margin: 1rem 0 1.25rem;
+}
+
+.admin-consoles__toolbar label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.admin-consoles__toolbar select,
+.admin-consoles__form input,
+.admin-consoles__form select,
+.admin-consoles__form textarea,
+.admin-consoles__section-head select {
+  min-width: 12rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.admin-consoles__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #445;
+}
+
+.admin-consoles__section {
+  margin-bottom: 2rem;
+}
+
+.admin-consoles__section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+.admin-consoles__table-wrap {
+  overflow-x: auto;
+}
+
+.admin-consoles__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-consoles__table th,
+.admin-consoles__table td {
+  border-bottom: 1px solid #e4e7ec;
+  padding: 0.55rem 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-consoles__thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  background: #f6f7f9;
+}
+
+.admin-consoles__muted {
+  color: #667085;
+  font-size: 0.8rem;
+}
+
+.admin-consoles__link {
+  background: none;
+  border: none;
+  color: #175cd3;
+  cursor: pointer;
+  padding: 0;
+}
+
+.admin-consoles__form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.admin-consoles__form label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.875rem;
+}
+
+.admin-consoles__form-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-consoles__form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.admin-consoles__form-actions button {
+  padding: 0.5rem 0.9rem;
+}
+
+.admin-consoles__alert {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+}
+
+.admin-consoles__message {
+  color: #027a48;
+}

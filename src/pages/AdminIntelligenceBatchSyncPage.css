@@ -1,0 +1,101 @@
+.admin-intelligence-batch-sync__priority-panel {
+  margin-bottom: 1.25rem;
+}
+
+.admin-intelligence-batch-sync__priority-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-intelligence-batch-sync__priority-table {
+  min-width: 72rem;
+}
+
+.admin-intelligence-batch-sync__reason-cell {
+  max-width: 28rem;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.admin-intelligence-batch-sync__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-intelligence-batch-sync__checkbox-field {
+  display: flex;
+  align-items: flex-end;
+}
+
+.admin-intelligence-batch-sync__checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.admin-intelligence-batch-sync__defaults {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.admin-intelligence-batch-sync__report-panel {
+  margin-bottom: 1.25rem;
+}
+
+.admin-intelligence-batch-sync__subheading {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.admin-intelligence-batch-sync__group-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.admin-intelligence-batch-sync__group-list li + li {
+  margin-top: 0.35rem;
+}
+
+.admin-intelligence-batch-sync__table {
+  min-width: 64rem;
+}
+
+.admin-intelligence-batch-sync__status {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.admin-intelligence-batch-sync__status--synced,
+.admin-intelligence-batch-sync__status--dry_run {
+  background: color-mix(in srgb, #16a34a 15%, transparent);
+  color: #166534;
+}
+
+.admin-intelligence-batch-sync__status--skipped {
+  background: color-mix(in srgb, #64748b 15%, transparent);
+  color: #334155;
+}
+
+.admin-intelligence-batch-sync__status--failed {
+  background: color-mix(in srgb, #dc2626 15%, transparent);
+  color: #991b1b;
+}
+
+.admin-intelligence-batch-sync__status--no_candidates {
+  background: color-mix(in srgb, #d97706 15%, transparent);
+  color: #92400e;
+}

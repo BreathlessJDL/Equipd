@@ -1,0 +1,348 @@
+.admin-price-guide-import {
+  max-width: 80rem;
+}
+
+.admin-price-guide-import__header {
+  margin-bottom: var(--space-lg);
+}
+
+.admin-price-guide-import__back {
+  margin: 0 0 var(--space-sm);
+}
+
+.admin-price-guide-import__back a,
+.admin-price-guide-import__link {
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.admin-price-guide-import__back a:hover,
+.admin-price-guide-import__link:hover {
+  text-decoration: underline;
+}
+
+.admin-price-guide-import__title {
+  margin: 0 0 var(--space-xs);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__lead {
+  margin: 0;
+  color: var(--color-muted);
+  max-width: 44rem;
+  line-height: 1.55;
+}
+
+.admin-price-guide-import__panel {
+  display: grid;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.admin-price-guide-import__panel-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin-price-guide-import__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__input,
+.admin-price-guide-import__select,
+.admin-price-guide-import__textarea,
+.admin-price-guide-import__cell-input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--color-navy);
+  font: inherit;
+}
+
+.admin-price-guide-import__textarea {
+  min-height: 10rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.admin-price-guide-import__cell-input {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.admin-price-guide-import__methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-price-guide-import__method {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-price-guide-import__method--active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  color: var(--color-primary);
+}
+
+.admin-price-guide-import__selected {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-bg) 80%, #fff);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.admin-price-guide-import__selected strong {
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-price-guide-import__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  background: #fff;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admin-price-guide-import__matches {
+  display: grid;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.admin-price-guide-import__match {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.admin-price-guide-import__match:hover,
+.admin-price-guide-import__match--selected {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 6%, #fff);
+}
+
+.admin-price-guide-import__match-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__match-slug {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.admin-price-guide-import__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.admin-price-guide-import__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-price-guide-import__button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-price-guide-import__button--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.admin-price-guide-import__button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.admin-price-guide-import__button--secondary {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__button--danger {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, var(--color-border));
+  background: #fff;
+  color: var(--color-danger);
+}
+
+.admin-price-guide-import__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-price-guide-import__stat {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 7rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-bg) 80%, #fff);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.admin-price-guide-import__stat span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.admin-price-guide-import__stat strong {
+  color: var(--color-navy);
+  font-size: 1.1rem;
+}
+
+.admin-price-guide-import__stat--ok strong {
+  color: var(--color-success);
+}
+
+.admin-price-guide-import__stat--bad strong {
+  color: var(--color-danger);
+}
+
+.admin-price-guide-import__message {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius);
+  line-height: 1.5;
+}
+
+.admin-price-guide-import__message--success {
+  background: color-mix(in srgb, var(--color-success) 10%, #fff);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 22%, var(--color-border));
+}
+
+.admin-price-guide-import__message--error {
+  background: color-mix(in srgb, var(--color-danger) 8%, #fff);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--color-border));
+}
+
+.admin-price-guide-import__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.admin-price-guide-import__table {
+  width: 100%;
+  min-width: 64rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.admin-price-guide-import__table th,
+.admin-price-guide-import__table td {
+  padding: 0.55rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-price-guide-import__table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  background: color-mix(in srgb, var(--color-bg) 70%, #fff);
+}
+
+.admin-price-guide-import__table tr[data-invalid='true'] {
+  background: color-mix(in srgb, var(--color-danger) 5%, #fff);
+}
+
+.admin-price-guide-import__errors {
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--color-danger);
+}
+
+.admin-price-guide-import__sample {
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-bg) 85%, #fff);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  white-space: pre;
+  color: var(--color-navy);
+}
+
+.admin-price-guide-import__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}

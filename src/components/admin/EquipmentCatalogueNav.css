@@ -1,0 +1,182 @@
+.equipment-catalogue-nav {
+  display: grid;
+  gap: 1.15rem;
+  margin-bottom: 1.5rem;
+}
+
+.equipment-catalogue-nav__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.equipment-catalogue-nav__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.55rem, 2.4vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+}
+
+.equipment-catalogue-nav__subtitle {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.equipment-catalogue-nav__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.equipment-catalogue-nav__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-bg) 70%, #fff);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.equipment-catalogue-nav__tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 0.65rem;
+  color: var(--color-navy);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.equipment-catalogue-nav__tab:hover {
+  background: color-mix(in srgb, var(--color-surface) 80%, #fff);
+}
+
+.equipment-catalogue-nav__tab--active {
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(15, 33, 55, 0.06);
+  color: var(--color-navy);
+}
+
+.equipment-catalogue-nav__legacy {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.equipment-catalogue-nav__legacy summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.equipment-catalogue-nav__legacy-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin-top: 0.65rem;
+}
+
+.equipment-catalogue-nav__legacy-links a {
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.equipment-catalogue-nav__legacy-links a:hover {
+  color: var(--color-orange);
+}
+
+.equipment-catalogue-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.equipment-catalogue-summary__card {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: var(--color-surface);
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.equipment-catalogue-summary__card:hover,
+.equipment-catalogue-summary__card--active {
+  border-color: color-mix(in srgb, var(--color-orange) 45%, var(--color-border));
+  box-shadow: 0 8px 20px rgba(15, 33, 55, 0.05);
+}
+
+.equipment-catalogue-summary__card span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.equipment-catalogue-summary__card strong {
+  font-size: 1.2rem;
+  color: var(--color-navy);
+}
+
+.equipment-catalogue-quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.equipment-catalogue-quick-filters__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 55%, #fff);
+  color: var(--color-navy);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.equipment-catalogue-quick-filters__chip--active {
+  border-color: color-mix(in srgb, var(--color-orange) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-orange) 10%, #fff);
+}
+
+.equipment-catalogue-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg) 70%, #fff);
+  color: var(--color-navy);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.equipment-catalogue-status--ready {
+  background: color-mix(in srgb, #1f8a5b 12%, #fff);
+  color: #146644;
+}
+
+.equipment-catalogue-status--attention {
+  background: color-mix(in srgb, var(--color-orange) 12%, #fff);
+  color: color-mix(in srgb, var(--color-orange) 80%, var(--color-navy));
+}
