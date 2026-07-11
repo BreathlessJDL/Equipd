@@ -46,3 +46,7 @@ technogym-model-variant-report.md
 
 # Supabase CLI temp
 /supabase/.temp/
+
+# Build-generated sitemap (created by npm run build)
+/public/sitemap.xml
+
