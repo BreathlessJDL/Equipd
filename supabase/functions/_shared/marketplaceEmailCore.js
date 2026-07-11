@@ -1072,8 +1072,6 @@ function dualRecipientResult({
   eventKey,
   order,
   listing,
-  buyerProfile,
-  sellerProfile,
   recipientRole,
   dynamicDataBuilder,
   disputeId,

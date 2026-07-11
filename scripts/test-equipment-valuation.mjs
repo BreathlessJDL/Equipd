@@ -107,9 +107,11 @@ assert(
 assert(
   valuationAdjustedPrice(integrityTreadmill, 'Integrity X')
     > valuationAdjustedPrice(integrityTreadmill, 'Integrity C')
+    && valuationAdjustedPrice(integrityTreadmill, 'Integrity X')
+    > valuationAdjustedPrice(integrityTreadmill, 'Integrity SL')
     && valuationAdjustedPrice(integrityTreadmill, 'Integrity C')
-    > valuationAdjustedPrice(integrityTreadmill, 'Integrity SL'),
-  'valuation: Integrity X > C > SL',
+    === valuationAdjustedPrice(integrityTreadmill, 'Integrity SL'),
+  'valuation: Integrity X > C/SL base parity',
 )
 assert(
   valuationAdjustedPrice(matrixTreadmill, 'Touch XL')

@@ -208,13 +208,6 @@ function tokenize(value) {
   return normalizeKey(value).split(/[^a-z0-9+]+/).filter((token) => token.length >= 2)
 }
 
-function titleCaseWords(value) {
-  return normalizeWhitespace(value)
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
 export function isMatrixBrand(brand) {
   const normalized = normalizeKey(brand)
   return normalized === 'matrix' || normalized === 'matrix fitness'

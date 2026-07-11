@@ -325,13 +325,6 @@ export function scoreTechnogymImageCandidate(candidate, product, {
     candidate?.imageUrl,
   ].filter(Boolean).join(' ').toLowerCase()
 
-  const productHaystack = [
-    product?.canonical_product_name,
-    product?.product_family,
-    product?.model,
-    product?.equipment_type,
-  ].filter(Boolean).join(' ').toLowerCase()
-
   const productTokens = new Set([
     ...tokenize(product?.canonical_product_name),
     ...tokenize(product?.model),
