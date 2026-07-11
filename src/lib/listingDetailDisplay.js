@@ -183,3 +183,19 @@ export function formatListingUploadedAgo(createdAt) {
 
   return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(created)
 }
+
+/** e.g. "Listed 25 Jun 2026" for listing detail metadata. */
+export function formatListingListedDate(createdAt) {
+  if (!createdAt) return null
+
+  const created = new Date(createdAt)
+  if (Number.isNaN(created.getTime())) return null
+
+  const formatted = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(created)
+
+  return `Listed ${formatted}`
+}

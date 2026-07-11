@@ -17,6 +17,11 @@ function AppShell() {
   const [fallbackSearch, setFallbackSearch] = useState('')
   const usesBrowseShellFooter = isBrowseShellRoute(location.pathname)
   const hideSiteFooter = isMessagesThreadRoute(location.pathname)
+  const isEquipmentProductRoute = /^\/equipment\//.test(location.pathname)
+  const isBrandsRoute = location.pathname === '/brands'
+    || location.pathname.startsWith('/brands/')
+  const isListingDetailRoute =
+    /^\/listings\/[^/]+$/.test(location.pathname) && !usesBrowseShellFooter
 
   const registerSiteHeader = useCallback((config) => {
     setPageHeaderConfig(config)
@@ -78,8 +83,10 @@ function AppShell() {
 
       <main
         className={`app-shell__main${usesBrowseShellFooter ? ' app-shell__main--home' : ''}${
-          hideSiteFooter ? ' app-shell__main--messages' : ''
-        }`}
+          isEquipmentProductRoute ? ' app-shell__main--equipment' : ''
+        }${isBrandsRoute ? ' app-shell__main--brands' : ''}${
+          isListingDetailRoute ? ' app-shell__main--listing-detail' : ''
+        }${hideSiteFooter ? ' app-shell__main--messages' : ''}`}
       >
         <Outlet context={outletContext} />
       </main>

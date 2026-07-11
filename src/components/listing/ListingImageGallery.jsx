@@ -4,6 +4,20 @@ import './ListingImageGallery.css'
 const SWIPE_THRESHOLD_PX = 40
 const SWIPE_MAX_VERTICAL_DRIFT_PX = 80
 
+function CameraIcon({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M5.25 4.25 5.9 3.2A1 1 0 0 1 6.75 2.75h2.5a1 1 0 0 1 .85.45l.65 1.05H12a1.75 1.75 0 0 1 1.75 1.75v6a1.75 1.75 0 0 1-1.75 1.75H4A1.75 1.75 0 0 1 2.25 12v-6A1.75 1.75 0 0 1 4 4.25h1.25Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="9" r="2.15" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  )
+}
+
 function ListingImageGallery({
   images = [],
   title = 'Listing photo',
@@ -159,17 +173,13 @@ function ListingImageGallery({
                     ›
                   </button>
                   <div
-                    className="listing-gallery__dots"
+                    className="listing-gallery__counter"
                     aria-label={`Photo ${safeIndex + 1} of ${images.length}`}
                   >
-                    {images.map((image, index) => (
-                      <span
-                        key={image.id}
-                        className={`listing-gallery__dot${
-                          index === safeIndex ? ' listing-gallery__dot--active' : ''
-                        }`}
-                      />
-                    ))}
+                    <CameraIcon className="listing-gallery__counter-icon" />
+                    <span>
+                      {safeIndex + 1} / {images.length}
+                    </span>
                   </div>
                 </>
               ) : null}

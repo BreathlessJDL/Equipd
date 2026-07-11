@@ -22,6 +22,7 @@ import ListingItemSummary from '../components/listing/ListingItemSummary'
 import ListingDetailSaveButton from '../components/listing/ListingDetailSaveButton'
 import ListingRecommendations from '../components/listing/ListingRecommendations'
 import ListingSavedCountOverlay from '../components/listing/ListingSavedCountOverlay'
+import ListingSellerDescription from '../components/listing/ListingSellerDescription'
 import MakeOfferModal from '../components/listing/MakeOfferModal'
 import OfferSentConfirmationModal from '../components/listing/OfferSentConfirmationModal'
 import ListingSaveButton from '../components/ListingSaveButton'
@@ -302,7 +303,6 @@ function ListingDetailPage() {
   const isOwner = isListingOwner(listing, user?.id)
   const isActiveListing = listing.status === 'active'
   const canContactSeller = isActiveListing && !isOwner
-  const canMessageSeller = Boolean(user && canContactSeller)
   const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
 
   function handleSavedChange(saved) {
@@ -366,26 +366,46 @@ function ListingDetailPage() {
   return (
     <article className="listing-detail">
       <div className="listing-detail__hero">
-        <div className="listing-detail__gallery-column">
-          <ListingImageGallery
-            images={listing.listing_images ?? []}
-            title={listing.title}
-            savedCountOverlay={<ListingSavedCountOverlay count={savedCount} />}
-            saveButton={
-              !isOwner && listing.status === 'active' ? (
-                <ListingSaveButton
-                  listing={listing}
-                  className="listing-save-button--detail"
-                  onSavedChange={handleSavedChange}
-                />
-              ) : null
-            }
-          />
-          <ListingRecommendations
-            recommendations={recommendations}
-            loading={loadingRecommendations}
-            placement="desktop"
-          />
+        <div className="listing-detail__primary">
+          <div className="listing-detail__media">
+            <ListingImageGallery
+              images={listing.listing_images ?? []}
+              title={listing.title}
+              savedCountOverlay={<ListingSavedCountOverlay count={savedCount} />}
+              saveButton={
+                !isOwner && listing.status === 'active' ? (
+                  <ListingSaveButton
+                    listing={listing}
+                    className="listing-save-button--detail"
+                    onSavedChange={handleSavedChange}
+                  />
+                ) : null
+              }
+            />
+            {(listing.listing_images?.length ?? 0) > 0 ? (
+              <p className="listing-detail__image-note" role="note">
+                <svg
+                  className="listing-detail__image-note-icon"
+                  viewBox="0 0 16 16"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.25" />
+                  <path
+                    d="M8 7.25v4M8 5.25h.01"
+                    stroke="currentColor"
+                    strokeWidth="1.35"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span>Photos shown are of the actual item being sold by the seller.</span>
+              </p>
+            ) : null}
+          </div>
+
+          <ListingSellerDescription listing={listing} />
         </div>
 
         <ListingItemSummary
@@ -435,6 +455,12 @@ function ListingDetailPage() {
           </p>
         </section>
       ) : null}
+
+      <ListingRecommendations
+        recommendations={recommendations}
+        loading={loadingRecommendations}
+        placement="desktop"
+      />
 
       <ListingRecommendations
         recommendations={recommendations}
