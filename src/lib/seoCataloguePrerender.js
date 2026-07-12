@@ -25,6 +25,7 @@ import {
   buildEquipmentProductPagePath,
   getEquipmentProductPublicName,
 } from './equipmentPageSeo.js'
+import { injectSiteStructuredDataIntoHtml } from './siteStructuredData.js'
 
 export { buildEquipmentProductPagePath }
 export const SEO_PRERENDER_MARKER = 'data-equipd-seo-prerender'
@@ -359,7 +360,9 @@ export function injectSeoIntoHtml(templateHtml, document) {
     throw new Error('Could not find #root in index.html template')
   }
 
-  return html
+  // Ensure Organization + WebSite JSON-LD exist exactly once in <head>
+  // (template may already include them after the post-Vite inject step).
+  return injectSiteStructuredDataIntoHtml(html)
 }
 
 export function mapProductForBrandSeo(product) {

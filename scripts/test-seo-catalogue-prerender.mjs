@@ -20,7 +20,7 @@ const brands = [
     href: '/brands/life-fitness',
     productCount: 2,
     listingCount: 1,
-    absoluteUrl: 'https://equipd.co.uk/brands/life-fitness',
+    absoluteUrl: 'https://www.equipd.co.uk/brands/life-fitness',
     intro: 'Explore Life Fitness equipment.',
   },
 ]
@@ -114,8 +114,16 @@ assert(html.includes('rel="canonical"'), 'injected canonical')
 assert(html.includes('property="og:title"'), 'injected og')
 assert(html.includes('name="twitter:card"'), 'injected twitter')
 assert(html.includes('application/ld+json'), 'injected json-ld')
+assert(html.includes('data-equipd-schema="organization"'), 'site organization schema')
+assert(html.includes('data-equipd-schema="website"'), 'site website schema')
+assert(html.includes('https://www.equipd.co.uk/browse?search={search_term_string}'), 'search action')
+assert((html.match(/data-equipd-schema="organization"/g) || []).length === 1, 'single organization')
+assert((html.match(/data-equipd-schema="website"/g) || []).length === 1, 'single website')
+assert(!html.includes('https://equipd.co.uk/'), 'prerender html avoids non-www host')
+assert(!html.includes('localhost'), 'prerender html avoids localhost')
+assert(!html.includes('vercel.app'), 'prerender html avoids preview hosts')
 assert(html.includes('A commercial treadmill overview.'), 'injected body')
 assert(html.includes('id="root"'), 'keeps root')
 assert(html.includes('/assets/index.js'), 'keeps spa script')
 
-console.log('seo-catalogue-prerender tests passed')
+console.log('seo catalogue prerender tests passed')

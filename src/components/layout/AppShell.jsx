@@ -4,6 +4,7 @@ import { fetchCategories } from '../../lib/listings'
 import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
 import { isBrowseShellRoute, isMessagesThreadRoute } from '../../lib/siteHeaderRoutes'
 import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
+import SiteStructuredData from '../seo/SiteStructuredData'
 import GlobalSiteHeader from './GlobalSiteHeader'
 import SiteFooter from './SiteFooter'
 import './AppShell.css'
@@ -79,6 +80,7 @@ function AppShell() {
 
   return (
     <div className="app-shell app-shell--home">
+      <SiteStructuredData />
       <GlobalSiteHeader {...headerConfig} />
 
       <main

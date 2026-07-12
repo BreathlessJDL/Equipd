@@ -5,7 +5,8 @@
 
 import { brandsMatch, normalizeBrandKey } from './consoleModifierMatch.js'
 
-export const EQUIPD_SITE_ORIGIN = 'https://equipd.co.uk'
+/** Preferred production canonical origin for SEO, sitemap, and absolute public URLs. */
+export const EQUIPD_SITE_ORIGIN = 'https://www.equipd.co.uk'
 
 export const FEATURED_BRAND_SLUGS = Object.freeze([
   'life-fitness',

@@ -27,4 +27,4 @@ Disallow: /forgot-password
 Disallow: /auth/
 Disallow: /support
 
-Sitemap: https://equipd.co.uk/sitemap.xml
+Sitemap: https://www.equipd.co.uk/sitemap.xml

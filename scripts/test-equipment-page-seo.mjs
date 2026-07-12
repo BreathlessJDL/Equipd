@@ -93,11 +93,14 @@ assert(strengthDesc.includes('product information'), 'strength fallback phrase')
 
 assert(
   buildEquipmentCanonicalUrl(cardio)
-    === 'https://equipd.co.uk/equipment/life-fitness-integrity-series-treadmill',
-  'canonical url production domain',
+    === 'https://www.equipd.co.uk/equipment/life-fitness-integrity-series-treadmill',
+  'canonical url production www domain',
 )
 assert(!buildEquipmentCanonicalUrl(cardio).includes('localhost'), 'no localhost')
-
+assert(
+  !buildEquipmentCanonicalUrl(cardio).includes('://equipd.co.uk/'),
+  'canonical does not use non-www host',
+)
 assert(getIndexabilityForProduct(cardio).indexable === true, 'approved indexable')
 assert(getIndexabilityForProduct(pending).indexable === false, 'pending noindex')
 assert(getIndexabilityForProduct(pending).robots === 'noindex, follow', 'pending robots')
