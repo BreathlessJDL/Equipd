@@ -1,0 +1,148 @@
+.equipment-value-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 33.5rem; /* ~536px */
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden; /* radius clip only — images must contain, not crop */
+  box-shadow: 0 1px 3px rgba(15, 33, 55, 0.04);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.equipment-value-card:hover {
+  border-color: #c5ced8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 33, 55, 0.07);
+}
+
+.equipment-value-card:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+/*
+  Image wrapper: fixed height controls layout.
+  Images use auto size + max constraints so global `img { height: auto }`
+  cannot force intrinsic height past the box (which overflow:hidden then crops).
+*/
+.equipment-value-card__media {
+  flex: 0 0 16.25rem; /* 260px */
+  width: 100%;
+  height: 16.25rem;
+  box-sizing: border-box;
+  padding: 1.5rem; /* 24px */
+  background: #f8f9fb;
+  border-bottom: 1px solid #eef1f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equipment-value-card__image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  /* Explicitly defeat global img { height: auto } blowout */
+  flex: 0 1 auto;
+}
+
+.equipment-value-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  background: #f3f5f7;
+  border-radius: 0.5rem;
+}
+
+.equipment-value-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.15rem 1.2rem 1.2rem;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.equipment-value-card__title {
+  margin: 0;
+  min-height: 3.15em;
+  max-height: 3.15em;
+  font-size: 1.015rem; /* ~16.25px */
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--color-navy);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.equipment-value-card__category {
+  margin: 0;
+  min-height: 1.25em;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.equipment-value-card__facts {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.55rem 0 0;
+  min-height: 6.5rem;
+}
+
+.equipment-value-card__fact {
+  margin: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.equipment-value-card__fact dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.equipment-value-card__fact dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-navy);
+  font-weight: 600;
+}
+
+.equipment-value-card__fact--value dd {
+  font-size: 1.05rem;
+}
+
+.equipment-value-card__cta {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-orange);
+}
+
+@media (max-width: 640px) {
+  .equipment-value-card {
+    min-height: 0;
+  }
+
+  .equipment-value-card__media {
+    flex-basis: 14.5rem;
+    height: 14.5rem;
+  }
+}

@@ -113,6 +113,10 @@ export function validateTransactionalEmail({ to, templateKey, dynamicData }) {
 
 export function enrichDynamicData(dynamicData, getEnv) {
   const baseUrl = resolveAppBaseUrl(getEnv)
+  const subject =
+    dynamicData.subject !== undefined && dynamicData.subject !== null
+      ? normalizeEmailSubject(dynamicData.subject)
+      : dynamicData.subject
 
   return {
     ...dynamicData,
@@ -122,6 +126,7 @@ export function enrichDynamicData(dynamicData, getEnv) {
       dynamicData.tagline?.trim() ||
       'The UK marketplace for used gym equipment.',
     logo_url: resolveLogoUrl(getEnv, dynamicData),
+    ...(subject !== undefined ? { subject } : {}),
   }
 }
 
@@ -157,10 +162,16 @@ export function buildSendGridPayload({
   from,
   replyTo,
 }) {
-  const subject = normalizeEmailSubject(dynamicTemplateData.subject)
+  const hasSubjectField =
+    dynamicTemplateData.subject !== undefined && dynamicTemplateData.subject !== null
+  const subject = hasSubjectField ? normalizeEmailSubject(dynamicTemplateData.subject) : ''
+  const normalizedDynamicTemplateData = hasSubjectField
+    ? { ...dynamicTemplateData, subject }
+    : dynamicTemplateData
+
   const personalization = {
     to: recipients.map((email) => ({ email })),
-    dynamic_template_data: dynamicTemplateData,
+    dynamic_template_data: normalizedDynamicTemplateData,
   }
 
   if (subject) {

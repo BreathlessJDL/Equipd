@@ -1,0 +1,196 @@
+.price-guide-page {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--home-gutter) clamp(2.5rem, 5vw, 4rem);
+}
+
+.price-guide-page__hero {
+  position: relative;
+  margin: 0 calc(-1 * var(--home-gutter)) var(--space-xl);
+  padding: clamp(1.75rem, 4vw, 3rem) var(--home-gutter);
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 92% 8%,
+      color-mix(in srgb, var(--color-orange) 11%, transparent),
+      transparent 68%
+    ),
+    linear-gradient(
+      165deg,
+      #fff 0%,
+      color-mix(in srgb, var(--color-navy) 2.5%, var(--color-bg)) 48%,
+      color-mix(in srgb, var(--color-orange) 4%, var(--color-bg)) 100%
+    );
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.price-guide-page__hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-md);
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.price-guide-page__eyebrow {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+.price-guide-page__title {
+  margin: 0;
+  font-size: clamp(1.85rem, 4.5vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+}
+
+.price-guide-page__intro {
+  margin: 0;
+  max-width: 40rem;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--color-navy) 78%, var(--color-muted));
+}
+
+.price-guide-page__controls {
+  display: grid;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.price-guide-page__search,
+.price-guide-page__select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-navy);
+  font: inherit;
+}
+
+.price-guide-page__search:focus,
+.price-guide-page__select:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 45%, transparent);
+  outline-offset: 1px;
+  border-color: color-mix(in srgb, var(--color-orange) 40%, var(--color-border));
+}
+
+.price-guide-page__filters {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .price-guide-page__filters {
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 16rem) minmax(12rem, 16rem);
+    align-items: center;
+  }
+}
+
+.price-guide-page__count {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.price-guide-page__status,
+.price-guide-page__empty {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, #fff);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.price-guide-page__grid {
+  display: grid;
+  gap: 0.875rem;
+}
+
+@media (min-width: 720px) {
+  .price-guide-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .price-guide-page__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.price-guide-page__card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.1rem 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, #fff);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 14px rgba(15, 33, 55, 0.04);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.price-guide-page__card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-orange) 22%, var(--color-border));
+  box-shadow: 0 10px 24px rgba(15, 33, 55, 0.08);
+}
+
+.price-guide-page__card-brand {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+.price-guide-page__card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-navy);
+}
+
+.price-guide-page__card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.price-guide-page__card-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg) 85%, #fff);
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.price-guide-page__card-cta {
+  margin: 0.15rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}

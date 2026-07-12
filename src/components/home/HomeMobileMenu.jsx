@@ -137,6 +137,27 @@ function LoggedOutMobileMenu({ onClose, onHomeBrandClick }) {
         </button>
       </div>
 
+      <ul className="home-mobile-menu__menu-list home-mobile-menu__menu-list--account">
+        <li>
+          <Link
+            to="/brands"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Equipment Values</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/valuation"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Equipment Valuator</span>
+          </Link>
+        </li>
+      </ul>
+
       <MobileMenuCategorySection onClose={onClose} />
     </>
   )
@@ -165,6 +186,21 @@ function LoggedInMobileMenu({ user, onClose, onSignOut, onHomeBrandClick }) {
       </div>
 
       <ul className="home-mobile-menu__menu-list home-mobile-menu__menu-list--account">
+        <li>
+          <Link
+            to="/brands"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <MenuIconSlot variant="account">
+              <MobileMenuIconImage
+                src={getMobileMenuAccountIconSrc('hub')}
+                className="home-mobile-menu__icon home-mobile-menu__icon--account"
+              />
+            </MenuIconSlot>
+            <span className="home-mobile-menu__row-label">Equipment Values</span>
+          </Link>
+        </li>
         {accountLinks.map((item) => (
           <li key={item.to}>
             <Link

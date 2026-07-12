@@ -116,15 +116,18 @@
 }
 
 .buyer-protection-price--detail .buyer-protection-price__item--primary {
-  font-size: 1.4rem;
-  letter-spacing: -0.02em;
+  font-size: 1.85rem;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  color: var(--color-navy);
 }
 
 .buyer-protection-price--detail .buyer-protection-price__total {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
 }
 
 .buyer-protection-price--detail .buyer-protection-price__link {
   font-size: 0.8125rem;
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
 }

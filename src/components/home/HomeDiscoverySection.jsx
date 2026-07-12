@@ -3,7 +3,7 @@ import { CollectionPinIcon } from '../icons/NavIcons'
 import { NewOfferTagIcon } from '../icons/NotificationIcons'
 import '../icons/NavIcons.css'
 import {
-  getBrowseBrandHref,
+  getBrandPagePath,
   HOME_DISCOVERY_BRANDS,
   HOME_DISCOVERY_LOCATIONS,
   HOME_DISCOVERY_VIEW_ALL_BRANDS_PATH,
@@ -38,7 +38,7 @@ function HomeDiscoveryCardFooter({ to, label }) {
 
 function HomeDiscoverySection() {
   return (
-    <section className="home-discovery" aria-label="Browse by location and popular brands">
+    <section className="home-discovery" aria-label="Browse by location and equipment values">
       <div className="home-section__inner">
         <div className="home-discovery__grid">
           <article
@@ -74,15 +74,15 @@ function HomeDiscoverySection() {
           >
             <HomeDiscoveryCardHeader
               icon={NewOfferTagIcon}
-              title="Popular Brands"
-              subtitle="Browse equipment from trusted fitness manufacturers."
+              title="Equipment Values"
+              subtitle="Browse equipment values, product information and current marketplace listings by manufacturer."
               titleId="home-discovery-brands-title"
             />
             <div className="home-discovery-card__chips">
               {HOME_DISCOVERY_BRANDS.map((brand) => (
                 <Link
                   key={brand.value}
-                  to={getBrowseBrandHref(brand.value)}
+                  to={getBrandPagePath(brand.slug || brand.value)}
                   className="home-discovery-chip"
                 >
                   {brand.label}
@@ -91,7 +91,7 @@ function HomeDiscoverySection() {
             </div>
             <HomeDiscoveryCardFooter
               to={HOME_DISCOVERY_VIEW_ALL_BRANDS_PATH}
-              label="View all brands →"
+              label="View all equipment values →"
             />
           </article>
         </div>

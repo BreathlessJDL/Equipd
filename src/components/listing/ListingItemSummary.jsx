@@ -1,9 +1,8 @@
 import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
 import SellerPayoutSummary from '../SellerPayoutSummary'
 import {
-  formatListingUploadedAgo,
+  formatListingListedDate,
   getListingDeliveryOptions,
-  parseListingDescriptionExtras,
 } from '../../lib/listingDetailDisplay'
 import { formatListingLocationDetail } from '../../lib/listingLocation'
 import {
@@ -58,15 +57,14 @@ function ListingItemSummary({
   viewerUserId = null,
   isOwner = false,
 }) {
-  const extras = parseListingDescriptionExtras(listing.description)
   const deliveryOptions = getListingDeliveryOptions(listing, { buyerProfile, viewerUserId })
-  const uploadedAgo = formatListingUploadedAgo(listing.created_at)
+  const listedDate = formatListingListedDate(listing.created_at)
   const categoryName = getCategoryDisplayName(listing)
   const conditionLabel = getConditionLabel(listing.condition)
   const ratingLabel = getRatingLabel(listing.rating)
   const locationLabel = formatListingLocationDetail(listing)
 
-  const subtitleParts = [categoryName, conditionLabel, listing.brand].filter(Boolean)
+  const metaParts = [conditionLabel, listedDate, listing.brand].filter(Boolean)
 
   return (
     <aside className="listing-summary">
@@ -74,13 +72,12 @@ function ListingItemSummary({
         <span className="listing-summary__status">{formatListingStatus(listing.status)}</span>
       ) : null}
 
-      <h1 className="listing-summary__title">{listing.title}</h1>
-
-      {subtitleParts.length > 0 ? (
-        <p className="listing-summary__subtitle">{subtitleParts.join(' · ')}</p>
-      ) : null}
-
-      {uploadedAgo ? <p className="listing-summary__uploaded">{uploadedAgo}</p> : null}
+      <header className="listing-summary__header">
+        <h1 className="listing-summary__title">{listing.title}</h1>
+        {metaParts.length > 0 ? (
+          <p className="listing-summary__meta">{metaParts.join(' • ')}</p>
+        ) : null}
+      </header>
 
       <section className="listing-summary__purchase" aria-label="Price and actions">
         {isOwner ? (
@@ -103,22 +100,9 @@ function ListingItemSummary({
         {reportListing}
       </section>
 
-      <section className="listing-summary__block" aria-labelledby="listing-summary-description">
-        <h2 id="listing-summary-description" className="listing-summary__block-title">
-          Description
-        </h2>
-        {extras.description ? (
-          <p className="listing-summary__description">{extras.description}</p>
-        ) : (
-          <p className="listing-summary__description listing-summary__description--empty">
-            No description provided.
-          </p>
-        )}
-      </section>
-
-      <section className="listing-summary__block" aria-labelledby="listing-summary-specs">
-        <h2 id="listing-summary-specs" className="listing-summary__block-title">
-          Item specifics
+      <section className="listing-summary__section" aria-labelledby="listing-summary-details">
+        <h2 id="listing-summary-details" className="listing-summary__section-title">
+          Listing details
         </h2>
         <dl className="listing-summary__specs">
           <SummaryRow label="Category" value={categoryName} />
@@ -132,13 +116,13 @@ function ListingItemSummary({
 
       {deliveryOptions.length > 0 ? (
         <section
-          className="listing-summary__block listing-summary__block--fulfilment"
+          className="listing-summary__section listing-summary__section--fulfilment"
           aria-labelledby="listing-summary-delivery"
         >
-          <h2 id="listing-summary-delivery" className="listing-summary__block-title">
-            Delivery &amp; collection
+          <h2 id="listing-summary-delivery" className="listing-summary__section-title">
+            Collection &amp; delivery
           </h2>
-          <ul className="listing-summary__fulfilment-panel">
+          <ul className="listing-summary__fulfilment-list">
             {deliveryOptions.map((option) => (
               <li
                 key={option.id}
@@ -170,5 +154,5 @@ function ListingItemSummary({
   )
 }
 
-export { parseListingDescriptionExtras }
+export { parseListingDescriptionExtras } from '../../lib/listingDetailDisplay'
 export default ListingItemSummary

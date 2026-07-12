@@ -1,0 +1,127 @@
+.equipment-product-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.equipment-product-content__heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+}
+
+.equipment-product-content__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.equipment-product-content__draft-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-orange) 42%, var(--color-border));
+  background: color-mix(in srgb, var(--color-orange) 10%, #fff);
+  color: color-mix(in srgb, var(--color-orange) 82%, var(--color-navy));
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.equipment-product-content__overview {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.equipment-product-content__overview-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-navy);
+}
+
+.equipment-product-content__faq-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.equipment-product-content__faq-item {
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--color-bg) 35%, #fff);
+  overflow: hidden;
+}
+
+.equipment-product-content__faq-question {
+  padding: 0.95rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-navy);
+  cursor: pointer;
+  list-style: none;
+}
+
+.equipment-product-content__faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.equipment-product-content__faq-question::after {
+  content: '+';
+  float: right;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.equipment-product-content__faq-item[open] .equipment-product-content__faq-question::after {
+  content: '−';
+}
+
+.equipment-product-content__faq-answer {
+  margin: 0;
+  padding: 0 1rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-muted);
+}
+
+@media (min-width: 1024px) {
+  .equipment-product-content {
+    gap: 0.85rem;
+  }
+
+  .equipment-product-content__overview {
+    gap: 0.75rem;
+  }
+
+  .equipment-product-content__overview-text {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .equipment-product-content__faq-list {
+    gap: 0.6rem;
+  }
+
+  .equipment-product-content__faq-item {
+    border-radius: 0.8rem;
+  }
+
+  .equipment-product-content__faq-question {
+    padding: 0.8rem 0.9rem;
+    font-size: 0.875rem;
+  }
+
+  .equipment-product-content__faq-answer {
+    padding: 0 0.9rem 0.85rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+}

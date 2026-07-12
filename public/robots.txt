@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+Allow: /equipment/
+Allow: /brands/
+Allow: /browse
+Allow: /valuation
+Allow: /help/
+Allow: /about
+
+Disallow: /admin/
+Disallow: /hub
+Disallow: /hub/
+Disallow: /messages
+Disallow: /messages/
+Disallow: /notifications
+Disallow: /notifications/
+Disallow: /profile
+Disallow: /settings
+Disallow: /my-listings
+Disallow: /saved-listings
+Disallow: /listings/new
+Disallow: /listings/*/edit
+Disallow: /orders/
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /support
+
+Sitemap: https://equipd.co.uk/sitemap.xml

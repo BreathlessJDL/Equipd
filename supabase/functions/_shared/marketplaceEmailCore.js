@@ -284,18 +284,18 @@ export function composeMarketplaceEmailSubject(eventKey, listingTitle, { recipie
 
   switch (eventKey) {
     case 'offer_received':
-      return `You have a new offer on ${title}`
+      return normalizeEmailSubject(`You have a new offer on ${title}`)
     case 'counter_offer_received':
-      return `New counter offer on ${title}`
+      return normalizeEmailSubject(`New counter offer on ${title}`)
     case 'offer_accepted':
       if (recipientRole === 'seller') {
-        return `Your counter offer on ${title} was accepted`
+        return normalizeEmailSubject(`Your counter offer on ${title} was accepted`)
       }
-      return `Your offer on ${title} was accepted`
+      return normalizeEmailSubject(`Your offer on ${title} was accepted`)
     case 'payment_successful':
-      return `Payment confirmed for ${title}`
+      return normalizeEmailSubject(`Payment confirmed for ${title}`)
     case 'new_order_received':
-      return `You've sold ${title}`
+      return normalizeEmailSubject(`You've sold ${title}`)
     case 'buyer_delivery_details_added':
       return `Delivery details added for ${title}`
     case 'collection_confirmed': {
@@ -1072,8 +1072,6 @@ function dualRecipientResult({
   eventKey,
   order,
   listing,
-  buyerProfile,
-  sellerProfile,
   recipientRole,
   dynamicDataBuilder,
   disputeId,

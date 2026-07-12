@@ -28,11 +28,11 @@
   --home-gutter: clamp(1rem, 2.5vw, 2rem);
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
   --font-serif: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
-  /* Marketplace listing card — matches design-reference/listing cards examples 2.png */
+  /* Marketplace listing card — taller image-led ratio (~60% of card height) */
   --listing-card-width: 11.5rem;
   --listing-card-width-min: 10rem;
   --listing-card-grid-gap: 1rem;
-  --listing-card-image-ratio: 1 / 1;
+  --listing-card-image-ratio: 5 / 6;
 }
 
 @media (min-width: 640px) {

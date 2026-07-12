@@ -4,6 +4,7 @@ import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChip
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
 import ListingBrowseResults from '../components/ListingBrowseResults'
 import HomeHero from '../components/home/HomeHero'
+import HomeEquipmentValuator from '../components/home/HomeEquipmentValuator'
 import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
 import HomeRecentListings from '../components/home/HomeRecentListings'
 import HomeReviewsSection from '../components/home/HomeReviewsSection'
@@ -190,6 +191,8 @@ function HomePage() {
     <div className={`home-page${isLoggedIn ? ' home-page--feed' : ''}`}>
       {!isLoggedIn ? <HomeHero /> : null}
 
+      {!isLoggedIn ? <HomeEquipmentValuator /> : null}
+
       {!isLoggedIn ? (
         <HomeRecentListings
           listings={recentListings}
@@ -198,21 +201,11 @@ function HomePage() {
         />
       ) : null}
 
-      <HomeDiscoverySection />
-
-      {!isLoggedIn ? (
-        <HomeReviewsSection
-          reviews={recentReviews}
-          loading={reviewsLoading}
-          error={reviewsError}
-        />
-      ) : null}
-
       <section id="browse" className={`home-browse${isLoggedIn ? ' home-browse--feed' : ''}`}>
         <div className="home-section__inner">
           {!isLoggedIn ? (
             <header className="home-browse__header">
-              <h2 className="home-browse__title">Browse gym equipment</h2>
+              <h2 className="home-browse__title">Browse by category</h2>
               <p className="home-browse__lead">
                 Explore and search for new and used gym equipment from sellers across the UK.
               </p>
@@ -273,6 +266,16 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      <HomeDiscoverySection />
+
+      {!isLoggedIn ? (
+        <HomeReviewsSection
+          reviews={recentReviews}
+          loading={reviewsLoading}
+          error={reviewsError}
+        />
+      ) : null}
     </div>
   )
 }

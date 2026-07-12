@@ -466,6 +466,90 @@ assert(
   'counter_offer_received buildSendGridPayload dynamic_template_data subject',
 )
 
+function assertSendGridSubjectDecoded(payload, expectedSubject, label) {
+  assert(payload.subject === expectedSubject, `${label} top-level subject decoded`)
+  assert(
+    payload.personalizations[0].subject === expectedSubject,
+    `${label} personalization subject decoded`,
+  )
+  assert(
+    payload.personalizations[0].dynamic_template_data.subject === expectedSubject,
+    `${label} dynamic_template_data subject decoded`,
+  )
+}
+
+const fromAddress = { email: 'notifications@equipd.co.uk', name: 'Equipd' }
+
+assertSendGridSubjectDecoded(
+  buildSendGridPayload({
+    recipients: ['seller@example.com'],
+    templateId: 'd-test',
+    dynamicTemplateData: {
+      ...sellerOrderData,
+      subject: "You&apos;ve sold Stripe live test",
+    },
+    from: fromAddress,
+  }),
+  "You've sold Stripe live test",
+  'new_order_received',
+)
+
+assertSendGridSubjectDecoded(
+  buildSendGridPayload({
+    recipients: ['buyer@example.com'],
+    templateId: 'd-test',
+    dynamicTemplateData: {
+      ...buyerPaymentData,
+      subject: 'Payment confirmed for Bob&apos;s Barbell',
+    },
+    from: fromAddress,
+  }),
+  "Payment confirmed for Bob's Barbell",
+  'payment_successful',
+)
+
+assertSendGridSubjectDecoded(
+  buildSendGridPayload({
+    recipients: ['buyer@example.com'],
+    templateId: 'd-test',
+    dynamicTemplateData: {
+      ...offerAcceptedData,
+      subject: 'Your offer on Rogue Ohio Bar was accepted',
+    },
+    from: fromAddress,
+  }),
+  'Your offer on Rogue Ohio Bar was accepted',
+  'offer_accepted',
+)
+
+assertSendGridSubjectDecoded(
+  buildSendGridPayload({
+    recipients: ['buyer@example.com'],
+    templateId: 'd-test',
+    dynamicTemplateData: {
+      ...sellerCounterData,
+      subject: 'New counter offer on Rogue Ohio Bar',
+    },
+    from: fromAddress,
+  }),
+  'New counter offer on Rogue Ohio Bar',
+  'counter_offer_received',
+)
+
+assertSendGridSubjectDecoded(
+  buildSendGridPayload({
+    recipients: ['seller@example.com'],
+    templateId: 'd-test',
+    dynamicTemplateData: {
+      subject: 'Payout released for Bob&apos;s Barbell',
+      title: 'Payout released',
+    },
+    from: fromAddress,
+  }),
+  "Payout released for Bob's Barbell",
+  'payout_released',
+)
+
 assert(
   normalizeMarketplaceEmailPayload({ offerId: 'offer-uuid-1' }).offerId === 'offer-uuid-1',
   'offer_received works with offerId',

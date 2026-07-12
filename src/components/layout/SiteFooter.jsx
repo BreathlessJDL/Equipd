@@ -15,6 +15,8 @@ const FOOTER_COLUMNS = [
     title: 'Buy',
     links: [
       { label: 'Browse Listings', to: '/browse' },
+      { label: 'Equipment Values', to: '/brands' },
+      { label: 'Instant Valuation', to: '/valuation' },
       { label: 'How Buying Works', to: '/help/how-buying-works' },
       { label: 'Buyer Protection', to: BUYER_PROTECTION_HELP_PATH },
       { label: 'Collection & Delivery', to: '/help/collection-orders' },

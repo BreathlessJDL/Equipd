@@ -28,3 +28,26 @@ node_modules
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Local review / audit artefacts (not production app assets)
+/debug-screenshots/
+/reports/
+/data/
+/public/design-reference/
+*-type-audit.csv
+canonical-audit-*.json
+equipment-product-image-audit.csv
+equipment-product-image-audit.json
+technogym-model-variant-audit.json
+technogym-model-variant-report.md
+
+# Local temp helper scripts
+/scripts/_tmp-*
+
+# Supabase CLI temp
+/supabase/.temp/
+
+# Build-generated sitemap (created by npm run build)
+/public/sitemap.xml
+
+.vercel

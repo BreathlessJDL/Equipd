@@ -96,7 +96,7 @@ function ListingDetailSaveButton({ listing, className = '', onSavedChange }) {
       disabled={loading || checking}
       onClick={handleClick}
     >
-      {loading ? (saved ? 'Removing…' : 'Saving…') : saved ? 'Saved' : 'Add to saved'}
+      {loading ? (saved ? 'Removing…' : 'Saving…') : saved ? 'Saved' : 'Save this item'}
     </button>
   )
 }

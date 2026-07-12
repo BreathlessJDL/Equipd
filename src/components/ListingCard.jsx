@@ -13,6 +13,15 @@ import './ListingCard.css'
 
 const NEW_LISTING_DAYS = 14
 
+const CONDITION_TONE_BY_VALUE = {
+  new: 'like-new',
+  like_new: 'like-new',
+  very_good: 'very-good',
+  good: 'good',
+  fair: 'fair',
+  poor: 'poor',
+}
+
 function isRecentListing(listing) {
   if (!listing?.created_at) return false
 
@@ -23,6 +32,10 @@ function isRecentListing(listing) {
   return ageMs <= NEW_LISTING_DAYS * 24 * 60 * 60 * 1000
 }
 
+function getConditionTone(value) {
+  return CONDITION_TONE_BY_VALUE[value] || 'neutral'
+}
+
 function ListingCardImage({ listing }) {
   const imageUrl = getListingPrimaryImageUrl(listing)
 
@@ -31,6 +44,19 @@ function ListingCardImage({ listing }) {
   }
 
   return <div className="listing-card__image listing-card__image--placeholder">No photo</div>
+}
+
+function ConditionPill({ condition }) {
+  const label = getConditionLabel(condition)
+  if (!label) return null
+
+  return (
+    <span
+      className={`listing-card__condition listing-card__condition--${getConditionTone(condition)}`}
+    >
+      {label}
+    </span>
+  )
 }
 
 function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null, onSavedChange }) {
@@ -50,11 +76,11 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
       </div>
 
       <Link to={listingHref} className="listing-card__body">
+        <ConditionPill condition={listing.condition} />
+
         <h3 className="listing-card__title" title={listing.title}>
           {listing.title}
         </h3>
-
-        <p className="listing-card__condition">{getConditionLabel(listing.condition)}</p>
 
         <BuyerProtectionPriceDisplay
           itemPricePence={normalizeListingPricePence(listing.price_pence ?? listing.price)}
@@ -62,33 +88,35 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
           className="listing-card__price-stack"
         />
 
-        {locationLabel ? (
-          <p className="listing-card__location">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="listing-card__location-icon">
-              <path
-                d="M12 21s7-4.6 7-11a7 7 0 1 0-14 0c0 6.4 7 11 7 11Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-              />
-              <circle cx="12" cy="10" r="2.5" fill="currentColor" />
-            </svg>
-            {locationLabel}
-          </p>
-        ) : null}
+        <div className="listing-card__footer">
+          {locationLabel ? (
+            <p className="listing-card__location">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="listing-card__location-icon">
+                <path
+                  d="M12 21s7-4.6 7-11a7 7 0 1 0-14 0c0 6.4 7 11 7 11Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                />
+                <circle cx="12" cy="10" r="2.5" fill="currentColor" />
+              </svg>
+              <span className="listing-card__location-text">{locationLabel}</span>
+            </p>
+          ) : null}
 
-        {distanceLabel ? <p className="listing-card__distance">{distanceLabel}</p> : null}
+          {distanceLabel ? <p className="listing-card__distance">{distanceLabel}</p> : null}
 
-        {showStatus ? (
-          <div className="listing-card__meta">
-            <span className="listing-card__tag listing-card__tag--status">
-              {formatListingStatus(listing.status)}
-            </span>
-            {listing.courier_available ? (
-              <span className="listing-card__tag">Courier</span>
-            ) : null}
-          </div>
-        ) : null}
+          {showStatus ? (
+            <div className="listing-card__meta">
+              <span className="listing-card__tag listing-card__tag--status">
+                {formatListingStatus(listing.status)}
+              </span>
+              {listing.courier_available ? (
+                <span className="listing-card__tag">Courier</span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </Link>
 
       {primaryLinkTo ? (
@@ -126,7 +154,7 @@ function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onS
           {showStatus ? (
             <span className="listing-row__status">{formatListingStatus(listing.status)}</span>
           ) : null}
-          <span className="listing-row__condition">{getConditionLabel(listing.condition)}</span>
+          <ConditionPill condition={listing.condition} />
         </div>
 
         <BuyerProtectionPriceDisplay

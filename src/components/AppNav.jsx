@@ -10,10 +10,14 @@ import { useIsAdmin } from '../hooks/useIsAdmin'
 
 const CREATE_LISTING_PATH = '/listings/new'
 
-const loggedOutPublicNavLinks = [{ to: CREATE_LISTING_PATH, label: 'Sell' }]
+const loggedOutPublicNavLinks = [
+  { to: '/brands', label: 'Equipment Values' },
+  { to: CREATE_LISTING_PATH, label: 'Sell' },
+]
 
 const loggedInPublicNavLinks = [
   { to: '/browse', label: 'Browse' },
+  { to: '/brands', label: 'Equipment Values' },
   { to: CREATE_LISTING_PATH, label: 'Sell' },
 ]
 
@@ -21,6 +25,8 @@ const adminNavLinks = [
   { to: '/admin/cases', label: 'Cases' },
   { to: '/admin/support', label: 'Support' },
   { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/intelligence/products', label: 'Equipment Catalogue' },
+  { to: '/admin/price-guide/import', label: 'Price Guide' },
 ]
 
 function AppNav({
@@ -111,6 +117,13 @@ function AppNav({
           ) : null}
 
           <div className="home-header__nav-group home-header__nav-group--links">
+            <NavLink
+              to="/brands"
+              className={({ isActive }) => linkClass(isActive)}
+              onClick={onNavigate}
+            >
+              Equipment Values
+            </NavLink>
             {!loading && user ? (
               <NavLink
                 to="/browse"
