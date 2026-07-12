@@ -13,7 +13,7 @@ export const EQUIPD_ORGANIZATION_ID = `${EQUIPD_SITE_ORIGIN}/#organization`
 export const EQUIPD_ORGANIZATION_NAME = 'Equipd'
 
 export const EQUIPD_ORGANIZATION_DESCRIPTION =
-  "Equipd is the UK's marketplace for buying, selling and valuing used commercial gym equipment."
+  "Equipd is the UK's marketplace for buying, selling and valuing used gym equipment."
 
 /** Official production logo (deployed under /public/email). */
 export const EQUIPD_ORGANIZATION_LOGO_PATH = '/email/equipd-full-logo.png'

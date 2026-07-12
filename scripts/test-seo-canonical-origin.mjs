@@ -66,7 +66,12 @@ const org = buildOrganizationSchema()
 const website = buildWebsiteSchema()
 assertWwwOnly(JSON.stringify(org), 'organization schema')
 assertWwwOnly(JSON.stringify(website), 'website schema')
-assert(org.description.includes('used commercial gym equipment'), 'updated description')
+assert(
+  org.description ===
+    "Equipd is the UK's marketplace for buying, selling and valuing used gym equipment.",
+  'updated description',
+)
+assert(!org.description.includes('commercial'), 'description not commercial-only')
 
 const brandsDoc = buildBrandsIndexSeoDocument({
   brands: [{

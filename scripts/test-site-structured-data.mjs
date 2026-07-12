@@ -32,8 +32,13 @@ assert(organization.url.startsWith('https://www.'), 'org uses www host')
 assert(organization.logo === `${EQUIPD_SCHEMA_ORIGIN}/email/equipd-full-logo.png`, 'org logo')
 assert(organization.description === EQUIPD_ORGANIZATION_DESCRIPTION, 'org description')
 assert(
-  organization.description.includes('used commercial gym equipment'),
-  'org description mentions used commercial',
+  organization.description ===
+    "Equipd is the UK's marketplace for buying, selling and valuing used gym equipment.",
+  'org description exact marketplace wording',
+)
+assert(
+  !organization.description.includes('commercial'),
+  'org description is not limited to commercial',
 )
 assert(organization.areaServed === 'United Kingdom', 'org areaServed')
 assert(organization.contactPoint?.email === 'support@equipd.co.uk', 'org contact')
