@@ -22,6 +22,7 @@ import {
   validateListingFulfilmentDetails,
 } from './listingFulfilmentPrivate'
 import { supabase } from './supabase'
+import { notifyIndexNowForListingChange } from './indexNowNotify'
 
 export { getCategoryDisplayName, getRatingLabel } from './listingOptions'
 export {
@@ -454,6 +455,15 @@ export async function createListing(sellerId, fields) {
     .select('*')
     .single()
 
+  if (!error && data) {
+    notifyIndexNowForListingChange({
+      previous: null,
+      next: data,
+      action: 'create',
+      source: 'createListing',
+    })
+  }
+
   return { data, error }
 }
 
@@ -461,6 +471,12 @@ export async function updateListing(listingId, fields) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
+
+  const { data: previous } = await supabase
+    .from('listings')
+    .select('*')
+    .eq('id', listingId)
+    .maybeSingle()
 
   const updates = {}
 
@@ -496,12 +512,43 @@ export async function updateListing(listingId, fields) {
     .select('*')
     .single()
 
+  if (!error && data) {
+    notifyIndexNowForListingChange({
+      previous,
+      next: data,
+      action: 'update',
+      source: 'updateListing',
+    })
+  }
+
   return { data, error }
 }
 
 export async function deleteListing(listingId) {
   if (!supabase) {
     return { error: new Error('Supabase is not configured.') }
+  }
+
+  const { data: previous } = await supabase
+    .from('listings')
+    .select('*')
+    .eq('id', listingId)
+    .maybeSingle()
+
+  // Notify while the row still exists so Edge ownership checks succeed.
+  // IndexNow failures must never block deletion.
+  if (previous) {
+    try {
+      await notifyIndexNowForListingChange({
+        previous,
+        next: null,
+        action: 'delete',
+        source: 'deleteListing',
+        awaitInvoke: true,
+      })
+    } catch {
+      // swallow
+    }
   }
 
   const { error } = await supabase.from('listings').delete().eq('id', listingId)

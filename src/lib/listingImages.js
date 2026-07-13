@@ -1,5 +1,6 @@
 import { MAX_LISTING_IMAGES } from './constants'
 import { supabase } from './supabase'
+import { notifyIndexNowForListingChange } from './indexNowNotify'
 
 export const LISTING_IMAGES_BUCKET = 'listing-images'
 
@@ -170,6 +171,23 @@ export async function uploadListingImages({ userId, listingId, files, startSortO
     uploaded.push(data)
   }
 
+  if (uploaded.length && supabase && listingId) {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('id', listingId)
+      .maybeSingle()
+
+    if (listing) {
+      notifyIndexNowForListingChange({
+        previous: listing,
+        next: listing,
+        action: 'images',
+        source: 'uploadListingImages',
+      })
+    }
+  }
+
   return { data: uploaded, error: null }
 }
 
@@ -189,7 +207,28 @@ export async function updateListingImagesOrder(images) {
   )
 
   const failed = results.find((result) => result.error)
-  return { error: failed?.error ?? null }
+  if (failed?.error) {
+    return { error: failed.error }
+  }
+
+  const listingId = images[0]?.listing_id
+  if (listingId) {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('id', listingId)
+      .maybeSingle()
+    if (listing) {
+      notifyIndexNowForListingChange({
+        previous: listing,
+        next: listing,
+        action: 'images',
+        source: 'updateListingImagesOrder',
+      })
+    }
+  }
+
+  return { error: null }
 }
 
 export async function deleteListingImage(image) {
@@ -197,6 +236,7 @@ export async function deleteListingImage(image) {
     return { error: new Error('Supabase is not configured.') }
   }
 
+  const listingId = image?.listing_id
   const { error: storageError } = await supabase.storage
     .from(LISTING_IMAGES_BUCKET)
     .remove([image.storage_path])
@@ -206,6 +246,22 @@ export async function deleteListingImage(image) {
   }
 
   const { error } = await supabase.from('listing_images').delete().eq('id', image.id)
+
+  if (!error && listingId) {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('id', listingId)
+      .maybeSingle()
+    if (listing) {
+      notifyIndexNowForListingChange({
+        previous: listing,
+        next: listing,
+        action: 'images',
+        source: 'deleteListingImage',
+      })
+    }
+  }
 
   return { error }
 }

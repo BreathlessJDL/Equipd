@@ -15,3 +15,7 @@ verify_jwt = false
 
 [functions.validate-password]
 verify_jwt = false
+
+[functions.indexnow-submit]
+# Auth enforced in-function (user JWT + listing ownership, admin JWT, or INDEXNOW_INTERNAL_SECRET)
+verify_jwt = false

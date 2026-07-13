@@ -50,4 +50,8 @@ technogym-model-variant-report.md
 # Build-generated sitemap (created by npm run build)
 /public/sitemap.xml
 
+# Build-generated IndexNow verification key file (from INDEXNOW_KEY; never commit)
+/public/*.txt
+!/public/robots.txt
+
 .vercel

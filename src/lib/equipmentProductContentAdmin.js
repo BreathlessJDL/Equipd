@@ -2,6 +2,7 @@ import {
   EQUIPMENT_PRODUCT_CONTENT_FIELDS,
   EQUIPMENT_PRODUCT_CONTENT_STATUS,
 } from './equipmentProductContentPage.js'
+import { notifyIndexNowForEquipmentContentChange } from './indexNowNotify.js'
 
 export const CONTENT_PUBLISH_SCOPE = {
   SELECTED: 'selected',
@@ -190,6 +191,7 @@ export async function publishEquipmentProductContentDrafts(contentIds = [], {
   }
 
   const publishedIds = []
+  const publishedRows = []
   const chunkSize = 100
   const update = buildPublishEquipmentProductContentUpdate()
 
@@ -200,13 +202,23 @@ export async function publishEquipmentProductContentDrafts(contentIds = [], {
       .update(update)
       .in('id', chunk)
       .eq('generation_status', EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT)
-      .select('id')
+      .select(`${EQUIPMENT_PRODUCT_CONTENT_FIELDS}, equipment_products ( brand, canonical_product_key )`)
 
     if (error) {
       return { publishedIds, publishedCount: publishedIds.length, error }
     }
 
-    publishedIds.push(...(data ?? []).map((row) => row.id))
+    const rows = (data ?? []).map(normalizeJoinedProduct)
+    publishedIds.push(...rows.map((row) => row.id))
+    publishedRows.push(...rows)
+  }
+
+  if (publishedRows.length) {
+    notifyIndexNowForEquipmentContentChange({
+      rows: publishedRows,
+      action: 'publish',
+      source: 'publishEquipmentProductContentDrafts',
+    })
   }
 
   return {

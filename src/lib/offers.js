@@ -1,5 +1,6 @@
 import { parsePriceToPence } from './listings'
 import { enrichListingWithImages } from './listingImages'
+import { notifyIndexNowForListingChange } from './indexNowNotify'
 import { enrichOfferWithOrder, fetchOrdersByOfferIds, getOfferOrder } from './orders'
 import { enrichOfferWithPayment, getOfferPayment, isPaymentComplete, paymentFields } from './payments'
 import { fetchPublicProfilesByIds } from './profiles'
@@ -571,6 +572,31 @@ export async function createOfferFromForm({
   })
 }
 
+async function notifyListingStatusTransitionIndexNow(listingId, source) {
+  if (!listingId || !supabase) return
+  try {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('id', listingId)
+      .maybeSingle()
+    if (!listing) return
+
+    // Offer/payment RPCs leave public `active` without going through updateListing.
+    notifyIndexNowForListingChange({
+      previous: { ...listing, status: 'active' },
+      next: listing,
+      action: 'update',
+      source,
+    })
+  } catch (error) {
+    console.info(
+      '[indexnow] offer status notify failed',
+      String(error?.message || error).slice(0, 200),
+    )
+  }
+}
+
 export async function acceptOffer(offerId) {
   if (!supabase) {
     return { data: null, offers: null, error: new Error('Supabase is not configured.') }
@@ -583,6 +609,8 @@ export async function acceptOffer(offerId) {
   if (error) {
     return { data: null, offers: null, error }
   }
+
+  void notifyListingStatusTransitionIndexNow(accepted?.listing_id, 'acceptOffer')
 
   const { data: offers, error: fetchError } = await fetchOffersForListing(accepted.listing_id)
 
@@ -640,6 +668,8 @@ export async function acceptCounterOffer(offerId) {
   if (error) {
     return { data: null, offers: null, error }
   }
+
+  void notifyListingStatusTransitionIndexNow(accepted?.listing_id, 'acceptCounterOffer')
 
   const { data: offers, error: fetchError } = await fetchOffersForListing(accepted.listing_id)
 

@@ -128,6 +128,21 @@ Deno.serve(async (req) => {
           payment_status: capturedPayment?.status ?? null,
         })
 
+        // Isolated IndexNow notify — never affects payment success/failure.
+        void import('../_shared/indexNowEdgeNotify.ts')
+          .then(({ notifyIndexNowAfterPaymentCapture }) =>
+            notifyIndexNowAfterPaymentCapture(
+              admin,
+              paymentId,
+              'stripe-webhook:mark_payment_captured',
+            ))
+          .catch((notifyError) => {
+            console.error(
+              'stripe-webhook indexnow notify failed',
+              String(notifyError?.message || notifyError).slice(0, 200),
+            )
+          })
+
         try {
           const { data: paidOrder, error: orderLookupError } = await admin
             .from('orders')

@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabase.js'
+import { notifyIndexNowForEquipmentChange } from './indexNowNotify.js'
 import {
   buildCanonicalProductAuditPayload,
   buildCanonicalProductAuditReport,
@@ -722,9 +723,25 @@ export async function approveEquipmentProduct(productId) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
+  const { data: previous } = await supabase
+    .from('equipment_products')
+    .select(EQUIPMENT_PRODUCT_FIELDS)
+    .eq('id', productId)
+    .maybeSingle()
+
   const { data, error } = await supabase.rpc('admin_approve_equipment_product', {
     p_product_id: productId,
   })
+
+  if (!error && data) {
+    notifyIndexNowForEquipmentChange({
+      previous,
+      next: data,
+      action: 'approve',
+      includeBrandDirectory: true,
+      source: 'approveEquipmentProduct',
+    })
+  }
 
   return { data, error }
 }
@@ -734,9 +751,25 @@ export async function excludeEquipmentProduct(productId) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
+  const { data: previous } = await supabase
+    .from('equipment_products')
+    .select(EQUIPMENT_PRODUCT_FIELDS)
+    .eq('id', productId)
+    .maybeSingle()
+
   const { data, error } = await supabase.rpc('admin_exclude_equipment_product', {
     p_product_id: productId,
   })
+
+  if (!error) {
+    notifyIndexNowForEquipmentChange({
+      previous,
+      next: data || (previous ? { ...previous, status: 'excluded' } : null),
+      action: 'exclude',
+      includeBrandDirectory: true,
+      source: 'excludeEquipmentProduct',
+    })
+  }
 
   return { data, error }
 }
@@ -745,6 +778,12 @@ export async function updateEquipmentProduct(productId, fields) {
   if (!isSupabaseConfigured || !supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
+
+  const { data: previous } = await supabase
+    .from('equipment_products')
+    .select(EQUIPMENT_PRODUCT_FIELDS)
+    .eq('id', productId)
+    .maybeSingle()
 
   const { data, error } = await supabase.rpc('admin_update_equipment_product', {
     p_product_id: productId,
@@ -765,6 +804,18 @@ export async function updateEquipmentProduct(productId, fields) {
     p_status: fields.status ?? null,
     p_review_notes: fields.reviewNotes ?? null,
   })
+
+  if (!error && data) {
+    const previousKey = previous?.canonical_product_key
+    const nextKey = data?.canonical_product_key
+    notifyIndexNowForEquipmentChange({
+      previous,
+      next: data,
+      action: previousKey && nextKey && previousKey !== nextKey ? 'key_change' : 'update',
+      includeBrandDirectory: Boolean(previousKey && nextKey && previousKey !== nextKey),
+      source: 'updateEquipmentProduct',
+    })
+  }
 
   return { data, error }
 }
@@ -869,6 +920,12 @@ export async function approveEquipmentProductImage(productId) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
+  const { data: previous } = await supabase
+    .from('equipment_products')
+    .select(EQUIPMENT_PRODUCT_FIELDS)
+    .eq('id', productId)
+    .maybeSingle()
+
   const { data, error } = await supabase.rpc('admin_approve_equipment_product_image', {
     p_product_id: productId,
   })
@@ -882,7 +939,15 @@ export async function approveEquipmentProductImage(productId) {
     return { data, error: syncResult.error }
   }
 
-  return { data: syncResult.data ?? data, error: null }
+  const next = syncResult.data ?? data
+  notifyIndexNowForEquipmentChange({
+    previous,
+    next,
+    action: 'image',
+    source: 'approveEquipmentProductImage',
+  })
+
+  return { data: next, error: null }
 }
 
 export async function uploadAndReplaceEquipmentProductImageFile(product, file, {
@@ -933,10 +998,25 @@ export async function rejectEquipmentProductImage(productId, reason = null) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
 
+  const { data: previous } = await supabase
+    .from('equipment_products')
+    .select(EQUIPMENT_PRODUCT_FIELDS)
+    .eq('id', productId)
+    .maybeSingle()
+
   const { data, error } = await supabase.rpc('admin_reject_equipment_product_image', {
     p_product_id: productId,
     p_reason: reason,
   })
+
+  if (!error && data) {
+    notifyIndexNowForEquipmentChange({
+      previous,
+      next: data,
+      action: 'image',
+      source: 'rejectEquipmentProductImage',
+    })
+  }
 
   return { data, error }
 }
