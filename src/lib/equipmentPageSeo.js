@@ -173,6 +173,116 @@ export function getEquipmentSocialImageUrl(product) {
   return getApprovedEquipmentImage(product) || absoluteUrl(EQUIPD_DEFAULT_OG_IMAGE_PATH)
 }
 
+function stripHtmlToPlainText(value) {
+  return String(value ?? '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function normalizeProductSchemaDescription(value) {
+  const text = stripHtmlToPlainText(value)
+  return text || null
+}
+
+function normalizeProductSchemaCategory(equipmentType) {
+  const category = normalizeWhitespace(equipmentType)
+  if (!category) return null
+  if (category.toLowerCase() === 'unknown') return null
+  // Reject raw enum-like codes (snake_case / internal taxonomy).
+  if (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(category)) return null
+  return category
+}
+
+/**
+ * Absolute https image suitable for Product schema.
+ * Rejects placeholders, preview hosts, and the site-wide OG logo fallback.
+ */
+export function resolveProductSchemaImageUrl(imageUrl = null, product = null) {
+  const candidates = [
+    normalizeWhitespace(imageUrl),
+    getApprovedEquipmentImage(product),
+  ].filter(Boolean)
+
+  for (const candidate of candidates) {
+    if (!/^https:\/\//i.test(candidate)) continue
+    if (/localhost|\.vercel\.app/i.test(candidate)) continue
+    if (candidate.includes(EQUIPD_DEFAULT_OG_IMAGE_PATH)) continue
+    return candidate
+  }
+  return null
+}
+
+/**
+ * Conservative Product JSON-LD for canonical equipment guide pages.
+ * Describes the model guide — never invents retail offers, ratings, or identifiers.
+ */
+export function buildEquipmentProductJsonLd(product, {
+  description = null,
+  imageUrl = null,
+  brandDisplayName = null,
+} = {}) {
+  if (!getIndexabilityForProduct(product).indexable) return null
+
+  const name = getEquipmentProductPublicName(product)
+  const url = buildEquipmentCanonicalUrl(product)
+  if (!name || !url) return null
+  // Reject totally generic fallback name with no brand/model identity.
+  if (name === 'Gym equipment' && !normalizeWhitespace(product?.brand) && !normalizeWhitespace(product?.model)) {
+    return null
+  }
+
+  const productLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${url}#product`,
+    name,
+    url,
+    mainEntityOfPage: url,
+  }
+
+  const resolvedDescription = normalizeProductSchemaDescription(description)
+  if (resolvedDescription) {
+    productLd.description = resolvedDescription
+  }
+
+  const brandName = normalizeWhitespace(brandDisplayName || getBrandDisplayName(product.brand))
+  if (brandName) {
+    productLd.brand = {
+      '@type': 'Brand',
+      name: brandName,
+    }
+  }
+
+  const image = resolveProductSchemaImageUrl(imageUrl, product)
+  if (image) {
+    productLd.image = [image]
+  }
+
+  const model = normalizeWhitespace(product.model)
+  if (model) {
+    productLd.model = model
+  }
+
+  const category = normalizeProductSchemaCategory(product.equipment_type)
+  if (category) {
+    productLd.category = category
+  }
+
+  // Intentionally omit: sku/mpn/gtin (no genuine manufacturer IDs),
+  // offers/price/availability, aggregateRating/review, manufacturer (no separate field).
+
+  return productLd
+}
+
 export function buildFactualOverviewFallback(product) {
   const name = getEquipmentProductPublicName(product)
   const brand = normalizeWhitespace(product?.brand)
@@ -315,51 +425,6 @@ export function buildEquipmentInternalLinks(product, {
   })
 }
 
-export function buildEquipmentProductJsonLd(product, {
-  description = null,
-  imageUrl = null,
-  brandSlug = null,
-  brandDisplayName = null,
-} = {}) {
-  if (!product?.canonical_product_key) return null
-
-  const name = getEquipmentProductPublicName(product)
-  const url = buildEquipmentCanonicalUrl(product)
-  const brandName = brandDisplayName || getBrandDisplayName(product.brand)
-  const resolvedDescription = description || buildEquipmentMetaDescription(product)
-  const image = imageUrl || getApprovedEquipmentImage(product)
-
-  const productLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name,
-    description: resolvedDescription,
-    url,
-    brand: {
-      '@type': 'Brand',
-      name: brandName,
-    },
-  }
-
-  if (image) {
-    productLd.image = [image]
-  }
-
-  if (normalizeWhitespace(product.model)) {
-    productLd.model = normalizeWhitespace(product.model)
-  }
-
-  if (normalizeWhitespace(product.equipment_type)
-    && String(product.equipment_type).toLowerCase() !== 'unknown') {
-    productLd.category = normalizeWhitespace(product.equipment_type)
-  }
-
-  // Public Equipd product identifier (canonical key), not a manufacturer GTIN.
-  productLd.sku = product.canonical_product_key
-
-  return productLd
-}
-
 export function buildEquipmentBreadcrumbJsonLd(product, {
   brandSlug = null,
   brandDisplayName = null,
@@ -453,6 +518,7 @@ export function selectRelatedEquipmentProducts(product, candidates = [], { limit
 export function buildEquipmentPageSeoBundle(product, {
   seoTitle = null,
   seoDescription = null,
+  overviewText = null,
   hasConsoleOptions = null,
   brandSlug = null,
   brandDisplayName = null,
@@ -479,9 +545,15 @@ export function buildEquipmentPageSeoBundle(product, {
     description,
     imageUrl: socialImage,
   })
+  // Product description: approved visible overview first, then approved SEO meta text.
+  // Never invent a meta-style fallback solely to fill Product.description.
+  const productDescription = normalizeWhitespace(overviewText)
+    || normalizeWhitespace(seoDescription)
+    || null
   const productJsonLd = buildEquipmentProductJsonLd(product, {
-    description,
-    imageUrl: getApprovedEquipmentImage(product) || imageUrl,
+    description: productDescription,
+    // Only approved catalogue images — never OG logo / display fallbacks.
+    imageUrl: getApprovedEquipmentImage(product),
     brandSlug,
     brandDisplayName,
   })
@@ -500,6 +572,8 @@ export function buildEquipmentPageSeoBundle(product, {
     indexability,
     openGraph,
     jsonLd: [productJsonLd, breadcrumbJsonLd].filter(Boolean),
+    productJsonLd,
+    breadcrumbJsonLd,
     internalLinks,
     socialImage,
   }

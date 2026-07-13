@@ -35,6 +35,7 @@ import {
   normalizeFaqItems,
   renderFaqPageScriptTag,
 } from './faqPageStructuredData.js'
+import { renderProductScriptTag } from './productPageStructuredData.js'
 import { injectSiteStructuredDataIntoHtml } from './siteStructuredData.js'
 
 export { buildEquipmentProductPagePath }
@@ -141,6 +142,9 @@ function renderJsonLd(data) {
     }
     if (entry?.['@type'] === 'FAQPage') {
       return renderFaqPageScriptTag(entry)
+    }
+    if (entry?.['@type'] === 'Product') {
+      return renderProductScriptTag(entry)
     }
     return `<script type="application/ld+json">${JSON.stringify(entry).replace(/</g, '\\u003c')}</script>`
   }).join('\n')
@@ -282,6 +286,7 @@ export function buildEquipmentPageSeoDocument({
   const seo = buildEquipmentPageSeoBundle(product, {
     seoTitle: content?.seo_title || null,
     seoDescription: content?.seo_meta_description || null,
+    overviewText: content?.overview_text || null,
     hasConsoleOptions,
     brandSlug: resolvedBrandSlug,
     brandDisplayName: brandName,

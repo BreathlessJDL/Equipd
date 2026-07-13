@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import JsonLd from '../components/JsonLd'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import FaqPageSchema from '../components/seo/FaqPageSchema'
+import ProductSchema from '../components/seo/ProductSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
 import {
   buildEquipmentPageSeoBundle,
@@ -14,6 +15,10 @@ import {
   findBreadcrumbSchemas,
 } from '../lib/breadcrumbStructuredData'
 import { buildFaqPageSchemaNode } from '../lib/faqPageStructuredData'
+import {
+  excludeProductSchemas,
+  findProductSchemas,
+} from '../lib/productPageStructuredData'
 import {
   fetchEquipmentProductPageData,
   fetchRelatedPublicEquipmentProducts,
@@ -200,12 +205,20 @@ function EquipmentModelPage() {
     return buildEquipmentPageSeoBundle(product, {
       seoTitle: pageContent?.seo?.title || null,
       seoDescription: pageContent?.seo?.description || null,
+      overviewText: pageContent?.content?.overview_text || null,
       hasConsoleOptions,
       brandSlug: product.brand ? getBrandSlug(product.brand) : null,
       brandDisplayName: product.brand,
       imageUrl: getApprovedEquipmentImage(product) || productImageUrl,
     })
-  }, [product, pageContent?.seo?.title, pageContent?.seo?.description, hasConsoleOptions, productImageUrl])
+  }, [
+    product,
+    pageContent?.seo?.title,
+    pageContent?.seo?.description,
+    pageContent?.content?.overview_text,
+    hasConsoleOptions,
+    productImageUrl,
+  ])
 
   usePageMeta({
     title: seoBundle?.titleForHook || (notFound ? 'Product not found' : 'Equipment product'),
@@ -218,13 +231,17 @@ function EquipmentModelPage() {
     openGraph: seoBundle?.openGraph || null,
   })
 
-  const pageJsonLd = useMemo(
-    () => (seoBundle?.jsonLd ? excludeBreadcrumbSchemas(seoBundle.jsonLd) : null),
-    [seoBundle],
-  )
+  const pageJsonLd = useMemo(() => {
+    if (!seoBundle?.jsonLd) return null
+    return excludeProductSchemas(excludeBreadcrumbSchemas(seoBundle.jsonLd))
+  }, [seoBundle])
   const breadcrumbSchema = useMemo(() => {
     if (!seoBundle?.jsonLd || seoBundle?.indexability?.indexable === false) return null
     return findBreadcrumbSchemas(seoBundle.jsonLd)[0] || null
+  }, [seoBundle])
+  const productSchema = useMemo(() => {
+    if (!seoBundle?.jsonLd || seoBundle?.indexability?.indexable === false) return null
+    return findProductSchemas(seoBundle.jsonLd)[0] || null
   }, [seoBundle])
 
   const faqSchema = useMemo(() => {
@@ -442,6 +459,7 @@ function EquipmentModelPage() {
   return (
     <article className="equipment-model-page">
       <JsonLd data={pageJsonLd} />
+      <ProductSchema schema={productSchema} />
       <BreadcrumbSchema schema={breadcrumbSchema} />
       <FaqPageSchema schema={faqSchema} />
       <div className="equipment-model-page__layout">
