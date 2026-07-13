@@ -61,6 +61,15 @@ const brandsDoc = buildBrandsIndexSeoDocument({ brands })
 assert(brandsDoc.title.includes('Value Guides'), 'brands title')
 assert(brandsDoc.bodyHtml.includes('<h1>Gym Equipment Value Guides by Brand</h1>'), 'brands h1')
 assert(brandsDoc.bodyHtml.includes('/brands/life-fitness'), 'brands crawlable link')
+assert(
+  Array.isArray(brandsDoc.jsonLd)
+    && brandsDoc.jsonLd.some((entry) => entry['@type'] === 'BreadcrumbList'),
+  'brands index breadcrumb json-ld',
+)
+assert(
+  brandsDoc.jsonLd.some((entry) => entry['@type'] === 'BreadcrumbList' && entry['@id']?.endsWith('#breadcrumb')),
+  'brands index breadcrumb @id',
+)
 
 const brandDoc = buildBrandPageSeoDocument({
   brand: brands[0],
@@ -93,6 +102,10 @@ assert(productDoc.bodyHtml.includes('A commercial treadmill overview.'), 'produc
 assert(productDoc.bodyHtml.includes('data-canonical-product-key'), 'product identity attr')
 assert(productDoc.jsonLd.some((entry) => entry['@type'] === 'Product'), 'product json-ld')
 assert(productDoc.jsonLd.some((entry) => entry['@type'] === 'BreadcrumbList'), 'breadcrumb json-ld')
+assert(
+  productDoc.jsonLd.some((entry) => entry['@type'] === 'BreadcrumbList' && entry['@id']?.includes('#breadcrumb')),
+  'breadcrumb @id',
+)
 assert(productDoc.openGraph['og:site_name'] === 'Equipd', 'product og')
 assert(productDoc.robots === 'index, follow', 'product robots')
 
@@ -116,6 +129,8 @@ assert(html.includes('name="twitter:card"'), 'injected twitter')
 assert(html.includes('application/ld+json'), 'injected json-ld')
 assert(html.includes('data-equipd-schema="organization"'), 'site organization schema')
 assert(html.includes('data-equipd-schema="website"'), 'site website schema')
+assert(html.includes('data-equipd-schema="breadcrumb"'), 'breadcrumb schema marker')
+assert((html.match(/data-equipd-schema="breadcrumb"/g) || []).length === 1, 'single breadcrumb')
 assert(html.includes('https://www.equipd.co.uk/browse?search={search_term_string}'), 'search action')
 assert((html.match(/data-equipd-schema="organization"/g) || []).length === 1, 'single organization')
 assert((html.match(/data-equipd-schema="website"/g) || []).length === 1, 'single website')

@@ -1,12 +1,17 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import JsonLd from '../components/JsonLd'
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
 import {
   buildEquipmentPageSeoBundle,
   buildFactualOverviewFallback,
   getApprovedEquipmentImage,
 } from '../lib/equipmentPageSeo'
+import {
+  excludeBreadcrumbSchemas,
+  findBreadcrumbSchemas,
+} from '../lib/breadcrumbStructuredData'
 import {
   fetchEquipmentProductPageData,
   fetchRelatedPublicEquipmentProducts,
@@ -210,6 +215,15 @@ function EquipmentModelPage() {
     noIndex: loading || notFound || error || Boolean(seoBundle && !seoBundle.indexability.indexable),
     openGraph: seoBundle?.openGraph || null,
   })
+
+  const pageJsonLd = useMemo(
+    () => (seoBundle?.jsonLd ? excludeBreadcrumbSchemas(seoBundle.jsonLd) : null),
+    [seoBundle],
+  )
+  const breadcrumbSchema = useMemo(() => {
+    if (!seoBundle?.jsonLd || seoBundle?.indexability?.indexable === false) return null
+    return findBreadcrumbSchemas(seoBundle.jsonLd)[0] || null
+  }, [seoBundle])
 
   useEffect(() => {
     if (loading) return
@@ -417,7 +431,8 @@ function EquipmentModelPage() {
 
   return (
     <article className="equipment-model-page">
-      <JsonLd data={seoBundle?.jsonLd} />
+      <JsonLd data={pageJsonLd} />
+      <BreadcrumbSchema schema={breadcrumbSchema} />
       <div className="equipment-model-page__layout">
         <nav className="equipment-model-page__breadcrumb" aria-label="Breadcrumb">
           <Link to="/">Home</Link>

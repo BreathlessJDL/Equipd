@@ -4,10 +4,13 @@ import HelpArticleContent from '../components/help/HelpArticleContent'
 import HelpHero from '../components/help/HelpHero'
 import HelpSearchResults from '../components/help/HelpSearchResults'
 import HelpSidebar from '../components/help/HelpSidebar'
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import '../components/help/HelpCentre.css'
 import { getHelpArticleBySlug } from '../data/helpArticles'
 import { useHelpCentreSearch } from '../hooks/useHelpCentreSearch'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { buildHelpArticleBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
+import { useMemo } from 'react'
 
 function HelpArticlePage() {
   const { slug } = useParams()
@@ -15,9 +18,14 @@ function HelpArticlePage() {
   usePageTitle(article?.title ?? 'Help Article')
   const { searchQuery, setSearchQuery, searchResults, isSearching, emptySearchMessage } =
     useHelpCentreSearch()
+  const breadcrumbSchema = useMemo(
+    () => (article ? buildHelpArticleBreadcrumbSchema(article) : null),
+    [article],
+  )
 
   return (
     <div className="help-centre">
+      <BreadcrumbSchema schema={breadcrumbSchema} />
       <HelpHero searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       <div className="help-centre__body">

@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import BrandCard from '../components/BrandCard'
 import JsonLd from '../components/JsonLd'
 import PageBreadcrumbs from '../components/PageBreadcrumbs'
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
 import {
   buildBrandCollectionJsonLd,
   fetchBrandDirectory,
   listBrandLogoAssetPaths,
 } from '../lib/brandCatalogue'
+import { buildBrandsIndexBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import './BrandsPage.css'
 
 function formatStatNumber(value) {
@@ -99,10 +101,12 @@ export default function BrandsPage() {
     () => buildBrandCollectionJsonLd(directory.brands),
     [directory.brands],
   )
+  const breadcrumbSchema = useMemo(() => buildBrandsIndexBreadcrumbSchema(), [])
 
   return (
     <div className="brands-page">
       <JsonLd data={jsonLd} />
+      <BreadcrumbSchema schema={breadcrumbSchema} />
       <div className="brands-page__inner">
         <PageBreadcrumbs
           items={[

@@ -432,49 +432,23 @@ export function buildBrandCollectionJsonLd(brands = []) {
 
 export function buildBrandPageJsonLd(brand, products = []) {
   if (!brand) return null
-  return [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'CollectionPage',
-      name: `${brand.displayName} Equipment Values`,
-      url: brand.absoluteUrl,
-      description: brand.intro,
-      mainEntity: {
-        '@type': 'ItemList',
-        numberOfItems: products.length,
-        itemListElement: products.slice(0, 100).map((product, index) => ({
-          '@type': 'ListItem',
-          position: index + 1,
-          name: product.displayName,
-          url: `${EQUIPD_SITE_ORIGIN}${product.href}`,
-        })),
-      },
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${brand.displayName} Equipment Values`,
+    url: brand.absoluteUrl,
+    description: brand.intro,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: products.length,
+      itemListElement: products.slice(0, 100).map((product, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: product.displayName,
+        url: `${EQUIPD_SITE_ORIGIN}${product.href}`,
+      })),
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Home',
-          item: `${EQUIPD_SITE_ORIGIN}/`,
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Equipment Values',
-          item: `${EQUIPD_SITE_ORIGIN}/brands`,
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: brand.displayName,
-          item: brand.absoluteUrl,
-        },
-      ],
-    },
-  ]
+  }
 }
 
 export function aggregateBrandCategories(products = []) {

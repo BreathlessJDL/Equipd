@@ -12,6 +12,7 @@ import {
   getProductSeriesLabel,
   isPublicBrandCatalogueProduct,
 } from './brandCatalogueCore.js'
+import { buildEquipmentBreadcrumbSchema } from './breadcrumbStructuredData.js'
 import { LISTING_CATEGORY_OPTIONS } from './listingOptions.js'
 import { supportsProductConsoleOptions } from './equipmentCardio.js'
 
@@ -365,35 +366,12 @@ export function buildEquipmentBreadcrumbJsonLd(product, {
 } = {}) {
   if (!product?.canonical_product_key) return null
 
-  const name = getEquipmentProductPublicName(product)
-  const url = buildEquipmentCanonicalUrl(product)
-  const brandName = brandDisplayName || getBrandDisplayName(product.brand)
-  const resolvedBrandSlug = brandSlug || getBrandSlug(product.brand)
-
-  const items = [
-    { name: 'Home', item: `${EQUIPD_SITE_ORIGIN}/` },
-    { name: 'Equipment Values', item: `${EQUIPD_SITE_ORIGIN}/brands` },
-  ]
-
-  if (resolvedBrandSlug) {
-    items.push({
-      name: brandName,
-      item: getBrandAbsoluteUrl(resolvedBrandSlug),
-    })
-  }
-
-  items.push({ name, item: url })
-
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((entry, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: entry.name,
-      item: entry.item,
-    })),
-  }
+  return buildEquipmentBreadcrumbSchema(product, {
+    brandSlug: brandSlug || getBrandSlug(product.brand),
+    brandDisplayName: brandDisplayName || getBrandDisplayName(product.brand),
+    productName: getEquipmentProductPublicName(product),
+    productUrl: buildEquipmentCanonicalUrl(product),
+  })
 }
 
 export function buildEquipmentOpenGraph(product, {

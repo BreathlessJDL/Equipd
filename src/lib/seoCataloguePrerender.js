@@ -25,6 +25,11 @@ import {
   buildEquipmentProductPagePath,
   getEquipmentProductPublicName,
 } from './equipmentPageSeo.js'
+import {
+  buildBrandsIndexBreadcrumbSchema,
+  buildBrandPageBreadcrumbSchema,
+  renderBreadcrumbScriptTag,
+} from './breadcrumbStructuredData.js'
 import { injectSiteStructuredDataIntoHtml } from './siteStructuredData.js'
 
 export { buildEquipmentProductPagePath }
@@ -124,10 +129,13 @@ function renderLinkList(links = [], { labelledBy = null } = {}) {
 
 function renderJsonLd(data) {
   if (!data) return ''
-  const payload = Array.isArray(data) ? data : [data]
-  return payload.map((entry) => (
-    `<script type="application/ld+json">${JSON.stringify(entry).replace(/</g, '\\u003c')}</script>`
-  )).join('\n')
+  const payload = Array.isArray(data) ? data.filter(Boolean) : [data]
+  return payload.map((entry) => {
+    if (entry?.['@type'] === 'BreadcrumbList') {
+      return renderBreadcrumbScriptTag(entry)
+    }
+    return `<script type="application/ld+json">${JSON.stringify(entry).replace(/</g, '\\u003c')}</script>`
+  }).join('\n')
 }
 
 export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
@@ -162,7 +170,10 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
     title,
     description,
     canonicalPath: path,
-    jsonLd: buildBrandCollectionJsonLd(brands),
+    jsonLd: [
+      buildBrandCollectionJsonLd(brands),
+      buildBrandsIndexBreadcrumbSchema(),
+    ].filter(Boolean),
     bodyHtml: body,
   }
 }
@@ -217,7 +228,10 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
     title,
     description,
     canonicalPath: path,
-    jsonLd: buildBrandPageJsonLd(brand, products),
+    jsonLd: [
+      buildBrandPageJsonLd(brand, products),
+      buildBrandPageBreadcrumbSchema(brand),
+    ].filter(Boolean),
     bodyHtml: body,
   }
 }

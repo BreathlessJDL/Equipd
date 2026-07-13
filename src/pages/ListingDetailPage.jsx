@@ -27,10 +27,12 @@ import MakeOfferModal from '../components/listing/MakeOfferModal'
 import OfferSentConfirmationModal from '../components/listing/OfferSentConfirmationModal'
 import ListingSaveButton from '../components/ListingSaveButton'
 import ReportTrigger from '../components/ReportTrigger'
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import { ErrorState, LoadingState } from '../components/ui/UiState'
 import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '../lib/orders'
 import { useListingRecommendations } from '../hooks/useListingRecommendations'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { buildListingBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { fetchListingSavedCount } from '../lib/savedListings'
 import { canReportListing, REPORT_TYPES } from '../lib/reports'
 
@@ -57,6 +59,11 @@ function ListingDetailPage() {
   const incrementedSlugRef = useRef(null)
 
   usePageTitle(listing?.title ?? (loading ? null : 'Listing Not Found'))
+
+  const breadcrumbSchema = useMemo(
+    () => (listing ? buildListingBreadcrumbSchema(listing) : null),
+    [listing],
+  )
 
   useEffect(() => {
     if (!slug) return undefined
@@ -365,6 +372,7 @@ function ListingDetailPage() {
 
   return (
     <article className="listing-detail">
+      <BreadcrumbSchema schema={breadcrumbSchema} />
       <div className="listing-detail__hero">
         <div className="listing-detail__primary">
           <div className="listing-detail__media">

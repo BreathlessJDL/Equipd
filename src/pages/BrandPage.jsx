@@ -5,6 +5,7 @@ import EquipmentValueGuideCard from '../components/EquipmentValueGuideCard'
 import JsonLd from '../components/JsonLd'
 import ListingCard from '../components/ListingCard'
 import PageBreadcrumbs from '../components/PageBreadcrumbs'
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
 import {
   buildBrandPageJsonLd,
@@ -14,6 +15,7 @@ import {
   fetchBrandPageData,
   getBrandPagePath,
 } from '../lib/brandCatalogue'
+import { buildBrandPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import './BrandPage.css'
 
 const PAGE_SIZE = 24
@@ -136,6 +138,10 @@ export default function BrandPage() {
     () => (brand ? buildBrandPageJsonLd(brand, allProducts) : null),
     [brand, allProducts],
   )
+  const breadcrumbSchema = useMemo(
+    () => (brand ? buildBrandPageBreadcrumbSchema(brand) : null),
+    [brand],
+  )
 
   function resetFilters() {
     setCategoryFilter('')
@@ -180,6 +186,7 @@ export default function BrandPage() {
   return (
     <div className="brand-page">
       <JsonLd data={jsonLd} />
+      <BreadcrumbSchema schema={breadcrumbSchema} />
       <div className="brand-page__inner">
         <PageBreadcrumbs
           items={[

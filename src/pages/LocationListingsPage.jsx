@@ -7,6 +7,7 @@ import LocationPageHero from '../components/browse/LocationPageHero'
 import LocationSellerSection from '../components/browse/LocationSellerSection'
 import MarketplaceBrowseShell from '../components/browse/MarketplaceBrowseShell'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import '../components/ListingBrowse.css'
 import '../components/browse/BrowseActiveFilterChips.css'
 import '../components/browse/LocationPage.css'
@@ -17,6 +18,7 @@ import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
+import { buildLocationPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { fetchCategories } from '../lib/listings'
 import {
   getLocationPage,
@@ -46,6 +48,11 @@ function LocationListingsPage({ locationSlug }) {
 
   usePageTitle(
     locationView?.name ? `${locationView.name} Gym Equipment` : region?.name ? `${region.name} Gym Equipment` : null,
+  )
+
+  const breadcrumbSchema = useMemo(
+    () => (region ? buildLocationPageBreadcrumbSchema(region) : null),
+    [region],
   )
 
   const profileLocation = useProfileBrowseLocation()
@@ -164,6 +171,7 @@ function LocationListingsPage({ locationSlug }) {
 
   return (
     <MarketplaceBrowseShell>
+      <BreadcrumbSchema schema={breadcrumbSchema} />
       <div className="location-page">
         <LocationPageHero
           locationView={locationView}
