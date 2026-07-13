@@ -30,6 +30,11 @@ import {
   buildBrandPageBreadcrumbSchema,
   renderBreadcrumbScriptTag,
 } from './breadcrumbStructuredData.js'
+import {
+  buildFaqPageSchemaNode,
+  normalizeFaqItems,
+  renderFaqPageScriptTag,
+} from './faqPageStructuredData.js'
 import { injectSiteStructuredDataIntoHtml } from './siteStructuredData.js'
 
 export { buildEquipmentProductPagePath }
@@ -134,8 +139,28 @@ function renderJsonLd(data) {
     if (entry?.['@type'] === 'BreadcrumbList') {
       return renderBreadcrumbScriptTag(entry)
     }
+    if (entry?.['@type'] === 'FAQPage') {
+      return renderFaqPageScriptTag(entry)
+    }
     return `<script type="application/ld+json">${JSON.stringify(entry).replace(/</g, '\\u003c')}</script>`
   }).join('\n')
+}
+
+function renderFaqSection(faqs = []) {
+  const { items } = normalizeFaqItems(faqs)
+  if (!items.length) return ''
+
+  const entries = items.map((entry) => (
+    `<details>
+      <summary>${escapeHtml(entry.question)}</summary>
+      <p>${escapeHtml(entry.answer)}</p>
+    </details>`
+  )).join('')
+
+  return `<section aria-labelledby="seo-product-faq-heading">
+    <h2 id="seo-product-faq-heading">Common questions</h2>
+    ${entries}
+  </section>`
 }
 
 export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
@@ -251,6 +276,8 @@ export function buildEquipmentPageSeoDocument({
   const resolvedBrandSlug = brandSlug || getBrandSlug(product.brand)
   const brandName = brandDisplayName || getBrandDisplayName(product.brand)
   const overview = String(content?.overview_text || '').trim()
+  const faqSource = Array.isArray(content?.faq_json) ? content.faq_json : []
+  const { items: faqItems } = normalizeFaqItems(faqSource)
 
   const seo = buildEquipmentPageSeoBundle(product, {
     seoTitle: content?.seo_title || null,
@@ -260,6 +287,10 @@ export function buildEquipmentPageSeoDocument({
     brandDisplayName: brandName,
     imageUrl,
   })
+
+  const faqSchema = seo.indexability.indexable
+    ? buildFaqPageSchemaNode(faqItems, { canonicalUrl: seo.canonicalUrl })
+    : null
 
   const series = getProductSeriesLabel(product)
   const yearBits = []
@@ -318,6 +349,7 @@ export function buildEquipmentPageSeoDocument({
     <ul>${facts}</ul>
   </section>
   ${about}
+  ${seo.indexability.indexable ? renderFaqSection(faqItems) : ''}
   ${related}
 </article>`.trim()
 
@@ -328,7 +360,7 @@ export function buildEquipmentPageSeoDocument({
     canonicalPath: path,
     robots: seo.indexability.robots,
     openGraph: seo.openGraph,
-    jsonLd: seo.jsonLd,
+    jsonLd: [...(seo.jsonLd || []), faqSchema].filter(Boolean),
     bodyHtml: body,
   }
 }

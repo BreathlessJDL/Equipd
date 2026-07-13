@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import JsonLd from '../components/JsonLd'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
+import FaqPageSchema from '../components/seo/FaqPageSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
 import {
   buildEquipmentPageSeoBundle,
@@ -12,6 +13,7 @@ import {
   excludeBreadcrumbSchemas,
   findBreadcrumbSchemas,
 } from '../lib/breadcrumbStructuredData'
+import { buildFaqPageSchemaNode } from '../lib/faqPageStructuredData'
 import {
   fetchEquipmentProductPageData,
   fetchRelatedPublicEquipmentProducts,
@@ -225,6 +227,14 @@ function EquipmentModelPage() {
     return findBreadcrumbSchemas(seoBundle.jsonLd)[0] || null
   }, [seoBundle])
 
+  const faqSchema = useMemo(() => {
+    if (!seoBundle?.indexability?.indexable) return null
+    if (!pageContent?.faqs?.length) return null
+    return buildFaqPageSchemaNode(pageContent.faqs, {
+      canonicalUrl: seoBundle.canonicalUrl,
+    })
+  }, [pageContent?.faqs, seoBundle])
+
   useEffect(() => {
     if (loading) return
 
@@ -433,6 +443,7 @@ function EquipmentModelPage() {
     <article className="equipment-model-page">
       <JsonLd data={pageJsonLd} />
       <BreadcrumbSchema schema={breadcrumbSchema} />
+      <FaqPageSchema schema={faqSchema} />
       <div className="equipment-model-page__layout">
         <nav className="equipment-model-page__breadcrumb" aria-label="Breadcrumb">
           <Link to="/">Home</Link>

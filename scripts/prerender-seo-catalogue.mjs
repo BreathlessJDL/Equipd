@@ -56,6 +56,7 @@ const CONTENT_SELECT = [
   'overview_text',
   'seo_title',
   'seo_meta_description',
+  'faq_json',
   'generation_status',
 ].join(', ')
 

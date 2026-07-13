@@ -106,8 +106,30 @@ assert(
   productDoc.jsonLd.some((entry) => entry['@type'] === 'BreadcrumbList' && entry['@id']?.includes('#breadcrumb')),
   'breadcrumb @id',
 )
+assert(!productDoc.jsonLd.some((entry) => entry['@type'] === 'FAQPage'), 'no FAQPage without faq_json')
 assert(productDoc.openGraph['og:site_name'] === 'Equipd', 'product og')
 assert(productDoc.robots === 'index, follow', 'product robots')
+
+const productDocWithFaqs = buildEquipmentPageSeoDocument({
+  product: products[0],
+  content: {
+    overview_text: 'A commercial treadmill overview.',
+    seo_title: 'Integrity Treadmill SEO Title',
+    seo_meta_description: 'Integrity meta description.',
+    faq_json: [
+      { question: 'When was it made?', answer: 'From 2015 according to Equipd records.' },
+      { question: 'What affects value?', answer: 'Year, condition and console configuration.' },
+    ],
+  },
+  hasConsoleOptions: true,
+})
+assert(productDocWithFaqs.jsonLd.some((entry) => entry['@type'] === 'FAQPage'), 'FAQPage when faqs present')
+assert(
+  (productDocWithFaqs.jsonLd.filter((entry) => entry['@type'] === 'FAQPage') || []).length === 1,
+  'exactly one FAQPage',
+)
+assert(productDocWithFaqs.bodyHtml.includes('Common questions'), 'FAQ section in prerender body')
+assert(productDocWithFaqs.bodyHtml.includes('When was it made?'), 'FAQ question in body')
 
 const template = `<!doctype html>
 <html lang="en">
@@ -140,5 +162,12 @@ assert(!html.includes('vercel.app'), 'prerender html avoids preview hosts')
 assert(html.includes('A commercial treadmill overview.'), 'injected body')
 assert(html.includes('id="root"'), 'keeps root')
 assert(html.includes('/assets/index.js'), 'keeps spa script')
+
+const htmlWithFaqs = injectSeoIntoHtml(template, productDocWithFaqs)
+assert(htmlWithFaqs.includes('data-equipd-schema="faq"'), 'faq schema marker')
+assert((htmlWithFaqs.match(/data-equipd-schema="faq"/g) || []).length === 1, 'single faq')
+assert((htmlWithFaqs.match(/data-equipd-schema="organization"/g) || []).length === 1, 'faq page keeps single org')
+assert((htmlWithFaqs.match(/data-equipd-schema="website"/g) || []).length === 1, 'faq page keeps single website')
+assert((htmlWithFaqs.match(/data-equipd-schema="breadcrumb"/g) || []).length === 1, 'faq page keeps breadcrumb')
 
 console.log('seo catalogue prerender tests passed')
