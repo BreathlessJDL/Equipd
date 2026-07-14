@@ -500,6 +500,15 @@ export function resolveContentEquipmentIdentityFamily(sourcePayload = null) {
   if (/rower|rowing/.test(type) || (/\brower\b|\browing\b/.test(haystack) && !/treadmill|bike/.test(type))) {
     return 'rower'
   }
+  if (
+    /\bsteppers?\b|\bstair\s*climbers?\b|\bclimbers?\b|\bpowermill\b|\bclimbmill\b/.test(type)
+    || (
+      /\bsteppers?\b|\bstair\s*climbers?\b|\bexcite\s*\+?\s*step\b|\bstep\s+excite\b/.test(haystack)
+      && !/selectorised|plate\s+loaded|chest\s+press|kinesis\s+step|step\s*\/\s*squat|\bsquat\b/.test(haystack)
+    )
+  ) {
+    return 'stepper'
+  }
   if (/cross\s*trainer|elliptical|crosstrainer|max\s+trainer|freestride/.test(type)
     || (/cross\s*trainer|elliptical|max\s+trainer|freestride/.test(haystack)
       && !/cable\s+crossover/.test(haystack))) {
@@ -534,6 +543,18 @@ const CATEGORY_INCOMPATIBLE_TERMS = Object.freeze({
     { label: 'selectorised strength', pattern: /selectori[sz]ed\s+strength/i },
     { label: 'indoor bike', pattern: /\bindoor\s+bikes?\b/i },
     { label: 'cross trainer', pattern: /\bcross\s*trainers?\b/i },
+  ],
+  stepper: [
+    { label: 'selectorised strength', pattern: /selectori[sz]ed\s+strength/i },
+    { label: 'selectorised', pattern: /\bselectori[sz]ed\b/i },
+    { label: 'weight stack', pattern: /\bweight\s+stacks?\b/i },
+    { label: 'pin loaded', pattern: /\bpin[-\s]?loaded\b/i },
+    { label: 'plate loaded', pattern: /\bplate[-\s]?loaded\b/i },
+    { label: 'strength station', pattern: /\bstrength\s+stations?\b/i },
+    { label: 'leg-strength', pattern: /\bleg[-\s]?strength\b/i },
+    { label: 'cable crossover', pattern: /\bcable\s+crossovers?\b/i },
+    { label: 'indoor bike', pattern: /\bindoor\s+bikes?\b/i },
+    { label: 'treadmill', pattern: /\btreadmills?\b/i },
   ],
   cross_trainer: [
     { label: 'cable crossover', pattern: /\bcable\s+crossovers?\b/i },

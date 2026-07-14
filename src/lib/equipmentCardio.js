@@ -112,6 +112,43 @@ const CARDIO_ROW_PATTERNS = [
   /\bindoor\s+row\b/i,
 ]
 
+/** Genuine stair / step cardio (not Kinesis Step/Squat strength). */
+const STEPPER_CARDIO_PATTERNS = [
+  /\bsteppers?\b/i,
+  /\bstair\s*climbers?\b/i,
+  /\bclimbmill\b/i,
+  /\bpowermill\b/i,
+  /\bexcite\s*\+?\s*step\b/i,
+  /\bstep\s+excite\b/i,
+]
+
+const STEPPER_STRENGTH_EXCLUSIONS = [
+  /\bkinesis\s+step\b/i,
+  /\bstep\s*\/\s*squat\b/i,
+  /\bsquat\b/i,
+  /\bchest\s+press\b/i,
+  /\bleg\s+press\b/i,
+]
+
+export function isStepperCardioProductIdentity(product) {
+  if (!product) return false
+  const type = normalizeEquipmentTypeKey(product?.equipment_type)
+  if (type && (type.includes('stepper') || type.includes('stair climber') || type === 'climber')) {
+    return true
+  }
+
+  const haystack = [
+    product?.equipment_type,
+    product?.model,
+    product?.canonical_product_name,
+    product?.product_family,
+  ].map((value) => normalizeText(value)).join(' ')
+
+  if (!haystack) return false
+  if (STEPPER_STRENGTH_EXCLUSIONS.some((pattern) => pattern.test(haystack))) return false
+  return STEPPER_CARDIO_PATTERNS.some((pattern) => pattern.test(haystack))
+}
+
 export function isStrengthEquipmentProduct(product) {
   const equipmentType = normalizeEquipmentTypeKey(product?.equipment_type)
   if (equipmentType === 'row machine') {
@@ -161,6 +198,8 @@ export function isCardioEquipmentProduct(product) {
   if (!product) return false
   // Spin / indoor bikes are cardio even when catalogue type uses “Indoor Bike”.
   if (isSpinBikeIndoorCycleProduct(product)) return true
+  // Stair / Excite Step cardio must win before strength defaulting on blank types.
+  if (isStepperCardioProductIdentity(product)) return true
   if (isStrengthEquipmentProduct(product)) return false
 
   const equipmentType = normalizeEquipmentTypeKey(product?.equipment_type)

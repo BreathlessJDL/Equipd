@@ -1,4 +1,4 @@
-import { isCardioEquipmentProduct } from './equipmentCardio.js'
+import { isCardioEquipmentProduct, isStepperCardioProductIdentity } from './equipmentCardio.js'
 import { normalizeEquipmentTypeKey } from './equipmentTypeRepair.js'
 import {
   CONTENT_USAGE_SEGMENT,
@@ -163,7 +163,7 @@ export function resolveProductContentCategory(product, { intelligenceRows = [] }
     return PRODUCT_CONTENT_CATEGORIES.CARDIO
   }
 
-  if (isCardioEquipmentProduct(product)) {
+  if (isStepperCardioProductIdentity(product) || isCardioEquipmentProduct(product)) {
     return PRODUCT_CONTENT_CATEGORIES.CARDIO
   }
 
@@ -375,6 +375,7 @@ Write a concise cardio overview (preferred 70–120 words; max 140).
 - If equipment_type is a treadmill: do not describe it as a bike, rower, or strength machine.
 - If equipment_type is a rower / rowing machine: do not describe it as a treadmill, bike, or cross trainer.
 - If equipment_type is a cross trainer / elliptical: do not describe it as a cable crossover or strength crossover.
+- If equipment_type is a stepper / stair climber / climber: describe it as cardio stair / step equipment. Do NOT describe steppers as selectorised strength, pin-loaded, plate-loaded, weight-stack or strength-station machines.
 - Respect usage_segment for commercial vs home wording.
 - Use "manufactured from around {year}" when a year is known.
 - List console names only if console_options is non-empty in source.
