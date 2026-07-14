@@ -3,11 +3,13 @@
  */
 import {
   buildBrandDirectoryFromProducts,
+  formatPublicCanonicalProductDisplayName,
   getBrandLogoMeta,
   getBrandPagePath,
   getBrandSlug,
   isPublicBrandCatalogueProduct,
   listBrandLogoAssetPaths,
+  normalizePublicSeriesDisplayLabel,
   resolveBrandRegistryEntry,
   slugifyBrandName,
 } from '../src/lib/brandCatalogueCore.js'
@@ -29,6 +31,22 @@ assert(getBrandLogoMeta('Life Fitness')?.logoAlt === 'Life Fitness logo', 'LF lo
 assert(getBrandLogoMeta('Life Fitness')?.logoBackground === 'dark', 'LF logo background')
 assert(listBrandLogoAssetPaths().length === 10, 'featured logo asset list')
 assert(listBrandLogoAssetPaths().every((entry) => entry.logoPath.startsWith('/brand-logos/')), 'logo paths under brand-logos')
+assert(normalizePublicSeriesDisplayLabel('Precor', 'Discovery Series') === 'Discovery', 'Precor Discovery Series display')
+assert(normalizePublicSeriesDisplayLabel('Precor', 'Discovery - Dbr') === 'Discovery', 'Precor Discovery - Dbr series chip')
+assert(
+  formatPublicCanonicalProductDisplayName({
+    brand: 'Precor',
+    canonical_product_name: 'Precor Discovery Series Chest Press',
+  }) === 'Precor Discovery Chest Press',
+  'Precor Discovery display title',
+)
+assert(
+  formatPublicCanonicalProductDisplayName({
+    brand: 'Precor',
+    canonical_product_name: 'Precor Discovery - Dbr Chest Press',
+  }) === 'Precor Discovery Dbr Chest Press',
+  'Precor Discovery hyphen display',
+)
 
 const products = [
   { brand: 'Life Fitness', status: 'approved', equipment_type: 'Treadmill', canonical_product_name: 'LF Treadmill', canonical_product_key: 'lf-1' },

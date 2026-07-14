@@ -335,8 +335,36 @@ export function isMeaningfulSeriesValue(value) {
 
 export function getProductSeriesLabel(product) {
   const family = String(product?.product_family ?? '').trim()
-  if (isMeaningfulSeriesValue(family)) return family
-  return null
+  if (!isMeaningfulSeriesValue(family)) return null
+  return normalizePublicSeriesDisplayLabel(product?.brand, family)
+}
+
+/**
+ * Public-facing series labels (brand-page chips / filters).
+ * Keep URLs/keys unchanged; only normalise display aliases.
+ */
+export function normalizePublicSeriesDisplayLabel(brand, family) {
+  const brandKey = normalizeBrandKey(brand)
+  const text = String(family ?? '').replace(/\s+/g, ' ').trim()
+  if (!text) return null
+
+  if (brandKey === 'precor' && /^discovery(\b|$)/i.test(text)) {
+    return 'Discovery'
+  }
+
+  return text
+}
+
+/**
+ * Soften “Discovery Series” wording in Precor public product titles without changing keys.
+ */
+export function formatPublicCanonicalProductDisplayName(product) {
+  const name = String(product?.canonical_product_name ?? '').replace(/\s+/g, ' ').trim()
+  if (!name) return name
+  if (normalizeBrandKey(product?.brand) !== 'precor') return name
+  return name
+    .replace(/\bDiscovery Series\b/gi, 'Discovery')
+    .replace(/\bDiscovery\s+-\s+/gi, 'Discovery ')
 }
 
 export function buildBrandDirectoryFromProducts(products = [], listingCountsByKey = {}) {

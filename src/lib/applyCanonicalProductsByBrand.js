@@ -95,8 +95,49 @@ export function deriveLegacyPlusKeyCandidates(canonicalProductKey) {
 }
 
 /**
- * Detect when applying would insert plus-keyed products while legacy (pre-plus)
- * keys already exist for the same brand — risk of duplicates.
+ * Resolve which existing row an audit product should update.
+ * Prefer exact plus-key match; otherwise remap onto a legacy pre-plus key only when
+ * that legacy row already carries a plus identity in its name/family/model
+ * (e.g. Element+ stored without "plus" in the key). Never remap Bike+ onto Bike.
+ */
+export function resolvePlusAwareExistingProduct(product, existingByKey) {
+  const nextKey = String(product?.canonical_product_key ?? '').trim()
+  if (!nextKey || !(existingByKey instanceof Map)) {
+    return { existing: null, upsertKey: nextKey || null, viaLegacy: false }
+  }
+
+  if (existingByKey.has(nextKey)) {
+    return {
+      existing: existingByKey.get(nextKey),
+      upsertKey: nextKey,
+      viaLegacy: false,
+    }
+  }
+
+  for (const legacyKey of deriveLegacyPlusKeyCandidates(nextKey)) {
+    const legacy = existingByKey.get(legacyKey)
+    if (!legacy) continue
+    const legacyHay = [
+      legacy.canonical_product_name,
+      legacy.model,
+      legacy.product_family,
+    ].join(' ')
+    // Genuine siblings (Bike vs Bike+) must stay distinct.
+    if (!/\+|plus\b/i.test(legacyHay)) continue
+    return {
+      existing: legacy,
+      upsertKey: legacyKey,
+      viaLegacy: true,
+    }
+  }
+
+  return { existing: null, upsertKey: nextKey, viaLegacy: false }
+}
+
+/**
+ * Detect when both a plus-keyed product AND its legacy pre-plus twin already
+ * exist as separate rows for the same plus-named identity. Safe remapping cannot
+ * choose between them — apply should skip until an explicit merge repair runs.
  */
 export function detectLegacyPlusKeyRisk({
   auditProducts = [],
@@ -112,11 +153,20 @@ export function detectLegacyPlusKeyRisk({
   for (const product of auditProducts) {
     const nextKey = product?.canonical_product_key
     if (!nextKey) continue
-    if (existingByKey.has(nextKey)) continue
+    // Parallel identity risk only when BOTH keys already exist as distinct rows.
+    if (!existingByKey.has(nextKey)) continue
 
     for (const legacyKey of deriveLegacyPlusKeyCandidates(nextKey)) {
       const legacy = existingByKey.get(legacyKey)
       if (!legacy) continue
+      if (legacy.canonical_product_key === nextKey) continue
+      const legacyHay = [
+        legacy.canonical_product_name,
+        legacy.model,
+        legacy.product_family,
+      ].join(' ')
+      // Ignore genuine non-plus siblings such as Bike next to Bike+.
+      if (!/\+|plus\b/i.test(legacyHay)) continue
       collisions.push({
         proposedKey: nextKey,
         legacyKey,
@@ -130,7 +180,7 @@ export function detectLegacyPlusKeyRisk({
     hasRisk: collisions.length > 0,
     collisions,
     warning: collisions.length
-      ? `Legacy plus-key risk: ${collisions.length} proposed key(s) would create duplicates alongside pre-plus keys. Promotion skipped for this brand; run a dedicated key migration before re-applying.`
+      ? `Legacy plus-key risk: ${collisions.length} product(s) already exist under both plus and pre-plus keys. Promotion skipped; run scripts/audit-plus-canonical-duplicates.mjs --apply before re-applying.`
       : null,
   }
 }
@@ -464,6 +514,12 @@ export async function applyCanonicalProductsForBrand(supabase, brand, {
     ],
   })
 
+  const existingByKeyPreview = new Map(
+    equipmentProducts
+      .filter((product) => product?.canonical_product_key)
+      .map((product) => [product.canonical_product_key, product]),
+  )
+
   if (!apply) {
     const counts = summarizeEquipmentProductCounts(equipmentProducts)
     result.pending = counts.pending
@@ -472,13 +528,11 @@ export async function applyCanonicalProductsForBrand(supabase, brand, {
     result.excluded = counts.excluded
     result.canonicalProductCount = equipmentProducts.length
     for (const product of audit.products) {
-      const existing = equipmentProducts.find(
-        (entry) => entry.canonical_product_key === product.canonical_product_key,
-      )
+      const resolved = resolvePlusAwareExistingProduct(product, existingByKeyPreview)
       tallyYearOutcome(result.yearStats, {
-        existingYear: existing?.baseline_manufacture_year,
+        existingYear: resolved.existing?.baseline_manufacture_year,
         proposedYear: product.baseline_manufacture_year,
-        action: existing ? 'updated' : 'inserted',
+        action: resolved.existing ? 'updated' : 'inserted',
       })
     }
     result.countNote = explainSourceCanonicalCountDelta({
@@ -495,11 +549,7 @@ export async function applyCanonicalProductsForBrand(supabase, brand, {
     ? upsertProduct
     : (product) => upsertCanonicalProductDirect(supabase, product)
 
-  const existingByKey = new Map(
-    equipmentProducts
-      .filter((product) => product?.canonical_product_key)
-      .map((product) => [product.canonical_product_key, product]),
-  )
+  const existingByKey = existingByKeyPreview
 
   onProgress?.({
     brand: resolvedBrand,
@@ -510,8 +560,12 @@ export async function applyCanonicalProductsForBrand(supabase, brand, {
 
   for (let index = 0; index < audit.products.length; index += 1) {
     const product = audit.products[index]
-    const existingBefore = existingByKey.get(product.canonical_product_key)
-    const upsertResult = await upsert(product)
+    const resolved = resolvePlusAwareExistingProduct(product, existingByKey)
+    const productForUpsert = resolved.viaLegacy
+      ? { ...product, canonical_product_key: resolved.upsertKey }
+      : product
+    const existingBefore = resolved.existing
+    const upsertResult = await upsert(productForUpsert)
     if (upsertResult.error) {
       result.productsFailed += 1
       result.errors.push({
@@ -520,6 +574,9 @@ export async function applyCanonicalProductsForBrand(supabase, brand, {
       })
     } else if (upsertResult.action === 'inserted') {
       result.productsInserted += 1
+      if (upsertResult.product?.canonical_product_key) {
+        existingByKey.set(upsertResult.product.canonical_product_key, upsertResult.product)
+      }
       tallyYearOutcome(result.yearStats, {
         existingYear: existingBefore?.baseline_manufacture_year,
         proposedYear: product.baseline_manufacture_year,
@@ -527,6 +584,11 @@ export async function applyCanonicalProductsForBrand(supabase, brand, {
       })
     } else {
       result.productsUpdated += 1
+      if (resolved.viaLegacy) {
+        result.warnings.push(
+          `Remapped plus key "${product.canonical_product_key}" onto legacy "${resolved.upsertKey}" to avoid a duplicate.`,
+        )
+      }
       tallyYearOutcome(result.yearStats, {
         existingYear: existingBefore?.baseline_manufacture_year,
         proposedYear: product.baseline_manufacture_year,

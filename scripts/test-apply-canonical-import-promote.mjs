@@ -314,7 +314,7 @@ const bowflexRows = [
   const legacyCandidates = deriveLegacyPlusKeyCandidates(plusKey)
   assert(legacyCandidates.length > 0, 'legacy plus candidates derived')
 
-  const risk = detectLegacyPlusKeyRisk({
+  const remapOnly = detectLegacyPlusKeyRisk({
     auditProducts: [{
       canonical_product_key: plusKey,
       canonical_product_name: 'Technogym Element+',
@@ -322,16 +322,54 @@ const bowflexRows = [
     existingProducts: [{
       canonical_product_key: legacyCandidates[0],
       canonical_product_name: 'Technogym Element+',
+      model: 'Element+',
+      product_family: 'Element+',
     }],
   })
-  assert(risk.hasRisk, 'legacy plus-key risk detected')
+  assert(!remapOnly.hasRisk, 'legacy-only plus-named twin is remapped, not a parallel-identity risk')
+
+  const risk = detectLegacyPlusKeyRisk({
+    auditProducts: [{
+      canonical_product_key: plusKey,
+      canonical_product_name: 'Technogym Element+',
+    }],
+    existingProducts: [
+      {
+        canonical_product_key: plusKey,
+        canonical_product_name: 'Technogym Element+',
+        model: 'Element+',
+        product_family: 'Element+',
+      },
+      {
+        canonical_product_key: legacyCandidates[0],
+        canonical_product_name: 'Technogym Element+',
+        model: 'Element+',
+        product_family: 'Element+',
+      },
+    ],
+  })
+  assert(risk.hasRisk, 'parallel plus + legacy rows are a collision risk')
   assert(risk.warning && /Legacy plus-key risk/i.test(risk.warning), 'warning message present')
 
-  const noRiskSameKey = detectLegacyPlusKeyRisk({
-    auditProducts: [{ canonical_product_key: plusKey, canonical_product_name: 'Technogym Element+' }],
-    existingProducts: [{ canonical_product_key: plusKey, canonical_product_name: 'Technogym Element+' }],
+  const bikeRisk = detectLegacyPlusKeyRisk({
+    auditProducts: [{
+      canonical_product_key: slugifyCoreProductKey('Peloton', 'Exercise Bike', null, 'Bike+'),
+      canonical_product_name: 'Peloton Bike+',
+    }],
+    existingProducts: [
+      {
+        canonical_product_key: slugifyCoreProductKey('Peloton', 'Exercise Bike', null, 'Bike'),
+        canonical_product_name: 'Peloton Bike',
+        model: 'Bike',
+      },
+      {
+        canonical_product_key: slugifyCoreProductKey('Peloton', 'Exercise Bike', null, 'Bike+'),
+        canonical_product_name: 'Peloton Bike+',
+        model: 'Bike+',
+      },
+    ],
   })
-  assert(!noRiskSameKey.hasRisk, 'existing matching plus key is not a collision')
+  assert(!bikeRisk.hasRisk, 'Bike vs Bike+ is not a legacy-plus collision')
 }
 
 // --- Idempotent apply: first insert, second update, no duplicates ---
@@ -419,7 +457,7 @@ const bowflexRows = [
   )
 }
 
-// --- Plus-key risk skips brand ---
+// --- Plus-key risk: remap legacy-only; skip when both keys already exist ---
 {
   const plusKey = slugifyCoreProductKey('Technogym', 'Elliptical', null, 'Element+')
   const legacyKey = deriveLegacyPlusKeyCandidates(plusKey)[0]
@@ -434,27 +472,68 @@ const bowflexRows = [
     original_rrp: 5000,
     currency: 'GBP',
   }]
-  const supabase = createMemorySupabase({
+
+  const remapSupabase = createMemorySupabase({
     intelligenceRows: intelligence,
     products: [{
       id: 'legacy',
       brand: 'Technogym',
       model: 'Element+',
+      product_family: 'Element+',
       canonical_product_key: legacyKey,
       canonical_product_name: 'Technogym Element+',
       status: PRODUCT_STATUS.APPROVED,
       source_intelligence_row_ids: ['tg1'],
     }],
   })
-  const result = await applyCanonicalProductsForBrands({
+  const remapResult = await applyCanonicalProductsForBrands({
     brands: ['Technogym'],
-    supabase,
+    supabase: remapSupabase,
     apply: true,
   })
-  assertEqual(result.brandsSkipped, 1, 'plus-key risk skips brand')
-  assertEqual(result.productsInserted, 0, 'no insert on plus-key risk')
-  assertEqual(supabase.state.products.length, 1, 'no duplicate row created')
-  assert(result.hasWarnings, 'warnings surfaced')
+  assertEqual(remapResult.brandsSkipped, 0, 'legacy-only remap does not skip brand')
+  assertEqual(remapResult.productsInserted, 0, 'no insert when remapping onto legacy')
+  assertEqual(remapSupabase.state.products.length, 1, 'no duplicate row created via remapping')
+  assertEqual(
+    remapSupabase.state.products[0].canonical_product_key,
+    legacyKey,
+    'upsert remains on legacy key',
+  )
+
+  const collisionSupabase = createMemorySupabase({
+    intelligenceRows: intelligence,
+    products: [
+      {
+        id: 'legacy',
+        brand: 'Technogym',
+        model: 'Element+',
+        product_family: 'Element+',
+        canonical_product_key: legacyKey,
+        canonical_product_name: 'Technogym Element+',
+        status: PRODUCT_STATUS.APPROVED,
+        source_intelligence_row_ids: ['tg1'],
+      },
+      {
+        id: 'plus',
+        brand: 'Technogym',
+        model: 'Element+',
+        product_family: 'Element+',
+        canonical_product_key: plusKey,
+        canonical_product_name: 'Technogym Element+',
+        status: PRODUCT_STATUS.PENDING,
+        source_intelligence_row_ids: ['tg1'],
+      },
+    ],
+  })
+  const collisionResult = await applyCanonicalProductsForBrands({
+    brands: ['Technogym'],
+    supabase: collisionSupabase,
+    apply: true,
+  })
+  assertEqual(collisionResult.brandsSkipped, 1, 'parallel plus+legacy keys skip brand')
+  assertEqual(collisionResult.productsInserted, 0, 'no insert on parallel-key risk')
+  assertEqual(collisionSupabase.state.products.length, 2, 'existing duplicate pair left for merge script')
+  assert(collisionResult.hasWarnings, 'warnings surfaced')
 }
 
 // --- approveSafe rejected by multi-brand API ---
