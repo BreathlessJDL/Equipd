@@ -36,12 +36,16 @@ function read(rel) {
 // --- 1. Buyer Protection modal viewport fit ---
 {
   const css = read('src/components/BuyerProtectionModal.css')
-  assert.match(css, /max-height:\s*calc\(100dvh\s*-\s*2rem\)/, 'dialog max-height uses viewport')
+  const jsx = read('src/components/BuyerProtectionModal.jsx')
+  assert.match(css, /max-height:\s*min\(100%,\s*calc\(100dvh\s*-\s*2rem\)\)/, 'dialog max-height fits padded overlay')
   assert.match(css, /\.buyer-protection-modal__body[\s\S]*overflow-y:\s*auto/, 'body scrolls internally')
   assert.match(css, /\.buyer-protection-modal__header[\s\S]*flex-shrink:\s*0/, 'header stays pinned')
   assert.match(css, /\.buyer-protection-modal__footer[\s\S]*flex-shrink:\s*0/, 'footer stays pinned')
   assert.match(css, /align-items:\s*safe center/, 'safe vertical centring')
   assert.match(css, /min-height:\s*0/, 'flex min-height allows shrink')
+  assert.match(css, /z-index:\s*1100/, 'modal stacks above listing chrome')
+  assert.match(jsx, /createPortal/, 'modal portals to document.body to avoid ancestor clipping')
+  assert.match(jsx, /document\.body/, 'portal target is document.body')
 }
 
 // --- 2. Element+ duplicate prevention ---

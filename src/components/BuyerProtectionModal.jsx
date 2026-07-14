@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { BUYER_PROTECTION_MODAL_CONTENT } from '../lib/trustMessaging'
 import { EnvelopeIcon } from './icons/NavIcons'
@@ -98,7 +99,7 @@ function BuyerProtectionModal({ open, onClose }) {
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="auth-modal buyer-protection-modal" role="presentation">
       <button
         type="button"
@@ -119,7 +120,7 @@ function BuyerProtectionModal({ open, onClose }) {
           aria-label="Close"
           onClick={onClose}
         >
-          ×
+          ├ù
         </button>
 
         <header className="buyer-protection-modal__header">
@@ -182,7 +183,8 @@ function BuyerProtectionModal({ open, onClose }) {
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

@@ -1,15 +1,25 @@
+.buyer-protection-modal.auth-modal {
+  z-index: 1100;
+  align-items: safe center;
+  justify-content: safe center;
+  /* Keep the overlay itself scrollable if the dialog still overflows. */
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: max(var(--space-md), env(safe-area-inset-top, 0px))
+    max(var(--space-md), env(safe-area-inset-right, 0px))
+    max(var(--space-md), env(safe-area-inset-bottom, 0px))
+    max(var(--space-md), env(safe-area-inset-left, 0px));
+}
+
 .buyer-protection-modal__dialog {
   display: flex;
   flex-direction: column;
   width: min(100%, 26rem);
-  max-height: calc(100dvh - 2rem);
+  /* Fit inside the padded overlay, not the raw viewport. */
+  max-height: min(100%, calc(100dvh - 2rem));
   min-height: 0;
   overflow: hidden;
   padding: var(--space-lg) var(--space-lg) var(--space-md);
-}
-
-.buyer-protection-modal.auth-modal {
-  align-items: safe center;
 }
 
 .buyer-protection-modal__header {
@@ -129,9 +139,20 @@
 }
 
 @media (max-width: 30rem) {
+  .buyer-protection-modal.auth-modal {
+    /* Override AuthModal bottom-sheet alignment so tall content isn't clipped. */
+    align-items: safe center;
+    padding: max(var(--space-sm), env(safe-area-inset-top, 0px))
+      max(var(--space-sm), env(safe-area-inset-right, 0px))
+      max(var(--space-sm), env(safe-area-inset-bottom, 0px))
+      max(var(--space-sm), env(safe-area-inset-left, 0px));
+  }
+
   .buyer-protection-modal__dialog {
     padding: var(--space-md);
-    max-height: calc(100dvh - 1rem);
+    max-height: min(100%, calc(100dvh - 1rem));
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
   }
 
   .buyer-protection-modal__title {

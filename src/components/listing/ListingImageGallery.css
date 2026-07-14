@@ -1,4 +1,5 @@
 .listing-gallery {
+  width: 100%;
   min-width: 0;
 }
 
@@ -241,17 +242,25 @@
   .listing-gallery__layout {
     display: flex;
     flex-direction: column;
+    /* Override desktop `align-items: start` so the stack fills and centres. */
+    align-items: stretch;
     gap: 0.65rem;
+    width: 100%;
   }
 
   .listing-gallery__thumbs {
     flex-direction: row;
+    justify-content: center;
+    justify-content: safe center;
     order: 2;
+    width: 100%;
+    max-width: 100%;
     max-height: none;
     overflow-x: auto;
     overflow-y: hidden;
     padding-right: 0;
     padding-bottom: 0.125rem;
+    box-sizing: border-box;
     scrollbar-width: thin;
   }
 
@@ -263,6 +272,9 @@
 
   .listing-gallery__main-wrap {
     order: 1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     min-height: 18rem;
     border-radius: 1rem;
   }

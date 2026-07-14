@@ -59,6 +59,18 @@ assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
 assert.doesNotMatch(valuator, /module-level selectedProduct|let selectedProduct/, 'no module shared selection')
 
 assert.match(valuatorCss, /\.home-valuator--contained/, 'contained layout CSS present')
+assert.match(
+  valuatorCss,
+  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator__form[\s\S]*minmax\(0,\s*1fr\)\s+auto/,
+  'mobile valuator keeps input + CTA on one row',
+)
+assert.match(
+  valuatorCss,
+  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator__submit-label--mobile[\s\S]*display:\s*inline/,
+  'mobile valuator uses compact CTA label',
+)
+assert.match(valuator, /home-valuator__title-text--mobile/, 'responsive title spans present')
+assert.match(valuator, /Value it/, 'mobile CTA label present')
 assert.doesNotMatch(valuatorCss, /brand-logo--bg-dark/, 'valuator CSS unrelated to logo plates')
 
 // Ensure there is only one valuator implementation module referenced.

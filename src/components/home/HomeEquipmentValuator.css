@@ -38,6 +38,12 @@
   color: var(--color-navy);
 }
 
+.home-valuator__title-text--mobile,
+.home-valuator__submit-label--mobile,
+.home-valuator__trust-label--mobile {
+  display: none;
+}
+
 .home-valuator__lede {
   margin: 0;
   max-width: 34rem;
@@ -102,7 +108,7 @@
   list-style: none;
 }
 
-.home-valuator__trust li {
+.home-valuator__trust-item {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -129,6 +135,7 @@
   border: 0;
 }
 
+/* Tablet / narrow desktop: stack copy above action (existing behaviour). */
 @media (max-width: 860px) {
   .home-valuator__card {
     grid-template-columns: 1fr;
@@ -145,5 +152,150 @@
 
   .home-valuator__trust {
     gap: 0.55rem 0.85rem;
+  }
+}
+
+/* Compact horizontal valuator — mobile only. */
+@media (max-width: 767px) {
+  .home-valuator {
+    padding: 0.85rem 0 1rem;
+  }
+
+  .home-valuator--contained {
+    padding: 0.25rem 0 1rem;
+  }
+
+  .home-valuator__card {
+    gap: 0.7rem;
+    padding: 0.95rem 0.95rem 0.9rem;
+    border-radius: 0.85rem;
+    box-shadow: 0 1px 4px rgba(15, 33, 55, 0.04);
+    overflow: visible;
+  }
+
+  .home-valuator__copy {
+    text-align: left;
+  }
+
+  .home-valuator__eyebrow {
+    margin: 0 0 0.3rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.07em;
+  }
+
+  .home-valuator__title {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  .home-valuator__title-text--desktop,
+  .home-valuator__submit-label--desktop,
+  .home-valuator__trust-label--desktop,
+  .home-valuator__trust-item--desktop-only,
+  .home-valuator__lede {
+    display: none;
+  }
+
+  .home-valuator__title-text--mobile,
+  .home-valuator__submit-label--mobile,
+  .home-valuator__trust-label--mobile {
+    display: inline;
+  }
+
+  .home-valuator__action {
+    gap: 0.65rem;
+  }
+
+  .home-valuator__form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem;
+    align-items: stretch;
+  }
+
+  .home-valuator__form .canonical-autocomplete {
+    z-index: 2;
+  }
+
+  .home-valuator__input {
+    min-height: 2.65rem;
+    height: 2.65rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.65rem;
+    font-size: 0.9375rem;
+    box-sizing: border-box;
+  }
+
+  .home-valuator__submit {
+    width: auto;
+    min-width: 4.75rem;
+    max-width: 6.25rem;
+    min-height: 2.65rem;
+    height: 2.65rem;
+    padding: 0 0.8rem;
+    border-radius: 0.65rem;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  .home-valuator__trust {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    row-gap: 0.35rem;
+  }
+
+  .home-valuator__trust-item {
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  /* General sibling: desktop-only item sits between the two mobile points. */
+  .home-valuator__trust-item:not(.home-valuator__trust-item--desktop-only)
+    ~ .home-valuator__trust-item:not(.home-valuator__trust-item--desktop-only)::before {
+    content: '•';
+    margin-inline: 0.55rem;
+    color: color-mix(in srgb, var(--color-muted) 70%, transparent);
+    font-weight: 600;
+  }
+
+  .home-valuator__trust-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Prefer shrinking the CTA before stacking on very narrow phones. */
+@media (max-width: 360px) {
+  .home-valuator__submit {
+    min-width: 4.25rem;
+    max-width: 5.25rem;
+    padding: 0 0.55rem;
+    font-size: 0.8125rem;
+  }
+
+  .home-valuator__input {
+    padding-inline: 0.65rem;
+    font-size: 0.875rem;
+  }
+
+  .home-valuator__trust {
+    flex-wrap: wrap;
+  }
+}
+
+/* Last resort: stack only on extremely narrow viewports. */
+@media (max-width: 300px) {
+  .home-valuator__form {
+    grid-template-columns: 1fr;
+  }
+
+  .home-valuator__submit {
+    width: 100%;
+    max-width: none;
   }
 }
