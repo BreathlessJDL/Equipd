@@ -53,6 +53,7 @@ import { selectRelatedEquipmentProducts } from './equipmentPageSeo.js'
 
 export const EQUIPMENT_INTELLIGENCE_APPROVAL_FIELDS = 'id, brand, series, model, equipment_type, product_family, slug, variant_name, core_product_key, is_base_product, core_product_group_status, core_product_group_confidence, original_rrp, currency, best_original_price, best_original_price_confidence, baseline_manufacture_year, manufacture_start_year, manufacture_end_year'
 
+/** Full product row — use for detail/edit, not catalogue browsing. */
 export const EQUIPMENT_PRODUCT_FIELDS = [
   'id',
   'brand',
@@ -86,6 +87,10 @@ export const EQUIPMENT_PRODUCT_FIELDS = [
   'updated_at',
 ].join(', ')
 
+/**
+ * Prefer fetchAdminEquipmentProductsPage for admin catalogue browsing.
+ * This full-catalogue helper remains for research/export workflows only.
+ */
 const EQUIPMENT_PRODUCTS_PAGE_SIZE = 1000
 
 async function fetchAllEquipmentProductRows({ approvedOnly = false } = {}) {

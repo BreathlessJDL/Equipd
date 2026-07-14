@@ -48,6 +48,7 @@ function buildProductsPageLink({ completionFilter, brand, equipmentType } = {}) 
 
 export default function CanonicalProductCompletionDashboard({
   products = [],
+  statsOverride = null,
   variant = 'full',
   filters,
   onFiltersChange,
@@ -55,14 +56,16 @@ export default function CanonicalProductCompletionDashboard({
   onExportIncomplete,
   onOpenTop100,
   exporting = false,
+  exportIncompleteDisabled = false,
+  exportCompletedDisabled = false,
 }) {
   const stats = useMemo(
-    () => buildCanonicalProductCompletionStats(products, filters),
-    [products, filters],
+    () => statsOverride ?? buildCanonicalProductCompletionStats(products, filters),
+    [statsOverride, products, filters],
   )
 
   const incompleteScopeProducts = useMemo(
-    () => stats.scopeProducts.filter((product) => {
+    () => (stats.scopeProducts ?? []).filter((product) => {
       const status = deriveCanonicalProductCompletionStatus(product)
       return status && status !== CANONICAL_COMPLETION_STATUS.COMPLETE
     }),
@@ -70,7 +73,7 @@ export default function CanonicalProductCompletionDashboard({
   )
 
   const completedScopeProducts = useMemo(
-    () => stats.scopeProducts.filter((product) => deriveCanonicalProductCompletionStatus(product)
+    () => (stats.scopeProducts ?? []).filter((product) => deriveCanonicalProductCompletionStatus(product)
       === CANONICAL_COMPLETION_STATUS.COMPLETE),
     [stats.scopeProducts],
   )
@@ -203,7 +206,18 @@ export default function CanonicalProductCompletionDashboard({
         <button
           type="button"
           className="admin-intelligence__button admin-intelligence__button--secondary"
-          disabled={exporting || incompleteScopeProducts.length === 0}
+          disabled={
+            exporting
+            || exportIncompleteDisabled
+            || (
+              !statsOverride
+              && incompleteScopeProducts.length === 0
+            )
+            || (
+              statsOverride
+              && !(stats.overall?.incomplete > 0)
+            )
+          }
           onClick={() => onExportIncomplete?.(incompleteScopeProducts)}
         >
           {exporting ? 'Exporting…' : 'Export incomplete'}
@@ -211,7 +225,18 @@ export default function CanonicalProductCompletionDashboard({
         <button
           type="button"
           className="admin-intelligence__button admin-intelligence__button--secondary"
-          disabled={exporting || completedScopeProducts.length === 0}
+          disabled={
+            exporting
+            || exportCompletedDisabled
+            || (
+              !statsOverride
+              && completedScopeProducts.length === 0
+            )
+            || (
+              statsOverride
+              && !(stats.overall?.completed > 0)
+            )
+          }
           onClick={() => onExportCompleted?.(completedScopeProducts)}
         >
           Export completed

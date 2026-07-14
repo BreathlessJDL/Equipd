@@ -10,6 +10,7 @@ import {
   parseResearchCsv,
   RESEARCH_IMPORT_MAX_ROWS,
 } from './equipmentProductResearchCsv.js'
+import { attachResearchImportClassificationReport } from './equipmentProductResearchImportReport.js'
 
 function emptyApplyResult(error = null) {
   return {
@@ -70,13 +71,17 @@ export async function buildResearchImportPlanFromCsvText(csvText, {
     entry.batchId = batchId
   }
 
+  const plan = {
+    ...built,
+    filename,
+    batchId,
+    headers: parsed.headers,
+    csvRows: parsed.rows,
+  }
+  attachResearchImportClassificationReport(plan, parsed.rows)
+
   return {
-    plan: {
-      ...built,
-      filename,
-      batchId,
-      headers: parsed.headers,
-    },
+    plan,
     error: null,
   }
 }

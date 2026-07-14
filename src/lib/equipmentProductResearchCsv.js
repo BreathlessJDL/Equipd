@@ -12,6 +12,144 @@ export const RESEARCH_EXPORT_SCOPE = Object.freeze({
   CURRENT_PAGE: 'current_page',
 })
 
+export const RESEARCH_IMPORT_ROW_CATEGORY = Object.freeze({
+  VALID_UPDATE: 'Valid update',
+  NO_CHANGES: 'No changes detected',
+  PRODUCT_ID_NOT_FOUND: 'Product ID not found',
+  CANONICAL_KEY_MISMATCH: 'Canonical key mismatch',
+  INVALID_BASELINE_YEAR: 'Invalid baseline year',
+  INVALID_PRODUCTION_YEAR: 'Invalid production year',
+  INVALID_PRICE: 'Invalid price',
+  INVALID_CURRENCY: 'Invalid currency',
+  INVALID_CONFIDENCE: 'Invalid confidence',
+  DUPLICATE_PRODUCT_ID: 'Duplicate product ID',
+  DUPLICATE_CANONICAL_KEY: 'Duplicate canonical key',
+  UNSUPPORTED_RESEARCHED_FIELD: 'Unsupported researched field',
+  VALIDATION_ERROR: 'Validation error',
+})
+
+/**
+ * Map an importer rejection message to a single report category.
+ * Report-only — does not change import behaviour.
+ */
+export function classifyResearchImportRejectionMessage(message = '') {
+  const text = String(message || '')
+  if (/duplicate product_id/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.DUPLICATE_PRODUCT_ID
+  if (/duplicate canonical/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.DUPLICATE_CANONICAL_KEY
+  if (/product not found/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.PRODUCT_ID_NOT_FOUND
+  if (/ID\/key mismatch/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.CANONICAL_KEY_MISMATCH
+  if (/researched_category/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.UNSUPPORTED_RESEARCHED_FIELD
+  if (/baseline_manufacture_year/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.INVALID_BASELINE_YEAR
+  if (/production_start_year|production_end_year|cannot precede/i.test(text)) {
+    return RESEARCH_IMPORT_ROW_CATEGORY.INVALID_PRODUCTION_YEAR
+  }
+  if (/^price must|price must be greater/i.test(text)) {
+    return RESEARCH_IMPORT_ROW_CATEGORY.INVALID_PRICE
+  }
+  if (/currency/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.INVALID_CURRENCY
+  if (/price confidence|confidence/i.test(text)) return RESEARCH_IMPORT_ROW_CATEGORY.INVALID_CONFIDENCE
+  return RESEARCH_IMPORT_ROW_CATEGORY.VALIDATION_ERROR
+}
+
+function emptyClassificationCounts() {
+  return Object.fromEntries(
+    Object.values(RESEARCH_IMPORT_ROW_CATEGORY).map((label) => [label, 0]),
+  )
+}
+
+export function summarizeResearchImportClassifications(rows = []) {
+  const counts = emptyClassificationCounts()
+  for (const row of rows) {
+    const category = row.category || RESEARCH_IMPORT_ROW_CATEGORY.VALIDATION_ERROR
+    counts[category] = (counts[category] || 0) + 1
+  }
+  const rowsRead = rows.length
+  const valid = counts[RESEARCH_IMPORT_ROW_CATEGORY.VALID_UPDATE] || 0
+  const rejected = rowsRead - valid
+  const lines = [
+    `${rowsRead} rows read`,
+    '',
+    `${valid} valid`,
+  ]
+  for (const label of Object.values(RESEARCH_IMPORT_ROW_CATEGORY)) {
+    if (label === RESEARCH_IMPORT_ROW_CATEGORY.VALID_UPDATE) continue
+    const count = counts[label] || 0
+    if (count > 0) lines.push(`${count} ${label.toLowerCase()}`)
+  }
+  lines.push('')
+  lines.push(`${rejected} rows not available as valid updates`)
+  return {
+    rowsRead,
+    valid,
+    rejected,
+    counts,
+    text: lines.join('\n'),
+  }
+}
+
+/**
+ * Build a rejection CSV for every row that is not a Valid update.
+ * Includes original researched input + rejection_reason.
+ */
+export function buildResearchImportRejectionCsv(classifications = []) {
+  const rejected = classifications.filter(
+    (row) => row.category !== RESEARCH_IMPORT_ROW_CATEGORY.VALID_UPDATE,
+  )
+  const headers = [
+    'line',
+    'product_id',
+    'canonical_product_key',
+    'brand',
+    'category',
+    'rejection_reason',
+    'research_notes',
+    'researched_product_family',
+    'researched_model',
+    'researched_category',
+    'researched_equipment_type',
+    'researched_baseline_manufacture_year',
+    'researched_production_start_year',
+    'researched_production_end_year',
+    'researched_original_base_price',
+    'researched_currency',
+    'researched_price_confidence',
+    'price_source_url',
+    'year_source_url',
+    'secondary_source_url',
+  ]
+  const lines = [headers.join(',')]
+  for (const entry of rejected) {
+    const raw = entry.rawRow || {}
+    lines.push([
+      entry.line ?? '',
+      entry.product_id || raw.product_id || '',
+      raw.canonical_product_key || entry.canonical_product_key || '',
+      raw.brand || entry.brand || '',
+      entry.category || '',
+      entry.rejection_reason || '',
+      raw.research_notes || '',
+      raw.researched_product_family || '',
+      raw.researched_model || '',
+      raw.researched_category || '',
+      raw.researched_equipment_type || '',
+      raw.researched_baseline_manufacture_year || '',
+      raw.researched_production_start_year || '',
+      raw.researched_production_end_year || '',
+      raw.researched_original_base_price || '',
+      raw.researched_currency || '',
+      raw.researched_price_confidence || '',
+      raw.price_source_url || '',
+      raw.year_source_url || '',
+      raw.secondary_source_url || '',
+    ].map((cell) => sanitizeCsvCell(cell)).join(','))
+  }
+  return `\uFEFF${lines.join('\r\n')}\r\n`
+}
+
+export function formatResearchImportClassificationReport(summary) {
+  return summary?.text || ''
+}
+
 export const RESEARCH_MISSING_FIELD = Object.freeze({
   PRODUCT_FAMILY: 'product_family',
   MODEL: 'model',

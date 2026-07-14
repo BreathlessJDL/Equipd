@@ -94,6 +94,13 @@ export default function EquipmentProductResearchImportModal({
   }
 
   function handleDownloadErrors() {
+    if (planBundle?.rejectionCsv) {
+      downloadResearchCsv(
+        planBundle.rejectionCsv,
+        `equipd-product-research-rejections-${new Date().toISOString().slice(0, 10)}.csv`,
+      )
+      return
+    }
     const errors = [
       ...(planBundle?.errors || []),
       ...(applyResult?.failed || []).map((entry) => ({
@@ -108,7 +115,22 @@ export default function EquipmentProductResearchImportModal({
     downloadResearchCsv(content, `equipd-product-research-errors-${new Date().toISOString().slice(0, 10)}.csv`)
   }
 
+  function handleDownloadClassificationReport() {
+    const text = planBundle?.classificationSummary?.text
+    if (!text) return
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `equipd-product-research-validation-${new Date().toISOString().slice(0, 10)}.txt`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }
+
   const updatePlans = (planBundle?.plans || []).filter((p) => p.action === 'update').slice(0, 40)
+  const classificationSummary = planBundle?.classificationSummary
   const stillIncomplete = (applyResult?.updated || []).filter((entry) => {
     const product = entry.product
     return product && deriveResearchMissingFields(product).length > 0
@@ -188,6 +210,17 @@ export default function EquipmentProductResearchImportModal({
                 </div>
               </dl>
 
+              {classificationSummary ? (
+                <div className="admin-products__research-classification">
+                  <strong>Validation report (why rows were excluded)</strong>
+                  <pre className="admin-products__research-filter-summary">{classificationSummary.text}</pre>
+                  <p className="admin-products__confirm-warning" role="status">
+                    Report-only instrumentation — import decisions are unchanged.
+                    Download the rejection CSV for every row that is not a valid update.
+                  </p>
+                </div>
+              ) : null}
+
               {planBundle.errors?.length ? (
                 <div className="admin-products__research-errors">
                   <strong>Validation errors</strong>
@@ -250,13 +283,22 @@ export default function EquipmentProductResearchImportModal({
                   >
                     Apply researched updates
                   </button>
-                  {planBundle.errors?.length ? (
+                  {classificationSummary?.rejected > 0 || planBundle.errors?.length ? (
                     <button
                       type="button"
                       className="admin-intelligence__button admin-intelligence__button--secondary"
                       onClick={handleDownloadErrors}
                     >
-                      Download error CSV
+                      Download rejection CSV
+                    </button>
+                  ) : null}
+                  {classificationSummary ? (
+                    <button
+                      type="button"
+                      className="admin-intelligence__button admin-intelligence__button--secondary"
+                      onClick={handleDownloadClassificationReport}
+                    >
+                      Download validation report
                     </button>
                   ) : null}
                   <button type="button" className="admin-intelligence__button" onClick={resetAndClose}>
