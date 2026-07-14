@@ -16,6 +16,7 @@ import {
   formatValuationRange,
   getEquipmentProductCompletionStatus,
 } from './equipmentValuation.js'
+import { enrichListingWithImages } from './listingImages.js'
 import { isSupabaseConfigured, supabase } from './supabase.js'
 import {
   aggregateBrandCategories,
@@ -30,6 +31,7 @@ import {
   getBrandSlug,
   getBrowseBrandFilterHref,
   getProductSeriesLabel,
+  formatPublicCanonicalProductDisplayName,
   isPublicBrandCatalogueProduct,
   resolveBrandRegistryEntry,
   slugifyBrandName,
@@ -78,7 +80,7 @@ export function mapBrandCatalogueProduct(product) {
   return {
     id: product.id,
     brand: product.brand,
-    displayName: product.canonical_product_name,
+    displayName: formatPublicCanonicalProductDisplayName(product) || product.canonical_product_name,
     canonicalProductKey: product.canonical_product_key,
     href: buildEquipmentProductPagePath(product.canonical_product_key),
     equipmentType: product.equipment_type || null,
@@ -131,13 +133,20 @@ async function fetchActiveListingsForBrand(brandName, { limit = 8 } = {}) {
 
   const { data, error } = await supabase
     .from('listings_public_browse')
-    .select('*')
+    .select('*, listing_images(id, storage_path, sort_order)')
     .eq('status', 'active')
     .eq('brand', brandName)
     .order('created_at', { ascending: false })
+    .order('sort_order', { ascending: true, foreignTable: 'listing_images' })
     .limit(limit)
+    .limit(1, { foreignTable: 'listing_images' })
 
-  return { data: data ?? [], error }
+  if (error) return { data: [], error }
+
+  return {
+    data: (data ?? []).map(enrichListingWithImages),
+    error: null,
+  }
 }
 
 export async function fetchBrandDirectory() {

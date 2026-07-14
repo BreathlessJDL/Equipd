@@ -55,8 +55,18 @@ export default function EquipmentValueGuideCard({
           ) : null}
           {product.estimatedValueLabel ? (
             <div className="equipment-value-card__fact equipment-value-card__fact--value">
-              <dt>Estimated used value</dt>
-              <dd>{product.estimatedValueLabel}</dd>
+              <dt>Estimated used value by year</dt>
+              <dd>
+                <span className="equipment-value-card__value-amount">
+                  {product.estimatedValueLabel}
+                </span>
+                {product.yearLabel ? (
+                  <span className="equipment-value-card__value-year">
+                    {' '}
+                    · based on {product.yearLabel}
+                  </span>
+                ) : null}
+              </dd>
             </div>
           ) : null}
           {rrpLabel ? (
