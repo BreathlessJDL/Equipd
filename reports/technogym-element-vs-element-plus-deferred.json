@@ -1,0 +1,729 @@
+{
+  "generated_at": "2026-07-14T11:07:36.981Z",
+  "deferred_element_vs_element_plus_count": 16,
+  "deferred_groups": [
+    {
+      "model_token": "abductor",
+      "element": [
+        {
+          "id": "1e41662e-4b97-466a-9be0-428eef48a20e",
+          "name": "Technogym Element Abductor",
+          "key": "technogym-hip-abductor-adductor-element-abductor",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3000,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "f38a99d0-bd91-4652-b7ef-c2b9dd2ee002",
+          "name": "Technogym Element+ Abductor",
+          "key": "technogym-selectorised-strength-element-abductor",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "adductor",
+      "element": [
+        {
+          "id": "7da388c3-5f20-47a0-9642-25cc9e238967",
+          "name": "Technogym Element Adductor",
+          "key": "technogym-hip-abductor-adductor-element-adductor",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3000,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "9efc2f42-9074-414b-9634-501dd02555dd",
+          "name": "Technogym Element+ Adductor",
+          "key": "technogym-selectorised-strength-element-adductor",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "arm curl",
+      "element": [
+        {
+          "id": "e0eeab3a-925f-4246-a765-1de4ec6ead54",
+          "name": "Technogym Element Arm Curl",
+          "key": "technogym-biceps-curl-element-arm-curl",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3000,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "567dda26-74f2-4bcb-8e8d-45fdb8a05625",
+          "name": "Technogym Element+ Arm Curl",
+          "key": "technogym-selectorised-strength-element-arm-curl",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "arm extension",
+      "element": [
+        {
+          "id": "b4adc991-c12a-478a-91c3-789100ed32e3",
+          "name": "Technogym Element Arm Extension",
+          "key": "technogym-element-arm-extension",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "4876c6d5-5b0e-48c9-bbb5-7e104998bbe6",
+          "name": "Technogym Element+ Arm Extension",
+          "key": "technogym-selectorised-strength-element-arm-extension",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "chest press",
+      "element": [
+        {
+          "id": "26642fa1-0d42-4a2f-9c4e-e8cfd9547bc7",
+          "name": "Technogym Element Chest Press",
+          "key": "technogym-chest-press-element-chest-press",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "ce0e2fe0-b101-4a5b-bc24-61a92696c356",
+          "name": "Technogym Element+ Chest Press",
+          "key": "technogym-selectorised-strength-element-chest-press",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "dual adjustable pulley",
+      "element": [
+        {
+          "id": "ec3322c8-c794-4622-9260-0841d276e51f",
+          "name": "Technogym Element Dual Adjustable Pulley",
+          "key": "technogym-element-dual-adjustable-pulley",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 7999.99,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "e4a9f4ea-05f5-4e5e-a699-87e7fbbd9e37",
+          "name": "Technogym Element+ Dual Adjustable Pulley",
+          "key": "technogym-selectorised-strength-element-dual-adjustable-pulley",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 8000,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "glute",
+      "element": [
+        {
+          "id": "363efac9-c9ca-469b-94dc-5b93346bf1fa",
+          "name": "Technogym Element Glute",
+          "key": "technogym-glute-machine-element-glute",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3000,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "5e1ff2d0-5d54-4d1c-9ce2-30ec398405bf",
+          "name": "Technogym Element+ Glute",
+          "key": "technogym-selectorised-strength-element-glute",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "lat machine",
+      "element": [
+        {
+          "id": "ecd7f20b-7fec-485b-a116-49af619487c2",
+          "name": "Technogym Element Lat Machine",
+          "key": "technogym-lat-pulldown-element-lat-machine",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3500,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "8db0d4e1-5351-48ad-988c-66dce51cfdd3",
+          "name": "Technogym Element+ Lat Machine",
+          "key": "technogym-selectorised-strength-element-lat-machine",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "leg curl",
+      "element": [
+        {
+          "id": "052fbc02-aaf0-4d9d-a0a5-8ea87fb32d49",
+          "name": "Technogym Element Leg Curl",
+          "key": "technogym-leg-curl-element-leg-curl",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "cee6b1e7-e319-47a5-8d17-b99bfb02ae05",
+          "name": "Technogym Element+ Leg Curl",
+          "key": "technogym-selectorised-strength-element-leg-curl",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "leg extension",
+      "element": [
+        {
+          "id": "0bf61650-45fe-454d-91f0-a56cff95366c",
+          "name": "Technogym Element Leg Extension",
+          "key": "technogym-leg-extension-element-leg-extension",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "f13380fe-11c3-4be2-9920-79a9cf9c6236",
+          "name": "Technogym Element+ Leg Extension",
+          "key": "technogym-selectorised-strength-element-leg-extension",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "leg press",
+      "element": [
+        {
+          "id": "927cee12-d1bc-481d-a665-67314ae2bd12",
+          "name": "Technogym Element Leg Press",
+          "key": "technogym-leg-press-element-leg-press",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 6495,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "5d133d27-72c9-4965-83ab-89f34fcc88ac",
+          "name": "Technogym Element+ Leg Press",
+          "key": "technogym-selectorised-strength-element-leg-press",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 7995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "low row",
+      "element": [
+        {
+          "id": "08d7024d-7186-4294-8a0a-a3fa99a57272",
+          "name": "Technogym Element Low Row",
+          "key": "technogym-row-machine-element-low-row",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3500,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "0df3ea8a-80fe-4e41-9b57-8d435fbc541a",
+          "name": "Technogym Element+ Low Row",
+          "key": "technogym-selectorised-strength-element-low-row",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "lower back",
+      "element": [
+        {
+          "id": "6adfae8e-65f8-4cff-b903-5ab26f44858f",
+          "name": "Technogym Element Lower Back",
+          "key": "technogym-bench-element-lower-back",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 3000,
+          "content": "draft",
+          "image": true,
+          "sources": 1
+        },
+        {
+          "id": "97360104-783d-4001-9e73-e6d4f3992222",
+          "name": "Technogym Element Lower Back",
+          "key": "technogym-element-lower-back",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "f3219e56-bee5-4b56-8ee6-0094984dca1a",
+          "name": "Technogym Element+ Lower Back",
+          "key": "technogym-selectorised-strength-element-lower-back",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "multipower",
+      "element": [
+        {
+          "id": "34898b1d-220d-4cde-a0fc-e376e0053df0",
+          "name": "Technogym Element Multipower",
+          "key": "technogym-element-multipower",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 6495,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "e58c748c-9bb8-47b0-b9f0-ccc6a1623297",
+          "name": "Technogym Element+ Multipower",
+          "key": "technogym-selectorised-strength-element-multipower",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4872,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "pectoral",
+      "element": [
+        {
+          "id": "9a8d7270-b054-4a9b-8f39-9cf032e1a0dc",
+          "name": "Technogym Element Pectoral",
+          "key": "technogym-element-pectoral",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "05dca4c6-ed1e-4c5c-a5f6-9bf11daaaffc",
+          "name": "Technogym Element+ Pectoral",
+          "key": "technogym-selectorised-strength-element-pectoral",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    },
+    {
+      "model_token": "shoulder press",
+      "element": [
+        {
+          "id": "2e780587-43de-411a-a057-4cce3b18d41c",
+          "name": "Technogym Element Shoulder Press",
+          "key": "technogym-shoulder-press-element-shoulder-press",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 1
+        }
+      ],
+      "element_plus": [
+        {
+          "id": "62eb110a-119e-4fbe-8ed9-d8327a8724c8",
+          "name": "Technogym Element+ Shoulder Press",
+          "key": "technogym-selectorised-strength-element-shoulder-press",
+          "status": "approved",
+          "year": 2012,
+          "rrp": 4995,
+          "content": "approved",
+          "image": true,
+          "sources": 16
+        }
+      ],
+      "recommendation": "defer_manual_review_do_not_auto_merge"
+    }
+  ],
+  "applied_ifi_exclusions": [
+    {
+      "loser_id": "3d00ff59-7e27-48bd-a010-c65ef6e5dcb4",
+      "loser_name": "Technogym Element+ Leg Press",
+      "loser_key": "technogym-selectorised-strength-element-leg-press-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-leg-press-ifi",
+      "survivor_id": "5d133d27-72c9-4965-83ab-89f34fcc88ac",
+      "survivor_key": "technogym-selectorised-strength-element-leg-press",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-leg-press"
+    },
+    {
+      "loser_id": "4adc0337-710a-43f7-bd41-9f3970f2a0aa",
+      "loser_name": "Technogym Element+ Shoulder Press",
+      "loser_key": "technogym-selectorised-strength-element-shoulder-press-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-shoulder-press-ifi",
+      "survivor_id": "62eb110a-119e-4fbe-8ed9-d8327a8724c8",
+      "survivor_key": "technogym-selectorised-strength-element-shoulder-press",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-shoulder-press"
+    },
+    {
+      "loser_id": "8c2628d3-23b5-4212-a90c-6fa75ec28e92",
+      "loser_name": "Technogym Element+ Lat Machine",
+      "loser_key": "technogym-selectorised-strength-element-lat-machine-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-lat-machine-ifi",
+      "survivor_id": "8db0d4e1-5351-48ad-988c-66dce51cfdd3",
+      "survivor_key": "technogym-selectorised-strength-element-lat-machine",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-lat-machine"
+    },
+    {
+      "loser_id": "d3a3d2c8-d707-48f7-8273-779195bb22bc",
+      "loser_name": "Technogym Element+ Low Row",
+      "loser_key": "technogym-selectorised-strength-element-low-row-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-low-row-ifi",
+      "survivor_id": "0df3ea8a-80fe-4e41-9b57-8d435fbc541a",
+      "survivor_key": "technogym-selectorised-strength-element-low-row",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-low-row"
+    },
+    {
+      "loser_id": "aaa9f5bb-bcc6-40f4-a31e-f05d468c056e",
+      "loser_name": "Technogym Element+ Abductor",
+      "loser_key": "technogym-selectorised-strength-element-abductor-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-abductor-ifi",
+      "survivor_id": "f38a99d0-bd91-4652-b7ef-c2b9dd2ee002",
+      "survivor_key": "technogym-selectorised-strength-element-abductor",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-abductor"
+    },
+    {
+      "loser_id": "d2afbd2c-1453-4fba-ba15-6aa4901717d7",
+      "loser_name": "Technogym Element+ Glute",
+      "loser_key": "technogym-selectorised-strength-element-glute-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-glute-ifi",
+      "survivor_id": "5e1ff2d0-5d54-4d1c-9ce2-30ec398405bf",
+      "survivor_key": "technogym-selectorised-strength-element-glute",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-glute"
+    },
+    {
+      "loser_id": "86a4e851-a7ce-4ae3-90cd-c393f1fd6dd9",
+      "loser_name": "Technogym Element+ Arm Curl",
+      "loser_key": "technogym-selectorised-strength-element-arm-curl-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-arm-curl-ifi",
+      "survivor_id": "567dda26-74f2-4bcb-8e8d-45fdb8a05625",
+      "survivor_key": "technogym-selectorised-strength-element-arm-curl",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-arm-curl"
+    },
+    {
+      "loser_id": "e760ab75-fb1c-45d5-b224-957600f8bb4d",
+      "loser_name": "Technogym Element+ Arm Extension",
+      "loser_key": "technogym-selectorised-strength-element-arm-extension-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-arm-extension-ifi",
+      "survivor_id": "4876c6d5-5b0e-48c9-bbb5-7e104998bbe6",
+      "survivor_key": "technogym-selectorised-strength-element-arm-extension",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-arm-extension"
+    },
+    {
+      "loser_id": "9640800f-193d-430f-9cb8-e1a442d9c600",
+      "loser_name": "Technogym Element+ Chest Press",
+      "loser_key": "technogym-selectorised-strength-element-chest-press-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-chest-press-ifi",
+      "survivor_id": "ce0e2fe0-b101-4a5b-bc24-61a92696c356",
+      "survivor_key": "technogym-selectorised-strength-element-chest-press",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-chest-press"
+    },
+    {
+      "loser_id": "0780af9a-8f79-4583-ac3f-159a9531cba3",
+      "loser_name": "Technogym Element+ Multipower",
+      "loser_key": "technogym-selectorised-strength-element-multipower-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-multipower-ifi",
+      "survivor_id": "e58c748c-9bb8-47b0-b9f0-ccc6a1623297",
+      "survivor_key": "technogym-selectorised-strength-element-multipower",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-multipower"
+    },
+    {
+      "loser_id": "cede46e2-f6d2-4f5d-99f3-99a3ef2258a0",
+      "loser_name": "Technogym Element+ Lower Back",
+      "loser_key": "technogym-selectorised-strength-element-lower-back-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-lower-back-ifi",
+      "survivor_id": "f3219e56-bee5-4b56-8ee6-0094984dca1a",
+      "survivor_key": "technogym-selectorised-strength-element-lower-back",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-lower-back"
+    },
+    {
+      "loser_id": "75dde8b8-8068-4627-a4ad-e529df58fcdb",
+      "loser_name": "Technogym Element+ Vertical Tr",
+      "loser_key": "technogym-selectorised-strength-element-vertical-tr-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-vertical-tr-ifi",
+      "survivor_id": "bb208700-fac9-4028-97c4-b80e71463e0b",
+      "survivor_key": "technogym-selectorised-strength-element-vertical-tr",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-vertical-tr"
+    },
+    {
+      "loser_id": "5fc49220-2e7d-41ce-a1ac-4add29c002e8",
+      "loser_name": "Technogym Element+ Dual Adjustable Pulley",
+      "loser_key": "technogym-selectorised-strength-element-dual-adjustable-pulley-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-dual-adjustable-pulley-ifi",
+      "survivor_id": "e4a9f4ea-05f5-4e5e-a699-87e7fbbd9e37",
+      "survivor_key": "technogym-selectorised-strength-element-dual-adjustable-pulley",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-dual-adjustable-pulley"
+    },
+    {
+      "loser_id": "ed698bb3-922d-453e-b376-19c0b60cb8f6",
+      "loser_name": "Technogym Element+ Adductor",
+      "loser_key": "technogym-selectorised-strength-element-adductor-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-adductor-ifi",
+      "survivor_id": "9efc2f42-9074-414b-9634-501dd02555dd",
+      "survivor_key": "technogym-selectorised-strength-element-adductor",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-adductor"
+    },
+    {
+      "loser_id": "cd6060aa-dff4-4009-af46-967f229d7a9f",
+      "loser_name": "Technogym Element+ Leg Curl",
+      "loser_key": "technogym-selectorised-strength-element-leg-curl-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-leg-curl-ifi",
+      "survivor_id": "cee6b1e7-e319-47a5-8d17-b99bfb02ae05",
+      "survivor_key": "technogym-selectorised-strength-element-leg-curl",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-leg-curl"
+    },
+    {
+      "loser_id": "6b137587-2412-4e83-865e-ca1b27d2b846",
+      "loser_name": "Technogym Element+ Leg Extension",
+      "loser_key": "technogym-selectorised-strength-element-leg-extension-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-leg-extension-ifi",
+      "survivor_id": "f13380fe-11c3-4be2-9920-79a9cf9c6236",
+      "survivor_key": "technogym-selectorised-strength-element-leg-extension",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-leg-extension"
+    },
+    {
+      "loser_id": "283e5d6f-a45b-4c5d-b73f-0ea7bc6eb543",
+      "loser_name": "Technogym Element+ Pectoral",
+      "loser_key": "technogym-selectorised-strength-element-pectoral-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-pectoral-ifi",
+      "survivor_id": "05dca4c6-ed1e-4c5c-a5f6-9bf11daaaffc",
+      "survivor_key": "technogym-selectorised-strength-element-pectoral",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-pectoral"
+    },
+    {
+      "loser_id": "edbee443-cca3-4626-9ab9-c5f7d914be6d",
+      "loser_name": "Technogym Element+ Crossover",
+      "loser_key": "technogym-cross-trainer-element-crossover-cables-ifi",
+      "loser_path": "/equipment/technogym-cross-trainer-element-crossover-cables-ifi",
+      "survivor_id": "eba18e21-6eca-4779-b6a9-e74c83887aef",
+      "survivor_key": "technogym-cross-trainer-element-crossover-cables",
+      "survivor_path": "/equipment/technogym-cross-trainer-element-crossover-cables"
+    },
+    {
+      "loser_id": "0b4254d1-e22f-4bec-b7ff-ebca09ceabe4",
+      "loser_name": "Technogym Excite Top 700",
+      "loser_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-digital-tv-without-seat-ifi",
+      "loser_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-digital-tv-without-seat-ifi",
+      "survivor_id": "d4ec1f98-c3a1-420a-89ad-b847a79d4fb9",
+      "survivor_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-digital-tv-without-seat",
+      "survivor_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-digital-tv-without-seat"
+    },
+    {
+      "loser_id": "b51cf3b0-eabd-4c86-89d8-0c8b251e19cf",
+      "loser_name": "Technogym Excite Top 700",
+      "loser_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-without-seat-ifi",
+      "loser_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-without-seat-ifi",
+      "survivor_id": "69879757-c11e-49b4-a65f-679294904f77",
+      "survivor_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-without-seat",
+      "survivor_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-without-seat"
+    },
+    {
+      "loser_id": "53cea5c6-2e5f-429e-853e-c9d649ddcb28",
+      "loser_name": "Technogym Element+ Ercolina Rehab Module",
+      "loser_key": "technogym-selectorised-strength-element-ercolina-rehab-module-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-ercolina-rehab-module-ifi",
+      "survivor_id": "03e61b53-9c80-48eb-99dd-a40d3143186b",
+      "survivor_key": "technogym-selectorised-strength-element-ercolina-rehab-module",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-ercolina-rehab-module"
+    },
+    {
+      "loser_id": "a1370842-415f-482c-8bab-07aead8dd6f0",
+      "loser_name": "Technogym Element+ Abdominal",
+      "loser_key": "technogym-selectorised-strength-element-abdominal-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-abdominal-ifi",
+      "survivor_id": "04188a5b-2856-45b4-907e-953b6763f38b",
+      "survivor_key": "technogym-selectorised-strength-element-abdominal",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-abdominal"
+    },
+    {
+      "loser_id": "e7a6e994-551e-4fb8-8e19-ea3f33d60e43",
+      "loser_name": "Technogym Excite Top 700",
+      "loser_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-sp-without-seat-ifi",
+      "loser_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-sp-without-seat-ifi",
+      "survivor_id": "1689c3f3-3748-472f-9cca-5a4750c1302b",
+      "survivor_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-sp-without-seat",
+      "survivor_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-sp-without-seat"
+    },
+    {
+      "loser_id": "25ca5377-386a-4066-a0ee-9836ae4f4661",
+      "loser_name": "Technogym Element+ Ercolina Module",
+      "loser_key": "technogym-selectorised-strength-element-ercolina-module-ifi",
+      "loser_path": "/equipment/technogym-selectorised-strength-element-ercolina-module-ifi",
+      "survivor_id": "f036fde0-9821-4722-8c4c-31af5a2b4f78",
+      "survivor_key": "technogym-selectorised-strength-element-ercolina-module",
+      "survivor_path": "/equipment/technogym-selectorised-strength-element-ercolina-module"
+    },
+    {
+      "loser_id": "c4aaddbd-9b3c-421b-bfb2-92932baebb08",
+      "loser_name": "Technogym Excite Top 700",
+      "loser_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-visio-web-without-seat-ifi",
+      "loser_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-visio-web-without-seat-ifi",
+      "survivor_id": "8cef125f-a716-4fbf-819d-6ad65281553b",
+      "survivor_key": "technogym-upper-body-ergometer-excite-top-top-excite-700-visio-web-without-seat",
+      "survivor_path": "/equipment/technogym-upper-body-ergometer-excite-top-top-excite-700-visio-web-without-seat"
+    }
+  ],
+  "safety_confirmation": {
+    "merge_element_family_not_run": true,
+    "catalogue_rebuild_not_run": true,
+    "additional_exclusions_this_step": 0
+  }
+}
