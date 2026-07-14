@@ -26,7 +26,7 @@ const DEFAULT_TRUST_POINTS = [
 const DEFAULT_EYEBROW = 'Equipment valuator'
 const DEFAULT_TITLE = 'Find out what your gym equipment is worth'
 const DEFAULT_TITLE_MOBILE = 'What’s your equipment worth?'
-const DEFAULT_LEDE = 'Search over 1,000 commercial fitness products and get an estimated current used value in just a few simple steps.'
+const DEFAULT_LEDE = 'Search over 1,000 fitness products and get an estimated current used value in just a few simple steps.'
 
 function TrustIcon() {
   return (

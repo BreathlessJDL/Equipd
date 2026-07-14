@@ -64,6 +64,17 @@ assert.match(valuator, /CanonicalEquipmentAutocomplete/, 'shared autocomplete')
 assert.match(valuator, /buildValuationHref/, 'shared valuation routing')
 assert.match(valuator, /useState\(''\)/, 'instance-local query state')
 assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
+assert.match(
+  valuator,
+  /Search over 1,000 fitness products and get an estimated current used value in just a few simple steps\./,
+  'shared default lede is not commercial-only',
+)
+assert.doesNotMatch(valuator, /commercial fitness products/, 'no commercial-only valuator lede')
 assert.match(valuatorCss, /\.home-valuator--signed-in/, 'signed-in compact spacing class exists')
+
+const hero = read('src/components/home/HomeHero.jsx')
+assert.doesNotMatch(hero, /home-hero__copy/, 'homepage does not render duplicate marketplace intro block')
+assert.doesNotMatch(hero, /EQUIPD MARKETPLACE|Equipd Marketplace/, 'no marketplace eyebrow under hero')
+assert.match(homePage, /<HomeHero/, 'homepage still uses hero banner component')
 
 console.log('homepage-valuator-auth-visibility: ok')

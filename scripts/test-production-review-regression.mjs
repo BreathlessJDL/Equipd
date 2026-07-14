@@ -236,9 +236,22 @@ function read(rel) {
   assert.match(indexHtml, /rel="canonical" href="https:\/\/www\.equipd\.co\.uk\/"/)
 
   const hero = read('src/components/home/HomeHero.jsx')
-  assert.match(hero, /<h1[^>]*>[\s\S]*Buy, sell & value used gym equipment/, 'homepage H1 marketplace messaging')
-  assert.match(hero, /Equipd Marketplace/, 'hero signals marketplace brand')
-  assert.match(hero, /valuation tool/, 'hero includes integrated valuation')
+  assert.doesNotMatch(hero, /home-hero__copy/, 'no visible marketplace intro block under hero')
+  assert.doesNotMatch(hero, /Equipd Marketplace/, 'hero does not render Equipd Marketplace eyebrow')
+  assert.doesNotMatch(
+    hero,
+    /Buy, sell & value used gym equipment/,
+    'hero does not render duplicate marketplace H1 block',
+  )
+  assert.match(hero, /home-hero__banner|home-hero__image/, 'hero banner remains')
+
+  const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
+  assert.match(
+    valuator,
+    /Search over 1,000 fitness products and get an estimated current used value in just a few simple steps\./,
+    'valuator lede uses fitness products wording',
+  )
+  assert.doesNotMatch(valuator, /commercial fitness products/, 'valuator lede is not commercial-only')
 }
 
 console.log('production-review-regression tests passed')

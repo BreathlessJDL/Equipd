@@ -207,39 +207,6 @@
   box-sizing: border-box;
 }
 
-.home-hero__copy {
-  padding-top: clamp(1rem, 2.2vw, 1.45rem);
-  padding-bottom: clamp(0.35rem, 1vw, 0.75rem);
-  text-align: left;
-}
-
-.home-hero__eyebrow {
-  margin: 0 0 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-orange);
-}
-
-.home-hero__title {
-  margin: 0 0 0.55rem;
-  max-width: 24ch;
-  font-size: clamp(1.55rem, 3.2vw, 2.35rem);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
-  color: var(--color-navy);
-}
-
-.home-hero__lede {
-  margin: 0;
-  max-width: 42rem;
-  font-size: clamp(0.95rem, 1.6vw, 1.0625rem);
-  line-height: 1.55;
-  color: var(--color-muted);
-}
-
 .home-recent,
 .home-discovery {
   padding-block: var(--home-listing-section-space);

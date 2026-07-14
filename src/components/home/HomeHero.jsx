@@ -4,9 +4,9 @@ import ProtectedLink from '../auth/ProtectedLink'
 const HERO_BANNER = {
   desktopSrc: '/design-reference/New%20main%20hero%20banner%20main.png',
   mobileSrc: '/design-reference/second-hero-banner-mobile.png',
-  alt: 'Buy, sell and value used gym equipment on the Equipd marketplace.',
+  alt: 'Your gym should not be a coat rack. Turn it into cash on Equipd.',
   href: '/listings/new',
-  label: 'Sell used gym equipment on Equipd',
+  label: 'Sell gym equipment',
 }
 
 function HomeHero() {
@@ -17,7 +17,7 @@ function HomeHero() {
   }, [HERO_BANNER.desktopSrc, HERO_BANNER.mobileSrc])
 
   return (
-    <section className="home-hero" aria-labelledby="home-hero-title">
+    <section className="home-hero" aria-label="Equipd hero banner">
       <div className="home-hero__frame">
         <div className="home-hero__banner">
           <ProtectedLink
@@ -45,17 +45,6 @@ function HomeHero() {
             </div>
           </ProtectedLink>
         </div>
-      </div>
-
-      <div className="home-section__inner home-hero__copy">
-        <p className="home-hero__eyebrow">Equipd Marketplace</p>
-        <h1 id="home-hero-title" className="home-hero__title">
-          Buy, sell & value used gym equipment
-        </h1>
-        <p className="home-hero__lede">
-          The UK marketplace for used gym equipment — browse listings from sellers nationwide,
-          sell your kit securely, and value equipment instantly with our built-in valuation tool.
-        </p>
       </div>
     </section>
   )
