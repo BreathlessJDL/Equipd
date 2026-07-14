@@ -3,12 +3,16 @@ import { Link } from 'react-router-dom'
 import { EmptyState, ErrorState } from '../components/ui/UiState'
 import { getAdminErrorMessage } from '../lib/admin'
 import {
+  EQUIPMENT_INTELLIGENCE_CSV_YEAR_GUIDANCE,
   SAMPLE_EQUIPMENT_INTELLIGENCE_CSV,
   formatTradeInValue,
-  importEquipmentIntelligenceRows,
   parseEquipmentIntelligenceCsv,
   validateEquipmentIntelligenceRows,
 } from '../lib/equipmentIntelligence'
+import {
+  importEquipmentIntelligenceAndPromote,
+  retryCanonicalPromotionForBrands,
+} from '../lib/equipmentIntelligenceImportPromote'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './AdminIntelligencePage.css'
 import './AdminIntelligenceImportPage.css'
@@ -23,6 +27,18 @@ function formatPreviewTradeIn(row) {
   })
 }
 
+function resultHeadline(result) {
+  if (!result) return ''
+  if (result.stage === 'import') return 'Import failed'
+  if (result.stage === 'promote') {
+    return result.importResult && !result.importResult.error
+      ? 'Import complete, product promotion failed'
+      : 'Product promotion failed'
+  }
+  if (result.promotion?.hasWarnings) return 'Import complete (with promotion warnings)'
+  return 'Import and promotion complete'
+}
+
 function AdminIntelligenceImportPage() {
   usePageTitle('Admin Intelligence Import')
 
@@ -34,22 +50,27 @@ function AdminIntelligenceImportPage() {
   const fileInputRef = useRef(null)
 
   const [importing, setImporting] = useState(false)
+  const [promoting, setPromoting] = useState(false)
+  const [progressLabel, setProgressLabel] = useState('')
   const [importError, setImportError] = useState('')
-  const [importSuccess, setImportSuccess] = useState('')
+  const [workflowResult, setWorkflowResult] = useState(null)
 
   const validation = useMemo(
     () => validateEquipmentIntelligenceRows(parsedRows),
     [parsedRows],
   )
 
-  function resetImportForm({ clearSuccess = true } = {}) {
+  const busy = importing || promoting
+
+  function resetImportForm({ clearResult = true } = {}) {
     setParsedRows([])
     setParseError('')
     setCsvText('')
     setPreviewActive(false)
     setImportError('')
-    if (clearSuccess) {
-      setImportSuccess('')
+    setProgressLabel('')
+    if (clearResult) {
+      setWorkflowResult(null)
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -58,7 +79,7 @@ function AdminIntelligenceImportPage() {
 
   function applyCsvText(text) {
     setImportError('')
-    setImportSuccess('')
+    setWorkflowResult(null)
     const parsed = parseEquipmentIntelligenceCsv(text)
     if (parsed.error) {
       setParseError(parsed.error)
@@ -93,9 +114,31 @@ function AdminIntelligenceImportPage() {
     reader.readAsText(file)
   }
 
+  function handleProgress(event) {
+    if (event.stage === 'import') {
+      setProgressLabel('Importing source rows…')
+      return
+    }
+    if (event.phase === 'brand-start') {
+      setProgressLabel(
+        `Promoting products for ${event.brand} (${(event.brandsCompleted ?? 0) + 1} of ${event.brandsTotal ?? '?'})…`,
+      )
+      return
+    }
+    if (event.phase === 'upserting') {
+      setProgressLabel(
+        `Updating ${event.brand}: ${event.completed ?? 0} of ${event.total ?? 0} products…`,
+      )
+      return
+    }
+    if (event.stage === 'promote') {
+      setProgressLabel('Promoting products to the catalogue…')
+    }
+  }
+
   async function handleImport() {
     setImportError('')
-    setImportSuccess('')
+    setWorkflowResult(null)
 
     if (parsedRows.length === 0) {
       setImportError('Parse a CSV before importing.')
@@ -108,18 +151,23 @@ function AdminIntelligenceImportPage() {
     }
 
     setImporting(true)
+    setProgressLabel('Importing source rows…')
 
-    const result = await importEquipmentIntelligenceRows(validation.validRows)
+    const result = await importEquipmentIntelligenceAndPromote(validation.validRows, {
+      onProgress: handleProgress,
+    })
 
-    if (result.error) {
+    setImporting(false)
+    setProgressLabel('')
+    setWorkflowResult(result)
+
+    if (result.stage === 'import' && result.error) {
       setImportError(getAdminErrorMessage(result.error))
-      setImporting(false)
       return
     }
 
-    setImportSuccess(
-      `Import complete: ${result.insertedCount} inserted, ${result.updatedCount} updated.`,
-    )
+    // Clear the form after a successful source import (even if promotion failed)
+    // so the result panel stays visible with brands retained for retry.
     setParsedRows([])
     setParseError('')
     setCsvText('')
@@ -127,12 +175,57 @@ function AdminIntelligenceImportPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-    setImporting(false)
+
+    if (result.error && result.stage === 'promote') {
+      setImportError(getAdminErrorMessage(result.error))
+    }
+  }
+
+  async function handleRetryPromotion() {
+    const brands = workflowResult?.brands ?? []
+    if (!brands.length) {
+      setImportError('No imported brands are available to retry. Import the CSV again or use manual promotion.')
+      return
+    }
+
+    setImportError('')
+    setPromoting(true)
+    setProgressLabel('Retrying product promotion…')
+
+    const retry = await retryCanonicalPromotionForBrands(brands, {
+      onProgress: (event) => handleProgress({ stage: 'promote', ...event }),
+    })
+
+    setPromoting(false)
+    setProgressLabel('')
+
+    setWorkflowResult((previous) => ({
+      ...(previous ?? {}),
+      ok: retry.ok,
+      stage: retry.ok ? 'complete' : 'promote',
+      promotion: retry.promotion,
+      brands: retry.brands,
+      productsPath: retry.productsPath,
+      error: retry.error,
+      importResult: previous?.importResult ?? null,
+    }))
+
+    if (retry.error) {
+      setImportError(getAdminErrorMessage(retry.error))
+    }
   }
 
   function handleImportAnother() {
-    resetImportForm({ clearSuccess: true })
+    resetImportForm({ clearResult: true })
   }
+
+  const importResult = workflowResult?.importResult
+  const promotion = workflowResult?.promotion
+  const showResultPanel = Boolean(workflowResult) && !previewActive
+  const canRetryPromotion = workflowResult?.stage === 'promote'
+    && Boolean(importResult)
+    && !importResult.error
+    && (workflowResult.brands?.length ?? 0) > 0
 
   return (
     <section className="admin-intelligence">
@@ -143,7 +236,11 @@ function AdminIntelligenceImportPage() {
         <h1 className="admin-intelligence__title">Import intelligence CSV</h1>
         <p className="admin-intelligence__lead">
           Upload or paste a cleaned master CSV. Rows upsert by slug; blank market observations do not
-          overwrite existing data.
+          overwrite existing data. After a successful import, affected brands are promoted into Products
+          as pending or needs review — nothing is auto-approved.
+        </p>
+        <p className="admin-intelligence__count">
+          {EQUIPMENT_INTELLIGENCE_CSV_YEAR_GUIDANCE}
         </p>
       </header>
 
@@ -159,6 +256,7 @@ function AdminIntelligenceImportPage() {
               method === 'upload' ? ' admin-intelligence-import__method--active' : ''
             }`}
             onClick={() => setMethod('upload')}
+            disabled={busy}
           >
             Upload CSV
           </button>
@@ -170,6 +268,7 @@ function AdminIntelligenceImportPage() {
               method === 'paste' ? ' admin-intelligence-import__method--active' : ''
             }`}
             onClick={() => setMethod('paste')}
+            disabled={busy}
           >
             Paste CSV
           </button>
@@ -187,6 +286,7 @@ function AdminIntelligenceImportPage() {
               accept=".csv,text/csv"
               className="admin-intelligence-import__file-input"
               onChange={handleFileChange}
+              disabled={busy}
             />
             <p className="admin-intelligence__count">
               File contents are previewed automatically after selection.
@@ -205,12 +305,14 @@ function AdminIntelligenceImportPage() {
                 setCsvText(event.target.value)
                 setParseError('')
               }}
+              disabled={busy}
             />
             <div className="admin-intelligence__actions">
               <button
                 type="button"
                 className="admin-intelligence__button admin-intelligence__button--primary"
                 onClick={handleParsePaste}
+                disabled={busy}
               >
                 Preview CSV
               </button>
@@ -218,6 +320,7 @@ function AdminIntelligenceImportPage() {
                 type="button"
                 className="admin-intelligence__button admin-intelligence__button--secondary"
                 onClick={handleLoadSample}
+                disabled={busy}
               >
                 Load sample CSV
               </button>
@@ -233,20 +336,159 @@ function AdminIntelligenceImportPage() {
 
         <div>
           <p className="admin-intelligence__label">Sample CSV</p>
+          <p className="admin-intelligence__count">
+            Sample uses manufacture_year as source metadata only. It does not set a verified first-release
+            baseline for automatic promotion.
+          </p>
           <pre className="admin-intelligence-import__sample">{SAMPLE_EQUIPMENT_INTELLIGENCE_CSV}</pre>
         </div>
       </section>
 
-      {importSuccess && !previewActive ? (
-        <section className="admin-intelligence__panel">
-          <p className="admin-intelligence__message admin-intelligence__message--success" role="status">
-            {importSuccess}
-          </p>
+      {showResultPanel ? (
+        <section className="admin-intelligence__panel admin-intelligence-import__result">
+          <h2 className="admin-intelligence__panel-title">{resultHeadline(workflowResult)}</h2>
+
+          {importResult && !importResult.error ? (
+            <div className="admin-intelligence-import__result-block">
+              <h3 className="admin-intelligence-import__result-heading">Source rows</h3>
+              <ul className="admin-intelligence-import__result-list">
+                <li>{importResult.insertedCount} inserted</li>
+                <li>{importResult.updatedCount} updated</li>
+              </ul>
+            </div>
+          ) : null}
+
+          {promotion ? (
+            <div className="admin-intelligence-import__result-block">
+              <h3 className="admin-intelligence-import__result-heading">Canonical promotion</h3>
+              <ul className="admin-intelligence-import__result-list">
+                <li>
+                  Brands processed: {promotion.brandsProcessed}
+                  {promotion.brandsSkipped
+                    ? ` (${promotion.brandsSkipped} skipped)`
+                    : ''}
+                </li>
+                <li>Products inserted: {promotion.productsInserted}</li>
+                <li>Products updated: {promotion.productsUpdated}</li>
+                <li>Pending: {promotion.pending}</li>
+                <li>Needs review: {promotion.needsReview}</li>
+                <li>Approved: {promotion.approved}</li>
+                <li>Duplicates collapsed: {promotion.duplicateRowsCollapsed}</li>
+                <li>Ambiguous: {promotion.ambiguous}</li>
+                {promotion.canonicalProductCount != null ? (
+                  <li>
+                    Canonical products (affected brands): {promotion.canonicalProductCount}
+                    {' · '}
+                    Source rows loaded: {promotion.sourceRowCount}
+                  </li>
+                ) : null}
+              </ul>
+
+              {workflowResult.brands?.length ? (
+                <p className="admin-intelligence__count">
+                  Brands: {workflowResult.brands.join(', ')}
+                </p>
+              ) : null}
+
+              {promotion.countNotes?.length ? (
+                <ul className="admin-intelligence-import__result-notes">
+                  {promotion.countNotes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {promotion.warnings?.length ? (
+                <div className="admin-intelligence__message admin-intelligence__message--warning" role="status">
+                  <p>Promotion warnings:</p>
+                  <ul>
+                    {promotion.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {promotion.yearStats ? (
+                <div className="admin-intelligence-import__result-block">
+                  <h3 className="admin-intelligence-import__result-heading">Manufacture years</h3>
+                  <ul className="admin-intelligence-import__result-list">
+                    <li>
+                      Source rows with manufacture year: {promotion.yearStats.sourceRowsWithManufactureYear}
+                    </li>
+                    <li>
+                      Source rows with verified first-release year:{' '}
+                      {promotion.yearStats.sourceRowsWithVerifiedBaseline}
+                    </li>
+                    <li>
+                      Canonical baselines newly populated:{' '}
+                      {promotion.yearStats.canonicalBaselinesPopulated}
+                    </li>
+                    <li>
+                      Canonical baselines left blank: {promotion.yearStats.canonicalBaselinesLeftBlank}
+                    </li>
+                    <li>
+                      Existing baselines preserved: {promotion.yearStats.existingBaselinesPreserved}
+                    </li>
+                  </ul>
+                  <p className="admin-intelligence__count">
+                    Import manufacture year is source metadata only. It is not treated as a verified
+                    first-release baseline unless researched and stored on the intelligence row.
+                  </p>
+                </div>
+              ) : null}
+
+              {workflowResult.ok && !promotion.hasWarnings ? (
+                <p className="admin-intelligence__message admin-intelligence__message--success" role="status">
+                  Products are now available in the Products dashboard.
+                </p>
+              ) : null}
+
+              {workflowResult.ok && promotion.hasWarnings ? (
+                <p className="admin-intelligence__message admin-intelligence__message--warning" role="status">
+                  Source import succeeded. Review skipped brands before relying on the Products dashboard.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {workflowResult.stage === 'promote' && !promotion ? (
+            <p className="admin-intelligence__message admin-intelligence__message--error" role="alert">
+              Source rows were saved, but product promotion did not complete.
+              {workflowResult.brands?.length
+                ? ' You can retry promotion without re-uploading the CSV.'
+                : ' Refreshing may require re-import or manual promotion.'}
+            </p>
+          ) : null}
+
+          {importError ? (
+            <ErrorState compact>{importError}</ErrorState>
+          ) : null}
+
           <div className="admin-intelligence__actions">
+            {canRetryPromotion ? (
+              <button
+                type="button"
+                className="admin-intelligence__button admin-intelligence__button--primary"
+                onClick={handleRetryPromotion}
+                disabled={busy}
+              >
+                {promoting ? 'Retrying…' : 'Retry product promotion'}
+              </button>
+            ) : null}
+            {workflowResult.ok || (importResult && !importResult.error) ? (
+              <Link
+                to={workflowResult.productsPath || '/admin/intelligence/products'}
+                className="admin-intelligence__button admin-intelligence__button--primary"
+              >
+                View products
+              </Link>
+            ) : null}
             <button
               type="button"
-              className="admin-intelligence__button admin-intelligence__button--primary"
+              className="admin-intelligence__button admin-intelligence__button--secondary"
               onClick={handleImportAnother}
+              disabled={busy}
             >
               Import another CSV
             </button>
@@ -332,15 +574,19 @@ function AdminIntelligenceImportPage() {
           <ErrorState compact>{importError}</ErrorState>
         ) : null}
 
+        {progressLabel ? (
+          <p className="admin-intelligence__count" role="status">{progressLabel}</p>
+        ) : null}
+
         <div className="admin-intelligence__actions">
           <button
             type="button"
             className="admin-intelligence__button admin-intelligence__button--primary"
             onClick={handleImport}
-            disabled={importing || validation.validCount === 0}
+            disabled={busy || validation.validCount === 0}
           >
-            {importing
-              ? 'Importing…'
+            {busy
+              ? (progressLabel || 'Working…')
               : `Import ${validation.validCount} valid row${validation.validCount === 1 ? '' : 's'}`}
           </button>
           <Link

@@ -380,3 +380,14 @@
   background: color-mix(in srgb, var(--color-success) 10%, #fff);
   color: var(--color-success);
 }
+
+.admin-intelligence__message--warning {
+  background: color-mix(in srgb, #f5d9a8 35%, #fff);
+  color: color-mix(in srgb, #a15c00 90%, var(--color-navy));
+  border: 1px solid color-mix(in srgb, #d4a017 40%, transparent);
+}
+
+.admin-intelligence__message--warning ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}

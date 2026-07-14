@@ -457,12 +457,19 @@ export function stripConsoleVariantFromModel(modelText, {
 }
 
 export function slugifyCoreProductKey(...parts) {
+  // NOTE: "+" becomes "plus". Existing DB keys created before this mapping (e.g.
+  // Technogym Element+ / Excite+) omit "plus". Rebuilds of those brands need a
+  // dedicated key-migration plan — do not bulk-rebuild without one.
   return parts
     .map((part) => normalizeWhitespace(part))
     .filter(Boolean)
     .join('-')
     .toLowerCase()
+    // Preserve meaningful plus signs as the word "plus" before stripping punctuation.
+    // e.g. Bike+ → bike-plus, SE3HD+ → se3hd-plus, "Console + TV" → console-plus-tv
+    .replace(/\+/g, '-plus-')
     .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
 
@@ -687,14 +694,35 @@ function resolveGroupStatus(members = []) {
   return CORE_PRODUCT_GROUP_STATUS.PENDING
 }
 
+/**
+ * True when the model already begins with the complete family phrase
+ * (case-insensitive, whitespace-normalised). Avoids "Commercial Commercial 1750".
+ *
+ * Family "Bike" + model "Bike+" is treated as the same label with a plus suffix
+ * for naming only — canonical keys remain distinct via slugifyCoreProductKey.
+ */
+export function modelStartsWithFamilyPhrase(coreModel, productFamily) {
+  const familyText = normalizeWhitespace(productFamily)
+  const modelText = normalizeWhitespace(coreModel)
+  if (!familyText || !modelText) return false
+
+  const familyLower = familyText.toLowerCase()
+  const modelLower = modelText.toLowerCase()
+  if (modelLower === familyLower) return true
+  // e.g. family "Bike", model "Bike+" — do not emit "Brand Bike Bike+"
+  if (modelLower === `${familyLower}+`) return true
+  return modelLower.startsWith(`${familyLower} `)
+}
+
 export function buildCoreProductName(brand, productFamily, coreModel) {
   const brandText = normalizeWhitespace(brand)
   const familyText = normalizeWhitespace(productFamily)
   const modelText = normalizeWhitespace(coreModel)
   const parts = []
   if (brandText) parts.push(brandText)
-  // Avoid "Wattbike Atom Atom" when series and model are the same label.
-  if (familyText && normalizeTokenKey(familyText) !== normalizeTokenKey(modelText)) {
+  // Skip family when the model already starts with that complete family phrase
+  // (e.g. family "Commercial", model "Commercial 1750").
+  if (familyText && !modelStartsWithFamilyPhrase(modelText, familyText)) {
     parts.push(familyText)
   }
   if (modelText) parts.push(modelText)

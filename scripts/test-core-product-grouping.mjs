@@ -515,4 +515,83 @@ const approvedGroup = {
 }
 assert(!isApprovableCoreProductGroup(approvedGroup), 'approved groups should not be approvable again')
 
+// --- Plus-sign identity + redundant family naming ---
+assert(slugifyCoreProductKey('Bike') === 'bike', 'Bike slug remains bike')
+assert(slugifyCoreProductKey('Bike+') === 'bike-plus', 'Bike+ slug becomes bike-plus')
+assert(
+  slugifyCoreProductKey('Bike') !== slugifyCoreProductKey('Bike+'),
+  'Bike and Bike+ must produce different slug keys',
+)
+assert(slugifyCoreProductKey('SE3HD+') === 'se3hd-plus', 'SE3HD+ slug becomes se3hd-plus')
+assert(slugifyCoreProductKey('Console + TV') === 'console-plus-tv', 'Console + TV slug becomes console-plus-tv')
+assert(
+  slugifyCoreProductKey('Life Fitness', 'Stepper', 'Integrity Series', 'PowerMill')
+    === 'life-fitness-stepper-integrity-series-powermill',
+  'ordinary commercial keys without + remain unchanged',
+)
+
+const pelotonBike = deriveCoreProductFields({
+  brand: 'Peloton',
+  series: 'Bike',
+  model: 'Bike',
+  equipment_type: 'Indoor Bike',
+})
+const pelotonBikePlus = deriveCoreProductFields({
+  brand: 'Peloton',
+  series: 'Bike+',
+  model: 'Bike+',
+  equipment_type: 'Indoor Bike',
+})
+assert(pelotonBike.core_product_name === 'Peloton Bike', 'Peloton Bike display name')
+assert(pelotonBikePlus.core_product_name === 'Peloton Bike+', 'Peloton Bike+ display name')
+assert(
+  pelotonBike.core_product_key !== pelotonBikePlus.core_product_key,
+  'Peloton Bike and Bike+ must produce different canonical keys',
+)
+assert(
+  pelotonBikePlus.core_product_key.includes('plus'),
+  'Peloton Bike+ canonical key should contain plus',
+)
+
+assert(
+  buildCoreProductName('NordicTrack', 'Commercial', 'Commercial 1750') === 'NordicTrack Commercial 1750',
+  'redundant Commercial family prefix suppressed',
+)
+assert(
+  buildCoreProductName('BowFlex', 'Max Total', 'Max Total 16') === 'BowFlex Max Total 16',
+  'redundant Max Total family prefix suppressed',
+)
+assert(
+  buildCoreProductName('Peloton', 'Cross Training', 'Cross Training Bike') === 'Peloton Cross Training Bike',
+  'redundant Cross Training family prefix suppressed',
+)
+assert(
+  buildCoreProductName('BowFlex', 'Treadmill', 'Treadmill 22') === 'BowFlex Treadmill 22',
+  'redundant Treadmill family prefix suppressed',
+)
+assert(
+  buildCoreProductName('NordicTrack', 'T Series', 'T 6.5S') === 'NordicTrack T Series T 6.5S',
+  'T Series must remain when model does not start with full family phrase',
+)
+assert(
+  buildCoreProductName('BowFlex', 'Max Trainer', 'M6') === 'BowFlex Max Trainer M6',
+  'Max Trainer M6 must keep family',
+)
+assert(
+  buildCoreProductName('Peloton', 'Bike', 'Bike+') === 'Peloton Bike+',
+  'family Bike + model Bike+ should name as Peloton Bike+ without repeating family',
+)
+assert(
+  buildCoreProductName('Wattbike', 'Atom', 'Atom') === 'Wattbike Atom',
+  'identical family/model still collapses once',
+)
+assert(
+  buildCoreProductName('Life Fitness', 'Integrity Series', 'PowerMill') === 'Life Fitness Integrity Series PowerMill',
+  'commercial Integrity Series PowerMill name unchanged',
+)
+assert(
+  buildCoreProductName('Technogym', 'Excite', 'Run 700') === 'Technogym Excite Run 700',
+  'Technogym family retained when model does not start with family',
+)
+
 console.log('core product grouping tests passed')

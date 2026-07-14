@@ -62,6 +62,7 @@
     "test:technogym-core-product-grouping": "node scripts/test-technogym-core-product-grouping.mjs",
     "audit:technogym-model-variants": "node scripts/audit-technogym-model-variants.mjs",
     "apply:canonical-by-brand": "node scripts/apply-canonical-products-by-brand.mjs",
+    "test:apply-canonical-import-promote": "node scripts/test-apply-canonical-import-promote.mjs",
     "test:equipment-research-price-selection": "node scripts/test-equipment-research-price-selection.mjs",
     "test:intelligence-structured-evidence": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligenceStructuredEvidence_test.ts",
     "test:intelligence-product-identity": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligenceProductIdentity_test.ts",

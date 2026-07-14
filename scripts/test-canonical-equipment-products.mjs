@@ -7,6 +7,7 @@ import {
   buildCanonicalProductsFromRows,
   buildConsoleDuplicateRepairPlan,
   coalesceMergedCanonicalProductFields,
+  coerceCanonicalManufactureYear,
   evaluateHighConfidenceApproval,
   isSafeApprovalCandidate,
   PRODUCT_STATUS,
@@ -466,6 +467,184 @@ assert(mergedFields.original_base_price === 5200, 'merge keeps verified RRP from
 assert(
   mergedFields.canonical_product_name === 'Life Fitness Integrity Series Bike',
   'merge renames keeper to clean canonical product name',
+)
+
+const pelotonBikeRows = [
+  {
+    id: 'peloton-bike',
+    brand: 'Peloton',
+    series: 'Bike',
+    model: 'Bike',
+    equipment_type: 'Indoor Bike',
+    confidence: 'Medium',
+    manufacture_year: 2018,
+  },
+  {
+    id: 'peloton-bike-plus',
+    brand: 'Peloton',
+    series: 'Bike+',
+    model: 'Bike+',
+    equipment_type: 'Indoor Bike',
+    confidence: 'High',
+    manufacture_year: 2020,
+  },
+]
+const pelotonBikeAudit = buildCanonicalProductAuditReport(pelotonBikeRows)
+assert(pelotonBikeAudit.products.length === 2, 'Peloton Bike and Bike+ must remain separate canonical products')
+assert(pelotonBikeAudit.duplicate_rows_collapsed === 0, 'Peloton Bike/Bike+ must not collapse')
+const pelotonNames = pelotonBikeAudit.products.map((product) => product.canonical_product_name).sort()
+assert(
+  pelotonNames[0] === 'Peloton Bike' && pelotonNames[1] === 'Peloton Bike+',
+  'Peloton Bike and Bike+ canonical names',
+)
+assert(
+  pelotonBikeAudit.products[0].canonical_product_key !== pelotonBikeAudit.products[1].canonical_product_key,
+  'Peloton Bike and Bike+ must have different canonical keys',
+)
+
+const lowConfidenceRow = buildCanonicalProductAuditReport([
+  {
+    id: 'nt-low',
+    brand: 'NordicTrack',
+    series: 'FreeStride',
+    model: 'FS14i',
+    equipment_type: 'Cross Trainer',
+    confidence: 'Low',
+  },
+])
+assert(
+  lowConfidenceRow.products[0]?.status === PRODUCT_STATUS.NEEDS_REVIEW,
+  'low source confidence should mark product needs_review',
+)
+assert(
+  lowConfidenceRow.products[0]?.review_reasons?.includes('low source confidence'),
+  'low confidence review reason recorded',
+)
+
+assert(coerceCanonicalManufactureYear(2018) === 2018, 'valid manufacture year retained')
+assert(coerceCanonicalManufactureYear('2020') === 2020, 'string manufacture year retained')
+assert(coerceCanonicalManufactureYear(null) === null, 'blank manufacture year remains null')
+assert(coerceCanonicalManufactureYear('') === null, 'empty manufacture year remains null')
+assert(coerceCanonicalManufactureYear(12) === null, 'implausible short year rejected')
+assert(coerceCanonicalManufactureYear(1899) === null, 'pre-1970 year rejected')
+assert(coerceCanonicalManufactureYear(9999) === null, 'implausible future year rejected')
+
+const withYear = buildCanonicalProductAuditReport([
+  {
+    id: 'year-ok',
+    brand: 'NordicTrack',
+    series: 'Commercial',
+    model: 'Commercial 1750',
+    equipment_type: 'Treadmill',
+    confidence: 'Medium',
+    manufacture_year: 2010,
+    original_rrp: null,
+  },
+])
+assert(
+  withYear.products[0].baseline_manufacture_year == null,
+  'generic manufacture_year alone does not populate baseline',
+)
+assert(
+  withYear.products[0].production_start_year == null,
+  'generic manufacture_year alone does not populate production_start',
+)
+assert(withYear.products[0].original_base_price == null, 'missing price stays null')
+assert(withYear.products[0].status === PRODUCT_STATUS.PENDING, 'medium confidence stays pending')
+
+const withVerifiedBaseline = buildCanonicalProductAuditReport([
+  {
+    id: 'year-verified',
+    brand: 'NordicTrack',
+    series: 'Commercial',
+    model: 'Commercial 1750',
+    equipment_type: 'Treadmill',
+    confidence: 'Medium',
+    manufacture_year: 2022,
+    baseline_manufacture_year: 2010,
+    original_rrp: null,
+  },
+])
+assert(
+  withVerifiedBaseline.products[0].baseline_manufacture_year === 2010,
+  'explicit baseline_manufacture_year populates canonical baseline',
+)
+assert(
+  withVerifiedBaseline.products[0].production_start_year === 2010,
+  'explicit baseline also seeds production_start when start missing',
+)
+
+const withUnsafeFallback = buildCanonicalProductAuditReport(
+  [{
+    id: 'year-unsafe',
+    brand: 'NordicTrack',
+    series: 'Commercial',
+    model: 'Commercial 1750',
+    equipment_type: 'Treadmill',
+    confidence: 'Medium',
+    manufacture_year: 2010,
+  }],
+  { allowManufactureYearAsBaseline: true },
+)
+assert(
+  withUnsafeFallback.products[0].baseline_manufacture_year === 2010,
+  'CLI override may use manufacture_year as baseline',
+)
+
+const withoutYear = buildCanonicalProductAuditReport([
+  {
+    id: 'year-blank',
+    brand: 'NordicTrack',
+    series: 'Commercial',
+    model: 'Commercial 2450',
+    equipment_type: 'Treadmill',
+    confidence: 'Medium',
+    manufacture_year: null,
+  },
+])
+assert(withoutYear.products[0].baseline_manufacture_year == null, 'blank manufacture year stays null on product')
+
+const invalidYear = buildCanonicalProductAuditReport([
+  {
+    id: 'year-bad',
+    brand: 'NordicTrack',
+    series: 'Commercial',
+    model: 'Commercial 2950',
+    equipment_type: 'Treadmill',
+    confidence: 'Medium',
+    manufacture_year: 1800,
+  },
+])
+assert(invalidYear.products[0].baseline_manufacture_year == null, 'invalid manufacture year rejected')
+
+const yearIdentity = buildCanonicalProductAuditReport([
+  {
+    id: 'id-a',
+    brand: 'Peloton',
+    series: 'Bike',
+    model: 'Bike',
+    equipment_type: 'Indoor Bike',
+    confidence: 'Medium',
+    manufacture_year: 2018,
+  },
+])
+const yearIdentityNoYear = buildCanonicalProductAuditReport([
+  {
+    id: 'id-b',
+    brand: 'Peloton',
+    series: 'Bike',
+    model: 'Bike',
+    equipment_type: 'Indoor Bike',
+    confidence: 'Medium',
+  },
+])
+assert(
+  yearIdentity.products[0].canonical_product_key === yearIdentityNoYear.products[0].canonical_product_key,
+  'manufacture_year must not change canonical key',
+)
+assert(
+  yearIdentity.products[0].canonical_product_name === yearIdentityNoYear.products[0].canonical_product_name,
+  'manufacture_year must not change canonical name',
 )
 
 console.log('canonical equipment products tests passed')

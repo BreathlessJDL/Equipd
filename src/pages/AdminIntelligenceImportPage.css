@@ -70,3 +70,26 @@
 .admin-intelligence-import__table tr[data-invalid='true'] {
   background: color-mix(in srgb, var(--color-danger) 5%, #fff);
 }
+
+.admin-intelligence-import__result-block {
+  margin: 0 0 var(--space-md);
+}
+
+.admin-intelligence-import__result-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.admin-intelligence-import__result-list,
+.admin-intelligence-import__result-notes {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.admin-intelligence-import__result-notes {
+  margin-top: 0.5rem;
+  color: color-mix(in srgb, var(--color-navy) 72%, transparent);
+}

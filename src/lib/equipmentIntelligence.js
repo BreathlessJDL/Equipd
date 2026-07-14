@@ -494,6 +494,14 @@ export const SAMPLE_EQUIPMENT_INTELLIGENCE_CSV = `brand,series,model,category,eq
 Concept2,Indoor Rower,Model D,Rowing Machines,Rowers,2018,1200,650,1850;1950;2100,Medium,GBP,concept2-model-d
 Life Fitness,95 Series,95Ti,Treadmills,Treadmill,2015,8500,2200,"[{""price"":2200,""source"":""Dealer"",""confidence"":85}]",High,GBP,life-fitness-95ti`
 
+/** Guidance shown in the import UI. manufacture_year is source metadata, not a verified baseline. */
+export const EQUIPMENT_INTELLIGENCE_CSV_YEAR_GUIDANCE = [
+  'manufacture_year = year associated with the source record or observed generation (not automatically used as the product baseline).',
+  'Verified first-release years live on equipment_intelligence as baseline_manufacture_year / manufacture_start_year (set via research workflows, not this CSV).',
+  'Automatic product promotion leaves baseline_manufacture_year blank unless a verified first-release field is already present on the source row.',
+  'Do not overload manufacture_year with earliest-release or pricing-year semantics.',
+].join(' ')
+
 const CSV_HEADER_ALIASES = {
   brand: 'brand',
   series: 'series',

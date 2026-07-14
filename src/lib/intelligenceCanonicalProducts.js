@@ -10,6 +10,7 @@ import {
   GROUPING_CONFIDENCE,
   KNOWN_BASE_MODEL_CODES,
 } from './intelligenceCoreProductGrouping.js'
+import { isValidCanonicalBaselineYear } from './equipmentResearchQueue.js'
 
 export const PRODUCT_STATUS = {
   PENDING: 'pending',
@@ -24,6 +25,92 @@ function normalizeWhitespace(value) {
 
 function normalizeTokenKey(value) {
   return normalizeWhitespace(value).toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * Accept a valid four-digit catalogue year; otherwise null.
+ * Used for verified baseline/start years and (opt-in only) generic manufacture_year.
+ */
+export function coerceCanonicalManufactureYear(value, now = new Date()) {
+  if (value == null || value === '') return null
+  const year = typeof value === 'number' ? value : Number(String(value).trim())
+  if (!Number.isInteger(year)) return null
+  if (!isValidCanonicalBaselineYear(year, now)) return null
+  return year
+}
+
+/**
+ * Resolve an earliest-release / baseline year from an intelligence row.
+ *
+ * Semantics:
+ * - baseline_manufacture_year / manufacture_start_year = explicit verified earliest year
+ * - manufacture_year = generation / observed / pricing-associated year (NOT a baseline by default)
+ *
+ * Automatic CSV promotion must keep allowManufactureYearAsBaseline=false.
+ */
+export function resolveCanonicalBaselineYear(row, {
+  allowManufactureYearAsBaseline = false,
+  now = new Date(),
+} = {}) {
+  const fromExplicitBaseline = coerceCanonicalManufactureYear(row?.baseline_manufacture_year, now)
+  if (fromExplicitBaseline != null) return fromExplicitBaseline
+
+  const fromStart = coerceCanonicalManufactureYear(row?.manufacture_start_year, now)
+  if (fromStart != null) return fromStart
+
+  if (allowManufactureYearAsBaseline) {
+    return coerceCanonicalManufactureYear(row?.manufacture_year, now)
+  }
+
+  return null
+}
+
+export function resolveCanonicalProductionStartYear(row, {
+  allowManufactureYearAsBaseline = false,
+  now = new Date(),
+} = {}) {
+  const fromStart = coerceCanonicalManufactureYear(row?.manufacture_start_year, now)
+  if (fromStart != null) return fromStart
+
+  return resolveCanonicalBaselineYear(row, { allowManufactureYearAsBaseline, now })
+}
+
+export function pickEarliestCanonicalYear(...years) {
+  const valid = years
+    .map((year) => coerceCanonicalManufactureYear(year))
+    .filter((year) => year != null)
+  if (!valid.length) return null
+  return Math.min(...valid)
+}
+
+export function hasVerifiedCanonicalBaselineYear(row, now = new Date()) {
+  return resolveCanonicalBaselineYear(row, {
+    allowManufactureYearAsBaseline: false,
+    now,
+  }) != null
+}
+
+export function summariseSourceYearFields(rows = []) {
+  let withManufactureYear = 0
+  let withVerifiedBaseline = 0
+  let withNeither = 0
+
+  for (const row of rows) {
+    const hasManufacture = coerceCanonicalManufactureYear(row?.manufacture_year
+      ?? row?.normalised?.manufacture_year) != null
+    const hasVerified = hasVerifiedCanonicalBaselineYear(row?.normalised ?? row)
+    if (hasManufacture) withManufactureYear += 1
+    if (hasVerified) withVerifiedBaseline += 1
+    if (!hasManufacture && !hasVerified) withNeither += 1
+  }
+
+  return {
+    totalRows: rows.length,
+    withManufactureYear,
+    withVerifiedBaseline,
+    withoutVerifiedBaseline: Math.max(0, rows.length - withVerifiedBaseline),
+    withNeither,
+  }
 }
 
 function isDistinctHardwareModel(modelA, modelB) {
@@ -106,8 +193,12 @@ export function deriveCanonicalProductFields(row, { technogymGroupingEnabled = t
   }
 }
 
-export function buildCanonicalProductsFromRows(rows = [], { technogymGroupingEnabled = true } = {}) {
+export function buildCanonicalProductsFromRows(rows = [], {
+  technogymGroupingEnabled = true,
+  allowManufactureYearAsBaseline = false,
+} = {}) {
   const productMap = new Map()
+  const yearOptions = { allowManufactureYearAsBaseline }
 
   for (const row of rows) {
     const fields = deriveCanonicalProductFields(row, { technogymGroupingEnabled })
@@ -122,7 +213,7 @@ export function buildCanonicalProductsFromRows(rows = [], { technogymGroupingEna
       equipment_type: row.equipment_type,
       detected_console: fields.detected_console,
       lifecycle_note: fields.lifecycle_note,
-      baseline_manufacture_year: row.baseline_manufacture_year ?? row.manufacture_year ?? null,
+      baseline_manufacture_year: resolveCanonicalBaselineYear(row, yearOptions),
       manufacture_start_year: row.manufacture_start_year ?? null,
       manufacture_end_year: row.manufacture_end_year ?? null,
       original_rrp: row.original_rrp ?? null,
@@ -136,7 +227,8 @@ export function buildCanonicalProductsFromRows(rows = [], { technogymGroupingEna
 
     const existing = productMap.get(fields.canonical_product_key)
     if (!existing) {
-      const baselineYear = row.baseline_manufacture_year ?? row.manufacture_year ?? null
+      const baselineYear = resolveCanonicalBaselineYear(row, yearOptions)
+      const productionStart = resolveCanonicalProductionStartYear(row, yearOptions)
       productMap.set(fields.canonical_product_key, {
         brand: fields.brand,
         product_family: fields.product_family,
@@ -151,8 +243,8 @@ export function buildCanonicalProductsFromRows(rows = [], { technogymGroupingEna
         detected_consoles: fields.detected_console ? [fields.detected_console] : [],
         lifecycle_notes: fields.lifecycle_note ? [fields.lifecycle_note] : [],
         baseline_manufacture_year: baselineYear,
-        production_start_year: row.manufacture_start_year ?? baselineYear ?? null,
-        production_end_year: row.manufacture_end_year ?? null,
+        production_start_year: productionStart,
+        production_end_year: coerceCanonicalManufactureYear(row.manufacture_end_year) ?? null,
         original_base_price: row.best_original_price ?? row.original_rrp ?? null,
         original_base_price_currency: row.best_original_price_currency ?? row.currency ?? 'GBP',
         original_price_confidence: row.best_original_price_confidence ?? null,
@@ -181,16 +273,21 @@ export function buildCanonicalProductsFromRows(rows = [], { technogymGroupingEna
       existing.status = PRODUCT_STATUS.NEEDS_REVIEW
     }
 
-    if (!existing.baseline_manufacture_year && (row.baseline_manufacture_year || row.manufacture_year)) {
-      existing.baseline_manufacture_year = row.baseline_manufacture_year ?? row.manufacture_year
-    }
-    if (!existing.production_start_year && (row.manufacture_start_year || row.baseline_manufacture_year || row.manufacture_year)) {
-      existing.production_start_year = row.manufacture_start_year
-        ?? row.baseline_manufacture_year
-        ?? row.manufacture_year
-    }
+    const nextBaseline = resolveCanonicalBaselineYear(row, yearOptions)
+    existing.baseline_manufacture_year = pickEarliestCanonicalYear(
+      existing.baseline_manufacture_year,
+      nextBaseline,
+    )
+
+    const nextStart = resolveCanonicalProductionStartYear(row, yearOptions)
+    existing.production_start_year = pickEarliestCanonicalYear(
+      existing.production_start_year,
+      nextStart,
+    )
+
     if (!existing.production_end_year && row.manufacture_end_year) {
-      existing.production_end_year = row.manufacture_end_year
+      existing.production_end_year = coerceCanonicalManufactureYear(row.manufacture_end_year)
+        ?? row.manufacture_end_year
     }
 
     const candidatePrice = row.best_original_price ?? row.original_rrp
@@ -219,13 +316,20 @@ export function buildCanonicalProductsFromRows(rows = [], { technogymGroupingEna
 
 export function buildCanonicalProductAuditReport(
   rows = [],
-  { brandFilter = null, technogymGroupingEnabled = true } = {},
+  {
+    brandFilter = null,
+    technogymGroupingEnabled = true,
+    allowManufactureYearAsBaseline = false,
+  } = {},
 ) {
   const filteredRows = brandFilter
     ? rows.filter((row) => normalizeWhitespace(row.brand).toLowerCase() === brandFilter.toLowerCase())
     : rows
 
-  const products = buildCanonicalProductsFromRows(filteredRows, { technogymGroupingEnabled })
+  const products = buildCanonicalProductsFromRows(filteredRows, {
+    technogymGroupingEnabled,
+    allowManufactureYearAsBaseline,
+  })
   const needsReview = products.filter((product) => product.status === PRODUCT_STATUS.NEEDS_REVIEW)
   const collapsedRows = products.reduce((sum, product) => sum + product.duplicate_rows_collapsed, 0)
 
