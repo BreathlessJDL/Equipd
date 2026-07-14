@@ -2,6 +2,11 @@
   padding: clamp(1.35rem, 2.8vw, 2rem) 0;
 }
 
+/* Used when the host page already provides the content width (e.g. /brands). */
+.home-valuator--contained {
+  padding: 0.35rem 0 1.35rem;
+}
+
 .home-valuator__card {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 1.05fr);

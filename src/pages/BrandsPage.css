@@ -23,6 +23,10 @@
   background: #fbf7f2;
 }
 
+.brands-page__valuator {
+  margin: 0 0 0.25rem;
+}
+
 .brands-page__eyebrow {
   margin: 0 0 0.55rem;
   font-size: 0.75rem;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import BrandCard from '../components/BrandCard'
+import HomeEquipmentValuator from '../components/home/HomeEquipmentValuator'
 import JsonLd from '../components/JsonLd'
 import PageBreadcrumbs from '../components/PageBreadcrumbs'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
@@ -113,6 +114,15 @@ export default function BrandsPage() {
             { label: 'Home', to: '/' },
             { label: 'Equipment Values' },
           ]}
+        />
+
+        <HomeEquipmentValuator
+          idPrefix="brands-valuator"
+          contained
+          className="brands-page__valuator"
+          eyebrow="Instant gym equipment valuation"
+          title="Find the value of your gym equipment"
+          lede="Search by brand or model to receive an instant estimated used value based on original RRP, manufacture year, depreciation and current UK market data."
         />
 
         <header className="brands-page__hero">
