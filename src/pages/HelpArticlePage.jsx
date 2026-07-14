@@ -8,14 +8,21 @@ import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import '../components/help/HelpCentre.css'
 import { getHelpArticleBySlug } from '../data/helpArticles'
 import { useHelpCentreSearch } from '../hooks/useHelpCentreSearch'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { buildHelpArticleBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { useMemo } from 'react'
 
 function HelpArticlePage() {
   const { slug } = useParams()
   const article = getHelpArticleBySlug(slug)
-  usePageTitle(article?.title ?? 'Help Article')
+  usePageMeta({
+    title: article?.title ?? 'Help Article',
+    description: article?.excerpt
+      || (article?.slug === 'buyer-protection'
+        ? 'Learn how Equipd Buyer Protection works when buying used gym equipment, including fees, the 24-hour window and how to raise a dispute.'
+        : 'Help and guidance for buying and selling used gym equipment on Equipd.'),
+    canonicalPath: article?.slug ? `/help/${article.slug}` : '/help',
+  })
   const { searchQuery, setSearchQuery, searchResults, isSearching, emptySearchMessage } =
     useHelpCentreSearch()
   const breadcrumbSchema = useMemo(

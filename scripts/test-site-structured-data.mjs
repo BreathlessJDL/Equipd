@@ -33,7 +33,7 @@ assert(organization.logo === `${EQUIPD_SCHEMA_ORIGIN}/email/equipd-full-logo.png
 assert(organization.description === EQUIPD_ORGANIZATION_DESCRIPTION, 'org description')
 assert(
   organization.description ===
-    "Equipd is the UK's marketplace for buying, selling and valuing used gym equipment.",
+    'Equipd is the UK marketplace for buying and selling used gym equipment, with tools to value eligible kit.',
   'org description exact marketplace wording',
 )
 assert(

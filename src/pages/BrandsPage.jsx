@@ -23,9 +23,9 @@ export default function BrandsPage() {
   const [search, setSearch] = useState('')
 
   usePageMeta({
-    title: 'Gym Equipment Value Guides by Brand | Equipd',
+    title: 'Gym Equipment Brands',
     description:
-      'Explore used gym equipment values by brand, including original RRPs, production years, compatible consoles and current marketplace listings.',
+      'Explore used gym equipment brands on Equipd. Browse marketplace listings, model guides, estimated used values and original RRPs by brand.',
     canonicalPath: '/brands',
   })
 

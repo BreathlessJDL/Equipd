@@ -199,12 +199,36 @@ function ValuationPage() {
 
   const currentYear = new Date().getFullYear()
   const prefilledProductKeyRef = useRef(null)
+  const skipInitialStepScrollRef = useRef(true)
 
   usePageMeta({
     title: 'Instant Equipment Valuation',
-    description: 'Find the estimated market value of your gym equipment in just a few steps.',
+    description:
+      'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
     canonicalPath: '/valuation',
   })
+
+  // Scroll to page top after each major step change (skips first mount).
+  useEffect(() => {
+    if (skipInitialStepScrollRef.current) {
+      skipInitialStepScrollRef.current = false
+      return undefined
+    }
+
+    let cancelled = false
+    const frameId = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (cancelled) return
+        // Sticky header is in document flow, so top: 0 keeps headings visible.
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+      })
+    })
+
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [step])
 
   /**
    * Shared action for homepage product entry and in-page product-card selection.

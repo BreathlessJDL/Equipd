@@ -4,7 +4,7 @@ import LeaveListingDraftModal from '../components/listing/LeaveListingDraftModal
 import ListingForm from '../components/ListingForm'
 import '../components/ListingForm.css'
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import {
   createListingFormSnapshot,
   emptyListingForm,
@@ -38,7 +38,12 @@ import {
 import { useAuth } from '../hooks/useAuth'
 
 function AddListingPage() {
-  usePageTitle('Create Listing')
+  usePageMeta({
+    title: 'Sell Used Gym Equipment',
+    description:
+      'List used gym equipment for sale on Equipd. Create a listing to reach buyers across the UK marketplace.',
+    canonicalPath: '/sell',
+  })
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const valuationParams = useMemo(

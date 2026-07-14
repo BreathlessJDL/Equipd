@@ -18,14 +18,25 @@ import { useHomeRecentListings } from '../hooks/useHomeRecentListings'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { useAuth } from '../hooks/useAuth'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
+import { DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '../lib/pageTitles'
 import { fetchRecentReviews, getReviewErrorMessage } from '../lib/reviews'
 
 function HomePage() {
-  usePageTitle()
+  usePageMeta({
+    description: DEFAULT_PAGE_DESCRIPTION,
+    canonicalPath: '/',
+    openGraph: {
+      'og:title': DEFAULT_PAGE_TITLE,
+      'og:description': DEFAULT_PAGE_DESCRIPTION,
+      'og:url': 'https://www.equipd.co.uk/',
+      'twitter:title': DEFAULT_PAGE_TITLE,
+      'twitter:description': DEFAULT_PAGE_DESCRIPTION,
+    },
+  })
   const { user } = useAuth()
   const isLoggedIn = Boolean(user)
   const navigate = useNavigate()

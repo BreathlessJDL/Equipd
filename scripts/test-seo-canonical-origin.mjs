@@ -68,7 +68,7 @@ assertWwwOnly(JSON.stringify(org), 'organization schema')
 assertWwwOnly(JSON.stringify(website), 'website schema')
 assert(
   org.description ===
-    "Equipd is the UK's marketplace for buying, selling and valuing used gym equipment.",
+    'Equipd is the UK marketplace for buying and selling used gym equipment, with tools to value eligible kit.',
   'updated description',
 )
 assert(!org.description.includes('commercial'), 'description not commercial-only')

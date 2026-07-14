@@ -6,11 +6,16 @@ import HelpSearchResults from '../components/help/HelpSearchResults'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import '../components/help/HelpCentre.css'
 import { useHelpCentreSearch } from '../hooks/useHelpCentreSearch'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { buildHelpCentreBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 
 function HelpCentrePage() {
-  usePageTitle('Help Centre')
+  usePageMeta({
+    title: 'Help Centre',
+    description:
+      'Get help buying and selling used gym equipment on Equipd, including Buyer Protection, payments, delivery and account support.',
+    canonicalPath: '/help',
+  })
   const { searchQuery, setSearchQuery, searchResults, isSearching, emptySearchMessage, categories } =
     useHelpCentreSearch()
   const breadcrumbSchema = useMemo(() => buildHelpCentreBreadcrumbSchema(), [])

@@ -13,12 +13,18 @@ import { useBrowseListings } from '../hooks/useBrowseListings'
 import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
+import { DEFAULT_PAGE_DESCRIPTION } from '../lib/pageTitles'
 import { fetchCategories } from '../lib/listings'
 
 function BrowsePage() {
-  usePageTitle('Browse Gym Equipment')
+  usePageMeta({
+    title: 'Browse Used Gym Equipment for Sale',
+    description:
+      'Browse used gym equipment listed for sale across the UK on Equipd. Filter by brand, location and category to find home and commercial kit.',
+    canonicalPath: '/browse',
+  })
   const [searchParams, setSearchParams] = useSearchParams()
   const resultsRef = useRef(null)
   const [categories, setCategories] = useState([])
