@@ -413,4 +413,58 @@ assert(identityTokenPresent('performance-plus-treadmill', 'Performance Plus'), '
   assert(result.maxConfidence <= 70, 'Generic ascent capped at family/brand level')
 }
 
+// Technogym generation / family conflicts
+{
+  const selectionPro = {
+    brand: 'Technogym',
+    product_family: 'Selection Pro',
+    model: 'Pulldown',
+    canonical_product_name: 'Technogym Selection Pro Pulldown',
+    equipment_type: 'Lat Pulldown',
+  }
+  const pureStrength = {
+    title: 'Technogym Pure Strength Pulldown',
+    sourceUrl: 'https://www.technogym.com/en-US/product/pure-strength-pulldown_MG2000-NBGJV0.html',
+    imageUrl: 'https://www.technogym.com/en-US/feed/images/MG2000-NBGJV0/pure-pulldown-plp.jpg',
+  }
+  const gate = evaluateImageCandidateIdentity(selectionPro, pureStrength)
+  assert(!gate.eligible, 'Selection Pro vs Pure Strength must reject')
+  assert(
+    gate.identityResult.conflicts.some((entry) => entry.type === 'technogym_line'),
+    'Selection Pro vs Pure Strength technogym_line conflict',
+  )
+
+  const selectionLine = {
+    brand: 'Technogym',
+    product_family: 'Selection Line',
+    model: 'Chest Press',
+    canonical_product_name: 'Technogym Selection Line Chest Press',
+    equipment_type: 'Chest Press',
+  }
+  const selection700 = {
+    title: 'Technogym Selection 700 Chest Press',
+    sourceUrl: 'https://www.technogym.com/en-US/product/selection-700-chest-press_MNFC.html',
+    imageUrl: 'https://www.technogym.com/en-US/feed/images/MNFC/selection-700-chest-press-plp.jpg',
+  }
+  const lineVs700 = evaluateImageCandidateIdentity(selectionLine, selection700)
+  assert(!lineVs700.eligible, 'Selection Line vs Selection 700 must reject')
+
+  const strengthBench = {
+    brand: 'Technogym',
+    product_family: 'Strength',
+    model: 'Panca Regolabile',
+    canonical_product_name: 'Technogym Strength Panca Regolabile',
+    equipment_type: 'Bench',
+  }
+  const pureBench = {
+    title: 'Adjustable Bench Pure Strength',
+    sourceUrl: 'https://www.technogym.com/it-IT/product/adjustable-bench-pure-strength_PG04.html',
+    imageUrl: 'https://www.technogym.com/images/pure-adjustable-bench.jpg',
+  }
+  assert(
+    !evaluateImageCandidateIdentity(strengthBench, pureBench).eligible,
+    'Strength vs Pure Strength bench must reject',
+  )
+}
+
 console.log('equipment-product-image-identity tests passed')

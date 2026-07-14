@@ -36,12 +36,56 @@ export const LIFE_FITNESS_SERIES = Object.freeze([
 ])
 
 export const TECHNOGYM_LINES = Object.freeze([
-  { id: 'excite', labels: ['excite', 'excite+', 'excite plus'] },
-  { id: 'artis', labels: ['artis'] },
+  // Specific generations first — identity-sensitive; do not collapse across these.
+  { id: 'selection_personal', labels: ['selection personal', 'selection-personal'] },
+  { id: 'selection_pro', labels: ['selection pro', 'selection-pro'] },
+  { id: 'selection_700', labels: ['selection 700', 'selection-700', 'selection700'] },
+  { id: 'selection_900', labels: ['selection 900', 'selection-900', 'selection900'] },
+  { id: 'selection_line', labels: ['selection line', 'selection-line', 'selectionline'] },
+  { id: 'biostrength', labels: ['biostrength', 'bio strength'] },
+  { id: 'pure_strength', labels: ['pure strength', 'pure-strength', 'purestrength'] },
   { id: 'skillrun', labels: ['skillrun', 'skill run'] },
   { id: 'skillrow', labels: ['skillrow', 'skill row'] },
   { id: 'skillbike', labels: ['skillbike', 'skill bike'] },
   { id: 'skillmill', labels: ['skillmill', 'skill mill'] },
+  { id: 'skill_line', labels: ['skill line', 'skillline'] },
+  { id: 'excite_plus', labels: ['excite+', 'excite plus'] },
+  { id: 'excite', labels: ['excite'] },
+  { id: 'artis', labels: ['artis'] },
+  { id: 'element_plus', labels: ['element+', 'element plus'] },
+  { id: 'element', labels: ['element'] },
+  { id: 'kinesis', labels: ['kinesis'] },
+  { id: 'unity', labels: ['unity'] },
+  { id: 'personal', labels: ['personal'] },
+  { id: 'strength', labels: ['strength'] },
+  // Generic "selection" last — only when no specific generation/family was found.
+  { id: 'selection', labels: ['selection'] },
+])
+
+/** Generations that must never be treated as interchangeable without explicit proof. */
+export const TECHNOGYM_IDENTITY_SENSITIVE_LINES = Object.freeze([
+  'selection_personal',
+  'selection_pro',
+  'selection_700',
+  'selection_900',
+  'selection_line',
+  'selection',
+  'biostrength',
+  'pure_strength',
+  'personal',
+  'unity',
+  'strength',
+  'excite',
+  'excite_plus',
+  'artis',
+  'element',
+  'element_plus',
+  'skill_line',
+  'skillrun',
+  'skillrow',
+  'skillbike',
+  'skillmill',
+  'kinesis',
 ])
 
 export const PRECOR_SERIES = Object.freeze([
@@ -355,12 +399,29 @@ function resolveMatrixAliases(codes = []) {
   return [...expanded]
 }
 
+function brandsAreCompatible(targetBrandKey, candidateBrandKey) {
+  if (!targetBrandKey || !candidateBrandKey) return true
+  if (targetBrandKey === candidateBrandKey) return true
+  // Allow Matrix Fitness vs Matrix, Pulse Fitness vs Pulse
+  const targetCore = targetBrandKey.replace(/fitness$/, '')
+  const candidateCore = candidateBrandKey.replace(/fitness$/, '')
+  if (targetCore === candidateCore) return true
+  // Hammer Strength catalogue pages often live under Life Fitness ownership/domains.
+  const pair = [targetBrandKey, candidateBrandKey].sort().join('|')
+  if (pair === 'hammerstrength|lifefitness') return true
+  return false
+}
+
 function detectBrandFromText(text) {
   const value = String(text ?? '')
   if (/\bmatrix(?:fitness|\s+fitness)?\b/i.test(value) || /matrixfitness\.com/i.test(value)) {
     return 'Matrix Fitness'
   }
-  if (/\blife\s*fitness\b/i.test(value) || /lifefitness\.com/i.test(value) || /\bhammer\s*strength\b/i.test(value)) {
+  // Prefer Hammer Strength when named explicitly (owned by Life Fitness, distinct catalogue brand).
+  if (/\bhammer\s*strength\b/i.test(value) || /hammerstrength\.com/i.test(value)) {
+    return 'Hammer Strength'
+  }
+  if (/\blife\s*fitness\b/i.test(value) || /lifefitness\.com/i.test(value)) {
     return 'Life Fitness'
   }
   if (/\btechnogym\b/i.test(value) || /technogym\.com/i.test(value)) return 'Technogym'
@@ -394,9 +455,40 @@ export function extractProductImageIdentity(source, { kind = 'product' } = {}) {
         : []
 
   const lifeFitnessSeries = detectLabelSet(text, LIFE_FITNESS_SERIES)
-  const technogymLines = detectLabelSet(text, TECHNOGYM_LINES)
+  let technogymLines = detectLabelSet(text, TECHNOGYM_LINES)
   let precorSeries = detectLabelSet(text, PRECOR_SERIES)
   let pulseSeries = detectLabelSet(text, PULSE_SERIES)
+
+  // Collapse generic Technogym labels when a more specific generation/family is present.
+  if (technogymLines.some((line) => line.startsWith('selection_') && line !== 'selection')) {
+    technogymLines = technogymLines.filter((line) => line !== 'selection')
+  }
+  if (technogymLines.includes('selection_personal')) {
+    technogymLines = technogymLines.filter((line) => line !== 'personal')
+  }
+  if (technogymLines.includes('pure_strength') || technogymLines.includes('biostrength')) {
+    technogymLines = technogymLines.filter((line) => line !== 'strength')
+  }
+  if (technogymLines.includes('excite_plus')) {
+    technogymLines = technogymLines.filter((line) => line !== 'excite')
+  }
+  if (technogymLines.includes('element_plus')) {
+    technogymLines = technogymLines.filter((line) => line !== 'element')
+  }
+  if (technogymLines.some((line) => line.startsWith('skill'))) {
+    // Keep specific skill* ids; drop vague skill_line only when a concrete skill product matched.
+    if (technogymLines.some((line) => ['skillrun', 'skillrow', 'skillbike', 'skillmill'].includes(line))) {
+      technogymLines = technogymLines.filter((line) => line !== 'skill_line')
+    }
+  }
+
+  // URL/path forms: /selection-700-chest-press_...
+  if (/\bselection[\s\-_]?700\b/i.test(text) && !technogymLines.includes('selection_700')) {
+    technogymLines = [...technogymLines.filter((line) => line !== 'selection'), 'selection_700']
+  }
+  if (/\bselection[\s\-_]?900\b/i.test(text) && !technogymLines.includes('selection_900')) {
+    technogymLines = [...technogymLines.filter((line) => line !== 'selection'), 'selection_900']
+  }
 
   // Precor Discovery SKU prefixes (DBR / DPL / DSL) are strong series signals.
   if (/\b(dbr|dpl|dsl)\d/i.test(text) && !precorSeries.includes('discovery')) {
@@ -509,6 +601,15 @@ function expandPulseComparableModelCodes(codes = []) {
   return expanded
 }
 
+function extractTechnogymGenerationNumerals(text) {
+  const found = new Set()
+  const value = String(text ?? '')
+  for (const match of value.matchAll(/\b(?:selection[\s\-_]?)?(700|900)\b/gi)) {
+    found.add(match[1])
+  }
+  return found
+}
+
 function codesConflict(targetCodes, candidateCodes) {
   const target = expandPulseComparableModelCodes(targetCodes)
   for (const code of targetCodes || []) {
@@ -603,13 +704,8 @@ export function compareProductIdentity(targetSource, candidateSource) {
 
   const targetBrandKey = compactIdentityKey(target.brand)
   const candidateBrandKey = compactIdentityKey(candidate.brand)
-  if (targetBrandKey && candidateBrandKey && targetBrandKey !== candidateBrandKey) {
-    // Allow Matrix Fitness vs Matrix, Pulse Fitness vs Pulse
-    const targetCore = targetBrandKey.replace(/fitness$/, '')
-    const candidateCore = candidateBrandKey.replace(/fitness$/, '')
-    if (targetCore !== candidateCore) {
-      conflicts.push({ type: 'brand', token: candidate.brand })
-    }
+  if (targetBrandKey && candidateBrandKey && !brandsAreCompatible(targetBrandKey, candidateBrandKey)) {
+    conflicts.push({ type: 'brand', token: candidate.brand })
   }
 
   const familyConflicts = familiesConflict(target.families || [], candidate.families || [])
@@ -649,6 +745,18 @@ export function compareProductIdentity(targetSource, candidateSource) {
   for (const series of lfConflicts) conflicts.push({ type: 'life_fitness_series', token: series })
   const tgConflicts = familiesConflict(target.technogymLines || [], candidate.technogymLines || [])
   for (const line of tgConflicts) conflicts.push({ type: 'technogym_line', token: line })
+  for (const line of (candidate.technogymLines || [])) {
+    if ((target.technogymLines || []).includes(line)) {
+      matched.push({ type: 'family', token: line })
+    }
+  }
+  // Life Fitness / Hammer Strength series matches also count as family evidence.
+  for (const series of (candidate.lifeFitnessSeries || [])) {
+    if ((target.lifeFitnessSeries || []).includes(series)) {
+      matched.push({ type: 'family', token: series })
+    }
+  }
+
   const precorConflicts = familiesConflict(target.precorSeries || [], candidate.precorSeries || [])
   for (const series of precorConflicts) conflicts.push({ type: 'precor_series', token: series })
   const pulseEquivalence = pulseSeriesEquivalent(target.pulseSeries || [], candidate.pulseSeries || [])
@@ -728,6 +836,16 @@ export function compareProductIdentity(targetSource, candidateSource) {
   }
   if (targetAdductor && !targetAbductor && candidateAbductor && !candidateAdductor) {
     conflicts.push({ type: 'model_variant', token: 'abductor' })
+  }
+
+  // Numeric generation labels (700 / 900) are identity-sensitive when either side uses them.
+  const targetGen = extractTechnogymGenerationNumerals(targetText)
+  const candidateGen = extractTechnogymGenerationNumerals(candidate.rawText || '')
+  if (targetGen.size && candidateGen.size) {
+    for (const gen of candidateGen) {
+      if (!targetGen.has(gen)) conflicts.push({ type: 'generation', token: gen })
+      else matched.push({ type: 'generation', token: gen })
+    }
   }
 
   // Assisted chin/dip machines are not seated dips.
