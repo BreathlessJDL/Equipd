@@ -12,8 +12,10 @@ export const EQUIPD_ORGANIZATION_ID = `${EQUIPD_SITE_ORIGIN}/#organization`
 
 export const EQUIPD_ORGANIZATION_NAME = 'Equipd'
 
+export const EQUIPD_ORGANIZATION_ALTERNATE_NAME = 'Equipd Marketplace'
+
 export const EQUIPD_ORGANIZATION_DESCRIPTION =
-  "Equipd is the UK marketplace for buying and selling used gym equipment, with tools to value eligible kit."
+  "The UK's marketplace for buying, selling and valuing used gym equipment."
 
 /** Official production logo (deployed under /public/email). */
 export const EQUIPD_ORGANIZATION_LOGO_PATH = '/email/equipd-full-logo.png'
@@ -49,6 +51,7 @@ export function buildOrganizationSchema({
     '@type': 'Organization',
     '@id': EQUIPD_ORGANIZATION_ID,
     name: EQUIPD_ORGANIZATION_NAME,
+    alternateName: EQUIPD_ORGANIZATION_ALTERNATE_NAME,
     url: EQUIPD_SCHEMA_ORIGIN,
     logo: absoluteSchemaUrl(EQUIPD_ORGANIZATION_LOGO_PATH),
     description: EQUIPD_ORGANIZATION_DESCRIPTION,
@@ -84,6 +87,7 @@ export function buildWebsiteSchema({
     '@type': 'WebSite',
     '@id': `${EQUIPD_SCHEMA_ORIGIN}/#website`,
     name: EQUIPD_ORGANIZATION_NAME,
+    alternateName: EQUIPD_ORGANIZATION_ALTERNATE_NAME,
     url: EQUIPD_SCHEMA_ORIGIN,
     publisher: {
       '@id': organizationId,

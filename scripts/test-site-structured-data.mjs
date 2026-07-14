@@ -27,18 +27,20 @@ assert(organization['@context'] === 'https://schema.org', 'org context')
 assert(organization['@type'] === 'Organization', 'org type')
 assert(organization['@id'] === EQUIPD_ORGANIZATION_ID, 'org id')
 assert(organization.name === 'Equipd', 'org name')
+assert(organization.alternateName === 'Equipd Marketplace', 'org alternateName')
 assert(organization.url === EQUIPD_SCHEMA_ORIGIN, 'org url is www')
 assert(organization.url.startsWith('https://www.'), 'org uses www host')
 assert(organization.logo === `${EQUIPD_SCHEMA_ORIGIN}/email/equipd-full-logo.png`, 'org logo')
 assert(organization.description === EQUIPD_ORGANIZATION_DESCRIPTION, 'org description')
 assert(
-  organization.description ===
-    'Equipd is the UK marketplace for buying and selling used gym equipment, with tools to value eligible kit.',
-  'org description exact marketplace wording',
+  organization.description.startsWith(
+    "The UK's marketplace for buying, selling and valuing used gym equipment.",
+  ),
+  'org description begins with marketplace positioning',
 )
 assert(
-  !organization.description.includes('commercial'),
-  'org description is not limited to commercial',
+  !/primarily a valuation/i.test(organization.description),
+  'org description is not valuation-only',
 )
 assert(organization.areaServed === 'United Kingdom', 'org areaServed')
 assert(organization.contactPoint?.email === 'support@equipd.co.uk', 'org contact')
@@ -46,6 +48,8 @@ assert(!('sameAs' in organization) || EQUIPD_SAME_AS.length > 0, 'no invented sa
 
 const website = buildWebsiteSchema()
 assert(website['@type'] === 'WebSite', 'website type')
+assert(website.name === 'Equipd', 'website name')
+assert(website.alternateName === 'Equipd Marketplace', 'website alternateName')
 assert(website.url === EQUIPD_SCHEMA_ORIGIN, 'website url is www')
 assert(website.url === 'https://www.equipd.co.uk', 'website exact www origin')
 assert(website.publisher?.['@id'] === EQUIPD_ORGANIZATION_ID, 'website publisher ref')

@@ -198,18 +198,37 @@ function read(rel) {
 
 // --- 7. Marketplace-first SEO ---
 {
-  assert.match(DEFAULT_PAGE_TITLE, /Used Gym Equipment for Sale/i)
-  assert.match(DEFAULT_PAGE_TITLE, /Buy & Sell/i)
-  assert.match(DEFAULT_PAGE_DESCRIPTION, /Buy and sell used gym equipment/i)
-  assert.match(DEFAULT_PAGE_DESCRIPTION, /value eligible equipment/i)
+  assert.equal(
+    DEFAULT_PAGE_TITLE,
+    'Buy, Sell & Value Used Gym Equipment | Equipd Marketplace',
+    'homepage title is marketplace-first',
+  )
+  assert.match(DEFAULT_PAGE_TITLE, /Buy, Sell & Value/i)
+  assert.match(DEFAULT_PAGE_TITLE, /Equipd Marketplace/i)
+  assert.equal(
+    DEFAULT_PAGE_DESCRIPTION,
+    "The UK's marketplace for used gym equipment. Buy and sell commercial and home gym equipment, browse thousands of listings and value your equipment instantly using original RRP, manufacture year and UK market data.",
+    'homepage meta description exact',
+  )
   assert.ok(!/primarily a valuation/i.test(DEFAULT_PAGE_DESCRIPTION))
+  assert.ok(!/^value /i.test(DEFAULT_PAGE_TITLE), 'title is not valuation-only')
 
-  assert.match(EQUIPD_ORGANIZATION_DESCRIPTION, /marketplace for buying and selling/i)
-  assert.match(EQUIPD_ORGANIZATION_DESCRIPTION, /value eligible/i)
+  assert.match(
+    EQUIPD_ORGANIZATION_DESCRIPTION,
+    /^The UK's marketplace for buying, selling and valuing used gym equipment/,
+  )
 
   const indexHtml = read('index.html')
-  assert.match(indexHtml, /Used Gym Equipment for Sale \| Buy &amp; Sell on Equipd/)
-  assert.match(indexHtml, /Buy and sell used gym equipment across the UK/)
+  assert.match(indexHtml, /Buy, Sell &amp; Value Used Gym Equipment \| Equipd Marketplace/)
+  assert.match(indexHtml, /browse thousands of listings and value your equipment instantly/)
+  assert.match(indexHtml, /property="og:title" content="Buy, Sell &amp; Value Used Gym Equipment \| Equipd Marketplace"/)
+  assert.match(indexHtml, /property="og:description"[\s\S]*browse thousands of listings/)
+  assert.match(indexHtml, /rel="canonical" href="https:\/\/www\.equipd\.co\.uk\/"/)
+
+  const hero = read('src/components/home/HomeHero.jsx')
+  assert.match(hero, /<h1[^>]*>[\s\S]*Buy, sell & value used gym equipment/, 'homepage H1 marketplace messaging')
+  assert.match(hero, /Equipd Marketplace/, 'hero signals marketplace brand')
+  assert.match(hero, /valuation tool/, 'hero includes integrated valuation')
 }
 
 console.log('production-review-regression tests passed')

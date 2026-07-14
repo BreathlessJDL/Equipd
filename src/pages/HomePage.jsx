@@ -216,9 +216,10 @@ function HomePage() {
         <div className="home-section__inner">
           {!isLoggedIn ? (
             <header className="home-browse__header">
-              <h2 className="home-browse__title">Browse by category</h2>
+              <h2 className="home-browse__title">Browse marketplace listings</h2>
               <p className="home-browse__lead">
-                Explore and search for new and used gym equipment from sellers across the UK.
+                Buy used commercial and home gym equipment from sellers across the UK, then
+                value eligible kit when you are ready to sell.
               </p>
             </header>
           ) : null}
