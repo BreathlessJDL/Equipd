@@ -229,7 +229,6 @@ export async function fetchBrandPageData(brandSlug, {
     logoMaxWidth: registry?.logoMaxWidth || null,
     logoMaxHeight: registry?.logoMaxHeight || null,
     logoScale: registry?.logoScale ?? 1,
-    logoBackground: registry?.logoBackground || null,
     intro: buildBrandIntro(displayName),
     productCount: matchedProducts.length,
     listingCount,

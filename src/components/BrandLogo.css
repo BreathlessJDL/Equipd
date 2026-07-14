@@ -24,15 +24,6 @@
   padding: 1rem;
 }
 
-.brand-logo--bg-dark {
-  background: #0b0b0b;
-}
-
-.brand-logo--bg-light {
-  background: #fff;
-  border: 1px solid #eef1f4;
-}
-
 .brand-logo__image {
   display: block;
   width: auto;

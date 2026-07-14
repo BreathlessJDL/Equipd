@@ -64,6 +64,8 @@
     "apply:canonical-by-brand": "node scripts/apply-canonical-products-by-brand.mjs",
     "test:apply-canonical-import-promote": "node scripts/test-apply-canonical-import-promote.mjs",
     "test:equipment-research-price-selection": "node scripts/test-equipment-research-price-selection.mjs",
+    "test:brand-catalogue-core": "node scripts/test-brand-catalogue-core.mjs",
+    "test:brand-logo-assets": "node scripts/test-brand-logo-assets.mjs",
     "test:equipment-product-research-csv": "node scripts/test-equipment-product-research-csv.mjs",
     "test:equipment-product-research-import-report": "node scripts/test-equipment-product-research-import-report.mjs",
     "test:equipment-product-image-identity": "node scripts/test-equipment-product-image-identity.mjs",

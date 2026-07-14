@@ -19,6 +19,9 @@ export const FEATURED_BRAND_SLUGS = Object.freeze([
   'woodway',
   'pulse-fitness',
   'hammer-strength',
+  'peloton',
+  'nordictrack',
+  'bowflex',
 ])
 
 export const BRAND_REGISTRY = Object.freeze([
@@ -29,10 +32,9 @@ export const BRAND_REGISTRY = Object.freeze([
     aliases: ['Life Fitness', 'LifeFitness', 'life fitness'],
     featured: true,
     shortDescription: 'Used equipment values and product information',
-    logoPath: '/brand-logos/life-fitness.jpg',
+    logoPath: '/brand-logos/life-fitness.png',
     logoAlt: 'Life Fitness logo',
     logoScale: 1.47,
-    logoBackground: 'dark',
   },
   {
     key: 'technogym',
@@ -44,7 +46,6 @@ export const BRAND_REGISTRY = Object.freeze([
     logoPath: '/brand-logos/technogym.png',
     logoAlt: 'Technogym logo',
     logoScale: 1.36,
-    logoBackground: 'dark',
   },
   {
     key: 'matrixfitness',
@@ -56,7 +57,6 @@ export const BRAND_REGISTRY = Object.freeze([
     logoPath: '/brand-logos/matrix-fitness.png',
     logoAlt: 'Matrix Fitness logo',
     logoScale: 1.5,
-    logoBackground: 'dark',
   },
   {
     key: 'precor',
@@ -65,11 +65,10 @@ export const BRAND_REGISTRY = Object.freeze([
     aliases: ['Precor'],
     featured: true,
     shortDescription: 'Used equipment values and product information',
-    logoPath: '/brand-logos/precor.webp',
+    logoPath: '/brand-logos/precor.png',
     logoAlt: 'Precor logo',
     logoScale: 1.29,
     logoMaxWidth: '96%',
-    logoBackground: 'dark',
   },
   {
     key: 'cybex',
@@ -81,7 +80,6 @@ export const BRAND_REGISTRY = Object.freeze([
     logoPath: '/brand-logos/cybex.png',
     logoAlt: 'Cybex logo',
     logoScale: 1.72,
-    logoBackground: 'light',
   },
   {
     key: 'concept2',
@@ -93,7 +91,6 @@ export const BRAND_REGISTRY = Object.freeze([
     logoPath: '/brand-logos/concept2.png',
     logoAlt: 'Concept2 logo',
     logoScale: 1.55,
-    logoBackground: 'dark',
   },
   {
     key: 'wattbike',
@@ -102,10 +99,9 @@ export const BRAND_REGISTRY = Object.freeze([
     aliases: ['Wattbike'],
     featured: true,
     shortDescription: 'Used equipment values and product information',
-    logoPath: '/brand-logos/wattbike.jpg',
+    logoPath: '/brand-logos/wattbike.png',
     logoAlt: 'Wattbike logo',
     logoScale: 1.78,
-    logoBackground: 'light',
   },
   {
     key: 'woodway',
@@ -114,10 +110,9 @@ export const BRAND_REGISTRY = Object.freeze([
     aliases: ['Woodway', 'WOODWAY'],
     featured: true,
     shortDescription: 'Used equipment values and product information',
-    logoPath: '/brand-logos/woodway.webp',
+    logoPath: '/brand-logos/woodway.png',
     logoAlt: 'Woodway logo',
     logoScale: 1.78,
-    logoBackground: 'light',
   },
   {
     key: 'pulsefitness',
@@ -130,7 +125,6 @@ export const BRAND_REGISTRY = Object.freeze([
     logoAlt: 'Pulse Fitness logo',
     logoScale: 1.85,
     logoMaxWidth: '100%',
-    logoBackground: 'dark',
   },
   {
     key: 'hammerstrength',
@@ -139,11 +133,43 @@ export const BRAND_REGISTRY = Object.freeze([
     aliases: ['Hammer Strength'],
     featured: true,
     shortDescription: 'Used equipment values and product information',
-    logoPath: '/brand-logos/hammer-strength.jpg',
+    logoPath: '/brand-logos/hammer-strength.png',
     logoAlt: 'Hammer Strength logo',
     logoScale: 1.47,
     logoMaxHeight: '100%',
-    logoBackground: 'dark',
+  },
+  {
+    key: 'peloton',
+    displayName: 'Peloton',
+    slug: 'peloton',
+    aliases: ['Peloton'],
+    featured: true,
+    shortDescription: 'Used equipment values and product information',
+    logoPath: '/brand-logos/peloton.png',
+    logoAlt: 'Peloton logo',
+    logoScale: 1.4,
+  },
+  {
+    key: 'nordictrack',
+    displayName: 'NordicTrack',
+    slug: 'nordictrack',
+    aliases: ['NordicTrack', 'Nordic Track'],
+    featured: true,
+    shortDescription: 'Used equipment values and product information',
+    logoPath: '/brand-logos/nordictrack.png',
+    logoAlt: 'NordicTrack logo',
+    logoScale: 1.45,
+  },
+  {
+    key: 'bowflex',
+    displayName: 'BowFlex',
+    slug: 'bowflex',
+    aliases: ['BowFlex', 'Bowflex', 'Bow Flex'],
+    featured: true,
+    shortDescription: 'Used equipment values and product information',
+    logoPath: '/brand-logos/bowflex.png',
+    logoAlt: 'BowFlex logo',
+    logoScale: 1.45,
   },
   {
     key: 'roguefitness',
@@ -388,7 +414,6 @@ export function buildBrandDirectoryFromProducts(products = [], listingCountsByKe
         logoScale: registry?.logoScale ?? 1,
         logoMaxWidth: registry?.logoMaxWidth || null,
         logoMaxHeight: registry?.logoMaxHeight || null,
-        logoBackground: registry?.logoBackground || null,
         productCount: 0,
         listingCount: listingCountsByKey[key] || 0,
         href: getBrandPagePath(registry?.slug || product.brand),
@@ -506,7 +531,6 @@ export function getBrandLogoMeta(brandOrSlug) {
     logoScale: registry?.logoScale ?? 1,
     logoMaxWidth: registry?.logoMaxWidth || null,
     logoMaxHeight: registry?.logoMaxHeight || null,
-    logoBackground: registry?.logoBackground || null,
   }
 }
 

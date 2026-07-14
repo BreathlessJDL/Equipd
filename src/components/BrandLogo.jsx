@@ -20,7 +20,6 @@ function resolveLogoMeta(brand, brandSlug) {
       logoScale: brand.logoScale ?? fallback?.logoScale ?? 1,
       logoMaxWidth: brand.logoMaxWidth ?? fallback?.logoMaxWidth ?? null,
       logoMaxHeight: brand.logoMaxHeight ?? fallback?.logoMaxHeight ?? null,
-      logoBackground: brand.logoBackground ?? fallback?.logoBackground ?? null,
     }
   }
   return getBrandLogoMeta(brandSlug)
@@ -48,7 +47,6 @@ export default function BrandLogo({
     'brand-logo',
     `brand-logo--${size}`,
     showImage ? '' : 'brand-logo--fallback',
-    meta.logoBackground ? `brand-logo--bg-${meta.logoBackground}` : '',
     className,
   ].filter(Boolean).join(' ')
 
