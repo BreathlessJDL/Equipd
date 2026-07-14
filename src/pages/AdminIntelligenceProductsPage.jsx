@@ -1,18 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import EquipmentCatalogueNav from '../components/admin/EquipmentCatalogueNav.jsx'
 import { getAdminErrorMessage } from '../lib/admin'
 import {
-  buildCatalogueSummary,
   CATALOGUE_ATTENTION,
   CATALOGUE_ATTENTION_LABELS,
   getCatalogueContentStatusLabel,
   getCatalogueImageStatusLabel,
   getCatalogueStatusLabel,
-  matchesCatalogueAttentionFilter,
 } from '../lib/equipmentCatalogueAdmin.js'
-import { fetchEquipmentProductContentAdminRows } from '../lib/equipmentProductContentAdmin.js'
 import {
   approveEquipmentProduct,
   approveEquipmentProductImage,
@@ -20,14 +17,11 @@ import {
   buildEquipmentProductPagePath,
   bulkApproveEquipmentProducts,
   bulkApproveHighConfidenceProducts,
-  bulkApproveSingleSourceNeedsReviewProducts,
   bulkExcludeEquipmentProducts,
   bulkRejectBlockedEquipmentProductImages,
   evaluateHighConfidenceApprovalCandidates,
-  evaluateSafeApprovalCandidates,
   excludeEquipmentProduct,
   fetchEquipmentIntelligenceByIds,
-  fetchEquipmentProducts,
   mergeEquipmentProducts,
   productHasBaselineYear,
   productHasRrp,
@@ -39,6 +33,21 @@ import {
   uploadAndReplaceEquipmentProductImageFile,
 } from '../lib/equipmentProducts.js'
 import {
+  applyEquipmentProductListQueryPatch,
+  buildContentStatusMapFromListRows,
+  clampEquipmentProductListPage,
+  clampEquipmentProductListPageSize,
+  EQUIPMENT_PRODUCT_LIST_PAGE_SIZES,
+  fetchAdminEquipmentProductById,
+  fetchAdminEquipmentProductByKey,
+  fetchAdminEquipmentProductFilterOptions,
+  fetchAdminEquipmentProductsDashboardMeta,
+  fetchAdminEquipmentProductsForExport,
+  fetchAdminEquipmentProductsPage,
+  normalizeFilterOptionList,
+  parseEquipmentProductListQueryParams,
+} from '../lib/equipmentProductsAdminList.js'
+import {
   EQUIPMENT_PRODUCT_IMAGE_STATUS,
   appendEquipmentProductImageCacheBuster,
   buildEquipmentProductImagePublicUrl,
@@ -49,31 +58,32 @@ import {
 import { supabase } from '../lib/supabase.js'
 import {
   assessEquipmentProductImageRisk,
-  IMAGE_ADMIN_FILTER,
   IMAGE_AUDIT_RISK,
-  matchesImageAdminFilter,
 } from '../lib/equipmentProductImageAudit.js'
-import { deriveEquipmentProductBaselineSource } from '../lib/lifeFitnessSeriesBaselines.js'
 import { getDetectedConsoleFromRow } from '../lib/intelligenceCanonicalProducts.js'
-import {
-  CANONICAL_COMPLETION_STATUS,
-  deriveCanonicalProductCompletionStatus,
-  formatCanonicalProductCompletionLabel,
-} from '../lib/equipmentResearchQueue.js'
 import {
   COMPLETION_DASHBOARD_FILTER,
   exportCanonicalProductsSpreadsheet,
 } from '../lib/canonicalProductCompletionStats.js'
 import CanonicalProductCompletionDashboard from '../components/admin/CanonicalProductCompletionDashboard.jsx'
+import EquipmentProductResearchExportModal from '../components/admin/EquipmentProductResearchExportModal.jsx'
+import EquipmentProductResearchImportModal from '../components/admin/EquipmentProductResearchImportModal.jsx'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './AdminIntelligencePage.css'
 import './AdminIntelligenceProductsPage.css'
 import '../components/admin/EquipmentCatalogueNav.css'
 
 const ALL_FILTER = ''
-const VIEW_ALL = 'all'
-const VIEW_SAFE_CANDIDATES = 'safe_candidates'
+const SEARCH_DEBOUNCE_MS = 300
+const META_CACHE_MS = 60_000
 const HIGH_CONFIDENCE_MIN_SCORE = 90
+
+function ensureSelectedFilterOption(options, selected) {
+  const value = String(selected ?? '').trim()
+  if (!value) return options
+  if (options.includes(value)) return options
+  return [value, ...options]
+}
 
 function deriveConsoleFromRow(row) {
   return getDetectedConsoleFromRow(row) ?? null
@@ -84,112 +94,6 @@ function formatPrice(product) {
   if (price == null) return '—'
   const currency = (product.original_base_price_currency || 'GBP').toUpperCase()
   return `${currency} ${Number(price).toLocaleString('en-GB')}`
-}
-
-function formatProductionYears(product) {
-  const start = product?.production_start_year
-  const end = product?.production_end_year
-  if (start && end) return `${start}–${end}`
-  if (start) return `${start}–present`
-  if (end) return `Until ${end}`
-  return null
-}
-
-function ProductIdentityCell({ product }) {
-  return (
-    <div className="admin-products__product-stack">
-      <div className="admin-products__product-brand">{product.brand}</div>
-      {product.product_family ? (
-        <div className="admin-products__product-family">{product.product_family}</div>
-      ) : null}
-      <div className="admin-products__product-model">{product.model}</div>
-      <div className="admin-products__product-type">{product.equipment_type ?? '—'}</div>
-      <div className="admin-products__subtle admin-products__product-canonical">{product.canonical_product_name}</div>
-    </div>
-  )
-}
-
-function PricingBaselineCell({ product }) {
-  const productionYears = formatProductionYears(product)
-  const priceConfidence = product?.original_price_confidence
-
-  return (
-    <div className="admin-products__pricing-cell">
-      <div className="admin-products__pricing-rrp">
-        <span className="admin-products__pricing-label">RRP</span>
-        <strong>{formatPrice(product)}</strong>
-      </div>
-      <div className="admin-products__pricing-meta">
-        <span className="admin-products__pricing-label">Manufactured from</span>
-        <span>{product.baseline_manufacture_year ?? '—'}</span>
-      </div>
-      {productionYears ? (
-        <div className="admin-products__pricing-meta">
-          <span className="admin-products__pricing-label">Production</span>
-          <span>{productionYears}</span>
-        </div>
-      ) : null}
-      <div className="admin-products__pricing-badges">
-        <BaselineSourceBadge product={product} />
-        {priceConfidence != null ? (
-          <span className="admin-products__price-confidence-badge">
-            {priceConfidence}% confidence
-          </span>
-        ) : null}
-      </div>
-    </div>
-  )
-}
-
-function ProductStatusCell({
-  product,
-  isSafeCandidate,
-  reviewMeta,
-}) {
-  const reviewReasonLabels = reviewMeta?.reviewReasonLabels ?? []
-
-  return (
-    <div className="admin-products__status-cell">
-      <CompletionBadge product={product} />
-      <div className="admin-products__status-badges">
-        <StatusBadge status={product.status} />
-        {isSafeCandidate ? (
-          <span className="admin-products__safe-candidate-badge">safe candidate</span>
-        ) : null}
-        {product.status === PRODUCT_STATUS.NEEDS_REVIEW ? (
-          <span className="admin-products__needs-review-badge">needs review</span>
-        ) : null}
-      </div>
-      {reviewReasonLabels.length > 0 ? (
-        <div className="admin-products__review-reasons">
-          {reviewReasonLabels.map((label) => (
-            <span key={label} className="admin-products__review-reason-badge">{label}</span>
-          ))}
-        </div>
-      ) : null}
-      {reviewMeta?.isSingleSourceNeedsReviewSafe ? (
-        <span className="admin-products__safe-candidate-badge">single-source safe</span>
-      ) : null}
-    </div>
-  )
-}
-
-function ProductSourcesCell({ sourceCount, onViewSources }) {
-  return (
-    <div className="admin-products__sources-cell">
-      <div className="admin-products__sources-count">
-        <strong>{sourceCount}</strong>
-        <span>{sourceCount === 1 ? 'source' : 'sources'}</span>
-      </div>
-      <button
-        type="button"
-        className="admin-products__action-pill"
-        onClick={onViewSources}
-      >
-        View sources
-      </button>
-    </div>
-  )
 }
 
 function ProductImageCell({ product, thumbUrl, onImageAudit }) {
@@ -311,38 +215,6 @@ function StatusBadge({ status }) {
   ].filter(Boolean).join(' ')
 
   return <span className={className}>{status.replace('_', ' ')}</span>
-}
-
-function CompletionBadge({ product }) {
-  const status = deriveCanonicalProductCompletionStatus(product)
-  const className = [
-    'admin-products__completion-badge',
-    status === CANONICAL_COMPLETION_STATUS.COMPLETE ? 'admin-products__completion-badge--complete' : '',
-    status === CANONICAL_COMPLETION_STATUS.MISSING_PRICE ? 'admin-products__completion-badge--missing-price' : '',
-    status === CANONICAL_COMPLETION_STATUS.MISSING_BASELINE ? 'admin-products__completion-badge--missing-baseline' : '',
-    status === CANONICAL_COMPLETION_STATUS.MISSING_BOTH ? 'admin-products__completion-badge--missing-both' : '',
-  ].filter(Boolean).join(' ')
-
-  return (
-    <span className={className}>
-      {formatCanonicalProductCompletionLabel(status)}
-    </span>
-  )
-}
-
-function BaselineSourceBadge({ product }) {
-  const source = deriveEquipmentProductBaselineSource(product)
-  const className = [
-    'admin-products__baseline-source-badge',
-    source.type === 'series_default' ? 'admin-products__baseline-source-badge--series' : '',
-    source.type === 'product_research' ? 'admin-products__baseline-source-badge--research' : '',
-    source.type === 'manual_admin' ? 'admin-products__baseline-source-badge--manual' : '',
-    source.type === 'missing' ? 'admin-products__baseline-source-badge--missing' : '',
-  ].filter(Boolean).join(' ')
-
-  if (source.type === 'missing') return null
-
-  return <span className={className}>{source.label}</span>
 }
 
 function DataFlag({ present, label }) {
@@ -1103,27 +975,49 @@ function BulkApprovalSummary({ summary, onDismiss }) {
 export default function AdminIntelligenceProductsPage() {
   usePageTitle('Products — Equipment Catalogue')
   const [searchParams, setSearchParams] = useSearchParams()
+  const listRequestIdRef = useRef(0)
+  const metaCacheRef = useRef({ at: 0, meta: null })
+  const detailCacheRef = useRef(new Map())
+  const hasLoadedRowsRef = useRef(false)
+  const filterOptionsCacheRef = useRef({ brands: [], equipmentTypes: [], at: 0 })
+
+  const listQuery = useMemo(
+    () => parseEquipmentProductListQueryParams(searchParams),
+    [searchParams],
+  )
+
+  const {
+    page,
+    pageSize,
+    search: debouncedSearch,
+    brand: brandFilter,
+    status: statusFilter,
+    equipmentType: equipmentTypeFilter,
+    completion: completionFilter,
+    attention: attentionFilter,
+    sort,
+    sortDir,
+  } = listQuery
 
   const [loading, setLoading] = useState(true)
+  const [listRefreshing, setListRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [products, setProducts] = useState([])
+  const [totalCount, setTotalCount] = useState(0)
   const [contentByProductId, setContentByProductId] = useState({})
-  const [searchInput, setSearchInput] = useState('')
-  const [brandFilter, setBrandFilter] = useState(() => searchParams.get('brand') || ALL_FILTER)
-  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || ALL_FILTER)
-  const [equipmentTypeFilter, setEquipmentTypeFilter] = useState(() => searchParams.get('equipmentType') || ALL_FILTER)
-  const [completionFilter, setCompletionFilter] = useState(() => searchParams.get('completion') || ALL_FILTER)
-  const [attentionFilter, setAttentionFilter] = useState(() => searchParams.get('attention') || CATALOGUE_ATTENTION.ALL)
-  const [imageAdminFilter, setImageAdminFilter] = useState(ALL_FILTER)
-  const [viewFilter, setViewFilter] = useState(VIEW_ALL)
-  const [safeCandidateIds, setSafeCandidateIds] = useState(new Set())
-  const [singleSourceNeedsReviewIds, setSingleSourceNeedsReviewIds] = useState(new Set())
-  const [reviewReasonsByProductId, setReviewReasonsByProductId] = useState({})
-  const [safeEvalLoading, setSafeEvalLoading] = useState(false)
+  const [catalogueSummary, setCatalogueSummary] = useState(null)
+  const [completionStats, setCompletionStats] = useState(null)
+  const [brandOptions, setBrandOptions] = useState([])
+  const [equipmentTypeOptions, setEquipmentTypeOptions] = useState([])
+  const [searchInput, setSearchInput] = useState(() => listQuery.search)
+  const pendingSearchWriteRef = useRef(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [selectedProductId, setSelectedProductId] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
+  const [editProduct, setEditProduct] = useState(null)
+  const [editLoading, setEditLoading] = useState(false)
   const [imageProductId, setImageProductId] = useState(null)
+  const [imageProductDetail, setImageProductDetail] = useState(null)
   const [mergeSourceId, setMergeSourceId] = useState(null)
   const [sourceRows, setSourceRows] = useState([])
   const [sourceLoading, setSourceLoading] = useState(false)
@@ -1134,14 +1028,279 @@ export default function AdminIntelligenceProductsPage() {
   const [highConfidenceLoading, setHighConfidenceLoading] = useState(false)
   const [approvalSummary, setApprovalSummary] = useState(null)
   const [completionExporting, setCompletionExporting] = useState(false)
+  const [researchExportOpen, setResearchExportOpen] = useState(false)
+  const [researchImportOpen, setResearchImportOpen] = useState(false)
   const [openActionsMenuId, setOpenActionsMenuId] = useState(null)
   const [imageActionMessage, setImageActionMessage] = useState('')
 
+  const updateListQuery = useCallback((patch, options = {}) => {
+    setSearchParams((previous) => (
+      applyEquipmentProductListQueryPatch(previous, patch, options)
+    ), { replace: true })
+  }, [setSearchParams])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const nextSearch = searchInput.trim()
+      if (nextSearch === debouncedSearch) return
+      pendingSearchWriteRef.current = nextSearch
+      updateListQuery({ search: nextSearch })
+    }, SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [searchInput, debouncedSearch, updateListQuery])
+
+  // Sync the text box from the URL only for external navigation (back/forward/shared link).
+  useEffect(() => {
+    if (pendingSearchWriteRef.current === debouncedSearch) {
+      pendingSearchWriteRef.current = null
+      return
+    }
+    setSearchInput(debouncedSearch)
+  }, [debouncedSearch])
+
+  const prevFilterIdentityRef = useRef(`${brandFilter}|${statusFilter}|${equipmentTypeFilter}|${completionFilter}|${attentionFilter}|${debouncedSearch}|${sort}|${sortDir}|${pageSize}`)
+  useEffect(() => {
+    const identity = `${brandFilter}|${statusFilter}|${equipmentTypeFilter}|${completionFilter}|${attentionFilter}|${debouncedSearch}|${sort}|${sortDir}|${pageSize}`
+    if (prevFilterIdentityRef.current === identity) return
+    prevFilterIdentityRef.current = identity
+    setSelectedIds(new Set())
+  }, [
+    brandFilter,
+    statusFilter,
+    equipmentTypeFilter,
+    completionFilter,
+    attentionFilter,
+    debouncedSearch,
+    sort,
+    sortDir,
+    pageSize,
+  ])
+
+  const loadDashboardMeta = useCallback(async ({ force = false } = {}) => {
+    const now = Date.now()
+    if (
+      !force
+      && metaCacheRef.current.meta
+      && now - metaCacheRef.current.at < META_CACHE_MS
+    ) {
+      return metaCacheRef.current.meta
+    }
+
+    const result = await fetchAdminEquipmentProductsDashboardMeta()
+    if (result.error) throw result.error
+    metaCacheRef.current = { at: Date.now(), meta: result.meta }
+    return result.meta
+  }, [])
+
+  const loadFilterOptions = useCallback(async ({ force = false } = {}) => {
+    const cached = filterOptionsCacheRef.current
+    const cacheFresh = cached.at > 0 && Date.now() - cached.at < META_CACHE_MS
+    if (
+      !force
+      && cacheFresh
+      && (cached.brands.length > 0 || cached.equipmentTypes.length > 0)
+    ) {
+      return {
+        brands: cached.brands,
+        equipmentTypes: cached.equipmentTypes,
+        meta: metaCacheRef.current.meta,
+      }
+    }
+
+    const [options, meta] = await Promise.all([
+      fetchAdminEquipmentProductFilterOptions(),
+      loadDashboardMeta({ force }).catch(() => metaCacheRef.current.meta),
+    ])
+
+    if (options.error) throw options.error
+
+    let brands = options.brands
+    let equipmentTypes = options.equipmentTypes
+
+    // Merge any extra values meta may know about (should match).
+    if (meta?.filterOptions?.brands?.length) {
+      brands = normalizeFilterOptionList([...brands, ...meta.filterOptions.brands])
+    }
+    if (meta?.filterOptions?.equipmentTypes?.length) {
+      equipmentTypes = normalizeFilterOptionList([
+        ...equipmentTypes,
+        ...meta.filterOptions.equipmentTypes,
+      ])
+    }
+
+    filterOptionsCacheRef.current = { brands, equipmentTypes, at: Date.now() }
+    return { brands, equipmentTypes, meta }
+  }, [loadDashboardMeta])
+
+  const applyFilterOptions = useCallback((brands, equipmentTypes) => {
+    if (Array.isArray(brands) && brands.length) setBrandOptions(brands)
+    if (Array.isArray(equipmentTypes) && equipmentTypes.length) {
+      setEquipmentTypeOptions(equipmentTypes)
+    }
+  }, [])
+
+  const loadProducts = useCallback(async ({
+    showLoading = true,
+    refreshMeta = false,
+  } = {}) => {
+    const requestId = ++listRequestIdRef.current
+    const isInitial = !hasLoadedRowsRef.current
+    if (showLoading && isInitial) setLoading(true)
+    else setListRefreshing(true)
+    setError('')
+
+    try {
+      const [listResult, optionsResult] = await Promise.all([
+        fetchAdminEquipmentProductsPage({
+          search: debouncedSearch,
+          brand: brandFilter,
+          status: statusFilter,
+          equipmentType: equipmentTypeFilter,
+          completion: completionFilter,
+          attention: attentionFilter,
+          page,
+          pageSize,
+          sort,
+          sortDir,
+        }),
+        loadFilterOptions({ force: refreshMeta }).catch((optionsError) => {
+          console.warn('Filter options failed', optionsError)
+          return {
+            brands: filterOptionsCacheRef.current.brands,
+            equipmentTypes: filterOptionsCacheRef.current.equipmentTypes,
+            meta: metaCacheRef.current.meta,
+          }
+        }),
+      ])
+
+      if (requestId !== listRequestIdRef.current) return
+
+      applyFilterOptions(optionsResult?.brands, optionsResult?.equipmentTypes)
+
+      const meta = optionsResult?.meta ?? metaCacheRef.current.meta
+      if (meta?.summary) setCatalogueSummary(meta.summary)
+      if (meta?.completion) {
+        setCompletionStats({
+          overall: meta.completion.overall ?? {
+            totalApproved: 0,
+            completed: 0,
+            incomplete: 0,
+            completionPercentage: 0,
+            breakdown: {
+              missingPriceOnly: 0,
+              missingBaselineOnly: 0,
+              missingBoth: 0,
+            },
+          },
+          byBrand: meta.completion.byBrand ?? [],
+          filterOptions: {
+            brands: optionsResult?.brands ?? meta.filterOptions?.brands ?? [],
+            equipmentTypes: optionsResult?.equipmentTypes
+              ?? meta.filterOptions?.equipmentTypes
+              ?? [],
+          },
+          scopeProducts: [],
+        })
+      }
+
+      if (listResult.error) {
+        setProducts([])
+        setTotalCount(0)
+        setContentByProductId({})
+        setError(getAdminErrorMessage(listResult.error))
+        return
+      }
+
+      const safePage = clampEquipmentProductListPage(
+        page,
+        listResult.totalCount,
+        pageSize,
+      )
+      if (safePage !== page) {
+        setTotalCount(listResult.totalCount)
+        updateListQuery({ page: safePage }, { resetPage: false })
+        return
+      }
+
+      hasLoadedRowsRef.current = true
+      setProducts(listResult.products)
+      setTotalCount(listResult.totalCount)
+      setContentByProductId(buildContentStatusMapFromListRows(listResult.products))
+      setSelectedIds((current) => {
+        if (!current.size) return current
+        const visible = new Set(listResult.products.map((product) => product.id))
+        const next = new Set([...current].filter((id) => visible.has(id)))
+        return next.size === current.size ? current : next
+      })
+    } catch (loadError) {
+      if (requestId !== listRequestIdRef.current) return
+      setError(getAdminErrorMessage(loadError))
+    } finally {
+      if (requestId === listRequestIdRef.current) {
+        setLoading(false)
+        setListRefreshing(false)
+      }
+    }
+  }, [
+    debouncedSearch,
+    brandFilter,
+    statusFilter,
+    equipmentTypeFilter,
+    completionFilter,
+    attentionFilter,
+    page,
+    pageSize,
+    sort,
+    sortDir,
+    loadFilterOptions,
+    applyFilterOptions,
+    updateListQuery,
+  ])
+
+  useEffect(() => {
+    // Catalogue list fetch — intentional data sync on filter/page changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async list load
+    void loadProducts({ showLoading: true })
+  }, [loadProducts])
+
+  useEffect(() => {
+    const editKey = searchParams.get('edit')
+    if (!editKey) return undefined
+    let cancelled = false
+    ;(async () => {
+      const cached = [...detailCacheRef.current.values()]
+        .find((product) => product.canonical_product_key === editKey)
+      if (cached) {
+        if (!cancelled) {
+          setEditProductId(cached.id)
+          setEditProduct(cached)
+        }
+        return
+      }
+      const result = await fetchAdminEquipmentProductByKey(editKey)
+      if (cancelled || result.error || !result.product) return
+      detailCacheRef.current.set(result.product.id, result.product)
+      setEditProductId(result.product.id)
+      setEditProduct(result.product)
+    })()
+    return () => { cancelled = true }
+  }, [searchParams])
+
   const applyProductRowUpdate = useCallback((updatedProduct) => {
     if (!updatedProduct?.id) return
+    detailCacheRef.current.set(updatedProduct.id, {
+      ...(detailCacheRef.current.get(updatedProduct.id) ?? {}),
+      ...updatedProduct,
+    })
     setProducts((current) => current.map((product) => (
       product.id === updatedProduct.id ? { ...product, ...updatedProduct } : product
     )))
+    setEditProduct((current) => (
+      current?.id === updatedProduct.id ? { ...current, ...updatedProduct } : current
+    ))
+    setImageProductDetail((current) => (
+      current?.id === updatedProduct.id ? { ...current, ...updatedProduct } : current
+    ))
   }, [])
 
   const handleImageProductUpdated = useCallback((updatedProduct, message) => {
@@ -1155,76 +1314,35 @@ export default function AdminIntelligenceProductsPage() {
     return () => window.clearTimeout(timer)
   }, [imageActionMessage])
 
-  const loadProducts = useCallback(async ({ showLoading = true } = {}) => {
-    const scrollY = window.scrollY
-    if (showLoading) {
-      setLoading(true)
-      setSafeEvalLoading(true)
-    }
-    setError('')
-    const result = await fetchEquipmentProducts()
-    if (result.error) {
-      setProducts([])
-      setSafeCandidateIds(new Set())
-      setSingleSourceNeedsReviewIds(new Set())
-      setReviewReasonsByProductId({})
-      setError(getAdminErrorMessage(result.error))
-      if (showLoading) {
-        setLoading(false)
-        setSafeEvalLoading(false)
-      }
+  const openEditProduct = useCallback(async (productId) => {
+    setEditProductId(productId)
+    setEditLoading(true)
+    setActionError('')
+    const cached = detailCacheRef.current.get(productId)
+    if (cached?.__detailLoaded) {
+      setEditProduct(cached)
+      setEditLoading(false)
       return
     }
-    setProducts(result.products)
+    const listRow = products.find((product) => product.id === productId) ?? null
+    if (listRow) setEditProduct(listRow)
 
-    const contentResult = await fetchEquipmentProductContentAdminRows()
-    if (!contentResult.error) {
-      const contentMap = {}
-      for (const row of contentResult.rows ?? []) {
-        if (row?.equipment_product_id) contentMap[row.equipment_product_id] = row
-      }
-      setContentByProductId(contentMap)
+    const result = await fetchAdminEquipmentProductById(productId)
+    setEditLoading(false)
+    if (result.error) {
+      setActionError(getAdminErrorMessage(result.error))
+      return
     }
-
-    const evaluation = await evaluateSafeApprovalCandidates(result.products)
-    if (evaluation.error) {
-      setSafeCandidateIds(new Set())
-      setSingleSourceNeedsReviewIds(new Set())
-      setReviewReasonsByProductId({})
-      setActionError(getAdminErrorMessage(evaluation.error))
-    } else {
-      setSafeCandidateIds(evaluation.safeIdSet)
-      setSingleSourceNeedsReviewIds(evaluation.singleSourceNeedsReviewIdSet)
-      setReviewReasonsByProductId(evaluation.reviewReasonsByProductId)
+    if (!result.product) {
+      setActionError('Product not found.')
+      setEditProductId(null)
+      setEditProduct(null)
+      return
     }
-
-    if (showLoading) {
-      setLoading(false)
-      setSafeEvalLoading(false)
-    }
-
-    if (!showLoading) {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY)
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    loadProducts()
-  }, [loadProducts])
-
-  useEffect(() => {
-    const nextAttention = searchParams.get('attention') || CATALOGUE_ATTENTION.ALL
-    setAttentionFilter(nextAttention)
-  }, [searchParams])
-
-  useEffect(() => {
-    const editKey = searchParams.get('edit')
-    if (!editKey || !products.length) return
-    const match = products.find((product) => product.canonical_product_key === editKey)
-    if (match) setEditProductId(match.id)
-  }, [searchParams, products])
+    const detailed = { ...result.product, __detailLoaded: true }
+    detailCacheRef.current.set(result.product.id, detailed)
+    setEditProduct(detailed)
+  }, [products])
 
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -1241,129 +1359,46 @@ export default function AdminIntelligenceProductsPage() {
     })
   ), [selectedIds, productsById])
 
-  const selectedSafeApprovableIds = useMemo(() => (
-    selectedApprovableIds.filter((id) => safeCandidateIds.has(id))
-  ), [selectedApprovableIds, safeCandidateIds])
-
-  const brandOptions = useMemo(
-    () => [...new Set(products.map((product) => product.brand).filter(Boolean))].sort(),
-    [products],
-  )
-
-  const equipmentTypeOptions = useMemo(
-    () => [...new Set(products.map((product) => product.equipment_type).filter(Boolean))].sort(),
-    [products],
-  )
-
-  const scopeProducts = useMemo(() => {
-    const query = searchInput.trim().toLowerCase()
-    return products.filter((product) => {
-      if (brandFilter && product.brand !== brandFilter) return false
-      if (equipmentTypeFilter && product.equipment_type !== equipmentTypeFilter) return false
-      if (!query) return true
-      const haystack = [
-        product.brand,
-        product.product_family,
-        product.model,
-        product.canonical_product_name,
-        product.equipment_type,
-      ].join(' ').toLowerCase()
-      return haystack.includes(query)
-    })
-  }, [products, searchInput, brandFilter, equipmentTypeFilter])
-
-  const statusCounts = useMemo(() => ({
-    safeToApprove: scopeProducts.filter((product) => safeCandidateIds.has(product.id)).length,
-    singleSourceNeedsReview: scopeProducts.filter((product) => singleSourceNeedsReviewIds.has(product.id)).length,
-    needsReview: scopeProducts.filter((product) => product.status === PRODUCT_STATUS.NEEDS_REVIEW).length,
-    approved: scopeProducts.filter((product) => product.status === PRODUCT_STATUS.APPROVED).length,
-    excluded: scopeProducts.filter((product) => product.status === PRODUCT_STATUS.EXCLUDED).length,
-  }), [scopeProducts, safeCandidateIds, singleSourceNeedsReviewIds])
-
-  const imageAdminCounts = useMemo(() => ({
-    hasImage: scopeProducts.filter((product) => matchesImageAdminFilter(product, IMAGE_ADMIN_FILTER.HAS_IMAGE)).length,
-    suggested: scopeProducts.filter((product) => matchesImageAdminFilter(product, IMAGE_ADMIN_FILTER.SUGGESTED)).length,
-    approved: scopeProducts.filter((product) => matchesImageAdminFilter(product, IMAGE_ADMIN_FILTER.APPROVED)).length,
-    needsReview: scopeProducts.filter((product) => matchesImageAdminFilter(product, IMAGE_ADMIN_FILTER.NEEDS_REVIEW)).length,
-    blockedRejected: scopeProducts.filter((product) => matchesImageAdminFilter(product, IMAGE_ADMIN_FILTER.BLOCKED_REJECTED)).length,
-    blockedSuggested: scopeProducts.filter((product) => (
-      product.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.SUGGESTED
-      && assessEquipmentProductImageRisk(product).riskLevel === IMAGE_AUDIT_RISK.BLOCKED
-    )).length,
-  }), [scopeProducts])
-
-  const filteredProducts = useMemo(() => {
-    return scopeProducts.filter((product) => {
-      if (statusFilter && product.status !== statusFilter) return false
-      if (viewFilter === VIEW_SAFE_CANDIDATES && !safeCandidateIds.has(product.id)) return false
-      if (completionFilter && completionFilter !== ALL_FILTER) {
-        const completionStatus = deriveCanonicalProductCompletionStatus(product)
-        if (completionFilter === COMPLETION_DASHBOARD_FILTER.INCOMPLETE) {
-          if (!completionStatus || completionStatus === CANONICAL_COMPLETION_STATUS.COMPLETE) return false
-        } else if (completionFilter === COMPLETION_DASHBOARD_FILTER.COMPLETE) {
-          if (completionStatus !== CANONICAL_COMPLETION_STATUS.COMPLETE) return false
-        } else if (completionStatus !== completionFilter) {
-          return false
-        }
-      }
-      if (imageAdminFilter && imageAdminFilter !== ALL_FILTER) {
-        if (!matchesImageAdminFilter(product, imageAdminFilter)) return false
-      }
-      if (!matchesCatalogueAttentionFilter(product, attentionFilter, contentByProductId)) {
-        return false
-      }
-      return true
-    })
-  }, [
-    scopeProducts,
-    statusFilter,
-    viewFilter,
-    safeCandidateIds,
-    completionFilter,
-    imageAdminFilter,
-    attentionFilter,
-    contentByProductId,
-  ])
-
-  const catalogueSummary = useMemo(
-    () => buildCatalogueSummary(scopeProducts, contentByProductId),
-    [scopeProducts, contentByProductId],
-  )
-
-  function setAttentionAndUrl(nextAttention) {
-    setAttentionFilter(nextAttention)
-    const next = new URLSearchParams(searchParams)
-    if (!nextAttention || nextAttention === CATALOGUE_ATTENTION.ALL) next.delete('attention')
-    else next.set('attention', nextAttention)
-    setSearchParams(next, { replace: true })
-  }
-
-  const productsMatchingActionFilters = filteredProducts
-
   const selectedProduct = useMemo(
     () => products.find((product) => product.id === selectedProductId) ?? null,
     [products, selectedProductId],
   )
 
-  const editProduct = useMemo(
-    () => products.find((product) => product.id === editProductId) ?? null,
-    [products, editProductId],
-  )
-
   const imageProduct = useMemo(
-    () => products.find((product) => product.id === imageProductId) ?? null,
-    [products, imageProductId],
+    () => products.find((product) => product.id === imageProductId)
+      ?? (imageProductDetail?.id === imageProductId ? imageProductDetail : null),
+    [products, imageProductId, imageProductDetail],
   )
 
-  const allFilteredSelected = filteredProducts.length > 0
-    && filteredProducts.every((product) => selectedIds.has(product.id))
+  const openImageAudit = useCallback((product) => {
+    if (!product?.id) return
+    setImageProductId(product.id)
+    setImageProductDetail(product)
+  }, [])
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize) || 1)
+  const allPageSelected = products.length > 0
+    && products.every((product) => selectedIds.has(product.id))
+  const brandSelectOptions = ensureSelectedFilterOption(brandOptions, brandFilter)
+  const equipmentTypeSelectOptions = ensureSelectedFilterOption(
+    equipmentTypeOptions,
+    equipmentTypeFilter,
+  )
+
+  function setAttentionFilter(nextAttention) {
+    updateListQuery({ attention: nextAttention || CATALOGUE_ATTENTION.ALL })
+  }
+
+  function setCompletionFilter(nextCompletion) {
+    updateListQuery({ completion: nextCompletion || ALL_FILTER })
+  }
 
   function toggleSelectAll() {
-    if (allFilteredSelected) {
+    if (allPageSelected) {
       setSelectedIds(new Set())
       return
     }
-    setSelectedIds(new Set(filteredProducts.map((product) => product.id)))
+    setSelectedIds(new Set(products.map((product) => product.id)))
   }
 
   function toggleSelect(productId) {
@@ -1388,13 +1423,19 @@ export default function AdminIntelligenceProductsPage() {
     setSourceRows(result.rows)
   }
 
+  async function reloadAfterMutation() {
+    detailCacheRef.current.clear()
+    metaCacheRef.current = { at: 0, meta: null }
+    await loadProducts({ showLoading: false, refreshMeta: true })
+  }
+
   async function handleApprove(productId) {
     const result = await approveEquipmentProduct(productId)
     if (result.error) {
       setActionError(getAdminErrorMessage(result.error))
       return
     }
-    await loadProducts()
+    await reloadAfterMutation()
   }
 
   async function handleExclude(productId) {
@@ -1403,7 +1444,7 @@ export default function AdminIntelligenceProductsPage() {
       setActionError(getAdminErrorMessage(result.error))
       return
     }
-    await loadProducts()
+    await reloadAfterMutation()
   }
 
   async function handleMerge(targetProductId) {
@@ -1417,7 +1458,7 @@ export default function AdminIntelligenceProductsPage() {
       return
     }
     setMergeSourceId(null)
-    await loadProducts()
+    await reloadAfterMutation()
   }
 
   async function runBulkApproval(ids, {
@@ -1432,7 +1473,7 @@ export default function AdminIntelligenceProductsPage() {
     }
 
     const message = confirmMessage
-      ?? `You are about to approve ${ids.length} selected canonical product(s). This will make them eligible for public/catalogue workflows. Continue?`
+      ?? `You are about to approve ${ids.length} selected product(s) on this page. Continue?`
     if (!window.confirm(message)) return
 
     setBulkLoading(true)
@@ -1458,34 +1499,25 @@ export default function AdminIntelligenceProductsPage() {
       failures: result.failures,
     })
     setSelectedIds(new Set())
-    await loadProducts()
+    await reloadAfterMutation()
   }
 
   async function handleBulkApproveSelected() {
     await runBulkApproval(selectedApprovableIds, {
       safeCandidatesOnly: false,
       title: 'Bulk approval complete',
-      emptyMessage: 'Select pending or needs_review products to approve.',
-    })
-  }
-
-  async function handleBulkApproveSafe() {
-    await runBulkApproval(selectedSafeApprovableIds, {
-      safeCandidatesOnly: true,
-      title: 'Safe bulk approval complete',
-      emptyMessage: 'No safe approval candidates selected. Use "Bulk approve selected" to approve pending products regardless of safe status.',
-      confirmMessage: `You are about to approve ${selectedSafeApprovableIds.length} selected safe canonical product(s). This will make them eligible for public/catalogue workflows. Continue?`,
+      emptyMessage: 'Select pending or needs_review products on this page to approve.',
     })
   }
 
   async function handleBulkExclude() {
     const ids = [...selectedIds]
     if (!ids.length) {
-      setActionError('Select products to exclude.')
+      setActionError('Select products on this page to exclude.')
       return
     }
 
-    if (!window.confirm(`Exclude ${ids.length} product(s)? They will be skipped from research.`)) return
+    if (!window.confirm(`Exclude ${ids.length} product(s) on this page? They will be skipped from research.`)) return
 
     setBulkLoading(true)
     setActionError('')
@@ -1496,68 +1528,14 @@ export default function AdminIntelligenceProductsPage() {
       return
     }
     setSelectedIds(new Set())
-    await loadProducts()
-  }
-
-  async function handleBulkApproveFilteredSafe() {
-    const ids = filteredProducts
-      .filter((product) => safeCandidateIds.has(product.id))
-      .map((product) => product.id)
-    if (!ids.length) {
-      setActionError('No safe approval candidates in the current filters.')
-      return
-    }
-    if (!window.confirm(`Approve ${ids.length} safe approval candidate(s) for the current filters?`)) return
-
-    setBulkLoading(true)
-    setActionError('')
-    setApprovalSummary(null)
-    const result = await bulkApproveEquipmentProducts(ids, { safeCandidatesOnly: true })
-    setBulkLoading(false)
-    if (result.error && result.approved === 0) {
-      setActionError(getAdminErrorMessage(result.error))
-      return
-    }
-    setApprovalSummary({
-      title: 'Filtered safe approval complete',
-      approved: result.approved,
-      skipped: result.skipped,
-      failures: result.failures,
-    })
-    await loadProducts()
-  }
-
-  async function handleBulkApproveSingleSourceNeedsReviewFiltered() {
-    const targets = productsMatchingActionFilters.filter((product) => (
-      singleSourceNeedsReviewIds.has(product.id)
-    ))
-    if (!targets.length) {
-      setActionError('No single-source needs_review products eligible in the current filters.')
-      return
-    }
-    if (!window.confirm(`Approve ${targets.length} single-source needs_review product(s) for the current filters?`)) return
-
-    setBulkLoading(true)
-    setActionError('')
-    const result = await bulkApproveSingleSourceNeedsReviewProducts(targets)
-    setBulkLoading(false)
-    if (result.error) {
-      setActionError(getAdminErrorMessage(result.error))
-      return
-    }
-    setApprovalSummary({
-      title: 'Single-source needs review approval complete',
-      approved: result.approved,
-      skipped: result.skipped,
-    })
-    await loadProducts()
+    await reloadAfterMutation()
   }
 
   async function openHighConfidenceApproveModal() {
     setHighConfidenceLoading(true)
     setActionError('')
     const evaluation = await evaluateHighConfidenceApprovalCandidates(
-      productsMatchingActionFilters,
+      products,
       { minScore: HIGH_CONFIDENCE_MIN_SCORE },
     )
     setHighConfidenceLoading(false)
@@ -1573,7 +1551,7 @@ export default function AdminIntelligenceProductsPage() {
     setHighConfidenceLoading(true)
     setActionError('')
     const result = await bulkApproveHighConfidenceProducts(
-      productsMatchingActionFilters,
+      products,
       { minScore: HIGH_CONFIDENCE_MIN_SCORE },
     )
     setHighConfidenceLoading(false)
@@ -1586,18 +1564,18 @@ export default function AdminIntelligenceProductsPage() {
     }
 
     setApprovalSummary({
-      title: 'High-confidence approval complete',
+      title: 'High-confidence approval complete (this page)',
       approved: result.approved,
       skipped: result.skipped,
       skippedReasons: result.skippedReasons,
     })
-    await loadProducts()
+    await reloadAfterMutation()
   }
 
   async function handleBulkRejectBlockedImages() {
     setBulkLoading(true)
     setActionError('')
-    const result = await bulkRejectBlockedEquipmentProductImages(productsMatchingActionFilters)
+    const result = await bulkRejectBlockedEquipmentProductImages(products)
     setBulkLoading(false)
     if (result.failures.length) {
       setActionError(getAdminErrorMessage(result.failures[0].error))
@@ -1620,23 +1598,35 @@ export default function AdminIntelligenceProductsPage() {
           : product
       )))
       setApprovalSummary({
-        title: 'Blocked image cleanup complete',
+        title: 'Blocked image cleanup complete (this page)',
         approved: result.rejected,
         skipped: 0,
       })
       setImageActionMessage(`${result.rejected} image(s) rejected`)
     } else if (!result.failures.length) {
-      setActionError('No suggested images from blocked domains matched the current filters.')
+      setActionError('No suggested images from blocked domains matched this page.')
     }
   }
 
-  async function handleExportCompletionProducts(exportProducts, label) {
-    if (!exportProducts.length) return
+  async function handleExportCompletionProducts(mode) {
     setCompletionExporting(true)
     setActionError('')
     try {
-      await exportCanonicalProductsSpreadsheet(exportProducts, {
-        label,
+      const result = await fetchAdminEquipmentProductsForExport({
+        brand: brandFilter,
+        equipmentType: equipmentTypeFilter,
+        completion: mode === 'complete'
+          ? COMPLETION_DASHBOARD_FILTER.COMPLETE
+          : COMPLETION_DASHBOARD_FILTER.INCOMPLETE,
+        status: PRODUCT_STATUS.APPROVED,
+      })
+      if (result.error) throw result.error
+      if (!result.products.length) {
+        setActionError(`No ${mode} approved products to export for the current brand/type filters.`)
+        return
+      }
+      await exportCanonicalProductsSpreadsheet(result.products, {
+        label: mode,
         origin: window.location.origin,
       })
     } catch (exportError) {
@@ -1646,6 +1636,53 @@ export default function AdminIntelligenceProductsPage() {
     }
   }
 
+  function handleResearchImportApplied(result) {
+    const updatedById = new Map(
+      (result?.updated || [])
+        .filter((entry) => entry.product?.id)
+        .map((entry) => [entry.product.id, entry.product]),
+    )
+    if (updatedById.size) {
+      setProducts((current) => current.map((product) => {
+        const next = updatedById.get(product.id)
+        return next ? { ...product, ...next } : product
+      }))
+    }
+    metaCacheRef.current = { at: 0, meta: null }
+    void loadDashboardMeta({ force: true }).then((meta) => {
+      if (!meta) return
+      if (meta.summary) setCatalogueSummary(meta.summary)
+      if (meta.completion) {
+        setCompletionStats({
+          overall: meta.completion.overall ?? {
+            totalApproved: 0,
+            completed: 0,
+            incomplete: 0,
+            completionPercentage: 0,
+            breakdown: {
+              missingPriceOnly: 0,
+              missingBaselineOnly: 0,
+              missingBoth: 0,
+            },
+          },
+          byBrand: meta.completion.byBrand ?? [],
+          filterOptions: {
+            brands: meta.filterOptions?.brands ?? [],
+            equipmentTypes: meta.filterOptions?.equipmentTypes ?? [],
+          },
+          scopeProducts: [],
+        })
+      }
+    }).catch(() => {})
+    // Reload current page so completion / attention filters reflect DB state.
+    void loadProducts({ showLoading: false, refreshMeta: true })
+    setApprovalSummary({
+      title: 'Research import complete',
+      approved: result?.updated?.length ?? 0,
+      skipped: result?.unchanged?.length ?? 0,
+    })
+  }
+
   const completionDashboardFilters = useMemo(() => ({
     brand: brandFilter,
     equipmentType: equipmentTypeFilter,
@@ -1653,6 +1690,15 @@ export default function AdminIntelligenceProductsPage() {
       ? COMPLETION_DASHBOARD_FILTER.ALL
       : completionFilter,
   }), [brandFilter, equipmentTypeFilter, completionFilter])
+
+  const pageNumbers = useMemo(() => {
+    const windowSize = 5
+    const start = Math.max(1, Math.min(page - 2, totalPages - windowSize + 1))
+    const end = Math.min(totalPages, start + windowSize - 1)
+    const items = []
+    for (let n = Math.max(1, start); n <= end; n += 1) items.push(n)
+    return items
+  }, [page, totalPages])
 
   return (
     <div className="admin-intelligence admin-products">
@@ -1667,8 +1713,8 @@ export default function AdminIntelligenceProductsPage() {
             <button
               type="button"
               className="admin-intelligence__button admin-intelligence__button--secondary"
-              onClick={() => loadProducts({ showLoading: true })}
-              disabled={loading}
+              onClick={() => loadProducts({ showLoading: true, refreshMeta: true })}
+              disabled={loading || listRefreshing}
             >
               Refresh
             </button>
@@ -1676,8 +1722,19 @@ export default function AdminIntelligenceProductsPage() {
         )}
       />
 
-      {loading ? <LoadingState compact>Loading products…</LoadingState> : null}
-      {error ? <ErrorState compact>{error}</ErrorState> : null}
+      {error ? (
+        <ErrorState compact>
+          {error}
+          {' '}
+          <button
+            type="button"
+            className="admin-intelligence__button"
+            onClick={() => loadProducts({ showLoading: true, refreshMeta: true })}
+          >
+            Retry
+          </button>
+        </ErrorState>
+      ) : null}
       {actionError ? <ErrorState compact>{actionError}</ErrorState> : null}
       <ImageActionToast
         message={imageActionMessage}
@@ -1685,17 +1742,17 @@ export default function AdminIntelligenceProductsPage() {
       />
       <BulkApprovalSummary summary={approvalSummary} onDismiss={() => setApprovalSummary(null)} />
 
-      {!loading && !error ? (
+      {catalogueSummary ? (
         <section className="equipment-catalogue-summary" aria-label="Catalogue summary">
-          <button type="button" className="equipment-catalogue-summary__card" onClick={() => setAttentionAndUrl(CATALOGUE_ATTENTION.ALL)}>
+          <button type="button" className="equipment-catalogue-summary__card" onClick={() => setAttentionFilter(CATALOGUE_ATTENTION.ALL)}>
             <span>Total</span>
             <strong>{catalogueSummary.total}</strong>
           </button>
-          <button type="button" className="equipment-catalogue-summary__card" onClick={() => setAttentionAndUrl(CATALOGUE_ATTENTION.READY)}>
+          <button type="button" className="equipment-catalogue-summary__card" onClick={() => setAttentionFilter(CATALOGUE_ATTENTION.READY)}>
             <span>Ready</span>
             <strong>{catalogueSummary.ready}</strong>
           </button>
-          <button type="button" className="equipment-catalogue-summary__card" onClick={() => setAttentionAndUrl(CATALOGUE_ATTENTION.ATTENTION)}>
+          <button type="button" className="equipment-catalogue-summary__card" onClick={() => setAttentionFilter(CATALOGUE_ATTENTION.ATTENTION)}>
             <span>Needs attention</span>
             <strong>{catalogueSummary.needsAttention}</strong>
           </button>
@@ -1718,223 +1775,355 @@ export default function AdminIntelligenceProductsPage() {
         </section>
       ) : null}
 
-      {!loading && !error ? (
+      {completionStats ? (
         <CanonicalProductCompletionDashboard
-          products={products}
+          statsOverride={completionStats}
           variant="compact"
           filters={completionDashboardFilters}
           onFiltersChange={() => {}}
           exporting={completionExporting}
-          onExportIncomplete={(exportProducts) => handleExportCompletionProducts(exportProducts, 'incomplete')}
-          onExportCompleted={(exportProducts) => handleExportCompletionProducts(exportProducts, 'complete')}
+          onExportIncomplete={() => handleExportCompletionProducts('incomplete')}
+          onExportCompleted={() => handleExportCompletionProducts('complete')}
         />
       ) : null}
 
-      {!loading && !error ? (
-        <section className="admin-intelligence__panel">
-          <div className="equipment-catalogue-quick-filters" aria-label="Quick status filters">
-            {[
-              CATALOGUE_ATTENTION.ALL,
-              CATALOGUE_ATTENTION.READY,
-              CATALOGUE_ATTENTION.NEEDS_IMAGE,
-              CATALOGUE_ATTENTION.NEEDS_PRICE,
-              CATALOGUE_ATTENTION.NEEDS_YEAR,
-              CATALOGUE_ATTENTION.NEEDS_CONTENT,
-              CATALOGUE_ATTENTION.NEEDS_REVIEW,
-            ].map((key) => (
-              <button
-                key={key}
-                type="button"
-                className={`equipment-catalogue-quick-filters__chip${attentionFilter === key ? ' equipment-catalogue-quick-filters__chip--active' : ''}`}
-                onClick={() => setAttentionAndUrl(key)}
-              >
-                {CATALOGUE_ATTENTION_LABELS[key]}
-              </button>
+      <section className="admin-intelligence__panel">
+        <div className="equipment-catalogue-quick-filters" aria-label="Quick status filters">
+          {[
+            CATALOGUE_ATTENTION.ALL,
+            CATALOGUE_ATTENTION.READY,
+            CATALOGUE_ATTENTION.NEEDS_IMAGE,
+            CATALOGUE_ATTENTION.NEEDS_PRICE,
+            CATALOGUE_ATTENTION.NEEDS_YEAR,
+            CATALOGUE_ATTENTION.NEEDS_CONTENT,
+            CATALOGUE_ATTENTION.NEEDS_REVIEW,
+          ].map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={`equipment-catalogue-quick-filters__chip${attentionFilter === key ? ' equipment-catalogue-quick-filters__chip--active' : ''}`}
+                onClick={() => setAttentionFilter(key)}
+            >
+              {CATALOGUE_ATTENTION_LABELS[key]}
+            </button>
+          ))}
+        </div>
+
+        <div className="admin-intelligence__filters admin-products__filters">
+          <div className="admin-intelligence__field admin-products__search-field">
+            <label className="admin-intelligence__label" htmlFor="product-search">Search</label>
+            <input
+              id="product-search"
+              type="search"
+              className="admin-intelligence__input"
+              placeholder="Brand, model, family, type…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Brand</span>
+            <select
+              className="admin-intelligence__select"
+              value={brandFilter}
+              onChange={(e) => updateListQuery({ brand: e.target.value })}
+            >
+              <option value={ALL_FILTER}>All brands</option>
+              {brandSelectOptions.map((brand) => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Category</span>
+            <select
+              className="admin-intelligence__select"
+              value={equipmentTypeFilter}
+              onChange={(e) => updateListQuery({ equipmentType: e.target.value })}
+            >
+              <option value={ALL_FILTER}>All categories</option>
+              {equipmentTypeSelectOptions.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Status</span>
+            <select
+              className="admin-intelligence__select"
+              value={statusFilter}
+              onChange={(e) => updateListQuery({ status: e.target.value })}
+            >
+              <option value={ALL_FILTER}>All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="needs_review">Needs review</option>
+              <option value="approved">Approved</option>
+              <option value="excluded">Excluded</option>
+            </select>
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Completion</span>
+            <select
+              className="admin-intelligence__select"
+              value={completionFilter}
+              onChange={(e) => setCompletionFilter(e.target.value)}
+            >
+              <option value={ALL_FILTER}>All</option>
+              <option value={COMPLETION_DASHBOARD_FILTER.COMPLETE}>Complete</option>
+              <option value={COMPLETION_DASHBOARD_FILTER.INCOMPLETE}>Incomplete</option>
+              <option value={COMPLETION_DASHBOARD_FILTER.MISSING_PRICE}>Missing price</option>
+              <option value={COMPLETION_DASHBOARD_FILTER.MISSING_BASELINE}>Missing baseline</option>
+              <option value={COMPLETION_DASHBOARD_FILTER.MISSING_BOTH}>Missing both</option>
+            </select>
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Page size</span>
+            <select
+              className="admin-intelligence__select"
+              value={pageSize}
+              onChange={(e) => {
+                updateListQuery({
+                  pageSize: clampEquipmentProductListPageSize(e.target.value),
+                })
+              }}
+            >
+              {EQUIPMENT_PRODUCT_LIST_PAGE_SIZES.map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="admin-products__summary-bar">
+          <span>
+            {loading && !products.length
+              ? 'Loading products…'
+              : `${totalCount.toLocaleString('en-GB')} matching products`}
+            {listRefreshing ? ' · Updating…' : ''}
+          </span>
+          <span className="admin-products__page-meta">
+            Page {page} of {totalPages}
+          </span>
+        </div>
+
+        <div className="admin-products__bulk-bar">
+          <label className="admin-products__select-all">
+            <input
+              type="checkbox"
+              checked={allPageSelected}
+              onChange={toggleSelectAll}
+              disabled={!products.length}
+            />
+            Select page
+          </label>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--primary"
+            disabled={bulkLoading || selectedApprovableIds.length === 0}
+            onClick={handleBulkApproveSelected}
+          >
+            Approve selected ({selectedApprovableIds.length})
+          </button>
+          <button
+            type="button"
+            className="admin-intelligence__button"
+            disabled={bulkLoading || selectedIds.size === 0}
+            onClick={handleBulkExclude}
+          >
+            Delete / exclude ({selectedIds.size})
+          </button>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--secondary"
+            disabled={bulkLoading || highConfidenceLoading || !products.length}
+            onClick={openHighConfidenceApproveModal}
+          >
+            Approve high confidence 90+ (page)
+          </button>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--secondary"
+            disabled={bulkLoading || !products.length}
+            onClick={handleBulkRejectBlockedImages}
+          >
+            Reject blocked images (page)
+          </button>
+          <Link
+            to="/admin/intelligence/product-content"
+            className="admin-intelligence__button admin-intelligence__button--secondary"
+          >
+            Publish content
+          </Link>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--secondary"
+            disabled={loading}
+            onClick={() => setResearchExportOpen(true)}
+          >
+            Export research list
+          </button>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--secondary"
+            onClick={() => setResearchImportOpen(true)}
+          >
+            Import researched product updates
+          </button>
+        </div>
+
+        {loading && !products.length ? (
+          <div className="admin-products__table-skeleton" aria-busy="true" aria-label="Loading products">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={`skeleton-${index}`} className="admin-products__skeleton-row" />
             ))}
           </div>
+        ) : null}
 
-          <div className="admin-intelligence__filters admin-products__filters">
-            <div className="admin-intelligence__field admin-products__search-field">
-              <label className="admin-intelligence__label" htmlFor="product-search">Search</label>
-              <input id="product-search" type="search" className="admin-intelligence__input" placeholder="Brand, model, family, type…" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
-            </div>
-            <label className="admin-intelligence__field">
-              <span className="admin-intelligence__label">Brand</span>
-              <select className="admin-intelligence__select" value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)}>
-                <option value={ALL_FILTER}>All brands</option>
-                {brandOptions.map((brand) => <option key={brand} value={brand}>{brand}</option>)}
-              </select>
-            </label>
-            <label className="admin-intelligence__field">
-              <span className="admin-intelligence__label">Category</span>
-              <select className="admin-intelligence__select" value={equipmentTypeFilter} onChange={(e) => setEquipmentTypeFilter(e.target.value)}>
-                <option value={ALL_FILTER}>All categories</option>
-                {equipmentTypeOptions.map((type) => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </label>
-            <label className="admin-intelligence__field">
-              <span className="admin-intelligence__label">Status</span>
-              <select className="admin-intelligence__select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value={ALL_FILTER}>All statuses</option>
-                <option value="pending">Pending</option>
-                <option value="needs_review">Needs review</option>
-                <option value="approved">Approved</option>
-                <option value="excluded">Excluded</option>
-              </select>
-            </label>
+        {!loading && !error && products.length === 0 ? (
+          <EmptyState compact>
+            No products match these filters.
+          </EmptyState>
+        ) : null}
+
+        {products.length > 0 ? (
+          <div className={`admin-intelligence__table-wrap admin-products__table-wrap${listRefreshing ? ' admin-products__table-wrap--refreshing' : ''}`}>
+            <table className="admin-intelligence__table admin-products__table">
+              <thead>
+                <tr>
+                  <th className="admin-products__col-select" aria-label="Select" />
+                  <th className="admin-products__col-image">Image</th>
+                  <th className="admin-products__col-product">Product</th>
+                  <th>Brand</th>
+                  <th>Category</th>
+                  <th>RRP</th>
+                  <th>From</th>
+                  <th>Image</th>
+                  <th>Content</th>
+                  <th>Status</th>
+                  <th className="admin-products__col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product) => {
+                  const thumbUrl = getAdminProductImageThumbUrl(product)
+                  const catalogueStatus = getCatalogueStatusLabel(product, contentByProductId)
+                  return (
+                    <tr
+                      key={product.id}
+                      className={mergeSourceId === product.id ? 'admin-products__row-merge-source' : undefined}
+                      onDoubleClick={() => openEditProduct(product.id)}
+                    >
+                      <td className="admin-products__col-select">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(product.id)}
+                          onChange={() => toggleSelect(product.id)}
+                          aria-label={`Select ${product.canonical_product_name}`}
+                        />
+                      </td>
+                      <td className="admin-products__col-image">
+                        <ProductImageCell
+                          product={product}
+                          thumbUrl={thumbUrl}
+                          onImageAudit={() => openImageAudit(product)}
+                        />
+                      </td>
+                      <td className="admin-products__col-product">
+                        <button
+                          type="button"
+                          className="admin-products__identity-button"
+                          onClick={() => openEditProduct(product.id)}
+                          style={{
+                            display: 'grid',
+                            gap: '0.15rem',
+                            padding: 0,
+                            border: 0,
+                            background: 'transparent',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            color: 'inherit',
+                            font: 'inherit',
+                          }}
+                        >
+                          <strong>{product.canonical_product_name}</strong>
+                          {product.product_family || product.model ? (
+                            <span style={{ color: 'var(--color-muted)', fontSize: '0.8125rem' }}>
+                              {[product.product_family, product.model].filter(Boolean).join(' · ')}
+                            </span>
+                          ) : null}
+                        </button>
+                      </td>
+                      <td>{product.brand}</td>
+                      <td>{product.equipment_type || '—'}</td>
+                      <td>{formatPrice(product)}</td>
+                      <td>{product.baseline_manufacture_year || '—'}</td>
+                      <td>{getCatalogueImageStatusLabel(product)}</td>
+                      <td>{getCatalogueContentStatusLabel(product, contentByProductId)}</td>
+                      <td>
+                        <span className={`equipment-catalogue-status${catalogueStatus === 'Ready' ? ' equipment-catalogue-status--ready' : ' equipment-catalogue-status--attention'}`}>
+                          {catalogueStatus}
+                        </span>
+                      </td>
+                      <td className="admin-products__col-actions">
+                        <ProductRowActions
+                          product={product}
+                          mergeSourceId={mergeSourceId}
+                          menuOpen={openActionsMenuId === product.id}
+                          onToggleMenu={() => setOpenActionsMenuId((current) => (
+                            current === product.id ? null : product.id
+                          ))}
+                          onCloseMenu={() => setOpenActionsMenuId(null)}
+                          onViewSources={() => openSourceRows(product)}
+                          onImageAudit={() => openImageAudit(product)}
+                          onEdit={() => openEditProduct(product.id)}
+                          onApprove={() => handleApprove(product.id)}
+                          onMergeSource={() => setMergeSourceId(product.id)}
+                          onMergeInto={() => handleMerge(product.id)}
+                          onExclude={() => handleExclude(product.id)}
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
+        ) : null}
 
-          <div className="admin-products__summary-bar">
-            <span>{filteredProducts.length} matching products</span>
-          </div>
-
-          <div className="admin-products__bulk-bar">
-            <label className="admin-products__select-all">
-              <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} />
-              Select filtered
-            </label>
-            <button
-              type="button"
-              className="admin-intelligence__button admin-intelligence__button--primary"
-              disabled={bulkLoading || selectedApprovableIds.length === 0}
-              onClick={handleBulkApproveSelected}
-            >
-              Approve selected ({selectedApprovableIds.length})
-            </button>
+        {totalCount > 0 ? (
+          <div className="admin-products__pagination" aria-label="Pagination">
             <button
               type="button"
               className="admin-intelligence__button"
-              disabled={bulkLoading || selectedIds.size === 0}
-              onClick={handleBulkExclude}
+              disabled={loading || listRefreshing || page <= 1}
+              onClick={() => updateListQuery({ page: Math.max(1, page - 1) }, { resetPage: false })}
             >
-              Delete / exclude ({selectedIds.size})
+              Previous
             </button>
+            <div className="admin-products__page-numbers">
+              {pageNumbers.map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  type="button"
+                  className={`admin-products__page-number${pageNumber === page ? ' admin-products__page-number--active' : ''}`}
+                  disabled={loading || listRefreshing}
+                  onClick={() => updateListQuery({ page: pageNumber }, { resetPage: false })}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
-              className="admin-intelligence__button admin-intelligence__button--secondary"
-              disabled={bulkLoading || highConfidenceLoading}
-              onClick={openHighConfidenceApproveModal}
+              className="admin-intelligence__button"
+              disabled={loading || listRefreshing || page >= totalPages}
+              onClick={() => updateListQuery({ page: Math.min(totalPages, page + 1) }, { resetPage: false })}
             >
-              Approve high confidence 90+
+              Next
             </button>
-            <Link
-              to="/admin/intelligence/product-content"
-              className="admin-intelligence__button admin-intelligence__button--secondary"
-            >
-              Publish content
-            </Link>
           </div>
-
-          {filteredProducts.length === 0 ? (
-            <EmptyState compact>
-              No products match these filters.
-            </EmptyState>
-          ) : (
-            <div className="admin-intelligence__table-wrap admin-products__table-wrap">
-              <table className="admin-intelligence__table admin-products__table">
-                <thead>
-                  <tr>
-                    <th className="admin-products__col-select" aria-label="Select" />
-                    <th className="admin-products__col-image">Image</th>
-                    <th className="admin-products__col-product">Product</th>
-                    <th>Brand</th>
-                    <th>Category</th>
-                    <th>RRP</th>
-                    <th>From</th>
-                    <th>Image</th>
-                    <th>Content</th>
-                    <th>Status</th>
-                    <th className="admin-products__col-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map((product) => {
-                    const thumbUrl = getAdminProductImageThumbUrl(product)
-                    const catalogueStatus = getCatalogueStatusLabel(product, contentByProductId)
-                    return (
-                      <tr
-                        key={product.id}
-                        className={mergeSourceId === product.id ? 'admin-products__row-merge-source' : undefined}
-                        onDoubleClick={() => setEditProductId(product.id)}
-                      >
-                        <td className="admin-products__col-select">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(product.id)}
-                            onChange={() => toggleSelect(product.id)}
-                            aria-label={`Select ${product.canonical_product_name}`}
-                          />
-                        </td>
-                        <td className="admin-products__col-image">
-                          <ProductImageCell
-                            product={product}
-                            thumbUrl={thumbUrl}
-                            onImageAudit={() => setImageProductId(product.id)}
-                          />
-                        </td>
-                        <td className="admin-products__col-product">
-                          <button
-                            type="button"
-                            className="admin-products__identity-button"
-                            onClick={() => setEditProductId(product.id)}
-                            style={{
-                              display: 'grid',
-                              gap: '0.15rem',
-                              padding: 0,
-                              border: 0,
-                              background: 'transparent',
-                              textAlign: 'left',
-                              cursor: 'pointer',
-                              color: 'inherit',
-                              font: 'inherit',
-                            }}
-                          >
-                            <strong>{product.canonical_product_name}</strong>
-                            {product.product_family || product.model ? (
-                              <span style={{ color: 'var(--color-muted)', fontSize: '0.8125rem' }}>
-                                {[product.product_family, product.model].filter(Boolean).join(' · ')}
-                              </span>
-                            ) : null}
-                          </button>
-                        </td>
-                        <td>{product.brand}</td>
-                        <td>{product.equipment_type || '—'}</td>
-                        <td>{formatPrice(product)}</td>
-                        <td>{product.baseline_manufacture_year || '—'}</td>
-                        <td>{getCatalogueImageStatusLabel(product)}</td>
-                        <td>{getCatalogueContentStatusLabel(product, contentByProductId)}</td>
-                        <td>
-                          <span className={`equipment-catalogue-status${catalogueStatus === 'Ready' ? ' equipment-catalogue-status--ready' : ' equipment-catalogue-status--attention'}`}>
-                            {catalogueStatus}
-                          </span>
-                        </td>
-                        <td className="admin-products__col-actions">
-                          <ProductRowActions
-                            product={product}
-                            mergeSourceId={mergeSourceId}
-                            menuOpen={openActionsMenuId === product.id}
-                            onToggleMenu={() => setOpenActionsMenuId((current) => (
-                              current === product.id ? null : product.id
-                            ))}
-                            onCloseMenu={() => setOpenActionsMenuId(null)}
-                            onViewSources={() => openSourceRows(product)}
-                            onImageAudit={() => setImageProductId(product.id)}
-                            onEdit={() => setEditProductId(product.id)}
-                            onApprove={() => handleApprove(product.id)}
-                            onMergeSource={() => setMergeSourceId(product.id)}
-                            onMergeInto={() => handleMerge(product.id)}
-                            onExclude={() => handleExclude(product.id)}
-                          />
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
       {selectedProduct ? (
         <ProductSourceRowsModal
@@ -1945,19 +2134,38 @@ export default function AdminIntelligenceProductsPage() {
         />
       ) : null}
 
-      {editProduct ? (
-        <ProductEditModal
-          product={editProduct}
-          onClose={() => setEditProductId(null)}
-          onSaved={loadProducts}
-          onOpenImage={setImageProductId}
-        />
+      {editProductId ? (
+        editLoading && !editProduct ? (
+          <div className="admin-products__modal-backdrop" role="dialog" aria-modal="true" aria-label="Loading product">
+            <div className="admin-products__modal">
+              <LoadingState compact>Loading product…</LoadingState>
+            </div>
+          </div>
+        ) : editProduct ? (
+          <ProductEditModal
+            product={editProduct}
+            onClose={() => {
+              setEditProductId(null)
+              setEditProduct(null)
+            }}
+            onSaved={reloadAfterMutation}
+            onOpenImage={(productId) => {
+              const match = (editProduct?.id === productId ? editProduct : null)
+                || products.find((product) => product.id === productId)
+                || { id: productId }
+              openImageAudit(match)
+            }}
+          />
+        ) : null
       ) : null}
 
       {imageProduct ? (
         <ProductImageAuditModal
           product={imageProduct}
-          onClose={() => setImageProductId(null)}
+          onClose={() => {
+            setImageProductId(null)
+            setImageProductDetail(null)
+          }}
           onProductUpdated={handleImageProductUpdated}
         />
       ) : null}
@@ -1973,6 +2181,30 @@ export default function AdminIntelligenceProductsPage() {
           setHighConfidenceModalOpen(false)
           setHighConfidencePreview(null)
         }}
+      />
+
+      <EquipmentProductResearchExportModal
+        open={researchExportOpen}
+        onClose={() => setResearchExportOpen(false)}
+        filters={{
+          brand: brandFilter,
+          status: statusFilter,
+          completion: completionFilter,
+          attention: attentionFilter,
+          equipmentType: equipmentTypeFilter,
+          search: debouncedSearch,
+          sort,
+          sortDir,
+        }}
+        totalMatching={totalCount}
+        selectedIds={[...selectedIds]}
+        currentPageProducts={products}
+      />
+
+      <EquipmentProductResearchImportModal
+        open={researchImportOpen}
+        onClose={() => setResearchImportOpen(false)}
+        onApplied={handleResearchImportApplied}
       />
     </div>
   )

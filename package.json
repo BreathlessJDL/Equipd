@@ -64,6 +64,7 @@
     "apply:canonical-by-brand": "node scripts/apply-canonical-products-by-brand.mjs",
     "test:apply-canonical-import-promote": "node scripts/test-apply-canonical-import-promote.mjs",
     "test:equipment-research-price-selection": "node scripts/test-equipment-research-price-selection.mjs",
+    "test:equipment-product-research-csv": "node scripts/test-equipment-product-research-csv.mjs",
     "test:intelligence-structured-evidence": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligenceStructuredEvidence_test.ts",
     "test:intelligence-product-identity": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligenceProductIdentity_test.ts",
     "test:intelligence-page-extract": "npx deno run --allow-env --no-check supabase/functions/_shared/intelligencePageExtract_test.ts",
