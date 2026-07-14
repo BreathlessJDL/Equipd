@@ -202,7 +202,9 @@ function HomePage() {
     <div className={`home-page${isLoggedIn ? ' home-page--feed' : ''}`}>
       {!isLoggedIn ? <HomeHero /> : null}
 
-      {!isLoggedIn ? <HomeEquipmentValuator /> : null}
+      <HomeEquipmentValuator
+        className={isLoggedIn ? 'home-valuator--signed-in' : ''}
+      />
 
       {!isLoggedIn ? (
         <HomeRecentListings

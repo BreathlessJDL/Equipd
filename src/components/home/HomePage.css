@@ -765,6 +765,10 @@
   scroll-margin-top: 4.5rem;
 }
 
+.home-page--feed .home-valuator--signed-in {
+  padding-top: var(--space-md);
+}
+
 @media (max-width: 768px) {
   .home-page--feed {
     display: flex;

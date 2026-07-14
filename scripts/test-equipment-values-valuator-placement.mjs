@@ -16,7 +16,12 @@ const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
 const valuatorCss = read('src/components/home/HomeEquipmentValuator.css')
 
 assert.match(homePage, /import HomeEquipmentValuator from/, 'homepage imports shared valuator')
-assert.match(homePage, /<HomeEquipmentValuator\s*\/>/, 'homepage renders shared valuator with defaults')
+assert.match(homePage, /<HomeEquipmentValuator/, 'homepage renders shared valuator')
+assert.doesNotMatch(
+  homePage,
+  /\{!\s*isLoggedIn\s*\?\s*<HomeEquipmentValuator/,
+  'homepage valuator is visible for signed-in users too',
+)
 assert.doesNotMatch(
   homePage,
   /idPrefix=["']brands-valuator["']/,

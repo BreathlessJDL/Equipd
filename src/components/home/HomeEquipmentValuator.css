@@ -7,6 +7,16 @@
   padding: 0.35rem 0 1.35rem;
 }
 
+/* Compact spacing on the signed-in homepage feed (same shared component). */
+.home-valuator--signed-in {
+  padding: 0.85rem 0 1rem;
+}
+
+.home-page--feed .home-valuator--signed-in {
+  order: 0;
+  flex-shrink: 0;
+}
+
 .home-valuator__card {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 1.05fr);
