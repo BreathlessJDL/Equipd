@@ -1,6 +1,6 @@
 .admin-content__counts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 12rem));
+  grid-template-columns: repeat(4, minmax(0, 12rem));
   gap: 0.75rem;
   margin: 0 0 1.25rem;
 }
@@ -46,10 +46,70 @@
   margin-bottom: 0;
 }
 
+.admin-content__actions-row {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .admin-content__actions-row {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
 .admin-content__publish {
   display: grid;
   gap: 0.35rem;
   max-width: 36rem;
+}
+
+.admin-content__scope-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--color-navy) 60%, transparent);
+}
+
+.admin-content__generate-panel {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-content__generate-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--color-navy);
+}
+
+.admin-content__generate-stats {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.admin-content__generate-summary {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.admin-content__generate-failure-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.admin-content__generate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .admin-content__publish-controls {
@@ -121,6 +181,18 @@
 .admin-content__status--stale {
   background: #e2e8f0;
   color: #334155;
+}
+
+.admin-content__status--missing {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.admin-content__source-warning {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #92400e;
 }
 
 .admin-content__confirm-lead {

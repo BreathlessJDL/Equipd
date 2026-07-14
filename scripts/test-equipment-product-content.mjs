@@ -10,6 +10,7 @@ import {
   buildCategoryProductContentUserPrompt,
   EQUIPMENT_PRODUCT_CONTENT_STATUS,
   findBannedGenericPhrases,
+  findHomeUseCommercialPhrases,
   findInventedMechanicsPhrases,
   findTechnogymCrossoverStrengthTerms,
   countOverviewWords,
@@ -25,16 +26,37 @@ import {
   shouldGenerateProductContent,
   TECHNOGYM_CROSSOVER_CARDIO_PROMPT_CONTEXT,
   validateConsoleFaqs,
+  validateHomeUseOverviewWording,
 } from '../src/lib/equipmentProductContent.js'
 import {
   buildPublishDraftsConfirmationMessage,
   buildPublishEquipmentProductContentUpdate,
+  buildAdminProductContentListRows,
+  buildAdminProductContentListRow,
   CONTENT_PUBLISH_SCOPE,
   getEquipmentProductContentStatusLabel,
+  isEligibleAdminProductContentProduct,
   isPublishableEquipmentProductContent,
+  matchesAdminContentGenerationStatusFilter,
+  matchesAdminContentProductStatusFilter,
+  productHasIncompleteContentSourceData,
   resolveDraftContentIdsForPublish,
   summarizeEquipmentProductContentStatuses,
 } from '../src/lib/equipmentProductContentAdmin.js'
+import {
+  applyGenerateMissingStepResult,
+  buildGenerateMissingPreview,
+  chunkProductIds,
+  emptyGenerateMissingProgress,
+  evaluateMissingDraftGenerationEligibility,
+  GENERATE_MISSING_MAX_PER_STEP,
+  isHomeUseContentBrand,
+  resolveProductContentUsageSegment,
+  summarizeGenerateMissingRun,
+  previewGenerateMissingFromAdminRows,
+  CONTENT_USAGE_SEGMENT,
+} from '../src/lib/equipmentProductContentGenerateMissing.js'
+import { PRODUCT_STATUS } from '../src/lib/intelligenceCanonicalProducts.js'
 
 function assert(condition, label) {
   if (!condition) throw new Error(label)
@@ -623,9 +645,11 @@ assert(publishSummary.failed === 1, 'publish summary failed count')
 
 assert(getEquipmentProductContentStatusLabel('approved') === 'Published', 'approved labelled Published')
 assert(getEquipmentProductContentStatusLabel('draft') === 'Draft', 'draft labelled Draft')
-assert(isPublishableEquipmentProductContent({ generation_status: 'draft' }), 'draft is publishable')
+assert(isPublishableEquipmentProductContent({ id: 'c1', generation_status: 'draft' }), 'draft is publishable')
+assert(!isPublishableEquipmentProductContent({ generation_status: 'draft' }), 'draft without content id is not publishable')
 assert(!isPublishableEquipmentProductContent({ generation_status: 'failed' }), 'failed is not publishable')
 assert(!isPublishableEquipmentProductContent({ generation_status: 'approved' }), 'approved is not publishable')
+assert(!isPublishableEquipmentProductContent({ id: 'missing:p1', generation_status: null }), 'missing placeholder is not publishable')
 
 assert(
   resolveDraftContentIdsForPublish({
@@ -676,6 +700,139 @@ assert(
 assert(
   buildPublishDraftsConfirmationMessage(187).includes('visible on public equipment pages'),
   'confirmation message warns about public visibility',
+)
+assert(
+  buildPublishDraftsConfirmationMessage(187).includes('does not approve or publish the canonical product'),
+  'confirmation message clarifies product status is unchanged',
+)
+
+// --- Admin Product Content list eligibility (pending/needs_review before approval) ---
+const listProducts = [
+  {
+    id: 'peloton-bike',
+    brand: 'Peloton',
+    model: 'Bike',
+    status: PRODUCT_STATUS.PENDING,
+    canonical_product_name: 'Peloton Bike',
+    canonical_product_key: 'peloton-bike',
+    original_base_price: null,
+    baseline_manufacture_year: 2014,
+  },
+  {
+    id: 'nordic-1750',
+    brand: 'NordicTrack',
+    model: 'Commercial 1750',
+    status: PRODUCT_STATUS.NEEDS_REVIEW,
+    canonical_product_name: 'NordicTrack Commercial 1750',
+    canonical_product_key: 'nordictrack-1750',
+    original_base_price: 1999,
+    baseline_manufacture_year: 2011,
+  },
+  {
+    id: 'bowflex-m5',
+    brand: 'BowFlex',
+    model: 'M5',
+    status: PRODUCT_STATUS.PENDING,
+    canonical_product_name: 'BowFlex Max Trainer M5',
+    canonical_product_key: 'bowflex-m5',
+    original_base_price: 1499,
+    baseline_manufacture_year: 2014,
+  },
+  {
+    id: 'lf-tread',
+    brand: 'Life Fitness',
+    model: 'Treadmill',
+    status: PRODUCT_STATUS.APPROVED,
+    canonical_product_name: 'Life Fitness Integrity Series Treadmill',
+    canonical_product_key: 'lf-tread',
+    original_base_price: 8500,
+    baseline_manufacture_year: 2017,
+  },
+  {
+    id: 'excluded-1',
+    brand: 'Peloton',
+    model: 'Deprecated',
+    status: PRODUCT_STATUS.EXCLUDED,
+    canonical_product_name: 'Peloton Deprecated',
+    canonical_product_key: 'peloton-deprecated',
+    original_base_price: 100,
+    baseline_manufacture_year: 2020,
+  },
+]
+
+const listContent = [
+  {
+    id: 'content-lf',
+    equipment_product_id: 'lf-tread',
+    generation_status: 'draft',
+    overview_text: 'Commercial treadmill overview',
+  },
+]
+
+const adminContentRows = buildAdminProductContentListRows(listProducts, listContent)
+assert(adminContentRows.length === 4, 'eligible products appear including pending/needs_review')
+assert(
+  adminContentRows.some((row) => row.brand === 'Peloton' && row.product_status === 'pending'),
+  'pending Peloton product appears in Product Content',
+)
+assert(
+  adminContentRows.some((row) => row.brand === 'NordicTrack' && row.product_status === 'needs_review'),
+  'needs_review NordicTrack product appears',
+)
+assert(
+  adminContentRows.some((row) => row.brand === 'BowFlex' && row.product_status === 'pending'),
+  'pending BowFlex product appears',
+)
+assert(
+  adminContentRows.some((row) => row.brand === 'Life Fitness' && row.generation_status === 'draft'),
+  'approved commercial products still appear',
+)
+assert(
+  !adminContentRows.some((row) => row.product_status === 'excluded'),
+  'excluded products do not appear',
+)
+assert(
+  !isEligibleAdminProductContentProduct(listProducts.find((p) => p.status === PRODUCT_STATUS.EXCLUDED)),
+  'excluded products are not eligible',
+)
+
+const pelotonRow = adminContentRows.find((row) => row.equipment_product_id === 'peloton-bike')
+assert(pelotonRow.generation_status == null, 'pending product without content shows Missing')
+assert(pelotonRow.incomplete_source.missingPrice === true, 'missing price flagged as incomplete source')
+assert(pelotonRow.incomplete_source.incomplete === true, 'incomplete source warning present')
+assert(
+  !productHasIncompleteContentSourceData(listProducts[1]).incomplete,
+  'complete priced product has no incomplete warning',
+)
+assert(
+  matchesAdminContentProductStatusFilter(pelotonRow, 'pending'),
+  'product status filter matches pending',
+)
+assert(
+  matchesAdminContentGenerationStatusFilter(pelotonRow, 'missing'),
+  'generation filter matches missing content',
+)
+assert(
+  !isPublishableEquipmentProductContent(pelotonRow),
+  'missing content cannot be published',
+)
+
+const lfRow = adminContentRows.find((row) => row.equipment_product_id === 'lf-tread')
+assert(isPublishableEquipmentProductContent(lfRow), 'draft content remains publishable')
+assert(
+  resolveDraftContentIdsForPublish({
+    rows: adminContentRows,
+    scope: CONTENT_PUBLISH_SCOPE.SELECTED,
+    selectedIds: [lfRow.id, pelotonRow.id],
+  }).join(',') === 'content-lf',
+  'publish selection publishes draft content ids only',
+)
+
+assert(lfRow.product_status === PRODUCT_STATUS.APPROVED, 'list row preserves approved product status')
+assert(pelotonRow.product_status === PRODUCT_STATUS.PENDING, 'list row preserves pending product status')
+assert(
+  Object.keys(buildPublishEquipmentProductContentUpdate()).join(',') === 'generation_status',
+  'publish update never touches equipment_products fields',
 )
 
 // --- Technogym Crossover cardio protected handling ---
@@ -853,5 +1010,260 @@ try {
   rejectedCrossoverStrength = error.message.includes('must not describe Technogym Crossover')
 }
 assert(rejectedCrossoverStrength, 'rejects strength-machine terminology for Technogym Crossover')
+
+// --- Generate missing drafts eligibility + home-use safety ---
+
+const pendingMissing = {
+  id: 'p-pending',
+  brand: 'Peloton',
+  model: 'Bike',
+  canonical_product_name: 'Peloton Bike',
+  equipment_type: 'Exercise Bike',
+  status: PRODUCT_STATUS.PENDING,
+  original_base_price: null,
+}
+
+assert(
+  evaluateMissingDraftGenerationEligibility(pendingMissing, null).eligible === true,
+  'pending product missing content is eligible',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility({
+    ...pendingMissing,
+    status: PRODUCT_STATUS.NEEDS_REVIEW,
+  }, null).eligible === true,
+  'needs_review product missing content is eligible',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility({
+    ...pendingMissing,
+    status: PRODUCT_STATUS.APPROVED,
+  }, null).eligible === true,
+  'approved product missing content is eligible',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility({
+    ...pendingMissing,
+    status: PRODUCT_STATUS.EXCLUDED,
+  }, null).eligible === false,
+  'excluded product is ineligible',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility(pendingMissing, {
+    generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT,
+  }).reason === 'draft_exists',
+  'existing draft is skipped',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility(pendingMissing, {
+    generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.APPROVED,
+  }).reason === 'approved_content_exists',
+  'approved content is skipped',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility(pendingMissing, {
+    generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.FAILED,
+  }).eligible === true,
+  'failed content can be retried',
+)
+
+assert(
+  evaluateMissingDraftGenerationEligibility({
+    ...pendingMissing,
+    original_base_price: null,
+  }, null).eligible === true,
+  'missing price remains eligible',
+)
+
+const noPricePayload = buildProductContentSourcePayload({
+  ...pendingMissing,
+  status: PRODUCT_STATUS.APPROVED,
+  original_base_price: null,
+})
+assert(noPricePayload.original_base_price == null, 'source payload does not invent price')
+assert(noPricePayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, 'Peloton uses home_use segment')
+
+const homeFixtures = [
+  { brand: 'Peloton', model: 'Bike', name: 'Peloton Bike', type: 'Exercise Bike' },
+  { brand: 'Peloton', model: 'Bike+', name: 'Peloton Bike+', type: 'Exercise Bike' },
+  { brand: 'NordicTrack', model: 'Commercial 1750', name: 'NordicTrack Commercial 1750', type: 'Treadmill' },
+  { brand: 'NordicTrack', model: 'S22i', name: 'NordicTrack S22i', type: 'Exercise Bike' },
+  { brand: 'BowFlex', model: 'Max Trainer M6', name: 'BowFlex Max Trainer M6', type: 'Elliptical' },
+  { brand: 'BowFlex', model: 'VeloCore 16i', name: 'BowFlex VeloCore 16i', type: 'Exercise Bike' },
+]
+
+for (const fixture of homeFixtures) {
+  assert(isHomeUseContentBrand(fixture.brand), `${fixture.brand} is home-use brand`)
+  const payload = buildProductContentSourcePayload({
+    id: `home-${fixture.model}`,
+    brand: fixture.brand,
+    model: fixture.model,
+    canonical_product_name: fixture.name,
+    equipment_type: fixture.type,
+    status: PRODUCT_STATUS.APPROVED,
+    original_base_price: null,
+  })
+  assert(payload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, `${fixture.name} usage_segment home_use`)
+  assert(payload.equipment_type === fixture.type, `${fixture.name} keeps equipment type`)
+  const commercialClaim = [
+    `${fixture.name} is built with commercial construction for continuous club use on the gym floor.`,
+  ].join(' ')
+  assert(findHomeUseCommercialPhrases(commercialClaim).length > 0, `${fixture.name} detects commercial claims`)
+  let rejected = false
+  try {
+    validateHomeUseOverviewWording(commercialClaim, payload)
+  } catch {
+    rejected = true
+  }
+  assert(rejected, `${fixture.name} rejects commercial-only overview wording`)
+
+  const safeOverview = [
+    `The ${fixture.name} is home fitness equipment in the ${fixture.type.toLowerCase()} category.`,
+    'Used value depends on age, condition, and overall specification where known.',
+  ].join(' ')
+  validateHomeUseOverviewWording(safeOverview, payload)
+}
+
+const crossoverHomePayload = buildProductContentSourcePayload({
+  brand: 'BowFlex',
+  model: 'Max Trainer M6',
+  canonical_product_name: 'BowFlex Max Trainer M6',
+  equipment_type: 'Cross Trainer',
+  status: PRODUCT_STATUS.APPROVED,
+})
+assert(crossoverHomePayload.equipment_type === 'Cross Trainer', 'preserves cross trainer type')
+
+const previewProducts = [
+  pendingMissing,
+  {
+    id: 'p-draft',
+    brand: 'Peloton',
+    model: 'Tread',
+    canonical_product_name: 'Peloton Tread',
+    status: PRODUCT_STATUS.APPROVED,
+  },
+  {
+    id: 'p-approved-content',
+    brand: 'NordicTrack',
+    model: 'S22i',
+    canonical_product_name: 'NordicTrack S22i',
+    status: PRODUCT_STATUS.APPROVED,
+  },
+  {
+    id: 'p-excluded',
+    brand: 'BowFlex',
+    model: 'X',
+    canonical_product_name: 'BowFlex X',
+    status: PRODUCT_STATUS.EXCLUDED,
+  },
+  {
+    id: 'p-lf',
+    brand: 'Life Fitness',
+    model: 'T5',
+    canonical_product_name: 'Life Fitness T5',
+    status: PRODUCT_STATUS.APPROVED,
+  },
+]
+
+const previewContent = {
+  'p-draft': { generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT },
+  'p-approved-content': { generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.APPROVED },
+}
+
+const preview = buildGenerateMissingPreview({
+  products: previewProducts,
+  contentByProductId: previewContent,
+})
+assert(preview.eligible === 2, 'preview counts eligible missing (Peloton pending + Life Fitness)')
+assert(preview.skipped_draft === 1, 'preview counts existing draft')
+assert(preview.skipped_approved === 1, 'preview counts approved content')
+assert(preview.invalid === 1, 'preview counts excluded')
+assert(preview.brands_affected.includes('Peloton'), 'preview brands include Peloton')
+assert(preview.brands_affected.includes('Life Fitness'), 'preview brands include Life Fitness')
+
+const brandFilteredPreview = buildGenerateMissingPreview({
+  products: previewProducts.filter((product) => product.brand === 'Peloton'),
+  contentByProductId: previewContent,
+})
+assert(brandFilteredPreview.eligible === 1, 'brand filter limits eligible set')
+assert(brandFilteredPreview.brands_affected.join(',') === 'Peloton', 'brand filter brands')
+
+const secondRunPreview = buildGenerateMissingPreview({
+  products: [pendingMissing],
+  contentByProductId: {
+    'p-pending': { generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT },
+  },
+})
+assert(secondRunPreview.eligible === 0, 'second run creates zero drafts when draft exists')
+
+let progress = emptyGenerateMissingProgress(3)
+progress = applyGenerateMissingStepResult(progress, {
+  created: 1,
+  skipped: 1,
+  failed: 1,
+  failures: [{ product_id: 'x', name: 'X', reason: 'boom' }],
+})
+assert(progress.completed === 3, 'step progress counts completed')
+assert(progress.failed === 1, 'step progress tracks failure')
+assert(progress.failures.length === 1, 'step progress keeps failure details')
+
+const chunks = chunkProductIds(['a', 'b', 'c', 'd', 'e', 'f'], GENERATE_MISSING_MAX_PER_STEP)
+assert(chunks.length === 2, 'chunkProductIds splits batches')
+assert(chunks[0].length === GENERATE_MISSING_MAX_PER_STEP, 'first chunk sized to max per step')
+
+const runSummary = summarizeGenerateMissingRun({ preview, progress })
+assert(runSummary.drafts_created === 1, 'run summary drafts created')
+assert(runSummary.failed === 1, 'run summary failed')
+
+const adminPreview = previewGenerateMissingFromAdminRows({
+  filteredRows: [
+    buildAdminProductContentListRow(pendingMissing, null),
+    buildAdminProductContentListRow({
+      id: 'p-draft',
+      brand: 'Peloton',
+      model: 'Tread',
+      canonical_product_name: 'Peloton Tread',
+      status: PRODUCT_STATUS.APPROVED,
+    }, {
+      id: 'c1',
+      generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT,
+      overview_text: 'draft',
+    }),
+  ],
+  selectedIds: new Set(),
+  scope: 'filtered',
+})
+assert(adminPreview.eligible === 1, 'admin preview shares eligibility with CLI helpers')
+assert(adminPreview.skipped_draft === 1, 'admin preview skips drafts')
+
+assert(
+  resolveProductContentUsageSegment({ brand: 'Life Fitness' }) === CONTENT_USAGE_SEGMENT.COMMERCIAL,
+  'commercial brands stay commercial',
+)
+
+const upsertDraft = buildProductContentUpsertRow({
+  productId: 'p-pending',
+  generated: {
+    overview_text: 'The Peloton Bike is home fitness equipment. Used value depends on age and condition.',
+    seo_title: 'Peloton Bike used value',
+    seo_meta_description: 'Overview of the Peloton Bike for valuation.',
+    faq_json: [
+      { question: 'What affects value?', answer: 'Age and condition.' },
+      { question: 'Is there an RRP?', answer: 'No RRP is recorded for this draft.' },
+    ],
+    ai_model: 'test',
+  },
+  sourceHash: 'abc',
+  existingContent: null,
+})
+assert(upsertDraft.generation_status === EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT, 'upserts as draft only')
+assert(upsertDraft.approved_at == null, 'does not auto-publish')
+assert(upsertDraft.approved_by == null, 'does not set approver')
 
 console.log('equipment product content tests passed')

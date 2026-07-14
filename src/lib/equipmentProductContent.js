@@ -8,6 +8,10 @@ import {
   resolveProductContentCategory,
   sourceAllowsConsoleMentions,
 } from './equipmentProductContentPrompts.js'
+import {
+  CONTENT_USAGE_SEGMENT,
+  resolveProductContentUsageSegment,
+} from './equipmentProductContentGenerateMissing.js'
 
 export const EQUIPMENT_PRODUCT_CONTENT_STATUS = {
   DRAFT: 'draft',
@@ -205,6 +209,7 @@ function normalizeWhitespace(value) {
 }
 
 function normalizeNullableNumber(value) {
+  if (value == null || value === '') return null
   const number = Number(value)
   return Number.isFinite(number) ? number : null
 }
@@ -255,6 +260,7 @@ export function buildProductContentSourcePayload(product, {
       ? 'Cross Trainer'
       : (normalizeWhitespace(product?.equipment_type) || null),
     equipment_category: equipmentCategory,
+    usage_segment: resolveProductContentUsageSegment(product),
     ...(protectedCrossover
       ? {
           protected_product_identity: 'technogym_crossover_cardio_cross_trainer',
@@ -321,6 +327,42 @@ export function validateOverviewEquipdMention(overviewText) {
       'overview_text should not mention Equipd; describe valuation factors naturally instead',
     )
   }
+}
+
+export const HOME_USE_BANNED_COMMERCIAL_PHRASES = [
+  'commercial construction',
+  'commercial gym',
+  'commercial facility',
+  'commercial facilities',
+  'gym-floor',
+  'gym floor',
+  'designed for commercial fitness facilities',
+  'premium commercial',
+  'commercial cardio',
+  'commercial treadmill',
+  'commercial strength',
+  'club use',
+  'continuous club',
+  'high-traffic commercial',
+  'commercial servicing',
+]
+
+export function findHomeUseCommercialPhrases(text) {
+  const haystack = String(text ?? '').toLowerCase()
+  return HOME_USE_BANNED_COMMERCIAL_PHRASES.filter((phrase) => haystack.includes(phrase.toLowerCase()))
+}
+
+export function validateHomeUseOverviewWording(overviewText, sourcePayload = null) {
+  const segment = sourcePayload?.usage_segment
+    || resolveProductContentUsageSegment(sourcePayload ?? {})
+  if (segment !== CONTENT_USAGE_SEGMENT.HOME_USE) return
+
+  const violations = findHomeUseCommercialPhrases(overviewText)
+  if (!violations.length) return
+
+  throw new Error(
+    `home_use overview_text contains commercial-only wording without evidence: ${violations.map((phrase) => `"${phrase}"`).join(', ')}`,
+  )
 }
 
 export function countOverviewWords(overviewText) {
@@ -437,6 +479,7 @@ export function validateProductContent({
   validateTechnogymCrossoverCardioContent(overviewText, sourcePayload)
   validateInventedMechanics(overviewText, sourcePayload)
   validateOverviewEquipdMention(overviewText)
+  validateHomeUseOverviewWording(overviewText, sourcePayload)
   validateOverviewConsoleMentions(overviewText, sourcePayload)
   validateContinuousProductionClaims(overviewText, sourcePayload)
   validateOverviewWordCount(overviewText)

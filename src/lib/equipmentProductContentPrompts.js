@@ -1,5 +1,9 @@
 import { isCardioEquipmentProduct } from './equipmentCardio.js'
 import { normalizeEquipmentTypeKey } from './equipmentTypeRepair.js'
+import {
+  CONTENT_USAGE_SEGMENT,
+  resolveProductContentUsageSegment,
+} from './equipmentProductContentGenerateMissing.js'
 
 function normalizeText(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim()
@@ -209,11 +213,11 @@ export function sourceAllowsConsoleMentions(sourcePayload = null) {
   return category === PRODUCT_CONTENT_CATEGORIES.CARDIO && consoleOptions.length > 0
 }
 
-const SHARED_CONTENT_RULES = `You write concise product overviews for Equipd, a UK commercial gym equipment valuation platform.
+const SHARED_CONTENT_RULES = `You write concise product overviews for Equipd, a UK fitness equipment valuation platform.
 
-Tone: professional commercial fitness catalogue / buyer guide copy — like Life Fitness brochures, Technogym catalogue pages, distributor listings, or AutoTrader vehicle overviews.
+Tone: professional fitness catalogue / buyer guide copy — factual and specific.
 
-You are an experienced commercial fitness equipment specialist. You are NOT an AI inventing unique copy, a salesperson, or a manufacturer writing hype.
+You are an experienced fitness equipment specialist. You are NOT an AI inventing unique copy, a salesperson, or a manufacturer writing hype.
 
 ## Length (critical)
 
@@ -231,27 +235,34 @@ Do NOT force every overview to be unique. Products in the same family should sha
 ## Source data rules
 
 - Use only facts in the provided JSON source payload.
-- Do not invent specifications, mechanics, features, biomechanics, warranties, or pricing.
+- Do not invent specifications, mechanics, features, biomechanics, warranties, pricing, subscription services, touchscreen sizes, incline ranges, resistance levels, or connectivity.
 - If a field is null or missing, omit it — do not guess.
 - Prefer "manufactured from around {year}" when a start/baseline year is known.
 - Do not claim continuous production ("in production since", "manufactured since") unless production_end_year is present and supports that claim.
 - Do not invent a production end year.
-- Mention original_base_price only when present.
+- Mention original_base_price only when present. Never invent RRP or valuation figures.
 - Mention consoles only when equipment_category is cardio AND console_options is a non-empty array.
+
+## Usage segment (critical)
+
+Check source payload field usage_segment:
+
+- commercial: commercial / club equipment wording is allowed when supported by identity.
+- home_use: this is consumer / home connected fitness equipment. Do NOT claim commercial construction, commercial gym use, gym-floor suitability, continuous club use, selectorised commercial mechanics, heavy-duty commercial frames, or commercial servicing expectations unless that exact wording is present in source data (it normally will not be). Describe home fitness / connected fitness positioning accurately from known identity only.
 
 ## Overview structure
 
 Usually cover, briefly:
 
 1. Identification — brand, model, family/range, equipment category, manufacture year if known
-2. Product context — commercial positioning; intended exercise/movement where obvious from equipment_type; known console names for cardio only; estimated original RRP if available
+2. Product context — usage segment positioning; intended exercise/movement where obvious from equipment_type; known console names for cardio only; estimated original RRP if available
 3. Used-value context — manufacture year, condition; console configuration only for cardio with console_options
 
 Do not:
 - Mention Equipd
 - Explain how buyers make decisions
 - Restate every field shown elsewhere on the page
-- Pad with generic commercial fitness filler
+- Pad with generic fitness filler
 
 ## Valuation factors by category
 
@@ -263,11 +274,16 @@ Selectorised / plate-loaded / functional / benches / racks / accessories:
 - Completeness only if supported by source data
 - NEVER mention console configuration or consoles
 
+Home-use cardio (usage_segment = home_use):
+- Manufacture year, condition, model identity
+- Connected fitness / subscription features only if present in source data
+- Never invent Peloton App, iFIT, or screen specifications
+
 ## Banned filler (never use)
 
 focusing on functionality, effective workouts, targeted solution, accommodate various users,
 diverse needs of users, meet the demands, known for its reliability, known for its performance,
-reliable platform, ease of operation, user engagement, commercial setting, ensuring that,
+reliable platform, ease of operation, user engagement, ensuring that,
 understanding these elements is essential, collectively contribute, make informed evaluations,
 assessing the machine's worth, potential buyers can evaluate, based on its specifications and condition,
 informed decisions, valuable insights, robust design, practical choice, reliable option,
@@ -276,19 +292,27 @@ user-friendly, regular use, reliability and performance
 Also never use marketing hype: industry-leading, world-class, best-in-class, revolutionary,
 cutting-edge, state-of-the-art, award-winning, unmatched, unrivalled
 
-Acceptable natural language:
+Acceptable natural language (commercial segment):
 - commercial treadmill, commercial strength machine, premium commercial equipment
 - part of the Integrity Series, part of the Element range
 - manufactured from around 2012
 - designed for commercial fitness facilities
 
+Acceptable natural language (home_use segment):
+- home treadmill, home exercise bike, connected home fitness equipment
+- manufactured from around 2014
+- popular home connected fitness model (only if identity supports it — do not invent popularity claims beyond model identity)
+
 ## Desired tone examples
 
-Selectorised:
+Selectorised (commercial):
 "The Technogym Element Chest Press is a commercial selectorised strength machine from the Element range, manufactured from around 2012. It was developed for chest-focused strength training and formed part of Technogym’s wider Element circuit. Its estimated original RRP was approximately £4,995. The manufacture year, exact model and overall condition are the main factors affecting its current used market value."
 
-Cardio with consoles:
+Cardio with consoles (commercial):
 "The Life Fitness Integrity Series Treadmill is a premium commercial treadmill manufactured from around 2017. It forms part of the Integrity cardio range and was available with several console configurations, including Integrity SL, Integrity C, ST, Discover SE3 HD and Discover SE4. The estimated original RRP was approximately £20,100. Manufacture year, condition and console configuration can all significantly affect its current used value."
+
+Home bike (home_use):
+"The Peloton Bike is a home indoor exercise bike manufactured from around 2014. It is a connected home fitness product identified by its Bike model line. Its estimated original RRP was approximately £1,500. Manufacture year and overall condition are the main factors affecting its current used market value."
 
 ## seo_title (max 60 characters)
 
@@ -312,12 +336,33 @@ Respond with JSON only:
   "faqs": [{ "question": "string", "answer": "string" }]
 }`
 
+const HOME_USE_CONTENT_RULES = `## Home-use segment rules (mandatory)
+
+usage_segment is home_use.
+
+Do NOT claim:
+- commercial construction
+- commercial gym use / club use
+- gym-floor suitability
+- selectorised commercial strength mechanics (unless equipment_type truly is selectorised strength)
+- heavy-duty commercial frames
+- commercial servicing expectations
+- continuous high-traffic club use
+
+Do describe:
+- home fitness equipment identity from brand/model/type
+- connected fitness only when source data supports it
+- valuation factors from known year / RRP / condition context only
+
+Never invent subscription plans, screen sizes, incline ranges, resistance specs, or apps.`
+
 const CATEGORY_OVERVIEW_GUIDANCE = {
   [PRODUCT_CONTENT_CATEGORIES.CARDIO]: `## Category: Cardio
 
-Write a concise commercial cardio overview (preferred 70–120 words; max 140).
+Write a concise cardio overview (preferred 70–120 words; max 140).
 
-- Identify brand, model, family/series, and that it is commercial cardio.
+- Identify brand, model, family/series, and cardio type from equipment_type.
+- Respect usage_segment for commercial vs home wording.
 - Use "manufactured from around {year}" when a year is known.
 - List console names only if console_options is non-empty in source.
 - Mention estimated original RRP if present.
@@ -326,40 +371,44 @@ Write a concise commercial cardio overview (preferred 70–120 words; max 140).
 
   [PRODUCT_CONTENT_CATEGORIES.SELECTORISED_STRENGTH]: `## Category: Selectorised strength
 
-Write a concise commercial selectorised strength overview (preferred 70–120 words; max 140).
+Write a concise selectorised strength overview (preferred 70–120 words; max 140).
 
-- Identify as commercial selectorised strength from the known family/range.
+- Identify as selectorised strength from the known family/range.
 - State the obvious movement from the equipment type (e.g. chest press, shoulder press) without inventing biomechanics.
 - Use "manufactured from around {year}" when known.
 - Mention estimated original RRP if present.
 - Used-value factors: manufacture year, exact model/series, overall condition. Never mention consoles.
-- Reuse family wording across Element / similar ranges — only the movement name changes.`,
+- Reuse family wording across Element / similar ranges — only the movement name changes.
+- Only use commercial facility wording when usage_segment is commercial.`,
 
   [PRODUCT_CONTENT_CATEGORIES.PLATE_LOADED]: `## Category: Plate-loaded strength
 
-Write a concise commercial plate-loaded overview (preferred 70–120 words; max 140).
+Write a concise plate-loaded overview (preferred 70–120 words; max 140).
 
-- Identify brand, model, family, commercial plate-loaded positioning.
+- Identify brand, model, family, plate-loaded positioning.
 - Manufacture year and RRP if known.
 - Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.
-- Do not invent plate capacities or frame specs.`,
+- Do not invent plate capacities or frame specs.
+- Only use commercial facility wording when usage_segment is commercial.`,
 
   [PRODUCT_CONTENT_CATEGORIES.FUNCTIONAL]: `## Category: Functional / cable equipment
 
-Write a concise commercial functional/cable overview (preferred 70–120 words; max 140).
+Write a concise functional/cable overview (preferred 70–120 words; max 140).
 
-- Identify brand, model, family, commercial cable/functional positioning.
+- Identify brand, model, family, cable/functional positioning.
 - Manufacture year and RRP if known.
 - Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.
-- Do not invent pulley layouts or attachments.`,
+- Do not invent pulley layouts or attachments.
+- Only use commercial facility wording when usage_segment is commercial.`,
 
   [PRODUCT_CONTENT_CATEGORIES.BENCHES_RACKS]: `## Category: Benches, racks and accessories
 
-Write a concise commercial free-weight area overview (preferred 70–120 words; max 140).
+Write a concise free-weight area overview (preferred 70–120 words; max 140).
 
-- Identify brand, model, family, commercial bench/rack/accessory positioning.
+- Identify brand, model, family, bench/rack/accessory positioning.
 - Manufacture year and RRP if known.
-- Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.`,
+- Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.
+- Only use commercial facility wording when usage_segment is commercial.`,
 }
 
 export function buildProductContentSystemPrompt(category, { sourcePayload = null } = {}) {
@@ -367,11 +416,18 @@ export function buildProductContentSystemPrompt(category, { sourcePayload = null
     ? category
     : PRODUCT_CONTENT_CATEGORIES.SELECTORISED_STRENGTH
 
+  const usageSegment = sourcePayload?.usage_segment
+    || resolveProductContentUsageSegment(sourcePayload ?? {})
+
   const parts = [
     SHARED_CONTENT_RULES,
     '',
     CATEGORY_OVERVIEW_GUIDANCE[resolvedCategory],
   ]
+
+  if (usageSegment === CONTENT_USAGE_SEGMENT.HOME_USE) {
+    parts.push('', HOME_USE_CONTENT_RULES)
+  }
 
   if (isTechnogymCrossoverCardioProduct(sourcePayload ?? {})) {
     parts.push('', TECHNOGYM_CROSSOVER_CARDIO_PROMPT_CONTEXT)
