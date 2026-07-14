@@ -27,6 +27,11 @@ import {
   TECHNOGYM_CROSSOVER_CARDIO_PROMPT_CONTEXT,
   validateConsoleFaqs,
   validateHomeUseOverviewWording,
+  validateCategoryIncompatibleTerminology,
+  findCategoryIncompatibleTerms,
+  findInventedProductFeaturePhrases,
+  validateInventedProductFeatures,
+  generateProductContentWithOpenAI,
 } from '../src/lib/equipmentProductContent.js'
 import {
   buildPublishDraftsConfirmationMessage,
@@ -1265,5 +1270,263 @@ const upsertDraft = buildProductContentUpsertRow({
 assert(upsertDraft.generation_status === EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT, 'upserts as draft only')
 assert(upsertDraft.approved_at == null, 'does not auto-publish')
 assert(upsertDraft.approved_by == null, 'does not set approver')
+
+// --- Indoor Bike routing + category incompatible terminology ---
+
+const veloCoreProduct = {
+  brand: 'BowFlex',
+  product_family: 'Velocore',
+  model: 'VeloCore 16i',
+  equipment_type: 'Indoor Bike',
+  canonical_product_name: 'BowFlex VeloCore 16i',
+  status: PRODUCT_STATUS.APPROVED,
+  baseline_manufacture_year: 2021,
+  original_base_price: 2499,
+  original_base_price_currency: 'GBP',
+}
+
+const veloPayload = buildProductContentSourcePayload(veloCoreProduct)
+assert(veloPayload.equipment_category === PRODUCT_CONTENT_CATEGORIES.CARDIO, 'VeloCore routes to cardio')
+assert(veloPayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, 'VeloCore home_use')
+assert(
+  resolveProductContentCategory({ brand: 'Peloton', equipment_type: 'Indoor Bike', model: 'Bike', canonical_product_name: 'Peloton Bike' })
+    === PRODUCT_CONTENT_CATEGORIES.CARDIO,
+  'Peloton Bike Indoor Bike routes to cardio',
+)
+assert(
+  resolveProductContentCategory({
+    brand: 'Test',
+    equipment_type: 'Spin Bike',
+    model: 'Studio',
+    canonical_product_name: 'Test Spin Bike',
+  }) === PRODUCT_CONTENT_CATEGORIES.CARDIO,
+  'Spin Bike routes to cardio',
+)
+assert(
+  resolveProductContentCategory({
+    brand: 'NordicTrack',
+    equipment_type: 'Studio Cycle',
+    model: 'S22i',
+    canonical_product_name: 'NordicTrack Studio Cycle S22i',
+  }) === PRODUCT_CONTENT_CATEGORIES.CARDIO,
+  'Studio Cycle routes to cardio',
+)
+assert(
+  resolveProductContentCategory({
+    brand: 'NordicTrack',
+    equipment_type: 'Rowers',
+    model: 'RW900',
+    canonical_product_name: 'NordicTrack Rower RW900',
+  }) === PRODUCT_CONTENT_CATEGORIES.CARDIO,
+  'plural Rowers routes to cardio',
+)
+assert(
+  resolveProductContentCategory({ brand: 'NordicTrack', equipment_type: 'Indoor Bike', model: 'S22i', canonical_product_name: 'NordicTrack Studio Cycle S22i' })
+    === PRODUCT_CONTENT_CATEGORIES.CARDIO,
+  'NordicTrack S22i Indoor Bike routes to cardio',
+)
+assert(
+  buildProductContentSourcePayload({
+    brand: 'Peloton',
+    equipment_type: 'Indoor Bike',
+    model: 'Bike+',
+    canonical_product_name: 'Peloton Bike+',
+  }).equipment_category === PRODUCT_CONTENT_CATEGORIES.CARDIO,
+  'Peloton Bike+ cannot route to strength prompts',
+)
+
+const invalidVeloOverview = [
+  'The BowFlex VeloCore 16i is a selectorised strength indoor bike from the VeloCore family,',
+  'manufactured from around 2021. Its estimated original RRP was approximately £2,499.',
+  'Manufacture year and overall condition affect used value for home fitness owners.',
+].join(' ')
+
+let rejectedVeloStrength = false
+try {
+  validateCategoryIncompatibleTerminology(invalidVeloOverview, veloPayload)
+} catch (error) {
+  rejectedVeloStrength = /incompatible with indoor_bike/i.test(error.message)
+    && /selectori/i.test(error.message)
+}
+assert(rejectedVeloStrength, 'VeloCore 16i cannot produce selectorised strength')
+assert(
+  findCategoryIncompatibleTerms(invalidVeloOverview, veloPayload).includes('selectorised strength'),
+  'indoor bike rejects strength terminology',
+)
+
+const maxTrainerPayload = buildProductContentSourcePayload({
+  brand: 'BowFlex',
+  model: 'M6',
+  equipment_type: 'Cross Trainer',
+  canonical_product_name: 'BowFlex Max Trainer M6',
+  product_family: 'Max Trainer',
+})
+assert(
+  findCategoryIncompatibleTerms(
+    'This cable crossover strength crossover with weight stack crossover selectorised crossover.',
+    maxTrainerPayload,
+  ).length >= 1,
+  'cross trainer rejects cable-crossover interpretation',
+)
+
+const treadPayload = buildProductContentSourcePayload({
+  brand: 'BowFlex',
+  model: 'Treadmill 22',
+  equipment_type: 'Treadmill',
+  canonical_product_name: 'BowFlex Treadmill 22',
+})
+assert(
+  findCategoryIncompatibleTerms(
+    'This indoor bike and rowing machine with cycling bike features.',
+    treadPayload,
+  ).some((term) => /bike|rowing/i.test(term)),
+  'treadmill rejects bike/rower terminology',
+)
+
+const rowerPayload = buildProductContentSourcePayload({
+  brand: 'NordicTrack',
+  model: 'RW900',
+  equipment_type: 'Rowers',
+  canonical_product_name: 'NordicTrack Rower RW900',
+  original_base_price: null,
+})
+assert(
+  findCategoryIncompatibleTerms(
+    'This treadmill indoor bike cross trainer machine.',
+    rowerPayload,
+  ).length >= 1,
+  'rowing machine rejects treadmill/bike terminology',
+)
+
+assert(rowerPayload.original_base_price == null, 'missing RRP stays null not zero')
+assert(
+  buildProductContentSourcePayload({
+    brand: 'Peloton',
+    model: 'Bike',
+    equipment_type: 'Indoor Bike',
+    canonical_product_name: 'Peloton Bike',
+    original_base_price: null,
+  }).original_base_price == null,
+  'Peloton Bike missing RRP never becomes zero',
+)
+
+const pelotonHomePayload = buildProductContentSourcePayload({
+  brand: 'Peloton',
+  model: 'Bike',
+  equipment_type: 'Indoor Bike',
+  canonical_product_name: 'Peloton Bike',
+})
+assert(pelotonHomePayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, 'Peloton Bike home_use')
+let rejectedPelotonCommercial = false
+try {
+  validateHomeUseOverviewWording(
+    'Designed for commercial gym continuous club use on the gym floor with commercial construction.',
+    pelotonHomePayload,
+  )
+} catch {
+  rejectedPelotonCommercial = true
+}
+assert(rejectedPelotonCommercial, 'home-use products reject unsupported commercial claims')
+
+assert(
+  findInventedProductFeaturePhrases(
+    'The bike includes a leaning mode and large touchscreen for classes.',
+    veloPayload,
+  ).includes('leaning mode'),
+  'leaning mode rejected unless present in source data',
+)
+let rejectedLeaning = false
+try {
+  validateInventedProductFeatures(
+    'The BowFlex VeloCore 16i includes a leaning mode for immersive rides and costs around £2,499.',
+    veloPayload,
+  )
+} catch (error) {
+  rejectedLeaning = /invents product features/i.test(error.message)
+}
+assert(rejectedLeaning, 'invented leaning mode fails validation')
+
+let retriedInsteadOfSaving = false
+const generatedWithRetry = await generateProductContentWithOpenAI({
+  sourcePayload: veloPayload,
+  apiKey: 'test-key',
+  maxAttempts: 2,
+  fetchImpl: async () => {
+    retriedInsteadOfSaving = true
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              overview_text: [
+                'The BowFlex VeloCore 16i is a selectorised strength indoor bike from the VeloCore family,',
+                'manufactured from around 2021. Its estimated original RRP was approximately £2,499.',
+                'Manufacture year and overall condition affect used market value for home buyers evaluating this machine.',
+              ].join(' '),
+              seo_title: 'BowFlex VeloCore 16i used value',
+              seo_meta_description: 'Overview for valuation.',
+              faqs: [
+                { question: 'What year?', answer: 'Around 2021.' },
+                { question: 'RRP?', answer: 'About £2,499.' },
+              ],
+            }),
+          },
+        }],
+      }),
+    }
+  },
+})
+  .then(() => false)
+  .catch((error) => /incompatible with indoor_bike|selectori/i.test(error.message))
+assert(retriedInsteadOfSaving && generatedWithRetry, 'invalid drafts are retried rather than saved')
+
+assert(
+  evaluateMissingDraftGenerationEligibility(veloCoreProduct, {
+    generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT,
+  }).eligible === false,
+  'valid existing drafts are not regenerated by missing-draft eligibility',
+)
+
+const retryUpsert = buildProductContentUpsertRow({
+  productId: veloCoreProduct.id || 'velo-1',
+  generated: {
+    overview_text: [
+      'The BowFlex VeloCore 16i is a home indoor cycling bike from the VeloCore range,',
+      'manufactured from around 2021. Its estimated original RRP was approximately £2,499.',
+      'Manufacture year, model identity and overall condition affect used market value.',
+    ].join(' '),
+    seo_title: 'BowFlex VeloCore 16i used value',
+    seo_meta_description: 'Home indoor bike overview.',
+    faq_json: [
+      { question: 'What year?', answer: 'Around 2021.' },
+      { question: 'RRP?', answer: 'About £2,499.' },
+    ],
+    ai_model: 'test',
+  },
+  sourceHash: 'hash',
+  existingContent: {
+    version: 1,
+    generation_status: EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT,
+  },
+})
+assert(retryUpsert.generation_status === EQUIPMENT_PRODUCT_CONTENT_STATUS.DRAFT, 'regenerated content remains draft')
+assert(retryUpsert.approved_at == null, 'regeneration does not publish')
+
+parseProductContentResponse(JSON.stringify({
+  overview_text: [
+    'The BowFlex VeloCore 16i is a home indoor cycling bike from the VeloCore family,',
+    'manufactured from around 2021. It is designed for residential cycling workouts',
+    'and sits within BowFlex connected-fitness positioning for home use. Its estimated',
+    'original RRP was approximately £2,499. Manufacture year, exact model identity and',
+    'overall condition are the main factors affecting its current used market value.',
+  ].join(' '),
+  seo_title: 'BowFlex VeloCore 16i used value guide',
+  seo_meta_description: 'Overview of the BowFlex VeloCore 16i for valuation.',
+  faqs: [
+    { question: 'What year?', answer: 'Around 2021.' },
+    { question: 'What was the RRP?', answer: 'About £2,499.' },
+  ],
+}), veloPayload)
 
 console.log('equipment product content tests passed')

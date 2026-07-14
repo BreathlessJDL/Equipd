@@ -16,8 +16,11 @@ export const CARDIO_EQUIPMENT_TYPES = new Set([
   'crosstrainer',
   'elliptical',
   'exercise bike',
+  'indoor bike',
   'upright bike',
   'recumbent bike',
+  'spin bike',
+  'studio cycle',
   'stepper',
   'stepper/stair climber',
   'stair climber',
@@ -25,6 +28,7 @@ export const CARDIO_EQUIPMENT_TYPES = new Set([
   'arc trainer',
   'adaptive motion trainer',
   'rower',
+  'rowers',
   'rowing machine',
   'indoor cycle',
   'bike',
@@ -155,6 +159,8 @@ export function supportsProductConsoleOptions(product) {
 
 export function isCardioEquipmentProduct(product) {
   if (!product) return false
+  // Spin / indoor bikes are cardio even when catalogue type uses “Indoor Bike”.
+  if (isSpinBikeIndoorCycleProduct(product)) return true
   if (isStrengthEquipmentProduct(product)) return false
 
   const equipmentType = normalizeEquipmentTypeKey(product?.equipment_type)

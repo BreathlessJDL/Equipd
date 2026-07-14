@@ -152,6 +152,17 @@ export const BANNED_GENERIC_PHRASES = [
   'designed for durability',
   'frequent use',
   'variety of workout',
+  'variety of fitness',
+  'accommodate a variety',
+  'commitment to providing',
+  'exemplifies',
+  'immersive workout',
+  'immersive experience',
+  'engaging workout experience',
+  'engaging cardio workout',
+  'engaging cycling experience',
+  'engaging home fitness',
+  'enhance their home gym',
   'solid choice',
   'suitable for various',
   'cardio workouts in fitness',
@@ -185,6 +196,27 @@ export const INVENTED_MECHANICS_PHRASES = [
   'movement path',
   'selectorised design',
   'weight stack',
+]
+
+/** Spec/feature claims that must appear in source JSON before they may be used. */
+export const INVENTED_PRODUCT_FEATURE_PHRASES = [
+  'leaning mode',
+  'lean mode',
+  'touchscreen',
+  'touch screen',
+  'incline range',
+  'resistance levels',
+  'resistance level',
+  'ifit',
+  'peloton app',
+  'all-access',
+  'all access membership',
+  'bluetooth',
+  'wifi',
+  'wi-fi',
+  'horsepower',
+  'user capacity',
+  'max user weight',
 ]
 
 /** Strength-machine terms that must never appear for Technogym Crossover cardio. */
@@ -312,12 +344,32 @@ export function findInventedMechanicsPhrases(text, sourcePayload = null) {
   })
 }
 
+export function findInventedProductFeaturePhrases(text, sourcePayload = null) {
+  const haystack = String(text ?? '').toLowerCase()
+  const sourceHaystack = buildSourceDataHaystack(sourcePayload)
+
+  return INVENTED_PRODUCT_FEATURE_PHRASES.filter((phrase) => {
+    const normalizedPhrase = phrase.toLowerCase()
+    if (!haystack.includes(normalizedPhrase)) return false
+    return !sourceHaystack.includes(normalizedPhrase)
+  })
+}
+
 export function validateInventedMechanics(overviewText, sourcePayload = null) {
   const violations = findInventedMechanicsPhrases(overviewText, sourcePayload)
   if (!violations.length) return
 
   throw new Error(
     `overview_text contains invented mechanics not in source data: ${violations.map((phrase) => `"${phrase}"`).join(', ')}`,
+  )
+}
+
+export function validateInventedProductFeatures(overviewText, sourcePayload = null) {
+  const violations = findInventedProductFeaturePhrases(overviewText, sourcePayload)
+  if (!violations.length) return
+
+  throw new Error(
+    `overview_text invents product features not in source data: ${violations.map((phrase) => `"${phrase}"`).join(', ')}`,
   )
 }
 
@@ -424,6 +476,93 @@ export function validateTechnogymCrossoverCardioContent(overviewText, sourcePayl
   )
 }
 
+/**
+ * Equipment-identity families used for incompatible-category terminology checks.
+ * Prefer equipment_type; fall back lightly to name/model when type is sparse.
+ */
+export function resolveContentEquipmentIdentityFamily(sourcePayload = null) {
+  const type = String(sourcePayload?.equipment_type ?? '').toLowerCase()
+  const haystack = [
+    sourcePayload?.equipment_type,
+    sourcePayload?.model,
+    sourcePayload?.canonical_product_name,
+    sourcePayload?.product_family,
+  ].map((value) => String(value ?? '')).join(' ').toLowerCase()
+
+  if (/indoor\s+bike|exercise\s+bike|spin\s*bike|studio\s+cycle|indoor\s+cycle|recumbent\s+bike|upright\s+bike/.test(type)
+    || (/indoor\s+bike|exercise\s+bike|spin\s*bike|studio\s+cycle|indoor\s+cycle/.test(haystack)
+      && !/treadmill|rower|cross\s+trainer|elliptical/.test(type))) {
+    return 'indoor_bike'
+  }
+  if (/treadmill|tread\b/.test(type) || (/\btreadmill\b/.test(haystack) && !/bike|rower/.test(type))) {
+    return 'treadmill'
+  }
+  if (/rower|rowing/.test(type) || (/\brower\b|\browing\b/.test(haystack) && !/treadmill|bike/.test(type))) {
+    return 'rower'
+  }
+  if (/cross\s*trainer|elliptical|crosstrainer|max\s+trainer|freestride/.test(type)
+    || (/cross\s*trainer|elliptical|max\s+trainer|freestride/.test(haystack)
+      && !/cable\s+crossover/.test(haystack))) {
+    return 'cross_trainer'
+  }
+  return null
+}
+
+const CATEGORY_INCOMPATIBLE_TERMS = Object.freeze({
+  indoor_bike: [
+    { label: 'selectorised strength', pattern: /selectori[sz]ed\s+strength/i },
+    { label: 'selectorised', pattern: /\bselectori[sz]ed\b/i },
+    { label: 'weight stack', pattern: /\bweight\s+stacks?\b/i },
+    { label: 'pin loaded', pattern: /\bpin[-\s]?loaded\b/i },
+    { label: 'plate loaded', pattern: /\bplate[-\s]?loaded\b/i },
+    { label: 'cable resistance machine', pattern: /\bcable\s+resistance\s+machines?\b/i },
+    { label: 'strength station', pattern: /\bstrength\s+stations?\b/i },
+    { label: 'multi-gym', pattern: /\bmulti[-\s]?gyms?\b/i },
+    { label: 'chest press', pattern: /\bchest\s+press\b/i },
+    { label: 'cable crossover', pattern: /\bcable\s+crossovers?\b/i },
+  ],
+  treadmill: [
+    { label: 'selectorised strength', pattern: /selectori[sz]ed\s+strength/i },
+    { label: 'weight stack', pattern: /\bweight\s+stacks?\b/i },
+    { label: 'resistance stack', pattern: /\bresistance\s+stacks?\b/i },
+    { label: 'cycling bike', pattern: /\bcycling\s+bikes?\b/i },
+    { label: 'rowing machine', pattern: /\browing\s+machines?\b/i },
+    { label: 'indoor bike', pattern: /\bindoor\s+bikes?\b/i },
+  ],
+  rower: [
+    { label: 'treadmill', pattern: /\btreadmills?\b/i },
+    { label: 'selectorised strength', pattern: /selectori[sz]ed\s+strength/i },
+    { label: 'indoor bike', pattern: /\bindoor\s+bikes?\b/i },
+    { label: 'cross trainer', pattern: /\bcross\s*trainers?\b/i },
+  ],
+  cross_trainer: [
+    { label: 'cable crossover', pattern: /\bcable\s+crossovers?\b/i },
+    { label: 'strength crossover', pattern: /\bstrength\s+crossovers?\b/i },
+    { label: 'weight stack crossover', pattern: /\bweight\s+stack\s+crossovers?\b/i },
+    { label: 'selectorised crossover', pattern: /selectori[sz]ed\s+crossovers?\b/i },
+  ],
+})
+
+export function findCategoryIncompatibleTerms(text, sourcePayload = null) {
+  const family = resolveContentEquipmentIdentityFamily(sourcePayload)
+  if (!family) return []
+  const terms = CATEGORY_INCOMPATIBLE_TERMS[family] || []
+  const haystack = String(text ?? '')
+  return terms
+    .filter((term) => term.pattern.test(haystack))
+    .map((term) => term.label)
+}
+
+export function validateCategoryIncompatibleTerminology(overviewText, sourcePayload = null) {
+  const violations = findCategoryIncompatibleTerms(overviewText, sourcePayload)
+  if (!violations.length) return
+
+  const family = resolveContentEquipmentIdentityFamily(sourcePayload)
+  throw new Error(
+    `overview_text uses terminology incompatible with ${family}: ${violations.map((term) => `"${term}"`).join(', ')}`,
+  )
+}
+
 export function isConsoleFaqQuestion(question) {
   return CONSOLE_FAQ_QUESTION_PATTERN.test(String(question ?? ''))
 }
@@ -478,8 +617,10 @@ export function validateProductContent({
 
   validateTechnogymCrossoverCardioContent(overviewText, sourcePayload)
   validateInventedMechanics(overviewText, sourcePayload)
+  validateInventedProductFeatures(overviewText, sourcePayload)
   validateOverviewEquipdMention(overviewText)
   validateHomeUseOverviewWording(overviewText, sourcePayload)
+  validateCategoryIncompatibleTerminology(overviewText, sourcePayload)
   validateOverviewConsoleMentions(overviewText, sourcePayload)
   validateContinuousProductionClaims(overviewText, sourcePayload)
   validateOverviewWordCount(overviewText)

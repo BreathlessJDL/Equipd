@@ -204,6 +204,14 @@ export function resolveProductContentCategory(product, { intelligenceRows = [] }
     return PRODUCT_CONTENT_CATEGORIES.SELECTORISED_STRENGTH
   }
 
+  // Last-resort cardio identity from equipment_type / name before the strength default.
+  if (
+    /\btreadmill\b|\bcross\s*trainer\b|\belliptical\b|\bindoor\s+bike\b|\bexercise\s+bike\b|\bspin\s*bike\b|\bstudio\s+cycle\b|\bindoor\s+cycle\b|\brower\b|\browing\b|\bstepper\b|\bstair\s*climber\b/i
+      .test(haystack)
+  ) {
+    return PRODUCT_CONTENT_CATEGORIES.CARDIO
+  }
+
   return PRODUCT_CONTENT_CATEGORIES.SELECTORISED_STRENGTH
 }
 
@@ -361,13 +369,18 @@ const CATEGORY_OVERVIEW_GUIDANCE = {
 
 Write a concise cardio overview (preferred 70–120 words; max 140).
 
-- Identify brand, model, family/series, and cardio type from equipment_type.
+- Identify brand, model, family/series, and cardio type from equipment_type exactly.
+- Ground identity in the provided fields: brand, product_family, model, equipment_type, usage_segment.
+- If equipment_type is an indoor bike / exercise bike / studio cycle / indoor cycle: describe it as a home indoor cycling bike when usage_segment is home_use. Do NOT describe bikes as strength equipment, selectorised machines, weight-stack products, cable machines, multi-gyms, cross trainers, or treadmills.
+- If equipment_type is a treadmill: do not describe it as a bike, rower, or strength machine.
+- If equipment_type is a rower / rowing machine: do not describe it as a treadmill, bike, or cross trainer.
+- If equipment_type is a cross trainer / elliptical: do not describe it as a cable crossover or strength crossover.
 - Respect usage_segment for commercial vs home wording.
 - Use "manufactured from around {year}" when a year is known.
 - List console names only if console_options is non-empty in source.
-- Mention estimated original RRP if present.
+- Mention estimated original RRP if present. If original_base_price is null, do not invent an RRP.
 - Close with used-value factors: manufacture year, condition, and console configuration only when consoles exist.
-- Do not invent treadmill features or running surfaces.`,
+- Do not invent treadmill features, resistance levels, screen sizes, apps, subscriptions, or running surfaces.`,
 
   [PRODUCT_CONTENT_CATEGORIES.SELECTORISED_STRENGTH]: `## Category: Selectorised strength
 
