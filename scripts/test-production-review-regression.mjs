@@ -46,6 +46,16 @@ function read(rel) {
   assert.match(css, /z-index:\s*1100/, 'modal stacks above listing chrome')
   assert.match(jsx, /createPortal/, 'modal portals to document.body to avoid ancestor clipping')
   assert.match(jsx, /document\.body/, 'portal target is document.body')
+  assert.match(jsx, /ModalCloseIcon/, 'close control uses SVG icon component')
+  assert.match(jsx, /aria-label=["']Close Buyer Protection["']/, 'close control has explicit aria-label')
+  assert.doesNotMatch(jsx, /├|ù|Ã|\\u00d7/, 'close control does not use corrupted Unicode close glyph')
+  assert.match(css, /\.buyer-protection-modal__close[\s\S]*min-width:\s*44px/, 'close touch target width')
+  assert.match(css, /\.buyer-protection-modal__close[\s\S]*min-height:\s*44px/, 'close touch target height')
+  assert.match(css, /\.buyer-protection-modal__close:focus-visible/, 'close has visible focus state')
+
+  const closeIcon = read('src/components/icons/ModalCloseIcon.jsx')
+  assert.match(closeIcon, /<svg[\s\S]*M6 6l12 12/, 'shared close icon is an SVG X')
+  assert.match(closeIcon, /aria-hidden=["']true["']/, 'close icon is decorative')
 }
 
 // --- 2. Element+ duplicate prevention ---

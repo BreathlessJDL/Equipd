@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { BUYER_PROTECTION_MODAL_CONTENT } from '../lib/trustMessaging'
 import { EnvelopeIcon } from './icons/NavIcons'
+import { ModalCloseIcon } from './icons/ModalCloseIcon'
 import '../components/auth/AuthModal.css'
 import './BuyerProtectionModal.css'
 
@@ -116,11 +117,11 @@ function BuyerProtectionModal({ open, onClose }) {
       >
         <button
           type="button"
-          className="auth-modal__close"
-          aria-label="Close"
+          className="auth-modal__close buyer-protection-modal__close"
+          aria-label="Close Buyer Protection"
           onClick={onClose}
         >
-          ├ù
+          <ModalCloseIcon />
         </button>
 
         <header className="buyer-protection-modal__header">
