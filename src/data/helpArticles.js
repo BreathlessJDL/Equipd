@@ -3395,7 +3395,7 @@ export const HELP_ARTICLES = [
       },
       {
         type: 'paragraph',
-        text: 'Equipd does not load optional analytics or marketing scripts before you give consent. Third-party tools such as Google Analytics, Microsoft Clarity, or Meta Pixel are not active on Equipd today.',
+        text: 'Equipd does not load optional analytics or marketing scripts before you give consent. When you opt in to Analytics, we use Google Analytics 4 to understand aggregated site usage. Microsoft Clarity and Meta Pixel are not active on Equipd today.',
       },
       {
         type: 'heading',
@@ -3409,7 +3409,7 @@ export const HELP_ARTICLES = [
         type: 'list',
         items: [
           'Necessary — required for sign-in, security, checkout, payments hand-off, and remembering your cookie choices. Always enabled.',
-          'Analytics — optional. Reserved for understanding how the site is used so we can improve Equipd. Not currently loaded; will only run if you consent when enabled in future.',
+          'Analytics — optional. Google Analytics 4, used to understand how the site is used so we can improve Equipd. Only loaded if you consent.',
           'Marketing — optional. Reserved for measuring advertising and relevant promotions. Not currently loaded; will only run if you consent when enabled in future.',
           'Preferences — optional. Reserved for remembering choices such as saved filters or layout preferences beyond basic site operation. Not currently used for separate tracking cookies.',
         ],
@@ -3464,11 +3464,11 @@ export const HELP_ARTICLES = [
       },
       {
         type: 'heading',
-        text: 'Optional categories (not active today)',
+        text: 'Optional categories',
       },
       {
         type: 'paragraph',
-        text: 'Analytics and Marketing toggles in Cookie Settings are ready for future tools. No Google Analytics, Microsoft Clarity, Meta Pixel, or similar advertising or analytics scripts are registered or loaded on Equipd at present. If we add them, they will only run after you opt in to the relevant category.',
+        text: 'If you allow Analytics in Cookie Settings, Equipd loads Google Analytics 4 (measurement ID G-M5767NZQ85) to measure page views and aggregated usage. Marketing tools such as Meta Pixel are not loaded today. Optional scripts only run after you opt in to the relevant category.',
       },
       {
         type: 'heading',

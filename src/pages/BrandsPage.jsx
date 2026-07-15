@@ -24,9 +24,9 @@ export default function BrandsPage() {
   const [search, setSearch] = useState('')
 
   usePageMeta({
-    title: 'Gym Equipment Brands',
+    title: 'Instant Gym Equipment Valuation | Value Your Equipment Online',
     description:
-      'Explore used gym equipment brands on Equipd. Browse marketplace listings, model guides, estimated used values and original RRPs by brand.',
+      'Value commercial and home gym equipment online. Search by brand or model to receive an instant estimated used value based on original RRP, manufacture year, depreciation models and UK market data. Browse equipment guides or sell your equipment on Equipd.',
     canonicalPath: '/brands',
   })
 
@@ -120,15 +120,16 @@ export default function BrandsPage() {
           idPrefix="brands-valuator"
           contained
           className="brands-page__valuator"
-          eyebrow="Instant gym equipment valuation"
-          title="Find the value of your gym equipment"
-          lede="Search by brand or model to receive an instant estimated used value based on original RRP, manufacture year, depreciation and current UK market data."
+          titleAs="h1"
+          eyebrow={null}
+          title="Instant Gym Equipment Valuation"
+          lede="Search by brand or model to estimate today's used market value. You can also browse equipment by manufacturer below."
         />
 
         <header className="brands-page__hero">
           <div className="brands-page__hero-copy">
             <p className="brands-page__eyebrow">Equipment value guides</p>
-            <h1 className="brands-page__title">Explore gym equipment by brand</h1>
+            <h2 className="brands-page__title">Browse equipment by brand</h2>
             <p className="brands-page__lede">
               Find estimated used values, original RRPs, production years and console
               information across leading fitness manufacturers.

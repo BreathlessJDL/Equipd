@@ -168,9 +168,9 @@ function renderFaqSection(faqs = []) {
 }
 
 export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
-  const title = 'Gym Equipment Value Guides by Brand | Equipd'
+  const title = 'Instant Gym Equipment Valuation | Value Your Equipment Online | Equipd'
   const description =
-    'Explore used gym equipment values by brand, including original RRPs, production years, compatible consoles and current marketplace listings.'
+    'Value commercial and home gym equipment online. Search by brand or model to receive an instant estimated used value based on original RRP, manufacture year, depreciation models and UK market data. Browse equipment guides or sell your equipment on Equipd.'
   const path = '/brands'
   const brandLinks = brands.map((brand) => ({
     href: brand.href || getBrandPagePath(brand.slug),
@@ -184,11 +184,11 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
     { label: 'Equipment Values' },
   ])}
   <header>
-    <h1>Gym Equipment Value Guides by Brand</h1>
-    <p>${escapeHtml(description)}</p>
+    <h1>Instant Gym Equipment Valuation</h1>
+    <p>Search by brand or model to estimate today's used market value. You can also browse equipment by manufacturer below.</p>
   </header>
   <section aria-labelledby="seo-brands-list-heading">
-    <h2 id="seo-brands-list-heading">All brands</h2>
+    <h2 id="seo-brands-list-heading">Browse equipment by brand</h2>
     ${renderLinkList(brandLinks, { labelledBy: 'seo-brands-list-heading' })}
   </section>
   <p><a href="/browse">View current marketplace listings</a> · <a href="/valuation">Value your equipment</a></p>

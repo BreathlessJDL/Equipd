@@ -5,6 +5,7 @@ import CookieConsentShell from './components/cookies/CookieConsentShell'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminProtectedRoute from './components/AdminProtectedRoute'
 import AppShell from './components/layout/AppShell'
+import AnalyticsPageViews from './components/routing/AnalyticsPageViews'
 import ScrollToTop from './components/routing/ScrollToTop'
 import { AuthProvider } from './hooks/useAuth'
 import { AuthModalProvider } from './hooks/useAuthModal'
@@ -68,6 +69,7 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <CookieConsentProvider>
+          <AnalyticsPageViews />
           <AuthModalProvider>
             <StripeConnectOnboardingProvider>
             <OAuthSessionHandler />
