@@ -7,8 +7,9 @@
  * - we are in production, or local analytics is explicitly enabled
  *   via VITE_ENABLE_ANALYTICS=true.
  *
- * Script/config use the Google tag ID. The GA4 measurement ID is the connected
- * destination in Google’s interface — do not load gtag.js with that ID.
+ * Script loads with the Google tag ID (GT-…). GA4 events are configured and
+ * sent explicitly to the connected measurement ID (G-…). Do not load gtag.js
+ * with the G- ID (that URL 404s).
  */
 
 const viteEnv = import.meta.env ?? {}
@@ -17,10 +18,10 @@ const initializedProviders = new Set()
 let googleAnalyticsConfigured = false
 let initialPageViewSent = false
 
-/** Google tag ID — used to load gtag.js and gtag('config', …). */
+/** Google tag ID — used only to load gtag.js (script src). */
 export const GOOGLE_TAG_ID = 'GT-MK48KZH9'
 
-/** Connected GA4 destination (routed by Google; not used as gtag.js ?id=). */
+/** Connected GA4 destination — used for gtag config + event send_to. */
 export const GA4_MEASUREMENT_ID = 'G-M5767NZQ85'
 
 /** @deprecated Prefer GOOGLE_TAG_ID / GA4_MEASUREMENT_ID. */
@@ -37,9 +38,9 @@ export function getGa4MeasurementId() {
   return fromEnv || GA4_MEASUREMENT_ID
 }
 
-/** @deprecated Prefer getGoogleTagId(). Kept for older imports. */
+/** @deprecated Prefer getGa4MeasurementId(). */
 export function getGaMeasurementId() {
-  return getGoogleTagId()
+  return getGa4MeasurementId()
 }
 
 /**
@@ -60,18 +61,17 @@ export function isGoogleAnalyticsReady() {
   )
 }
 
-function gaDisableKey(tagId = getGoogleTagId()) {
-  return `ga-disable-${tagId}`
+function gaDisableKey(id = getGa4MeasurementId()) {
+  return `ga-disable-${id}`
 }
 
 function isGaDisabled() {
   if (typeof window === 'undefined') return true
-  return Boolean(window[gaDisableKey(getGoogleTagId())]) || Boolean(window[gaDisableKey(getGa4MeasurementId())])
+  return Boolean(window[gaDisableKey(getGa4MeasurementId())])
 }
 
 function setGaDisabled(disabled) {
   if (typeof window === 'undefined') return
-  window[gaDisableKey(getGoogleTagId())] = Boolean(disabled)
   window[gaDisableKey(getGa4MeasurementId())] = Boolean(disabled)
 }
 
@@ -147,7 +147,8 @@ function initGoogleAnalytics() {
   if (!shouldSendAnalytics()) return false
 
   const googleTagId = getGoogleTagId()
-  if (!googleTagId) return false
+  const ga4MeasurementId = getGa4MeasurementId()
+  if (!googleTagId || !ga4MeasurementId) return false
 
   setGaDisabled(false)
 
@@ -156,10 +157,9 @@ function initGoogleAnalytics() {
 
   if (!googleAnalyticsConfigured) {
     gtag('js', new Date())
-    // Disable automatic first page_view — we own SPA page views.
-    // Config the Google tag only; Google routes events to connected destinations
-    // (GA4 G-M5767NZQ85). Do not also config the destination ID (would duplicate).
-    gtag('config', googleTagId, {
+    // Configure the GA4 destination explicitly. Script still loads via GT-…
+    // Do not also config GT-MK48KZH9 for analytics (avoids Ads-only / duplicate routing).
+    gtag('config', ga4MeasurementId, {
       send_page_view: false,
     })
     googleAnalyticsConfigured = true
@@ -181,7 +181,9 @@ export function trackPageView(pagePath) {
   if (!isGoogleAnalyticsReady()) return false
 
   const path = pagePath || `${window.location.pathname}${window.location.search}`
+  const ga4MeasurementId = getGa4MeasurementId()
   window.gtag('event', 'page_view', {
+    send_to: ga4MeasurementId,
     page_path: path,
     page_location: `${window.location.origin}${path}`,
     page_title: document.title,
@@ -191,12 +193,16 @@ export function trackPageView(pagePath) {
 
 /**
  * Record a custom GA4 event. Safe no-op until GA is initialised and allowed.
+ * Always routes to the GA4 destination via send_to.
  * @param {string} eventName
  * @param {Record<string, unknown>} [params]
  */
 export function trackEvent(eventName, params = {}) {
   if (!eventName || !isGoogleAnalyticsReady()) return false
-  window.gtag('event', eventName, params)
+  window.gtag('event', eventName, {
+    ...params,
+    send_to: getGa4MeasurementId(),
+  })
   return true
 }
 

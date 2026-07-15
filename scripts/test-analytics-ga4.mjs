@@ -3,8 +3,8 @@
  * Run: node scripts/test-analytics-ga4.mjs
  *
  * Distinguishes:
- * - script-loading Google tag ID: GT-MK48KZH9
- * - connected GA4 destination ID: G-M5767NZQ85
+ * - script loader ID: GT-MK48KZH9
+ * - GA4 config/event destination: G-M5767NZQ85
  */
 
 import assert from 'node:assert/strict'
@@ -49,33 +49,30 @@ check('gtag stub pushes arguments (not rest Array)', () => {
   }
 })
 
-check('separates Google tag ID from GA4 destination ID', () => {
+check('separates script loader ID from GA4 destination ID', () => {
   if (!analyticsSource.includes(`GOOGLE_TAG_ID = '${GOOGLE_TAG_ID}'`)) {
     throw new Error(`Missing GOOGLE_TAG_ID constant ${GOOGLE_TAG_ID}`)
   }
   if (!analyticsSource.includes(`GA4_MEASUREMENT_ID = '${GA4_MEASUREMENT_ID}'`)) {
     throw new Error(`Missing GA4_MEASUREMENT_ID constant ${GA4_MEASUREMENT_ID}`)
   }
-  if (/gtag\/js\?id=\$\{.*[Gg]a4|gtag\/js\?id=\$\{.*[Mm]easurement/.test(analyticsSource)) {
-    // soft: ensure inject uses googleTagId param name
-  }
   if (!/gtag\/js\?id=\$\{googleTagId\}/.test(analyticsSource)) {
-    throw new Error('gtag.js script URL must use googleTagId, not the GA4 destination')
+    throw new Error('gtag.js script URL must use googleTagId')
   }
-  if (/gtag\('config',\s*measurementId/.test(analyticsSource) || /gtag\('config',\s*getGa4/.test(analyticsSource)) {
-    throw new Error('gtag config must target the Google tag ID, not the GA4 destination')
+  if (!/gtag\('config',\s*ga4MeasurementId/.test(analyticsSource)) {
+    throw new Error('gtag config must target ga4MeasurementId')
+  }
+  if (/gtag\('config',\s*googleTagId/.test(analyticsSource)) {
+    throw new Error('Must not gtag config the Google tag ID for analytics')
+  }
+  if (!/send_to:\s*ga4MeasurementId/.test(analyticsSource) && !/send_to:\s*getGa4MeasurementId\(\)/.test(analyticsSource)) {
+    throw new Error('Events must include send_to pointing at the GA4 destination')
   }
 })
 
 check('send_page_view disabled on config', () => {
   if (!/send_page_view:\s*false/.test(analyticsSource)) {
     throw new Error('GA config must set send_page_view: false')
-  }
-})
-
-check('does not config GA4 destination separately (avoids duplicate events)', () => {
-  if (new RegExp(`gtag\\(['"]config['"],\\s*['"]${GA4_MEASUREMENT_ID}['"]`).test(analyticsSource)) {
-    throw new Error('Must not gtag config the GA4 destination ID directly')
   }
 })
 
@@ -190,7 +187,7 @@ await checkAsync('first visit: analytics not loaded without consent', async () =
   assert.equal(document.querySelector(`script[data-google-tag-id="${GOOGLE_TAG_ID}"]`), null)
 })
 
-await checkAsync('Accept all: loads GT tag once, configs GT once, one page_view', async () => {
+await checkAsync('Accept all: loads GT script, configs GA4 once, one page_view send_to GA4', async () => {
   const { scripts } = installDomStub()
   const analytics = await loadAnalyticsModule({ prod: true })
   analytics.resetAnalyticsProvidersForTesting()
@@ -204,16 +201,16 @@ await checkAsync('Accept all: loads GT tag once, configs GT once, one page_view'
   assert.equal(analytics.isGoogleAnalyticsReady(), true)
   assert.equal(scripts.length, 1)
   assert.equal(scripts[0].src, `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID}`)
-  assert.equal(scripts[0].dataset.googleTagId, GOOGLE_TAG_ID)
 
   const entries = layerEntries()
   const pageViews = entries.filter((entry) => entry[0] === 'event' && entry[1] === 'page_view')
   assert.equal(pageViews.length, 1)
+  assert.equal(pageViews[0][2].send_to, GA4_MEASUREMENT_ID)
 
   const configs = entries.filter((entry) => entry[0] === 'config')
   assert.equal(configs.length, 1)
-  assert.equal(configs[0][1], GOOGLE_TAG_ID)
-  assert.notEqual(configs[0][1], GA4_MEASUREMENT_ID)
+  assert.equal(configs[0][1], GA4_MEASUREMENT_ID)
+  assert.notEqual(configs[0][1], GOOGLE_TAG_ID)
   assert.equal(configs[0][2].send_page_view, false)
 })
 
@@ -230,7 +227,7 @@ await checkAsync('Reject / denied: events blocked and scripts not inserted', asy
   assert.equal(document.querySelector(`script[data-google-tag-id="${GOOGLE_TAG_ID}"]`), null)
 })
 
-await checkAsync('route page views send once while granted', async () => {
+await checkAsync('route page views send once while granted with send_to GA4', async () => {
   installDomStub()
   const analytics = await loadAnalyticsModule({ prod: true })
   analytics.resetAnalyticsProvidersForTesting()
@@ -240,8 +237,23 @@ await checkAsync('route page views send once while granted', async () => {
   const before = layerEntries().filter((e) => e[0] === 'event' && e[1] === 'page_view').length
   assert.equal(analytics.trackPageView('/browse'), true)
   assert.equal(analytics.trackPageView('/brands'), true)
-  const after = layerEntries().filter((e) => e[0] === 'event' && e[1] === 'page_view').length
-  assert.equal(after - before, 2)
+  const pageViews = layerEntries().filter((e) => e[0] === 'event' && e[1] === 'page_view')
+  assert.equal(pageViews.length - before, 2)
+  assert.ok(pageViews.every((entry) => entry[2].send_to === GA4_MEASUREMENT_ID))
+})
+
+await checkAsync('trackEvent routes to GA4 via send_to', async () => {
+  installDomStub()
+  const analytics = await loadAnalyticsModule({ prod: true })
+  analytics.resetAnalyticsProvidersForTesting()
+  analytics.applyConsentedAnalytics({
+    categories: { necessary: true, analytics: true },
+  })
+  assert.equal(analytics.trackEvent('listing_saved', { listing_id: 'x' }), true)
+  const events = layerEntries().filter((e) => e[0] === 'event' && e[1] === 'listing_saved')
+  assert.equal(events.length, 1)
+  assert.equal(events[0][2].send_to, GA4_MEASUREMENT_ID)
+  assert.equal(events[0][2].listing_id, 'x')
 })
 
 await checkAsync('revoking analytics disables events and clears GA cookies', async () => {
@@ -263,7 +275,7 @@ await checkAsync('revoking analytics disables events and clears GA cookies', asy
   assert.equal(analytics.trackEvent('after_revoke'), false)
   assert.equal(cookies.has('_ga'), false)
   assert.equal(cookies.has('_ga_M5767NZQ85'), false)
-  assert.equal(window[`ga-disable-${GOOGLE_TAG_ID}`], true)
+  assert.equal(window[`ga-disable-${GA4_MEASUREMENT_ID}`], true)
 })
 
 await checkAsync('re-grant after revoke initialises again without duplicate scripts', async () => {
@@ -285,9 +297,8 @@ await checkAsync('re-grant after revoke initialises again without duplicate scri
   assert.equal(scripts.length, 1)
 
   const configs = layerEntries().filter((entry) => entry[0] === 'config')
-  // config once on first grant; re-grant after revoke configs again (allowed) but not duplicated while granted
   assert.ok(configs.length >= 1)
-  assert.ok(configs.every((entry) => entry[1] === GOOGLE_TAG_ID))
+  assert.ok(configs.every((entry) => entry[1] === GA4_MEASUREMENT_ID))
 })
 
 await checkAsync('local development does not send unless explicitly enabled', async () => {
