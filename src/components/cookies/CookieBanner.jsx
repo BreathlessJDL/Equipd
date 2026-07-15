@@ -14,8 +14,9 @@ function CookieBanner() {
         <div className="cookie-banner__copy">
           <h2 className="cookie-banner__title">We use cookies</h2>
           <p className="cookie-banner__text">
-            Equipd uses necessary cookies to run the site. With your permission we may also use
-            analytics, marketing, and preference cookies. Read our{' '}
+            Equipd uses necessary cookies to run the site. You can also allow optional Analytics
+            cookies (Google Analytics) to help us improve the marketplace and valuation tools.
+            Choose Accept all, Reject non-essential, or Cookie settings. Read our{' '}
             <Link to={COOKIE_POLICY_PATH}>Cookie Policy</Link> for details.
           </p>
         </div>

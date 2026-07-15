@@ -17,25 +17,26 @@ export function CookieConsentProvider({ children }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
-    if (consent) {
-      applyConsentedAnalytics(consent)
-    }
+    applyConsentedAnalytics(consent)
   }, [consent])
 
   const persistConsent = useCallback((categories) => {
     const record = writeStoredCookieConsent(categories)
+    // Apply immediately so GA can load without waiting for the next effect.
+    applyConsentedAnalytics(record)
     setConsent(record)
     setBannerVisible(false)
-    applyConsentedAnalytics(record)
     return record
   }, [])
 
   const acceptAll = useCallback(() => {
     persistConsent(getAcceptAllCategoryPreferences())
+    setSettingsOpen(false)
   }, [persistConsent])
 
   const rejectNonEssential = useCallback(() => {
     persistConsent(getRejectNonEssentialCategoryPreferences())
+    setSettingsOpen(false)
   }, [persistConsent])
 
   const savePreferences = useCallback(

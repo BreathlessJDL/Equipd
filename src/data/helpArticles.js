@@ -3409,8 +3409,8 @@ export const HELP_ARTICLES = [
         type: 'list',
         items: [
           'Necessary — required for sign-in, security, checkout, payments hand-off, and remembering your cookie choices. Always enabled.',
-          'Analytics — optional. Google Analytics 4, used to understand how the site is used so we can improve Equipd. Only loaded if you consent.',
-          'Marketing — optional. Reserved for measuring advertising and relevant promotions. Not currently loaded; will only run if you consent when enabled in future.',
+          'Analytics — optional. Google Analytics 4, used to understand how people use Equipd so we can improve the marketplace and valuation tools. Only loaded if you consent.',
+          'Marketing — optional. Reserved for measuring advertising and relevant promotions. Not currently loaded.',
           'Preferences — optional. Reserved for remembering choices such as saved filters or layout preferences beyond basic site operation. Not currently used for separate tracking cookies.',
         ],
       },

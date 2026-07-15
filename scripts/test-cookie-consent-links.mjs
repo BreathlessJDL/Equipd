@@ -162,19 +162,65 @@ check('Cookie policy mentions consent storage key', () => {
   }
 })
 
-check('Cookie policy does not claim GA is active', () => {
-  const articleMatch = helpSource.match(/slug: 'cookie-policy'[\s\S]*?},\n  \]/)
+check('Cookie policy describes consent-gated Google Analytics', () => {
+  const articleMatch = helpSource.match(/slug: 'cookie-policy'[\s\S]*?},\n  \{/)
   const articleText = articleMatch?.[0] ?? helpSource
-  const falseClaims = [
-    /Google Analytics is (currently )?active/i,
-    /we use Google Analytics/i,
-    /Meta Pixel is (currently )?active/i,
-    /Microsoft Clarity is (currently )?active/i,
-  ]
-  for (const pattern of falseClaims) {
-    if (pattern.test(articleText)) {
-      throw new Error(`Cookie policy may falsely claim active tracking: ${pattern}`)
-    }
+  if (!/Google Analytics 4/i.test(articleText)) {
+    throw new Error('Cookie policy should mention Google Analytics 4')
+  }
+  if (
+    !/only (loaded|run) if you (consent|opt in)/i.test(articleText) &&
+    !/after you opt in/i.test(articleText)
+  ) {
+    throw new Error('Cookie policy should state GA only runs after consent')
+  }
+  if (/Meta Pixel is (currently )?active/i.test(articleText)) {
+    throw new Error('Cookie policy should not claim Meta Pixel is active')
+  }
+  if (/Microsoft Clarity is (currently )?active/i.test(articleText)) {
+    throw new Error('Cookie policy should not claim Microsoft Clarity is active')
+  }
+})
+
+check('Cookie settings shows Analytics with Google Analytics copy', () => {
+  if (!modalSource.includes('getVisibleOptionalCookieCategories')) {
+    throw new Error('CookieSettingsModal should use getVisibleOptionalCookieCategories')
+  }
+  if (!cookieConsentSource.includes('Google Analytics is only loaded')) {
+    throw new Error('Analytics category description should mention Google Analytics gating')
+  }
+  if (!cookieConsentSource.includes('uiVisible: false')) {
+    throw new Error(
+      'Inactive marketing/preferences categories should be hidden from Cookie Settings UI',
+    )
+  }
+})
+
+check('Banner mentions Analytics cookies and Cookie settings', () => {
+  if (!bannerSource.includes('Accept all')) {
+    throw new Error('Banner should offer Accept all')
+  }
+  if (!bannerSource.includes('Reject non-essential')) {
+    throw new Error('Banner should offer Reject non-essential')
+  }
+  if (!bannerSource.includes('Cookie settings')) {
+    throw new Error('Banner should offer Cookie settings')
+  }
+  if (!bannerSource.includes('Google Analytics')) {
+    throw new Error('Banner should mention Google Analytics')
+  }
+})
+
+check('App mounts AnalyticsPageViews inside CookieConsentProvider', () => {
+  const appSource = readSource('src/App.jsx')
+  if (!appSource.includes('AnalyticsPageViews')) {
+    throw new Error('App.jsx missing AnalyticsPageViews')
+  }
+  if (!appSource.includes('CookieConsentProvider')) {
+    throw new Error('App.jsx missing CookieConsentProvider')
+  }
+  if (!appSource.includes('CookieConsentShell')) {
+    throw new Error('App.jsx missing CookieConsentShell')
   }
 })
 

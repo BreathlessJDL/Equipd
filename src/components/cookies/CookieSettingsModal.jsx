@@ -1,17 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCookieConsent } from '../../hooks/useCookieConsent'
 import {
   COOKIE_CATEGORIES,
   COOKIE_POLICY_PATH,
   getDefaultCategoryPreferences,
+  getVisibleOptionalCookieCategories,
 } from '../../lib/cookieConsent'
 import '../auth/AuthModal.css'
 import './CookieSettingsModal.css'
 
-const OPTIONAL_CATEGORIES = Object.values(COOKIE_CATEGORIES).filter(
-  (category) => !category.required,
-)
+const OPTIONAL_CATEGORIES = getVisibleOptionalCookieCategories()
 
 function CookieSettingsModal() {
   const {
@@ -24,11 +23,14 @@ function CookieSettingsModal() {
   } = useCookieConsent()
 
   const [draftCategories, setDraftCategories] = useState(getDefaultCategoryPreferences())
+  const draftCategoriesRef = useRef(draftCategories)
+  draftCategoriesRef.current = draftCategories
 
   useEffect(() => {
     if (!settingsOpen) return undefined
 
     setDraftCategories(categoryPreferences)
+    draftCategoriesRef.current = categoryPreferences
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -50,10 +52,14 @@ function CookieSettingsModal() {
   if (!settingsOpen) return null
 
   function toggleCategory(categoryId) {
-    setDraftCategories((current) => ({
-      ...current,
-      [categoryId]: !current[categoryId],
-    }))
+    setDraftCategories((current) => {
+      const next = {
+        ...current,
+        [categoryId]: !current[categoryId],
+      }
+      draftCategoriesRef.current = next
+      return next
+    })
   }
 
   return (
@@ -84,7 +90,7 @@ function CookieSettingsModal() {
           Cookie settings
         </h2>
         <p className="cookie-settings-modal__lead">
-          Choose which optional cookies Equipd may use. See our{' '}
+          Choose whether Equipd may use analytics cookies. See our{' '}
           <Link to={COOKIE_POLICY_PATH} onClick={closeCookieSettings}>
             Cookie Policy
           </Link>{' '}
@@ -95,9 +101,7 @@ function CookieSettingsModal() {
           <li className="cookie-settings-modal__item">
             <div className="cookie-settings-modal__item-header">
               <div>
-                <h3 className="cookie-settings-modal__item-title">
-                  {COOKIE_CATEGORIES.necessary.label}
-                </h3>
+                <h3 className="cookie-settings-modal__item-title">Necessary cookies</h3>
                 <p className="cookie-settings-modal__item-description">
                   {COOKIE_CATEGORIES.necessary.description}
                 </p>
@@ -122,7 +126,7 @@ function CookieSettingsModal() {
                     draftCategories[category.id] ? ' cookie-settings-modal__toggle--on' : ''
                   }`}
                   aria-checked={draftCategories[category.id]}
-                  aria-label={`${category.label} cookies`}
+                  aria-label={`${category.label}`}
                   onClick={() => toggleCategory(category.id)}
                 />
               </div>
@@ -148,7 +152,7 @@ function CookieSettingsModal() {
           <button
             type="button"
             className="cookie-settings-modal__button cookie-settings-modal__button--primary"
-            onClick={() => savePreferences(draftCategories)}
+            onClick={() => savePreferences(draftCategoriesRef.current)}
           >
             Save preferences
           </button>

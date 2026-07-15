@@ -16,9 +16,9 @@ export const COOKIE_CATEGORIES = {
   },
   analytics: {
     id: 'analytics',
-    label: 'Analytics',
+    label: 'Analytics cookies',
     description:
-      'Help us understand how the site is used so we can improve performance and features. Data is aggregated where possible.',
+      'Help us understand how people use Equipd so we can improve the marketplace and valuation tools. Google Analytics is only loaded when you allow this category.',
     required: false,
   },
   marketing: {
@@ -27,6 +27,8 @@ export const COOKIE_CATEGORIES = {
     description:
       'Used to measure advertising and show relevant Equipd promotions on other platforms.',
     required: false,
+    /** Not shown in Cookie Settings until a marketing provider is registered. */
+    uiVisible: false,
   },
   preferences: {
     id: 'preferences',
@@ -34,10 +36,18 @@ export const COOKIE_CATEGORIES = {
     description:
       'Remember choices such as layout or saved filters to personalise your experience.',
     required: false,
+    uiVisible: false,
   },
 }
 
 const OPTIONAL_CATEGORY_IDS = ['analytics', 'marketing', 'preferences']
+
+/** Categories shown in Cookie Settings (Necessary is always listed separately). */
+export function getVisibleOptionalCookieCategories() {
+  return Object.values(COOKIE_CATEGORIES).filter(
+    (category) => !category.required && category.uiVisible !== false,
+  )
+}
 
 export function getDefaultCategoryPreferences() {
   return {
