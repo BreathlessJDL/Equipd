@@ -2,10 +2,13 @@
  * Consent-gated analytics and marketing scripts.
  * Register providers here; they only initialise after the user opts in.
  *
- * Google Analytics 4 loads only when:
+ * Google tag loads only when:
  * - the user consents to the analytics category, and
  * - we are in production, or local analytics is explicitly enabled
  *   via VITE_ENABLE_ANALYTICS=true.
+ *
+ * Script/config use the Google tag ID. The GA4 measurement ID is the connected
+ * destination in Google’s interface — do not load gtag.js with that ID.
  */
 
 const viteEnv = import.meta.env ?? {}
@@ -14,14 +17,29 @@ const initializedProviders = new Set()
 let googleAnalyticsConfigured = false
 let initialPageViewSent = false
 
-/** Public GA4 measurement ID (override with VITE_GA_MEASUREMENT_ID if needed). */
-export const GA_MEASUREMENT_ID_DEFAULT = 'G-M5767NZQ85'
+/** Google tag ID — used to load gtag.js and gtag('config', …). */
+export const GOOGLE_TAG_ID = 'GT-MK48KZH9'
 
+/** Connected GA4 destination (routed by Google; not used as gtag.js ?id=). */
+export const GA4_MEASUREMENT_ID = 'G-M5767NZQ85'
+
+/** @deprecated Prefer GOOGLE_TAG_ID / GA4_MEASUREMENT_ID. */
+export const GA_MEASUREMENT_ID_DEFAULT = GA4_MEASUREMENT_ID
+
+export function getGoogleTagId() {
+  const fromEnv = typeof viteEnv.VITE_GOOGLE_TAG_ID === 'string' ? viteEnv.VITE_GOOGLE_TAG_ID.trim() : ''
+  return fromEnv || GOOGLE_TAG_ID
+}
+
+export function getGa4MeasurementId() {
+  const fromEnv =
+    typeof viteEnv.VITE_GA_MEASUREMENT_ID === 'string' ? viteEnv.VITE_GA_MEASUREMENT_ID.trim() : ''
+  return fromEnv || GA4_MEASUREMENT_ID
+}
+
+/** @deprecated Prefer getGoogleTagId(). Kept for older imports. */
 export function getGaMeasurementId() {
-  const fromEnv = typeof viteEnv.VITE_GA_MEASUREMENT_ID === 'string'
-    ? viteEnv.VITE_GA_MEASUREMENT_ID.trim()
-    : ''
-  return fromEnv || GA_MEASUREMENT_ID_DEFAULT
+  return getGoogleTagId()
 }
 
 /**
@@ -42,18 +60,19 @@ export function isGoogleAnalyticsReady() {
   )
 }
 
-function gaDisableKey(measurementId = getGaMeasurementId()) {
-  return `ga-disable-${measurementId}`
+function gaDisableKey(tagId = getGoogleTagId()) {
+  return `ga-disable-${tagId}`
 }
 
-function isGaDisabled(measurementId = getGaMeasurementId()) {
+function isGaDisabled() {
   if (typeof window === 'undefined') return true
-  return Boolean(window[gaDisableKey(measurementId)])
+  return Boolean(window[gaDisableKey(getGoogleTagId())]) || Boolean(window[gaDisableKey(getGa4MeasurementId())])
 }
 
-function setGaDisabled(disabled, measurementId = getGaMeasurementId()) {
+function setGaDisabled(disabled) {
   if (typeof window === 'undefined') return
-  window[gaDisableKey(measurementId)] = Boolean(disabled)
+  window[gaDisableKey(getGoogleTagId())] = Boolean(disabled)
+  window[gaDisableKey(getGa4MeasurementId())] = Boolean(disabled)
 }
 
 /**
@@ -75,14 +94,14 @@ export function ensureGtag() {
   return gtag
 }
 
-function injectGtagScript(measurementId) {
-  const existing = document.querySelector(`script[data-ga-measurement-id="${measurementId}"]`)
+function injectGtagScript(googleTagId) {
+  const existing = document.querySelector(`script[data-google-tag-id="${googleTagId}"]`)
   if (existing) return existing
 
   const script = document.createElement('script')
   script.async = true
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`
-  script.dataset.gaMeasurementId = measurementId
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${googleTagId}`
+  script.dataset.googleTagId = googleTagId
   document.head.appendChild(script)
   return script
 }
@@ -117,8 +136,7 @@ export function clearGoogleAnalyticsCookies() {
 }
 
 function disableGoogleAnalytics() {
-  const measurementId = getGaMeasurementId()
-  setGaDisabled(true, measurementId)
+  setGaDisabled(true)
   googleAnalyticsConfigured = false
   initialPageViewSent = false
   initializedProviders.delete('googleAnalytics')
@@ -128,20 +146,21 @@ function disableGoogleAnalytics() {
 function initGoogleAnalytics() {
   if (!shouldSendAnalytics()) return false
 
-  const measurementId = getGaMeasurementId()
-  if (!measurementId) return false
+  const googleTagId = getGoogleTagId()
+  if (!googleTagId) return false
 
-  setGaDisabled(false, measurementId)
+  setGaDisabled(false)
 
   const gtag = ensureGtag()
-  injectGtagScript(measurementId)
+  injectGtagScript(googleTagId)
 
   if (!googleAnalyticsConfigured) {
     gtag('js', new Date())
     // Disable automatic first page_view — we own SPA page views.
-    gtag('config', measurementId, {
+    // Config the Google tag only; Google routes events to connected destinations
+    // (GA4 G-M5767NZQ85). Do not also config the destination ID (would duplicate).
+    gtag('config', googleTagId, {
       send_page_view: false,
-      anonymize_ip: true,
     })
     googleAnalyticsConfigured = true
   }
