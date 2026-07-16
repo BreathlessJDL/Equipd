@@ -131,7 +131,7 @@ export default function HomeEquipmentValuator({
             onSelectedProductChange={setSelectedProduct}
             placeholder="Search brand or model..."
             inputClassName="home-valuator__input"
-            resultLimit={6}
+            resultLimit={10}
             debounceMs={250}
             onSubmit={({ product }) => {
               if (product) {

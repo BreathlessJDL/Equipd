@@ -128,6 +128,7 @@ function ProductSummary({ product, currency }) {
 
 function ProductCard({ product, onSelect, currency }) {
   const productPagePath = buildEquipmentProductPagePath(product.canonical_product_key)
+  const series = product.product_family || product.series || ''
 
   return (
     <div
@@ -143,7 +144,10 @@ function ProductCard({ product, onSelect, currency }) {
       }}
     >
       <p className="valuation-page__match-brand">{product.brand}</p>
-      <p className="valuation-page__match-title">{getEquipmentProductDisplayName(product)}</p>
+      {series ? <p className="valuation-page__match-series">{series}</p> : null}
+      <p className="valuation-page__match-title">
+        {product.model || getEquipmentProductDisplayName(product)}
+      </p>
       <div className="valuation-page__match-meta">
         {product.equipment_type ? (
           <span className="valuation-page__chip">{product.equipment_type}</span>
@@ -355,7 +359,7 @@ function ValuationPage() {
   const displayMatches = useMemo(
     () => (searchState.scoredMatches.length
       ? searchState.scoredMatches.map((entry) => entry.product)
-      : searchState.matches),
+      : searchState.matches).slice(0, 10),
     [searchState.matches, searchState.scoredMatches],
   )
   const showNoMatch = searchState.showNoMatch

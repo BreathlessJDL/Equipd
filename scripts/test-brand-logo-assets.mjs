@@ -20,7 +20,7 @@ const publicRoot = join(process.cwd(), 'public')
 const logosDir = join(publicRoot, 'brand-logos')
 
 const assets = listBrandLogoAssetPaths()
-assert(assets.length >= 13, `expected at least 13 logo assets, got ${assets.length}`)
+assert(assets.length >= 25, `expected at least 25 logo assets, got ${assets.length}`)
 
 for (const asset of assets) {
   assert(asset.logoPath.startsWith('/brand-logos/'), `${asset.slug} path under /brand-logos/`)
@@ -38,7 +38,24 @@ for (const slug of FEATURED_BRAND_SLUGS) {
   assert(existsSync(absolute), `featured logo file missing: ${entry.logoPath}`)
 }
 
-for (const brand of ['Peloton', 'NordicTrack', 'BowFlex', 'Bowflex']) {
+for (const brand of [
+  'Peloton',
+  'NordicTrack',
+  'BowFlex',
+  'Bowflex',
+  'Horizon Fitness',
+  'StairMaster',
+  'York Fitness',
+  'Reebok',
+  'BH Fitness',
+  'Powertec',
+  'REP',
+  'Spirit Fitness',
+  'WaterRower',
+  'ProForm',
+  'Schwinn',
+  'Sole Fitness',
+]) {
   const entry = resolveBrandRegistryEntry(brand)
   assert(entry, `${brand} must be registered`)
   assert(FEATURED_BRAND_SLUGS.includes(entry.slug), `${brand} must be featured`)
@@ -48,7 +65,9 @@ for (const brand of ['Peloton', 'NordicTrack', 'BowFlex', 'Bowflex']) {
 assert(
   FEATURED_BRAND_SLUGS.includes('peloton')
     && FEATURED_BRAND_SLUGS.includes('nordictrack')
-    && FEATURED_BRAND_SLUGS.includes('bowflex'),
+    && FEATURED_BRAND_SLUGS.includes('bowflex')
+    && FEATURED_BRAND_SLUGS.includes('horizon-fitness')
+    && FEATURED_BRAND_SLUGS.includes('sole-fitness'),
   'home-use brands in FEATURED_BRAND_SLUGS',
 )
 

@@ -13,6 +13,24 @@ function assert(condition, label) {
   if (!condition) throw new Error(label)
 }
 
+function assertFirstModel(matches, modelNeedle, label) {
+  assert(matches.length > 0, `${label}: expected matches`)
+  const first = matches[0]
+  const haystack = [
+    first.model,
+    first.canonical_product_name,
+    first.canonical_product_key,
+  ].join(' ').toLowerCase()
+  assert(haystack.includes(String(modelNeedle).toLowerCase()), label)
+}
+
+function assertBrandPresent(matches, brandNeedle, label) {
+  assert(
+    matches.some((product) => String(product.brand || '').toLowerCase().includes(String(brandNeedle).toLowerCase())),
+    label,
+  )
+}
+
 const precorCatalog = [
   {
     id: 'precor-abdominal',
@@ -311,5 +329,218 @@ assert(
   !productMatchesEquipmentIntent(precorCatalog[0], parsed.equipmentIntent),
   'abdominal product does not match treadmill intent',
 )
+
+// --- Redesigned ranking / brand coverage ---
+
+const soleCatalog = [
+  {
+    brand: 'Sole Fitness',
+    model: 'F80',
+    product_family: 'F Series',
+    canonical_product_name: 'Sole F80 Treadmill',
+    canonical_product_key: 'sole-f80-treadmill',
+    equipment_type: 'Treadmill',
+  },
+  {
+    brand: 'Sole Fitness',
+    model: 'F60',
+    product_family: 'F Series',
+    canonical_product_name: 'Sole F60 Treadmill',
+    canonical_product_key: 'sole-f60-treadmill',
+    equipment_type: 'Treadmill',
+  },
+  {
+    brand: 'Sole Fitness',
+    model: 'F63',
+    product_family: 'F Series',
+    canonical_product_name: 'Sole F63 Treadmill',
+    canonical_product_key: 'sole-f63-treadmill',
+    equipment_type: 'Treadmill',
+  },
+  {
+    brand: 'Sole Fitness',
+    model: 'F85',
+    product_family: 'F Series',
+    canonical_product_name: 'Sole F85 Treadmill',
+    canonical_product_key: 'sole-f85-treadmill',
+    equipment_type: 'Treadmill',
+  },
+]
+
+const soleF85 = searchEquipmentProductCatalog(soleCatalog, 'Sole F85')
+assertFirstModel(soleF85.matches, 'F85', 'Sole F85 returns F85 first')
+
+const f85Only = searchEquipmentProductCatalog(soleCatalog, 'F85')
+assertFirstModel(f85Only.matches, 'F85', 'F85 returns F85 first')
+
+const f8Prefix = searchEquipmentProductCatalog(soleCatalog, 'F8')
+assert(
+  f8Prefix.matches[0].model === 'F85' || f8Prefix.matches[0].model === 'F80',
+  'F8 ranks an F8x model first',
+)
+assert(
+  f8Prefix.matches.slice(0, 2).every((product) => ['F85', 'F80'].includes(product.model)),
+  'F8 returns F85 and F80 above F63',
+)
+assert(
+  !f8Prefix.matches.some((product) => product.model === 'F63')
+    || f8Prefix.matches.findIndex((product) => product.model === 'F63')
+      > f8Prefix.matches.findIndex((product) => product.model === 'F80'),
+  'F63 ranks below F80 for F8',
+)
+
+const stairCatalog = [
+  {
+    brand: 'StairMaster',
+    model: '8 Series',
+    product_family: 'Gauntlet',
+    canonical_product_name: 'StairMaster Gauntlet 8 Series',
+    canonical_product_key: 'stairmaster-gauntlet-8-series',
+    equipment_type: 'Stair Climber',
+  },
+  {
+    brand: 'StairMaster',
+    model: 'SM5',
+    product_family: 'Stepper',
+    canonical_product_name: 'StairMaster SM5',
+    canonical_product_key: 'stairmaster-sm5',
+    equipment_type: 'Stepper',
+  },
+  {
+    brand: 'Life Fitness',
+    model: 'PowerMill',
+    product_family: 'Elevation Series',
+    canonical_product_name: 'Life Fitness Elevation Series PowerMill',
+    canonical_product_key: 'life-fitness-elevation-powermill',
+    equipment_type: 'Stepper',
+  },
+]
+
+for (const query of ['Stair', 'Stairm', 'Stairmaster', 'Stair Master', 'StairMaster']) {
+  const result = searchEquipmentProductCatalog(stairCatalog, query)
+  assertBrandPresent(result.matches, 'StairMaster', `${query} returns StairMaster`)
+  assert(
+    result.matches.every((product) => product.brand === 'StairMaster'),
+    `${query} does not return other brands ahead of StairMaster brand filter`,
+  )
+}
+
+const commercialCatalog = [
+  {
+    brand: 'NordicTrack',
+    model: 'Commercial 1750',
+    product_family: 'Commercial',
+    canonical_product_name: 'NordicTrack Commercial 1750',
+    canonical_product_key: 'nordictrack-commercial-1750',
+    equipment_type: 'Treadmill',
+  },
+  {
+    brand: 'NordicTrack',
+    model: 'Commercial 2450',
+    product_family: 'Commercial',
+    canonical_product_name: 'NordicTrack Commercial 2450',
+    canonical_product_key: 'nordictrack-commercial-2450',
+    equipment_type: 'Treadmill',
+  },
+]
+
+assertFirstModel(
+  searchEquipmentProductCatalog(commercialCatalog, 'Commercial 1750').matches,
+  '1750',
+  'Commercial 1750 returns 1750 first',
+)
+
+const adCatalog = [
+  {
+    brand: 'Spirit Fitness',
+    model: 'AD7',
+    canonical_product_name: 'Spirit Fitness AD7',
+    canonical_product_key: 'spirit-ad7',
+    equipment_type: 'Elliptical',
+  },
+  {
+    brand: 'Spirit Fitness',
+    model: 'AD6',
+    canonical_product_name: 'Spirit Fitness AD6',
+    canonical_product_key: 'spirit-ad6',
+    equipment_type: 'Elliptical',
+  },
+]
+
+assertFirstModel(searchEquipmentProductCatalog(adCatalog, 'AD7').matches, 'AD7', 'AD7 returns AD7 first')
+
+const brandAliasCatalog = [
+  {
+    brand: 'Concept2',
+    model: 'RowErg',
+    canonical_product_name: 'Concept2 RowErg',
+    canonical_product_key: 'concept2-rowerg',
+    equipment_type: 'Rower',
+  },
+  {
+    brand: 'WaterRower',
+    model: 'A1',
+    canonical_product_name: 'WaterRower A1',
+    canonical_product_key: 'waterrower-a1',
+    equipment_type: 'Rower',
+  },
+  {
+    brand: 'York Fitness',
+    model: 'Barbell',
+    canonical_product_name: 'York Fitness Barbell',
+    canonical_product_key: 'york-fitness-barbell',
+    equipment_type: 'Free Weights',
+  },
+  {
+    brand: 'REP',
+    model: 'Fitness Bench',
+    canonical_product_name: 'REP Fitness Bench',
+    canonical_product_key: 'rep-fitness-bench',
+    equipment_type: 'Bench',
+  },
+  {
+    brand: 'Powertec',
+    model: 'Leverage Squat',
+    canonical_product_name: 'Powertec Leverage Squat',
+    canonical_product_key: 'powertec-leverage-squat',
+    equipment_type: 'Strength',
+  },
+  {
+    brand: 'Technogym',
+    model: 'Run',
+    canonical_product_name: 'Technogym Run',
+    canonical_product_key: 'technogym-run',
+    equipment_type: 'Treadmill',
+  },
+  {
+    brand: 'Life Fitness',
+    model: '95T',
+    canonical_product_name: 'Life Fitness 95T',
+    canonical_product_key: 'life-fitness-95t',
+    equipment_type: 'Treadmill',
+  },
+  {
+    brand: 'NordicTrack',
+    model: 'Commercial 1750',
+    canonical_product_name: 'NordicTrack Commercial 1750',
+    canonical_product_key: 'nordictrack-commercial-1750',
+    equipment_type: 'Treadmill',
+  },
+]
+
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Concept2').matches, 'Concept2', 'Concept2 returns Concept2')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Concept 2').matches, 'Concept2', 'Concept 2 returns Concept2')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'WaterRower').matches, 'WaterRower', 'WaterRower returns WaterRower')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Water Rower').matches, 'WaterRower', 'Water Rower returns WaterRower')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'York').matches, 'York', 'York returns York Fitness')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'REP').matches, 'REP', 'REP returns REP')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Powertec').matches, 'Powertec', 'Powertec returns Powertec')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Techno').matches, 'Technogym', 'Techno returns Technogym')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Life').matches, 'Life Fitness', 'Life returns Life Fitness')
+assertBrandPresent(searchEquipmentProductCatalog(brandAliasCatalog, 'Nordic').matches, 'NordicTrack', 'Nordic returns NordicTrack')
+
+assert(parseEquipmentProductSearchQuery('Stair').brand === 'StairMaster', 'Stair parses as StairMaster brand')
+assert(parseEquipmentProductSearchQuery('Sole F85').brand === 'Sole Fitness', 'Sole F85 parses Sole brand')
+assert(parseEquipmentProductSearchQuery('Techno').brand === 'Technogym', 'Techno parses Technogym')
 
 console.log('equipment product search tests passed')

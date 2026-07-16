@@ -75,6 +75,7 @@
     "test:equipment-product-image-identity": "node scripts/test-equipment-product-image-identity.mjs",
     "test:equipment-product-image-hardening": "node scripts/test-equipment-product-image-hardening.mjs",
     "test:equipment-product-images": "node scripts/test-equipment-product-images.mjs",
+    "test:equipment-product-search": "node scripts/test-equipment-product-search.mjs",
     "test:admin-equipment-products-list": "node scripts/test-admin-equipment-products-list.mjs",
     "test:production-review-regression": "node scripts/test-production-review-regression.mjs",
     "test:intelligence-structured-evidence": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligenceStructuredEvidence_test.ts",

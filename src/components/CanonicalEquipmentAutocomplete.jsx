@@ -3,13 +3,13 @@ import {
   getEquipmentProductDisplayName,
   resolveValuationSearchMatches,
 } from '../lib/equipmentValuation'
+import { formatEquipmentProductSearchSuggestion } from '../lib/equipmentProductSearch'
 import { resolveEquipmentProductImageUrl } from '../lib/equipmentProductImages'
 import { supabase } from '../lib/supabase'
 import { getValuationCatalogProducts } from '../lib/valuationCatalogCache'
-import { buildCanonicalSuggestionMeta } from '../lib/valuationNavigation'
 import './CanonicalEquipmentAutocomplete.css'
 
-const DEFAULT_LIMIT = 6
+const DEFAULT_LIMIT = 10
 const DEFAULT_DEBOUNCE_MS = 250
 const MIN_CHARS = 2
 
@@ -288,7 +288,7 @@ export default function CanonicalEquipmentAutocomplete({
 
           {!isSearching && !catalogError && searchState.matches.map((product, index) => {
             const active = index === activeIndex
-            const meta = buildCanonicalSuggestionMeta(product)
+            const suggestion = formatEquipmentProductSearchSuggestion(product)
             return (
               <div
                 key={product.id || product.canonical_product_key || index}
@@ -310,11 +310,17 @@ export default function CanonicalEquipmentAutocomplete({
               >
                 {showImages ? <SuggestionThumb product={product} /> : null}
                 <span className="canonical-autocomplete__option-copy">
+                  {suggestion.brand ? (
+                    <span className="canonical-autocomplete__option-brand">{suggestion.brand}</span>
+                  ) : null}
+                  {suggestion.series ? (
+                    <span className="canonical-autocomplete__option-series">{suggestion.series}</span>
+                  ) : null}
                   <span className="canonical-autocomplete__option-title">
-                    {getEquipmentProductDisplayName(product)}
+                    {suggestion.model || getEquipmentProductDisplayName(product)}
                   </span>
-                  {meta ? (
-                    <span className="canonical-autocomplete__option-meta">{meta}</span>
+                  {suggestion.equipmentType ? (
+                    <span className="canonical-autocomplete__option-meta">{suggestion.equipmentType}</span>
                   ) : null}
                 </span>
               </div>

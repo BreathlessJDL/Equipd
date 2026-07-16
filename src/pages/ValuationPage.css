@@ -668,6 +668,12 @@
   color: var(--color-orange);
 }
 
+.valuation-page__match-series {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 .valuation-page__match-title {
   margin: 0;
   font-size: 1rem;
