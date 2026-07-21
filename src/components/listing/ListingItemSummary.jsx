@@ -7,10 +7,12 @@ import {
 import { formatListingLocationDetail } from '../../lib/listingLocation'
 import {
   formatListingStatus,
+  formatPricePence,
   getCategoryDisplayName,
   getConditionLabel,
   getRatingLabel,
 } from '../../lib/listings'
+import { getDisplayableAvailableQuantity } from '../../lib/listingAvailability'
 import {
   CollectionPinIcon,
   CourierTruckIcon,
@@ -65,6 +67,7 @@ function ListingItemSummary({
   const locationLabel = formatListingLocationDetail(listing)
 
   const metaParts = [conditionLabel, listedDate, listing.brand].filter(Boolean)
+  const availableQuantity = getDisplayableAvailableQuantity(listing)
 
   return (
     <aside className="listing-summary">
@@ -94,6 +97,15 @@ function ListingItemSummary({
             className="buyer-protection-price--detail listing-summary__price-stack"
           />
         )}
+
+        {availableQuantity != null ? (
+          <div className="listing-summary__availability">
+            <p className="listing-summary__availability-price">
+              {formatPricePence(listing.price_pence ?? listing.price)} each
+            </p>
+            <p className="listing-summary__availability-count">{availableQuantity} available</p>
+          </div>
+        ) : null}
 
         {actions ? <div className="listing-summary__actions">{actions}</div> : null}
 

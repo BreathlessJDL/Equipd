@@ -3,8 +3,10 @@ import BuyerProtectionPriceDisplay from './BuyerProtectionPriceDisplay'
 import { normalizeListingPricePence } from '../lib/buyerProtection'
 import {
   formatListingStatus,
+  formatPricePence,
   getConditionLabel,
 } from '../lib/listings'
+import { getDisplayableAvailableQuantity } from '../lib/listingAvailability'
 import { formatListingLocationCard } from '../lib/listingLocation'
 import { formatListingDistanceLabel } from '../lib/listingDistance'
 import { getListingPrimaryImageUrl } from '../lib/listingImages'
@@ -44,6 +46,20 @@ function ListingCardImage({ listing }) {
   }
 
   return <div className="listing-card__image listing-card__image--placeholder">No photo</div>
+}
+
+function ListingCardAvailability({ listing, className }) {
+  const available = getDisplayableAvailableQuantity(listing)
+  if (available == null) return null
+
+  const pricePence = normalizeListingPricePence(listing.price_pence ?? listing.price)
+
+  return (
+    <p className={className}>
+      {pricePence ? `${formatPricePence(pricePence)} each · ` : ''}
+      {available} available
+    </p>
+  )
 }
 
 function ConditionPill({ condition }) {
@@ -87,6 +103,8 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
           compact
           className="listing-card__price-stack"
         />
+
+        <ListingCardAvailability listing={listing} className="listing-card__availability" />
 
         <div className="listing-card__footer">
           {locationLabel ? (
@@ -162,6 +180,8 @@ function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onS
           compact
           className="listing-row__price-stack"
         />
+
+        <ListingCardAvailability listing={listing} className="listing-row__availability" />
 
         {hasCollection ? (
           <p className="listing-row__collection">

@@ -17,6 +17,7 @@ import {
   getEquipmentProductCompletionStatus,
 } from './equipmentValuation.js'
 import { enrichListingWithImages } from './listingImages.js'
+import { attachPublicAvailabilityToListings } from './listings.js'
 import { isSupabaseConfigured, supabase } from './supabase.js'
 import {
   aggregateBrandCategories,
@@ -144,7 +145,7 @@ async function fetchActiveListingsForBrand(brandName, { limit = 8 } = {}) {
   if (error) return { data: [], error }
 
   return {
-    data: (data ?? []).map(enrichListingWithImages),
+    data: await attachPublicAvailabilityToListings((data ?? []).map(enrichListingWithImages)),
     error: null,
   }
 }

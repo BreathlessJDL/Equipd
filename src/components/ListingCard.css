@@ -173,6 +173,15 @@
   line-height: 1.3;
 }
 
+.listing-card__availability,
+.listing-row__availability {
+  margin: 0.1rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
 .listing-card__footer {
   display: flex;
   flex-direction: column;

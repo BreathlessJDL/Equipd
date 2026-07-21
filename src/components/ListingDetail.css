@@ -279,6 +279,26 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
 }
 
+.listing-summary__availability {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: -0.55rem 0 1.1rem;
+}
+
+.listing-summary__availability-price,
+.listing-summary__availability-count {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.listing-summary__availability-price {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .listing-summary__section {
   margin: 0;
   padding: 1.15rem 0;

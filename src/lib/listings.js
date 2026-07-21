@@ -669,7 +669,10 @@ export async function fetchSellerActiveListings(sellerId) {
     return { data: null, error }
   }
 
-  return { data: (data ?? []).map(enrichListingWithImages), error: null }
+  return {
+    data: await attachPublicAvailabilityToListings((data ?? []).map(enrichListingWithImages)),
+    error: null,
+  }
 }
 
 export async function fetchSellerSoldListingCount(sellerId) {
@@ -737,7 +740,10 @@ async function fetchRecommendedBatch({ listingId, categoryId = '', brand = '', l
     return { data: [], error }
   }
 
-  return { data: (data ?? []).map(enrichListingWithImages), error: null }
+  return {
+    data: await attachPublicAvailabilityToListings((data ?? []).map(enrichListingWithImages)),
+    error: null,
+  }
 }
 
 export async function fetchRecommendedListings({
@@ -906,7 +912,47 @@ export async function searchListingsWithDistance({
     return { data: null, error }
   }
 
-  return { data: (data ?? []).map(mapDistanceSearchListing), error: null }
+  const listings = (data ?? []).map(mapDistanceSearchListing)
+  await attachPublicAvailabilityToListings(listings)
+
+  return { data: listings, error: null }
+}
+
+/**
+ * Stage 3 display-only availability hydration.
+ *
+ * The production `listings_public_browse` view predates the Stage 1 inventory
+ * columns, so card selects against it cannot include `quantity_available`.
+ * Instead, hydrate from the base `listings` table, whose anonymous RLS uses
+ * the same canonical public-visibility predicate and does expose the column.
+ * Display code fails safe when this read is unavailable, so errors are
+ * intentionally swallowed.
+ */
+export async function attachPublicAvailabilityToListings(listings) {
+  if (!supabase || !Array.isArray(listings) || listings.length === 0) return listings
+
+  const ids = listings
+    .filter((listing) => listing?.quantity_available == null)
+    .map((listing) => listing?.id)
+    .filter(Boolean)
+  if (ids.length === 0) return listings
+
+  const { data, error } = await supabase
+    .from('listings')
+    .select('id, quantity_available')
+    .in('id', ids)
+
+  if (error || !data) return listings
+
+  const availabilityById = new Map(data.map((row) => [row.id, row.quantity_available]))
+
+  for (const listing of listings) {
+    if (listing.quantity_available == null && availabilityById.has(listing.id)) {
+      listing.quantity_available = availabilityById.get(listing.id)
+    }
+  }
+
+  return listings
 }
 
 export async function fetchActiveListings({
@@ -1088,5 +1134,8 @@ async function fetchActiveListingsDirect({
     return { data: null, error }
   }
 
-  return { data: (data ?? []).map(enrichListingWithImages), error: null }
+  return {
+    data: await attachPublicAvailabilityToListings((data ?? []).map(enrichListingWithImages)),
+    error: null,
+  }
 }
