@@ -54,6 +54,28 @@ assert(doc.bodyHtml.includes('/brands/life-fitness'), 'brand internal links in p
 assert(doc.bodyHtml.includes('A practical guide'), 'guide note in prerender')
 assert(doc.bodyHtml.includes('Free specialist listings'), 'guide highlights in prerender')
 
+// Prerendered journey markup must mirror the React <picture> so the browser
+// resolves the same image URL before and after hydration (no double download).
+assert(doc.bodyHtml.includes('<picture>'), 'prerender journey uses picture element')
+for (const step of SELL_JOURNEY_STEPS) {
+  assert(
+    !doc.bodyHtml.includes(`src="${step.imageSrc}"`),
+    `prerender has no bare full-size journey img: ${step.title}`,
+  )
+  assert(
+    doc.bodyHtml.includes(`media="(max-width: 767px)" type="image/webp" srcset="${step.imageSrcMobile}"`),
+    `prerender mobile webp source: ${step.title}`,
+  )
+  assert(
+    doc.bodyHtml.includes(`media="(min-width: 768px)" type="image/webp" srcset="${step.imageSrcMobile} 800w, ${step.imageSrc} 1600w"`),
+    `prerender desktop webp srcset: ${step.title}`,
+  )
+  assert(
+    doc.bodyHtml.includes(`src="${step.imageSrcPng}"`),
+    `prerender png fallback img: ${step.title}`,
+  )
+}
+
 assert(
   formatPageTitle(SELL_GYM_EQUIPMENT_META_TITLE) === doc.title,
   'React page title matches prerender title',

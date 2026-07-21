@@ -53,6 +53,14 @@ export const SELL_HERO_ARTWORK = Object.freeze({
   alt: 'Sell gym equipment on Equipd: create a listing, accept an offer, confirm handover and get paid securely',
 })
 
+/**
+ * Shared sizes attribute for journey images. Must match the React page so the
+ * prerendered markup and the hydrated markup resolve to the same image URL
+ * (otherwise the browser downloads both the -800 and full-size variants).
+ */
+export const SELL_JOURNEY_IMAGE_SIZES =
+  '(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw'
+
 function buildJourneyImageSet(baseName) {
   return {
     imageSrc: `${JOURNEY_IMAGE_DIR}/${baseName}.webp`,
@@ -416,17 +424,28 @@ function renderGuideSectionHtml() {
  * Build SEO document for build-time prerender (/sell-gym-equipment/index.html).
  */
 export function buildSellGymEquipmentSeoDocument() {
+  // Mirror the React page's <picture> exactly: the prerendered markup is live
+  // in the DOM until React mounts, so any full-size <img> here gets fetched by
+  // the lazy-load prescan on mobile before hydration swaps in the -800 source,
+  // double-downloading every journey image.
   const journeyItems = SELL_JOURNEY_STEPS.map(
     (step) => `<li>
       <h3>${escapeHtml(String(step.step))}. ${escapeHtml(step.title)}</h3>
-      <img
-        src="${escapeHtml(step.imageSrc)}"
-        alt="${escapeHtml(step.imageAlt)}"
-        width="${step.imageWidth}"
-        height="${step.imageHeight}"
-        loading="lazy"
-        decoding="async"
-      />
+      <picture>
+        <source media="(max-width: 767px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)}" />
+        <source media="(max-width: 767px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)}" />
+        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)} 800w, ${escapeHtml(step.imageSrc)} 1600w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
+        <source media="(min-width: 768px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)} 800w, ${escapeHtml(step.imageSrcPng)} 1600w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
+        <img
+          src="${escapeHtml(step.imageSrcPng)}"
+          alt="${escapeHtml(step.imageAlt)}"
+          width="${step.imageWidth}"
+          height="${step.imageHeight}"
+          sizes="${SELL_JOURNEY_IMAGE_SIZES}"
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
       <p>${escapeHtml(step.description)}</p>
     </li>`,
   ).join('\n      ')

@@ -26,6 +26,7 @@ import {
   SELL_GYM_EQUIPMENT_PATH,
   SELL_HERO_ARTWORK,
   SELL_HERO_TRUST_ITEMS,
+  SELL_JOURNEY_IMAGE_SIZES,
   SELL_JOURNEY_STEPS,
   VALUATION_PATH,
 } from '../lib/sellGymEquipmentPage.js'
@@ -113,14 +114,16 @@ function SellJourneyStep({
             srcSet={imageSrcMobilePng}
           />
           <source
+            media="(min-width: 768px)"
             type="image/webp"
             srcSet={`${imageSrcMobile} 800w, ${imageSrc} 1600w`}
-            sizes="(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw"
+            sizes={SELL_JOURNEY_IMAGE_SIZES}
           />
           <source
+            media="(min-width: 768px)"
             type="image/png"
             srcSet={`${imageSrcMobilePng} 800w, ${imageSrcPng || imageSrc} 1600w`}
-            sizes="(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw"
+            sizes={SELL_JOURNEY_IMAGE_SIZES}
           />
           <img
             src={imageSrcPng || imageSrc}
@@ -128,7 +131,7 @@ function SellJourneyStep({
             className="sell-page__step-image"
             width={imageWidth || 1600}
             height={imageHeight || 900}
-            sizes="(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw"
+            sizes={SELL_JOURNEY_IMAGE_SIZES}
             loading="lazy"
             decoding="async"
           />
