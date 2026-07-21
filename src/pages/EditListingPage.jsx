@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ListingForm from '../components/ListingForm'
 import ListingManageSection from '../components/listing/ListingManageSection'
+import SellerInventoryEditor from '../components/listing/SellerInventoryEditor'
 import '../components/ListingForm.css'
 import '../components/PageStub.css'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -380,6 +381,12 @@ function EditListingPage() {
         </p>
       ) : null}
 
+      <SellerInventoryEditor
+        key={listing.inventory_version}
+        listing={listing}
+        onListingChange={setListing}
+      />
+
       <ListingForm
         form={form}
         categories={categories}
@@ -395,6 +402,7 @@ function EditListingPage() {
         onReorderExistingImages={handleReorderExistingImages}
         formError={formError}
         formSuccess={formSuccess}
+        showQuantity={false}
         onSubmit={(event) => {
           event.preventDefault()
           if (isDraft) {

@@ -18,6 +18,7 @@ export const emptyListingForm = {
   collectionPhone: '',
   collectionInstructions: '',
   price: '',
+  quantity: '1',
   collectionAvailable: true,
   courierAvailable: false,
   deliveryNotes: '',
@@ -58,6 +59,7 @@ export function isCreateListingFormDirty(form, pendingFiles = []) {
   if (hasText(form.collectionPhone)) return true
   if (hasText(form.collectionInstructions)) return true
   if (hasText(form.price)) return true
+  if (String(form.quantity ?? '1') !== '1') return true
 
   return false
 }

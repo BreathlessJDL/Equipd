@@ -31,7 +31,9 @@ import {
   createListing,
   fetchCategories,
   getListingErrorMessage,
+  parseListingQuantity,
   prepareListingPayload,
+  updateListingQuantity,
   updateListing,
   validateListingForPublish,
 } from '../lib/listings'
@@ -254,6 +256,11 @@ function AddListingPage() {
 
     const payload = prepareListingPayload(form, status)
     const hasPhotos = pendingFiles.length > 0 || uploadedImageCount > 0
+    const quantity = parseListingQuantity(form.quantity)
+
+    if (quantity == null) {
+      return { ok: false, error: 'Quantity must be a whole number between 1 and 999.' }
+    }
 
     if (status === 'active') {
       const validationErrors = validateListingForPublish({
@@ -299,6 +306,7 @@ function AddListingPage() {
       courier_available: payload.courier_available,
       delivery_notes: payload.delivery_notes,
       seller_delivery_radius_miles: payload.seller_delivery_radius_miles,
+      quantity_total: quantity,
       status,
     }
 
@@ -313,6 +321,24 @@ function AddListingPage() {
       }
 
       listing = data
+
+      if (quantity !== data.quantity_total) {
+        const quantityResult = await updateListingQuantity(
+          data.id,
+          quantity,
+          data.inventory_version,
+        )
+
+        if (quantityResult.error) {
+          return {
+            ok: false,
+            error: getListingErrorMessage(quantityResult.error),
+            listing: data,
+          }
+        }
+
+        listing = quantityResult.data
+      }
     } else {
       const { data, error } = await createListing(user.id, listingFields)
 

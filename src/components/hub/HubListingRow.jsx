@@ -22,6 +22,15 @@ import {
   getHubListingStatusBadge,
 } from '../../lib/hubItemStatus'
 
+function formatInventorySummary(listing) {
+  return [
+    `${listing.quantity_total ?? 1} total`,
+    `${listing.quantity_available ?? 1} available`,
+    `${listing.quantity_reserved ?? 0} reserved`,
+    `${listing.quantity_sold ?? 0} sold`,
+  ].join(' · ')
+}
+
 function HubListingRow({
   listing,
   statusLabel,
@@ -48,7 +57,12 @@ function HubListingRow({
           label={statusLabel ?? badge.label}
         />
       }
-      metadata={metadata ? <p className="hub-item-row__metadata">{metadata}</p> : null}
+      metadata={(
+        <>
+          {metadata ? <p className="hub-item-row__metadata">{metadata}</p> : null}
+          <p className="hub-item-row__metadata">Inventory: {formatInventorySummary(listing)}</p>
+        </>
+      )}
       finance={<HubItemPrice amount={formatPricePence(listing.price_pence)} label="Price" />}
       iconActions={
         <HubItemNavActions>

@@ -79,6 +79,7 @@ function ListingForm({
   formSuccess = '',
   onSubmit,
   formId,
+  showQuantity = true,
   children,
 }) {
   function fieldId(name) {
@@ -431,6 +432,25 @@ function ListingForm({
             />
           </div>
         </ListingFormRow>
+        {showQuantity ? (
+          <ListingFormRow label="Quantity available" htmlFor={fieldId('quantity')}>
+            <input
+              id={fieldId('quantity')}
+              className="listing-form__input listing-form__input--underline"
+              type="number"
+              min="1"
+              max="999"
+              step="1"
+              inputMode="numeric"
+              value={form.quantity}
+              onChange={(event) => onFieldChange('quantity', event.target.value)}
+              aria-describedby={`${fieldId('quantity')}-hint`}
+            />
+            <p id={`${fieldId('quantity')}-hint`} className="listing-form__hint listing-form__hint--inline">
+              Enter 1–999 identical items. The price above is per item.
+            </p>
+          </ListingFormRow>
+        ) : null}
         {parsePriceToPence(form.price) ? (
           <SellerPayoutSummary
             amountInput={form.price}

@@ -21,10 +21,16 @@ import {
   parseSellerDeliveryRadiusInput,
   validateListingFulfilmentDetails,
 } from './listingFulfilmentPrivate'
+import { parseListingQuantity } from './listingQuantity'
 import { supabase } from './supabase'
 import { notifyIndexNowForListingChange } from './indexNowNotify'
 
 export { getCategoryDisplayName, getRatingLabel } from './listingOptions'
+export {
+  MAX_LISTING_QUANTITY,
+  MIN_LISTING_QUANTITY,
+  parseListingQuantity,
+} from './listingQuantity'
 export {
   FULFILMENT_BUYER_COURIER_MARKER,
   FULFILMENT_COLLECTION_MARKER,
@@ -109,6 +115,10 @@ export function validateListingForPublish({
     errors.push('Enter a valid price greater than zero.')
   }
 
+  if (form && parseListingQuantity(form.quantity) == null) {
+    errors.push('Quantity must be a whole number between 1 and 999.')
+  }
+
   if (!condition) {
     errors.push('Condition is required.')
   }
@@ -188,6 +198,7 @@ export function prepareListingPayload(form, status, existingListing = null) {
     rating: form.rating || null,
     description: appendOptionalItemDetails(form.description, form),
     price_pence: pricePence,
+    quantity_total: parseListingQuantity(form.quantity),
     condition,
     ...locationFields,
     collection_available: deliveryFields.collection_available,
@@ -216,6 +227,7 @@ export function listingToForm(listing) {
     categoryId: listing.category_id ?? listing.category?.id ?? '',
     rating: listing.rating ?? '',
     price: formatPenceToPriceInput(listing.price_pence),
+    quantity: String(listing.quantity_total ?? 1),
     condition: listing.condition ?? '',
     ...locationFields,
     colour: '',
@@ -424,6 +436,14 @@ export async function createListing(sellerId, fields) {
   }
 
   const slug = generateListingSlug(fields.title)
+  const quantity = parseListingQuantity(fields.quantity_total)
+
+  if (quantity == null) {
+    return {
+      data: null,
+      error: new Error('Quantity must be a whole number between 1 and 999.'),
+    }
+  }
 
   const { data, error } = await supabase
     .from('listings')
@@ -449,6 +469,7 @@ export async function createListing(sellerId, fields) {
       courier_available: fields.courier_available,
       delivery_notes: fields.delivery_notes,
       seller_delivery_radius_miles: fields.seller_delivery_radius_miles ?? null,
+      quantity_total: quantity,
       status: fields.status,
       source: 'manual',
     })
@@ -463,6 +484,29 @@ export async function createListing(sellerId, fields) {
       source: 'createListing',
     })
   }
+
+  return { data, error }
+}
+
+export async function updateListingQuantity(listingId, newTotal, expectedInventoryVersion) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const quantity = parseListingQuantity(newTotal)
+  if (quantity == null) {
+    return {
+      data: null,
+      error: new Error('Quantity must be a whole number between 1 and 999.'),
+    }
+  }
+
+  const { data, error } = await supabase
+    .rpc('update_listing_quantity', {
+      p_listing_id: listingId,
+      p_new_total: quantity,
+      p_expected_inventory_version: expectedInventoryVersion,
+    })
 
   return { data, error }
 }
