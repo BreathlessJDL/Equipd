@@ -3,6 +3,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import sharp from 'sharp'
 import { formatPageTitle } from '../src/lib/pageTitles.js'
 import {
   buildSellGymEquipmentBreadcrumbSchema,
@@ -16,6 +17,7 @@ import {
   SELL_GYM_EQUIPMENT_LEAD,
   SELL_GYM_EQUIPMENT_META_DESCRIPTION,
   SELL_GYM_EQUIPMENT_META_TITLE,
+  SELL_GYM_EQUIPMENT_OG_IMAGE,
   SELL_GYM_EQUIPMENT_PAGE_TITLE,
   SELL_GYM_EQUIPMENT_PATH,
   SELL_HERO_ARTWORK,
@@ -37,7 +39,10 @@ assert(doc.title === SELL_GYM_EQUIPMENT_PAGE_TITLE, 'document title')
 assert(doc.description === SELL_GYM_EQUIPMENT_META_DESCRIPTION, 'meta description')
 assert(doc.canonicalPath === '/sell-gym-equipment', 'canonical path field')
 assert(doc.openGraph?.['og:title'] === SELL_GYM_EQUIPMENT_PAGE_TITLE, 'open graph title')
-assert(doc.openGraph?.['og:image']?.includes('sell-gym-equipment-marketplace'), 'open graph image')
+assert(doc.openGraph?.['og:image']?.endsWith('/sell-gym-equipment/sell-gym-equipment-og.png'), 'dedicated open graph image')
+assert(doc.openGraph?.['og:image:width'] === '1200', 'open graph image width')
+assert(doc.openGraph?.['og:image:height'] === '630', 'open graph image height')
+assert(doc.robots === 'index, follow, max-image-preview:large', 'large image preview robots directive')
 assert(doc.bodyHtml.includes(`<h1>${SELL_GYM_EQUIPMENT_H1}</h1>`), 'single H1 in prerender body')
 assert((doc.bodyHtml.match(/<h1/g) || []).length === 1, 'only one H1 in prerender body')
 assert(
@@ -213,7 +218,7 @@ assert(
   pageSource.indexOf('<SellGuideSection') < pageSource.indexOf('className="sell-page__faq"'),
   'SEO guide appears above FAQ',
 )
-assert(pageSource.includes('Check Your Equipment Value First'), 'optional valuation is secondary CTA')
+assert(pageSource.includes('Get a Free Valuation'), 'optional valuation is secondary CTA')
 assert(!pageSource.includes('sell-page__closing'), 'final closing CTA section removed')
 assert(!pageSource.includes('Ready to sell your gym equipment?'), 'closing headline removed')
 assert(!pageSource.includes('Create Your Listing Now'), 'closing CTA copy removed')
@@ -272,8 +277,8 @@ assert(!contentSource.includes('SELL_HERO_IMAGE'), 'old hero image export remove
 assert(!contentSource.includes('SELL_HERO_COLLAGE_PANELS'), 'collage panel export removed')
 assert(!contentSource.includes('hero-equipment'), 'old hero equipment paths removed from content')
 assert(!contentSource.includes('hero-selling-artwork'), 'opaque hero artwork paths removed')
-assert(SELL_GYM_EQUIPMENT_LEAD.includes('get paid securely through Equipd'), 'hero lead copy exported')
-assert(SELL_GYM_EQUIPMENT_H1 === 'Sell Your Gym Equipment', 'SEO hero headline')
+assert(SELL_GYM_EQUIPMENT_LEAD.includes('You do not need a valuation to list'), 'direct listing hero copy exported')
+assert(SELL_GYM_EQUIPMENT_H1 === 'Sell Your Gym Equipment with Equipd', 'SEO hero headline')
 assert(SELL_GYM_EQUIPMENT_META_DESCRIPTION.length >= 140 && SELL_GYM_EQUIPMENT_META_DESCRIPTION.length <= 165, 'meta description length')
 
 const cssSource = readFileSync(join(process.cwd(), 'src', 'pages', 'SellGymEquipmentPage.css'), 'utf8')
@@ -338,7 +343,10 @@ assert(pageJsx.includes('sell-page__hero-eyebrow'), 'hero eyebrow present in mar
 assert(pageJsx.includes('Sell it simply'), 'hero eyebrow copy')
 assert(/sell-page__hero-eyebrow" aria-hidden="true"/.test(pageJsx), 'eyebrow is decorative only')
 assert((pageJsx.match(/<h1/g) || []).length === 1, 'hero keeps a single H1')
-assert(/<h1 id="sell-page-title" className="sell-page__h1">\s*with Equipd\s*<\/h1>/.test(pageJsx), 'visible H1 reads "with Equipd"')
+assert(
+  /<h1 id="sell-page-title" className="sell-page__h1">\s*Sell Your Gym Equipment with Equipd\s*<\/h1>/.test(pageJsx),
+  'visible H1 describes the sell page',
+)
 assert(pageSource.includes('sell-page__step-number'), 'journey marker structure')
 assert(pageSource.includes('sell-page__benefit-mark'), 'benefit handwritten markers present')
 assert(pageSource.includes('Want to know what it'), 'optional valuation heading')
@@ -372,6 +380,18 @@ assert(!existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'hero-equ
 assert(!existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'hero-equipment.png')), 'obsolete treadmill hero png removed')
 assert(existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'sell-gym-equipment-marketplace.webp')), 'SEO hero webp present')
 assert(existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'sell-gym-equipment-marketplace.png')), 'SEO hero png present')
+assert(
+  existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'sell-gym-equipment-og.png')),
+  'dedicated social preview present',
+)
+const ogMetadata = await sharp(
+  join(process.cwd(), 'public', 'sell-gym-equipment', 'sell-gym-equipment-og.png'),
+).metadata()
+assert(
+  ogMetadata.width === SELL_GYM_EQUIPMENT_OG_IMAGE.width
+    && ogMetadata.height === SELL_GYM_EQUIPMENT_OG_IMAGE.height,
+  'social preview is exactly 1200x630',
+)
 assert(existsSync(join(process.cwd(), 'scripts', 'generate-sell-equipment-header-transparent.mjs')), 'transparent header generator present')
 assert(existsSync(join(process.cwd(), 'public', 'images', 'sell', 'step-1.webp')), 'journey step-1 webp present')
 assert(
@@ -393,12 +413,18 @@ assert(
 )
 assert(html.includes('name="description"'), 'prerender meta description')
 assert(html.includes('rel="canonical"'), 'prerender canonical')
+assert(html.includes('max-image-preview:large'), 'prerender allows large image previews')
 assert(html.includes('og:title'), 'prerender open graph title')
 assert(html.includes('twitter:card'), 'prerender twitter card')
 assert(
   (html.match(/property="og:title"/g) || []).length === 1,
   'single og:title after stripping homepage defaults',
 )
+assert((html.match(/<title>/g) || []).length === 1, 'single title in prerender')
+assert((html.match(/name="description"/g) || []).length === 1, 'single description in prerender')
+assert((html.match(/rel="canonical"/g) || []).length === 1, 'single canonical in prerender')
+assert((html.match(/property="og:image"/g) || []).length === 1, 'single og:image in prerender')
+assert((html.match(/"@type":"FAQPage"/g) || []).length === 1, 'single FAQPage entity in prerender')
 assert(
   !html.includes('Buy, Sell &amp; Value Used Gym Equipment | Equipd Marketplace'),
   'homepage social title not left in sell prerender',

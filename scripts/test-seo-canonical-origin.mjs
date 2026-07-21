@@ -11,6 +11,7 @@ import {
   buildEquipmentPageSeoBundle,
 } from '../src/lib/equipmentPageSeo.js'
 import {
+  EQUIPD_ORGANIZATION_DESCRIPTION,
   EQUIPD_SCHEMA_ORIGIN,
   buildOrganizationSchema,
   buildWebsiteSchema,
@@ -66,11 +67,7 @@ const org = buildOrganizationSchema()
 const website = buildWebsiteSchema()
 assertWwwOnly(JSON.stringify(org), 'organization schema')
 assertWwwOnly(JSON.stringify(website), 'website schema')
-assert(
-  org.description ===
-    'Equipd is the UK marketplace for buying and selling used gym equipment, with tools to value eligible kit.',
-  'updated description',
-)
+assert(org.description === EQUIPD_ORGANIZATION_DESCRIPTION, 'shared organization description')
 assert(!org.description.includes('commercial'), 'description not commercial-only')
 
 const brandsDoc = buildBrandsIndexSeoDocument({

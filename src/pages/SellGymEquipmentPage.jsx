@@ -146,17 +146,17 @@ function ValuationPreview() {
   return (
     <ol className="sell-page__valuation-preview" aria-hidden="true">
       <li className="sell-page__valuation-card">
-        <span className="sell-page__valuation-card-label">1. Search</span>
+        <span className="sell-page__valuation-card-label">Search</span>
         <span className="sell-page__valuation-search">Life Fitness T5…</span>
       </li>
       <li className="sell-page__valuation-card">
-        <span className="sell-page__valuation-card-label">2. Value</span>
+        <span className="sell-page__valuation-card-label">Estimate</span>
         <span className="sell-page__valuation-range">£2,100 – £2,600</span>
         <span className="sell-page__valuation-spark" />
       </li>
       <li className="sell-page__valuation-card">
-        <span className="sell-page__valuation-card-label">3. List</span>
-        <span className="sell-page__valuation-list-cta">Create listing</span>
+        <span className="sell-page__valuation-card-label">Your choice</span>
+        <span className="sell-page__valuation-list-cta">Choose your price</span>
       </li>
     </ol>
   )
@@ -286,6 +286,7 @@ export default function SellGymEquipmentPage() {
     title: SELL_GYM_EQUIPMENT_META_TITLE,
     description: SELL_GYM_EQUIPMENT_META_DESCRIPTION,
     canonicalPath: SELL_GYM_EQUIPMENT_PATH,
+    robotsContent: 'index, follow, max-image-preview:large',
     openGraph,
   })
 
@@ -307,7 +308,7 @@ export default function SellGymEquipmentPage() {
                 Sell it simply
               </span>
               <h1 id="sell-page-title" className="sell-page__h1">
-                with Equipd
+                Sell Your Gym Equipment with Equipd
               </h1>
               <p className="sell-page__lead">{SELL_GYM_EQUIPMENT_LEAD}</p>
               <div className="sell-page__actions">
@@ -318,12 +319,9 @@ export default function SellGymEquipmentPage() {
                   Create a Listing Now
                 </ProtectedLink>
                 <Link to={VALUATION_PATH} className="sell-page__btn sell-page__btn--secondary">
-                  Get a Valuation
+                  Get a Free Valuation
                 </Link>
               </div>
-              <p className="sell-page__note">
-                A valuation is optional — you can list your equipment immediately.
-              </p>
               <TrustLine />
             </div>
             {showHeroArtwork ? (
@@ -362,13 +360,13 @@ export default function SellGymEquipmentPage() {
         <div className="sell-page__reading-rail sell-page__reading-rail--optional">
           <div className="sell-page__optional-panel">
             <div>
-              <p className="sell-page__eyebrow">Optional</p>
+              <p className="sell-page__eyebrow">Valuation is optional</p>
               <h2 id="sell-optional-heading" className="sell-page__h2 sell-page__h2--optional">
                 Want to know what it&apos;s worth first?
               </h2>
               <p className="sell-page__optional-copy">
-                Get an instant equipment valuation before listing if you want guidance on your
-                asking price.
+                You can list your equipment straight away without completing a valuation. If you
+                would like help choosing an asking price, use our free equipment valuation tool.
               </p>
               <div className="sell-page__optional-actions">
                 <ProtectedLink
@@ -381,12 +379,9 @@ export default function SellGymEquipmentPage() {
                   or
                 </p>
                 <Link to={VALUATION_PATH} className="sell-page__btn sell-page__btn--secondary">
-                  Check Your Equipment Value First
+                  Get a Free Valuation
                 </Link>
               </div>
-              <p className="sell-page__optional-note">
-                A valuation is optional — you can list your equipment immediately.
-              </p>
             </div>
             <ValuationPreview />
           </div>

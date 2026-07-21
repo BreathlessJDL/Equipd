@@ -17,21 +17,23 @@ export const CREATE_LISTING_PATH = '/listings/new'
 export const VALUATION_PATH = '/valuation'
 export const BROWSE_PATH = '/browse'
 export const BRANDS_PATH = '/brands'
+export const BUYER_PROTECTION_PATH = '/help/buyer-protection'
+export const HOW_SELLING_WORKS_PATH = '/help/how-selling-works'
 
 export const SELL_GYM_EQUIPMENT_META_TITLE =
-  "Sell Gym Equipment | UK's Fitness Equipment Marketplace"
+  'Sell Used Gym Equipment Across the UK'
 
 export const SELL_GYM_EQUIPMENT_PAGE_TITLE =
   `${SELL_GYM_EQUIPMENT_META_TITLE} | Equipd`
 
-/** ~152 characters — includes primary keyword, UK, free listing, secure payments, home/commercial. */
+/** 157 characters — keeps the direct-listing message and optional valuation in one snippet. */
 export const SELL_GYM_EQUIPMENT_META_DESCRIPTION =
-  'Sell gym equipment on Equipd — the UK marketplace for home and commercial fitness equipment. Free listing, secure payments, and reach buyers nationwide.'
+  'Sell used home or commercial gym equipment on Equipd. Create a listing in minutes and reach serious buyers across the UK. Free valuation available if needed.'
 
-export const SELL_GYM_EQUIPMENT_H1 = 'Sell Your Gym Equipment'
+export const SELL_GYM_EQUIPMENT_H1 = 'Sell Your Gym Equipment with Equipd'
 
 export const SELL_GYM_EQUIPMENT_LEAD =
-  'List used home or commercial gym equipment in minutes, reach serious buyers across the UK, and get paid securely through Equipd.'
+  'Sell used home or commercial gym equipment across the UK. Create a listing in minutes and reach serious fitness equipment buyers. You do not need a valuation to list. If you are unsure what price to ask, you can use our free equipment valuation tool first.'
 
 export const SELL_HERO_TRUST_ITEMS = Object.freeze([
   'Free to list',
@@ -43,6 +45,13 @@ export const WEBPAGE_SCHEMA_KEY = 'webpage'
 
 const JOURNEY_IMAGE_DIR = '/images/sell'
 const HERO_IMAGE_DIR = '/sell-gym-equipment'
+
+export const SELL_GYM_EQUIPMENT_OG_IMAGE = Object.freeze({
+  src: `${HERO_IMAGE_DIR}/sell-gym-equipment-og.png`,
+  width: 1200,
+  height: 630,
+  alt: 'Equipd Sell Your Gym Equipment preview with a listing screen and UK seller message',
+})
 
 /** Right-hand hero artwork — transparent marketplace collage. */
 export const SELL_HERO_ARTWORK = Object.freeze({
@@ -142,6 +151,18 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
       'That focus usually means better conversations, fewer wasted enquiries and a cleaner path from listing to handover when you sell used gym equipment online. You are not competing with sofas, bikes or random household clutter for attention.',
       'Equipd is built around product context, messaging and protected checkout so both home sellers and facility operators can move kit with less friction.',
     ],
+    bullets: [
+      {
+        before: 'Ready to sell? ',
+        link: { to: CREATE_LISTING_PATH, label: 'Create your equipment listing' },
+        after: ' directly.',
+      },
+      {
+        before: 'Read ',
+        link: { to: HOW_SELLING_WORKS_PATH, label: 'how selling on Equipd works' },
+        after: ' from listing to payout.',
+      },
+    ],
   },
   {
     id: 'home-and-commercial',
@@ -165,7 +186,7 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
       },
       {
         before: 'Compare model guides and values via ',
-        link: { to: VALUATION_PATH, label: 'Equipment Values' },
+        link: { to: BRANDS_PATH, label: 'Equipment Values' },
         after: '.',
       },
     ],
@@ -195,8 +216,20 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     title: 'Pricing guidance and valuations',
     paragraphs: [
       'Asking price is still your choice. Condition, age, completeness and local collection practicality all move the needle on what buyers will pay for used gym equipment in the UK.',
-      'An optional valuation helps you sense-check original RRP, manufacture year and used-market context before you list. Use that guidance to set a confident price — then create your listing. You never need a valuation to sell gym equipment on Equipd.',
+      'You can create a listing directly without knowing the original RRP or completing a valuation. If you would like pricing guidance, the optional valuation tool can help you review available product and used-market context before choosing your asking price.',
       'Well-priced listings with honest condition notes typically attract faster offers than optimistic asking prices that sit for weeks.',
+    ],
+    bullets: [
+      {
+        before: 'Use the ',
+        link: { to: VALUATION_PATH, label: 'free equipment valuation tool' },
+        after: ' for optional pricing guidance.',
+      },
+      {
+        before: 'Browse ',
+        link: { to: BRANDS_PATH, label: 'equipment values and model guides' },
+        after: ' by brand.',
+      },
     ],
   },
   {
@@ -206,6 +239,13 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
       'Handover can be buyer collection, seller delivery or a buyer-arranged courier. Collection and seller delivery use Equipd’s QR confirmation flow; courier orders use evidence and delivery confirmation so both sides know when risk transfers.',
       'Payments run through Stripe Connect. When the order completes under Buyer Protection, your payout is released — so selling exercise equipment does not mean chasing cash on the doorstep or relying on informal bank transfers.',
       'Listings are free. When an item sells, Equipd applies a 2% Seller Service Fee deducted from your payout. You see the sale price, fee and amount you receive before you accept.',
+    ],
+    bullets: [
+      {
+        before: 'Learn more about ',
+        link: { to: BUYER_PROTECTION_PATH, label: 'Equipd Buyer Protection' },
+        after: '.',
+      },
     ],
   },
   {
@@ -231,9 +271,9 @@ export const SELL_FAQ_ITEMS = Object.freeze([
       'Creating a listing is free. When an item sells, Equipd applies a 2% Seller Service Fee, which is deducted from your payout before funds are transferred through Stripe.',
   },
   {
-    question: 'How do I sell gym equipment on Equipd?',
+    question: 'How do I sell used gym equipment on Equipd?',
     answer:
-      'Create a free listing with photos, a description and your asking price. When a buyer offers, chat in Equipd messaging, accept the sale, arrange handover, and receive your payout through Stripe once the order completes.',
+      'Create a listing with photos, information about the equipment, its condition, your asking price and your preferred fulfilment option. Buyers can then contact you or make an offer through Equipd.',
   },
   {
     question: 'Can I sell commercial gym equipment?',
@@ -246,9 +286,14 @@ export const SELL_FAQ_ITEMS = Object.freeze([
       'Yes. Equipd supports home gym equipment as well as commercial kit — including treadmills, bikes, racks, weights and other fitness equipment.',
   },
   {
-    question: 'Do I need a valuation before selling?',
+    question: 'Do I need to value my equipment before listing?',
     answer:
-      'No. You can create a listing immediately. The valuation tool is optional if you want guidance on what your equipment may be worth before choosing an asking price.',
+      'No. You can create a listing immediately without completing a valuation. Equipd’s free valuation tool is optional and can help you estimate a suitable asking price before listing.',
+  },
+  {
+    question: 'Can I sell without using the valuation tool?',
+    answer:
+      'Yes. Go directly to Create a Listing and enter your equipment and selling details. The valuation tool is available only if you would like additional guidance on pricing.',
   },
   {
     question: 'How do I receive payment?',
@@ -264,11 +309,6 @@ export const SELL_FAQ_ITEMS = Object.freeze([
     question: 'What brands can I sell?',
     answer:
       'You can list equipment from major fitness brands such as Life Fitness, Technogym, Matrix, Concept2, Precor, Cybex and many others. Accurate brand and model details help serious buyers find your listing.',
-  },
-  {
-    question: 'How long does it take to sell?',
-    answer:
-      'Timing varies by item, price and demand. Well-photographed listings with clear descriptions and realistic asking prices typically attract interest faster on a specialist marketplace.',
   },
   {
     question: 'What happens when I receive an offer?',
@@ -289,7 +329,7 @@ export const SELL_FAQ_ITEMS = Object.freeze([
 
 export function buildSellGymEquipmentOpenGraph() {
   const pageUrl = `${EQUIPD_SITE_ORIGIN}${SELL_GYM_EQUIPMENT_PATH}`
-  const imageUrl = `${EQUIPD_SITE_ORIGIN}${SELL_HERO_ARTWORK.srcPng}`
+  const imageUrl = `${EQUIPD_SITE_ORIGIN}${SELL_GYM_EQUIPMENT_OG_IMAGE.src}`
   return {
     'og:type': 'website',
     'og:site_name': 'Equipd',
@@ -298,7 +338,9 @@ export function buildSellGymEquipmentOpenGraph() {
     'og:title': SELL_GYM_EQUIPMENT_PAGE_TITLE,
     'og:description': SELL_GYM_EQUIPMENT_META_DESCRIPTION,
     'og:image': imageUrl,
-    'og:image:alt': SELL_HERO_ARTWORK.alt,
+    'og:image:width': String(SELL_GYM_EQUIPMENT_OG_IMAGE.width),
+    'og:image:height': String(SELL_GYM_EQUIPMENT_OG_IMAGE.height),
+    'og:image:alt': SELL_GYM_EQUIPMENT_OG_IMAGE.alt,
     'twitter:card': 'summary_large_image',
     'twitter:title': SELL_GYM_EQUIPMENT_PAGE_TITLE,
     'twitter:description': SELL_GYM_EQUIPMENT_META_DESCRIPTION,
@@ -318,7 +360,7 @@ export function buildSellGymEquipmentBreadcrumbSchema() {
 
 export function buildSellGymEquipmentWebPageSchema() {
   const pageUrl = `${EQUIPD_SITE_ORIGIN}${SELL_GYM_EQUIPMENT_PATH}`
-  const imageUrl = `${EQUIPD_SITE_ORIGIN}${SELL_HERO_ARTWORK.srcPng}`
+  const imageUrl = `${EQUIPD_SITE_ORIGIN}${SELL_GYM_EQUIPMENT_OG_IMAGE.src}`
   return {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -338,8 +380,8 @@ export function buildSellGymEquipmentWebPageSchema() {
     primaryImageOfPage: {
       '@type': 'ImageObject',
       url: imageUrl,
-      width: SELL_HERO_ARTWORK.width,
-      height: SELL_HERO_ARTWORK.height,
+      width: SELL_GYM_EQUIPMENT_OG_IMAGE.width,
+      height: SELL_GYM_EQUIPMENT_OG_IMAGE.height,
     },
     image: [imageUrl],
     publisher: {
@@ -460,8 +502,7 @@ export function buildSellGymEquipmentSeoDocument() {
   <header>
     <h1>${escapeHtml(SELL_GYM_EQUIPMENT_H1)}</h1>
     <p>${escapeHtml(SELL_GYM_EQUIPMENT_LEAD)}</p>
-    <p><a href="${CREATE_LISTING_PATH}">Create a Listing Now</a> · <a href="${VALUATION_PATH}">Get a Valuation</a></p>
-    <p>A valuation is optional — you can list your equipment immediately.</p>
+    <p><a href="${CREATE_LISTING_PATH}">Create a Listing Now</a> · <a href="${VALUATION_PATH}">Get a Free Valuation</a></p>
   </header>
   <section aria-labelledby="seo-sell-journey-heading">
     <h2 id="seo-sell-journey-heading">How selling on Equipd works</h2>
@@ -470,9 +511,8 @@ export function buildSellGymEquipmentSeoDocument() {
   </section>
   <section aria-labelledby="seo-sell-valuation-heading">
     <h2 id="seo-sell-valuation-heading">Want to know what it&apos;s worth first?</h2>
-    <p>Get an instant equipment valuation before listing if you would like guidance on your asking price.</p>
-    <p><a href="${CREATE_LISTING_PATH}">Create a Listing</a> · <a href="${VALUATION_PATH}">Check Your Equipment Value First</a></p>
-    <p>A valuation is optional — you can list your equipment immediately.</p>
+    <p><strong>Valuation is optional.</strong> You can list your equipment straight away without completing a valuation. If you would like help choosing an asking price, use our free equipment valuation tool first.</p>
+    <p><a href="${CREATE_LISTING_PATH}">Create a Listing Now</a> · <a href="${VALUATION_PATH}">Get a Free Valuation</a></p>
   </section>
   <section aria-labelledby="seo-sell-benefits-heading">
     <h2 id="seo-sell-benefits-heading">Why sell on Equipd?</h2>
@@ -497,6 +537,7 @@ export function buildSellGymEquipmentSeoDocument() {
     title: SELL_GYM_EQUIPMENT_PAGE_TITLE,
     description: SELL_GYM_EQUIPMENT_META_DESCRIPTION,
     canonicalPath: SELL_GYM_EQUIPMENT_PATH,
+    robots: 'index, follow, max-image-preview:large',
     openGraph: buildSellGymEquipmentOpenGraph(),
     // Desktop LCP: hero artwork is hidden below 768px
     headLinks: [

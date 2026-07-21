@@ -25,6 +25,7 @@ export function usePageMeta({
   description,
   canonicalPath = null,
   noIndex = false,
+  robotsContent = null,
   openGraph = null,
 } = {}) {
   usePageTitle(title)
@@ -54,7 +55,7 @@ export function usePageMeta({
   }, [description])
 
   useEffect(() => {
-    if (!canonicalPath && noIndex == null) return undefined
+    if (!canonicalPath && noIndex == null && !robotsContent) return undefined
 
     let canonical = document.querySelector('link[rel="canonical"]')
     const createdCanonical = !canonical
@@ -76,13 +77,16 @@ export function usePageMeta({
     const createdRobots = !robots
     const previousRobots = robots?.getAttribute('content') ?? ''
 
-    if (noIndex != null) {
+    const nextRobotsContent =
+      robotsContent || (noIndex != null ? (noIndex ? 'noindex, follow' : 'index, follow') : null)
+
+    if (nextRobotsContent) {
       if (!robots) {
         robots = document.createElement('meta')
         robots.setAttribute('name', 'robots')
         document.head.appendChild(robots)
       }
-      robots.setAttribute('content', noIndex ? 'noindex, follow' : 'index, follow')
+      robots.setAttribute('content', nextRobotsContent)
     }
 
     return () => {
@@ -90,12 +94,12 @@ export function usePageMeta({
         if (createdCanonical) canonical?.remove()
         else if (canonical) canonical.setAttribute('href', previousCanonical)
       }
-      if (noIndex != null) {
+      if (nextRobotsContent) {
         if (createdRobots) robots?.remove()
         else if (robots) robots.setAttribute('content', previousRobots)
       }
     }
-  }, [canonicalPath, noIndex])
+  }, [canonicalPath, noIndex, robotsContent])
 
   useEffect(() => {
     if (!openGraph || typeof openGraph !== 'object') return undefined
