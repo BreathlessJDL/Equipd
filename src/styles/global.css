@@ -1,4 +1,5 @@
 @import '../components/BuyerProtectionBrand.css';
+@import './fonts.css';
 
 :root {
   --color-bg: #f7f8fa;

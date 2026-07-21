@@ -479,6 +479,17 @@ export function buildSellGymEquipmentSeoDocument() {
     description: SELL_GYM_EQUIPMENT_META_DESCRIPTION,
     canonicalPath: SELL_GYM_EQUIPMENT_PATH,
     openGraph: buildSellGymEquipmentOpenGraph(),
+    // Desktop LCP: hero artwork is hidden below 768px
+    headLinks: [
+      {
+        rel: 'preload',
+        as: 'image',
+        href: SELL_HERO_ARTWORK.src,
+        type: 'image/webp',
+        media: '(min-width: 768px)',
+        fetchPriority: 'high',
+      },
+    ],
     jsonLd: [
       buildSellGymEquipmentWebPageSchema(),
       buildSellGymEquipmentBreadcrumbSchema(),

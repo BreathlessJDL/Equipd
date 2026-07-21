@@ -86,7 +86,11 @@ const pageJsx = readFileSync(join(process.cwd(), 'src', 'pages', 'SellGymEquipme
 assert(pageJsx.includes('<picture>'), 'journey images use picture element')
 assert(pageJsx.includes('type="image/webp"'), 'webp source present')
 assert(pageJsx.includes('media="(max-width: 767px)"'), 'mobile-only smaller journey sources')
-assert(pageJsx.includes('srcSet={imageSrc}'), 'desktop uses full-resolution webp')
+assert(
+  pageJsx.includes('${imageSrcMobile} 800w, ${imageSrc} 1600w') ||
+    pageJsx.includes('800w, ${imageSrc} 1600w'),
+  'desktop webp srcset includes 800w and 1600w',
+)
 assert(pageJsx.includes('sizes='), 'responsive sizes attribute present')
 assert(pageJsx.includes('loading="lazy"'), 'below-fold journey images lazy load')
 assert(!pageJsx.includes('imageSrcSet'), 'no density srcset that prefers -800 on desktop')
@@ -209,7 +213,10 @@ assert(
 assert(!pageSource.includes('reading-rail--guide'), 'guide no longer uses narrow reading rail')
 assert(!pageSource.includes('sell-page__guide-grid'), 'old equal two-column guide grid removed')
 assert(pageSource.includes('sell-page__step-image'), 'journey image class present')
-assert(pageSource.includes('rel = \'preload\'') || pageSource.includes('rel = "preload"') || pageSource.includes("rel: 'preload'") || pageSource.includes('link.rel = \'preload\'') || pageSource.includes('link.rel = "preload"'), 'hero image preload present')
+assert(
+  pageSource.includes('800w') && pageSource.includes('1600w'),
+  'journey images expose 800w + 1600w srcset',
+)
 assert(pageSource.includes('openGraph'), 'social meta via openGraph')
 assert(pageSource.includes('sell-page__hero-visual'), 'split hero visual present')
 assert(pageSource.includes('sell-page__hero-artwork'), 'hero artwork wrapper present')
@@ -230,6 +237,10 @@ assert(!pageSource.includes('HeroCollage'), 'layered collage component removed')
 assert(!/DRIPP/i.test(pageSource), 'no invented DRIPP branding on page')
 
 const contentSource = readFileSync(join(process.cwd(), 'src', 'lib', 'sellGymEquipmentPage.js'), 'utf8')
+assert(
+  contentSource.includes("rel: 'preload'") && contentSource.includes('headLinks'),
+  'hero image preload declared on SEO document headLinks',
+)
 assert(SELL_HERO_TRUST_ITEMS.join('|') === 'Free to list|Reach buyers nationwide|Secure payments through Stripe', 'hero trust items are the three seller benefits')
 assert(!SELL_HERO_TRUST_ITEMS.some((item) => /buyer protection/i.test(item)), 'hero trust does not list Buyer Protection')
 assert(SELL_HERO_ARTWORK.src.includes('sell-gym-equipment-marketplace.webp'), 'hero artwork webp path')

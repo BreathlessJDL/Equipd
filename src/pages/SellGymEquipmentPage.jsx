@@ -41,6 +41,25 @@ function TrustLine() {
   )
 }
 
+function useMinWidth(minWidthPx) {
+  const query = `(min-width: ${minWidthPx}px)`
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false
+    return window.matchMedia(query).matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const media = window.matchMedia(query)
+    const onChange = () => setMatches(media.matches)
+    onChange()
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [query])
+
+  return matches
+}
+
 function HeroArtwork() {
   return (
     <div className="sell-page__hero-artwork">
@@ -83,9 +102,26 @@ function SellJourneyStep({
       <h3 className="sell-page__step-title">{title}</h3>
       <div className="sell-page__step-frame">
         <picture>
-          <source media="(max-width: 767px)" type="image/webp" srcSet={imageSrcMobile} />
-          <source media="(max-width: 767px)" type="image/png" srcSet={imageSrcMobilePng} />
-          <source type="image/webp" srcSet={imageSrc} />
+          <source
+            media="(max-width: 767px)"
+            type="image/webp"
+            srcSet={imageSrcMobile}
+          />
+          <source
+            media="(max-width: 767px)"
+            type="image/png"
+            srcSet={imageSrcMobilePng}
+          />
+          <source
+            type="image/webp"
+            srcSet={`${imageSrcMobile} 800w, ${imageSrc} 1600w`}
+            sizes="(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw"
+          />
+          <source
+            type="image/png"
+            srcSet={`${imageSrcMobilePng} 800w, ${imageSrcPng || imageSrc} 1600w`}
+            sizes="(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw"
+          />
           <img
             src={imageSrcPng || imageSrc}
             alt={imageAlt}
@@ -241,6 +277,7 @@ function SellFaqItem({ question, answer }) {
 
 export default function SellGymEquipmentPage() {
   const openGraph = useMemo(() => buildSellGymEquipmentOpenGraph(), [])
+  const showHeroArtwork = useMinWidth(768)
 
   usePageMeta({
     title: SELL_GYM_EQUIPMENT_META_TITLE,
@@ -248,21 +285,6 @@ export default function SellGymEquipmentPage() {
     canonicalPath: SELL_GYM_EQUIPMENT_PATH,
     openGraph,
   })
-
-  useEffect(() => {
-    const existing = document.querySelector(`link[rel="preload"][href="${SELL_HERO_ARTWORK.src}"]`)
-    if (existing) return undefined
-    const link = document.createElement('link')
-    link.rel = 'preload'
-    link.as = 'image'
-    link.href = SELL_HERO_ARTWORK.src
-    link.type = 'image/webp'
-    // Artwork is hidden on mobile, so only preload where it renders
-    link.media = '(min-width: 768px)'
-    link.setAttribute('fetchpriority', 'high')
-    document.head.appendChild(link)
-    return () => link.remove()
-  }, [])
 
   const breadcrumbSchema = useMemo(() => buildSellGymEquipmentBreadcrumbSchema(), [])
   const webPageSchema = useMemo(() => buildSellGymEquipmentWebPageSchema(), [])
@@ -301,9 +323,11 @@ export default function SellGymEquipmentPage() {
               </p>
               <TrustLine />
             </div>
-            <div className="sell-page__hero-visual">
-              <HeroArtwork />
-            </div>
+            {showHeroArtwork ? (
+              <div className="sell-page__hero-visual">
+                <HeroArtwork />
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

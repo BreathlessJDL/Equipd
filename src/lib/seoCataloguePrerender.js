@@ -113,6 +113,28 @@ function renderOpenGraphTags(openGraph = {}) {
     .join('\n    ')
 }
 
+/** Optional <link> tags from SEO documents (e.g. LCP image preload). */
+function renderHeadLinks(links = []) {
+  if (!Array.isArray(links) || !links.length) return ''
+  return links
+    .filter((link) => link?.rel && link?.href)
+    .map((link) => {
+      const attrs = [
+        `rel="${escapeHtml(link.rel)}"`,
+        link.as ? `as="${escapeHtml(link.as)}"` : '',
+        `href="${escapeHtml(link.href)}"`,
+        link.type ? `type="${escapeHtml(link.type)}"` : '',
+        link.media ? `media="${escapeHtml(link.media)}"` : '',
+        link.fetchPriority ? `fetchpriority="${escapeHtml(link.fetchPriority)}"` : '',
+        link.crossOrigin ? `crossorigin="${escapeHtml(link.crossOrigin === true ? '' : link.crossOrigin)}"` : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      return `<link ${attrs} />`
+    })
+    .join('\n    ')
+}
+
 function renderBreadcrumbs(items = []) {
   const parts = items.map((item, index) => {
     const isLast = index === items.length - 1
@@ -398,6 +420,7 @@ export function injectSeoIntoHtml(templateHtml, document) {
       ? `<meta name="robots" content="${escapeHtml(document.robots)}" />`
       : '',
     `<link rel="canonical" href="${escapeHtml(absoluteUrl(document.canonicalPath))}" />`,
+    renderHeadLinks(document.headLinks),
     renderOpenGraphTags(document.openGraph || {}),
     renderJsonLd(document.jsonLd),
     `<style id="equipd-seo-prerender-style">.seo-prerender{max-width:48rem;margin:1.5rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5;color:#111}.seo-prerender a{color:#0b57d0}.seo-prerender ul{padding-left:1.25rem}</style>`,
