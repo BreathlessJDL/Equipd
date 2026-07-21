@@ -69,6 +69,15 @@
   padding-bottom: clamp(2.5rem, 1.5rem + 5vw, 7.5rem);
 }
 
+.app-shell__main.app-shell__main--sell {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  padding-bottom: clamp(2.5rem, 1.5rem + 5vw, 7.5rem);
+  overflow: visible;
+}
+
 .app-shell__main.app-shell__main--listing-detail {
   max-width: 94rem; /* ~1504px — gallery-led marketplace listing detail */
   width: 100%;

@@ -12,13 +12,13 @@ const CREATE_LISTING_PATH = '/listings/new'
 
 const loggedOutPublicNavLinks = [
   { to: '/brands', label: 'Equipment Values' },
-  { to: CREATE_LISTING_PATH, label: 'Sell' },
+  { to: '/sell-gym-equipment', label: 'Sell Equipment' },
 ]
 
 const loggedInPublicNavLinks = [
   { to: '/browse', label: 'Browse' },
   { to: '/brands', label: 'Equipment Values' },
-  { to: CREATE_LISTING_PATH, label: 'Sell' },
+  { to: '/sell-gym-equipment', label: 'Sell Equipment' },
 ]
 
 const adminNavLinks = [
@@ -69,13 +69,6 @@ function AppNav({
   }
 
   function handlePublicNavClick(event, to) {
-    if (!loading && !user && to === CREATE_LISTING_PATH) {
-      event.preventDefault()
-      onNavigate?.()
-      openLoginModal({ redirectTo: CREATE_LISTING_PATH })
-      return
-    }
-
     onNavigate?.()
   }
 
@@ -123,6 +116,13 @@ function AppNav({
               onClick={onNavigate}
             >
               Equipment Values
+            </NavLink>
+            <NavLink
+              to="/sell-gym-equipment"
+              className={({ isActive }) => linkClass(isActive)}
+              onClick={onNavigate}
+            >
+              Sell Equipment
             </NavLink>
             {!loading && user ? (
               <NavLink

@@ -14,6 +14,8 @@
     "prerender:seo": "node scripts/prerender-seo-catalogue.mjs",
     "inject:site-schema": "node scripts/inject-site-structured-data.mjs",
     "test:seo-prerender": "node scripts/test-seo-catalogue-prerender.mjs",
+    "test:sell-gym-equipment-page": "node scripts/test-sell-gym-equipment-page.mjs",
+    "generate:sell-equipment-header-transparent": "node scripts/generate-sell-equipment-header-transparent.mjs",
     "test:equipment-page-seo": "node scripts/test-equipment-page-seo.mjs",
     "test:site-structured-data": "node scripts/test-site-structured-data.mjs",
     "test:seo-canonical-origin": "node scripts/test-seo-canonical-origin.mjs",

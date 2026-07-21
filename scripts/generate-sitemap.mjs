@@ -107,6 +107,7 @@ async function main() {
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/valuation`))
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/about`))
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/help`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/sell-gym-equipment`))
 
   for (const route of catalogueRoutes) {
     if (route.type === 'brands-index') {

@@ -25,7 +25,8 @@ const FOOTER_COLUMNS = [
   {
     title: 'Sell',
     links: [
-      { label: 'Sell Equipment', to: '/listings/new' },
+      { label: 'Sell Gym Equipment', to: '/sell-gym-equipment' },
+      { label: 'Create a Listing', to: '/listings/new' },
       { label: 'How Selling Works', to: '/help/how-selling-works' },
       { label: 'Getting Paid', to: '/help/getting-paid' },
       { label: 'Seller Payouts', to: '/help/seller-payouts' },

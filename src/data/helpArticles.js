@@ -1228,6 +1228,14 @@ export const HELP_ARTICLES = [
       },
       {
         type: 'paragraph',
+        segments: [
+          { text: 'Prefer a quick overview first? See ' },
+          { link: { label: 'Sell Gym Equipment', to: '/sell-gym-equipment' } },
+          { text: ' for the seller journey, then create your listing when you are ready.' },
+        ],
+      },
+      {
+        type: 'paragraph',
         text: "Whether you're selling a single treadmill or clearing an entire commercial facility, Equipd helps connect you with buyers while handling payments securely.",
       },
       {

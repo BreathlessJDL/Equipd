@@ -385,6 +385,13 @@ export function injectSeoIntoHtml(templateHtml, document) {
     `<title>${escapeHtml(document.title)}</title>`,
   )
 
+  // Drop homepage defaults so page-specific description/canonical/social tags win.
+  html = html
+    .replace(/<meta\s+name=["']description["'][^>]*>\s*/gi, '')
+    .replace(/<link\s+rel=["']canonical["'][^>]*>\s*/gi, '')
+    .replace(/<meta\s+property=["']og:[^"']+["'][^>]*>\s*/gi, '')
+    .replace(/<meta\s+name=["']twitter:[^"']+["'][^>]*>\s*/gi, '')
+
   const headExtras = [
     `<meta name="description" content="${escapeHtml(document.description)}" />`,
     document.robots

@@ -29,6 +29,7 @@ import {
   buildSeoRouteList,
   injectSeoIntoHtml,
 } from '../src/lib/seoCataloguePrerender.js'
+import { buildSellGymEquipmentSeoDocument } from '../src/lib/sellGymEquipmentPage.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 const PRODUCT_SELECT = [
@@ -274,6 +275,30 @@ async function main() {
     } catch (error) {
       errors.push({ path: route.path, message: error.message })
       console.error(`[prerender] Failed ${route.path}:`, error.message)
+    }
+  }
+
+  const staticMarketingPages = [buildSellGymEquipmentSeoDocument()]
+  console.log(`[prerender] Rendering ${staticMarketingPages.length} static marketing page(s)…`)
+
+  for (const document of staticMarketingPages) {
+    try {
+      const html = injectSeoIntoHtml(templateHtml, document)
+      const outPath = routePathToDistFile(document.path, distDir)
+
+      if (!args.dryRun) {
+        writeHtmlFile(outPath, html)
+      }
+
+      written.push({
+        path: document.path,
+        type: 'marketing',
+        file: outPath,
+        title: document.title,
+      })
+    } catch (error) {
+      errors.push({ path: document.path, message: error.message })
+      console.error(`[prerender] Failed ${document.path}:`, error.message)
     }
   }
 

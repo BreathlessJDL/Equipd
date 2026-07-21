@@ -8,6 +8,10 @@ export function isBrowseShellRoute(pathname) {
   return LOCATION_SLUGS.some((slug) => pathname === `/listings/${slug}`)
 }
 
+export function isSellGymEquipmentRoute(pathname) {
+  return pathname === '/sell-gym-equipment'
+}
+
 export function isMobileHomepageRoute(pathname) {
   return pathname === '/'
 }
