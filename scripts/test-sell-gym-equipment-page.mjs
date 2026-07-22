@@ -305,6 +305,7 @@ assert(!cssSource.includes('sell-page__btn--primary-finale'), 'finale CTA size r
 assert(!pageSource.includes('Get an Instant Valuation'), 'old optional primary valuation CTA removed')
 assert(cssSource.includes('sell-page__hero-artwork'), 'hero artwork styles present')
 assert(cssSource.includes('sell-page__hero-artwork-image'), 'hero artwork image styles present')
+assert(!cssSource.includes('white-space: nowrap'), 'hero H1 must not force nowrap clipping')
 assert(cssSource.includes('--sell-hand'), 'handwritten font token present')
 assert(cssSource.includes('var(--sell-hand)'), 'handwritten font applied')
 assert(cssSource.includes('--sell-hero-art-bg'), 'hero art background token present')
