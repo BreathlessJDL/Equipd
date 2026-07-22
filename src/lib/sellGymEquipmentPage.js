@@ -30,7 +30,10 @@ export const SELL_GYM_EQUIPMENT_PAGE_TITLE =
 export const SELL_GYM_EQUIPMENT_META_DESCRIPTION =
   'Sell used home or commercial gym equipment on Equipd. Create a listing in minutes and reach serious buyers across the UK. Free valuation available if needed.'
 
-export const SELL_GYM_EQUIPMENT_H1 = 'Sell Your Gym Equipment with Equipd'
+export const SELL_GYM_EQUIPMENT_H1 = 'With Equipd'
+
+/** WebPage JSON-LD headline — preserved from original SEO; not the visible hero H1. */
+const SELL_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE = 'Sell Your Gym Equipment with Equipd'
 
 export const SELL_GYM_EQUIPMENT_LEAD =
   'Sell used home or commercial gym equipment across the UK. Create a listing in minutes and reach serious fitness equipment buyers. You do not need a valuation to list. If you are unsure what price to ask, you can use our free equipment valuation tool first.'
@@ -367,7 +370,7 @@ export function buildSellGymEquipmentWebPageSchema() {
     '@id': `${pageUrl}#webpage`,
     url: pageUrl,
     name: SELL_GYM_EQUIPMENT_PAGE_TITLE,
-    headline: SELL_GYM_EQUIPMENT_H1,
+    headline: SELL_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE,
     description: SELL_GYM_EQUIPMENT_META_DESCRIPTION,
     inLanguage: 'en-GB',
     isPartOf: {

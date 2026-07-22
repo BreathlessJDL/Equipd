@@ -171,6 +171,7 @@ assert(webPageSchema.url.endsWith('/sell-gym-equipment'), 'WebPage url')
 assert(webPageSchema.primaryImageOfPage?.url, 'WebPage primary image')
 assert(webPageSchema.publisher?.['@id']?.includes('#organization'), 'WebPage publisher Organization ref')
 assert(webPageSchema.inLanguage === 'en-GB', 'WebPage language')
+assert(webPageSchema.headline === 'Sell Your Gym Equipment with Equipd', 'WebPage schema headline unchanged')
 
 const breadcrumbSchema = buildSellGymEquipmentBreadcrumbSchema()
 assert(breadcrumbSchema['@type'] === 'BreadcrumbList', 'BreadcrumbList schema')
@@ -278,7 +279,7 @@ assert(!contentSource.includes('SELL_HERO_COLLAGE_PANELS'), 'collage panel expor
 assert(!contentSource.includes('hero-equipment'), 'old hero equipment paths removed from content')
 assert(!contentSource.includes('hero-selling-artwork'), 'opaque hero artwork paths removed')
 assert(SELL_GYM_EQUIPMENT_LEAD.includes('You do not need a valuation to list'), 'direct listing hero copy exported')
-assert(SELL_GYM_EQUIPMENT_H1 === 'Sell Your Gym Equipment with Equipd', 'SEO hero headline')
+assert(SELL_GYM_EQUIPMENT_H1 === 'With Equipd', 'visible hero H1')
 assert(SELL_GYM_EQUIPMENT_META_DESCRIPTION.length >= 140 && SELL_GYM_EQUIPMENT_META_DESCRIPTION.length <= 165, 'meta description length')
 
 const cssSource = readFileSync(join(process.cwd(), 'src', 'pages', 'SellGymEquipmentPage.css'), 'utf8')
