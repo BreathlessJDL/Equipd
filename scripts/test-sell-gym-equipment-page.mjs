@@ -343,9 +343,10 @@ assert(pageJsx.includes('sell-page__hero-eyebrow'), 'hero eyebrow present in mar
 assert(pageJsx.includes('Sell it simply'), 'hero eyebrow copy')
 assert(/sell-page__hero-eyebrow" aria-hidden="true"/.test(pageJsx), 'eyebrow is decorative only')
 assert((pageJsx.match(/<h1/g) || []).length === 1, 'hero keeps a single H1')
+assert(pageJsx.includes('SELL_GYM_EQUIPMENT_H1'), 'hero H1 uses shared sell-page heading constant')
 assert(
-  /<h1 id="sell-page-title" className="sell-page__h1">\s*Sell Your Gym Equipment with Equipd\s*<\/h1>/.test(pageJsx),
-  'visible H1 describes the sell page',
+  /<h1 id="sell-page-title" className="sell-page__h1">\s*\{SELL_GYM_EQUIPMENT_H1\}\s*<\/h1>/.test(pageJsx),
+  'visible H1 is bound to shared sell-page heading constant',
 )
 assert(pageSource.includes('sell-page__step-number'), 'journey marker structure')
 assert(pageSource.includes('sell-page__benefit-mark'), 'benefit handwritten markers present')

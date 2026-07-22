@@ -20,6 +20,7 @@ import {
   SELL_GUIDE_INTRO,
   SELL_GUIDE_NOTE,
   SELL_GUIDE_SECTIONS,
+  SELL_GYM_EQUIPMENT_H1,
   SELL_GYM_EQUIPMENT_LEAD,
   SELL_GYM_EQUIPMENT_META_DESCRIPTION,
   SELL_GYM_EQUIPMENT_META_TITLE,
@@ -308,7 +309,7 @@ export default function SellGymEquipmentPage() {
                 Sell it simply
               </span>
               <h1 id="sell-page-title" className="sell-page__h1">
-                Sell Your Gym Equipment with Equipd
+                {SELL_GYM_EQUIPMENT_H1}
               </h1>
               <p className="sell-page__lead">{SELL_GYM_EQUIPMENT_LEAD}</p>
               <div className="sell-page__actions">
