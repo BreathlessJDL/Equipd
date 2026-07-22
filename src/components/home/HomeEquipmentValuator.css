@@ -90,7 +90,7 @@
 
 .home-valuator__search {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.35rem;
   min-height: 3.4rem;
@@ -101,6 +101,14 @@
   background: #fff;
   box-shadow: 0 1px 2px rgba(15, 33, 55, 0.03);
   box-sizing: border-box;
+}
+
+.home-valuator__search-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .home-valuator__search-icon {
@@ -404,7 +412,8 @@
   }
 }
 
-/* Mobile: search-only card — hide decorative graph + product overlay. */
+/* Mobile: search-only card — hide decorative graph + product overlay.
+   Separate search field and CTA so they no longer share one bordered control. */
 @media (max-width: 767px) {
   .home-valuator {
     padding: 0.7rem 0 0.75rem;
@@ -419,15 +428,20 @@
     gap: 0.75rem;
     align-items: stretch;
     min-height: 0;
-    padding: 0.95rem 0.9rem 0.85rem;
+    padding: 1.05rem 1rem 1rem;
     border-radius: 0.95rem;
     box-shadow: 0 4px 16px rgba(15, 33, 55, 0.05);
+    overflow: visible;
   }
 
   .home-valuator__main {
     max-width: none;
-    gap: 0.75rem;
+    gap: 1.05rem; /* ~17px between copy and search */
     align-self: stretch;
+  }
+
+  .home-valuator__copy {
+    gap: 0.5rem;
   }
 
   .home-valuator__visual {
@@ -445,7 +459,7 @@
 
   .home-valuator__title {
     font-size: 1.28rem;
-    line-height: 1.18;
+    line-height: 1.28;
   }
 
   .home-valuator__title-text--desktop {
@@ -458,48 +472,94 @@
 
   .home-valuator__lede {
     font-size: 0.875rem;
-    line-height: 1.45;
+    line-height: 1.5;
+  }
+
+  .home-valuator__form {
+    overflow: visible;
   }
 
   .home-valuator__search {
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    gap: 0.45rem 0.35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem; /* 12px between input and button */
     height: auto;
     min-height: 0;
-    padding: 0.55rem;
-    border-radius: 0.9rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .home-valuator__search:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .home-valuator__search-field {
+    position: relative;
+    display: block;
+    min-height: 2.75rem;
+    padding: 0.15rem 0.75rem 0.15rem 2.4rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.85rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 33, 55, 0.03);
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .home-valuator__search-field:focus-within {
+    border-color: color-mix(in srgb, var(--color-orange) 55%, var(--color-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-orange) 18%, transparent);
   }
 
   .home-valuator__search-icon {
-    grid-column: 1;
-    grid-row: 1;
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    pointer-events: none;
   }
 
   .home-valuator__search .canonical-autocomplete {
-    grid-column: 2;
-    grid-row: 1;
-    z-index: 8;
+    position: static;
+    width: 100%;
+    z-index: 12;
+  }
+
+  .home-valuator__search .canonical-autocomplete__dropdown {
+    left: 0;
+    right: 0;
+    width: auto;
   }
 
   .home-valuator__submit {
-    grid-column: 1 / -1;
-    grid-row: 2;
     width: 100%;
     height: auto;
-    min-height: 2.65rem;
-    border-radius: 0.7rem;
+    min-height: 2.75rem; /* ~44px touch target */
+    padding: 0.75rem 1rem;
+    border-radius: 0.85rem;
+    font-size: 0.975rem;
   }
 
   .home-valuator__input {
-    min-height: 2.45rem;
-    height: 2.45rem;
+    min-height: 2.55rem;
+    height: 2.55rem;
+    padding: 0.55rem 0.15rem 0.55rem 0;
     /* ≥16px prevents iOS Safari focus zoom */
     font-size: 1rem;
   }
 }
 
 @media (max-width: 360px) {
+  .home-valuator__card {
+    padding: 0.95rem 0.9rem 0.95rem;
+  }
+
   .home-valuator__input {
     font-size: 1rem;
   }

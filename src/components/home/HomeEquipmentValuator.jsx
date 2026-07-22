@@ -378,29 +378,31 @@ export default function HomeEquipmentValuator({
             Search by brand, model or product
           </label>
           <div className="home-valuator__search">
-            <span className="home-valuator__search-icon" aria-hidden="true">
-              <SearchIcon />
-            </span>
-            <CanonicalEquipmentAutocomplete
-              id={inputId}
-              value={query}
-              onChange={setQuery}
-              selectedProduct={selectedProduct}
-              onSelectedProductChange={setSelectedProduct}
-              placeholder="Search by brand, model or product..."
-              inputClassName="home-valuator__input"
-              resultLimit={10}
-              debounceMs={250}
-              onSubmit={({ product }) => {
-                if (product) {
-                  setSelectedProduct(product)
-                  setQuery(getEquipmentProductDisplayName(product))
-                  goToValuator({ product, queryText: getEquipmentProductDisplayName(product) })
-                } else {
-                  goToValuator({ product: null, queryText: query })
-                }
-              }}
-            />
+            <div className="home-valuator__search-field">
+              <span className="home-valuator__search-icon" aria-hidden="true">
+                <SearchIcon />
+              </span>
+              <CanonicalEquipmentAutocomplete
+                id={inputId}
+                value={query}
+                onChange={setQuery}
+                selectedProduct={selectedProduct}
+                onSelectedProductChange={setSelectedProduct}
+                placeholder="Search by brand, model or product..."
+                inputClassName="home-valuator__input"
+                resultLimit={10}
+                debounceMs={250}
+                onSubmit={({ product }) => {
+                  if (product) {
+                    setSelectedProduct(product)
+                    setQuery(getEquipmentProductDisplayName(product))
+                    goToValuator({ product, queryText: getEquipmentProductDisplayName(product) })
+                  } else {
+                    goToValuator({ product: null, queryText: query })
+                  }
+                }}
+              />
+            </div>
             <button type="submit" className="home-valuator__submit">
               Value equipment
             </button>
