@@ -14,6 +14,7 @@ function resolveSellerPayoutTotals({
   payment,
   order,
   amountInput,
+  quantity,
 }) {
   if (payment) {
     return resolvePaymentSellerPayoutTotals(payment)
@@ -24,13 +25,19 @@ function resolveSellerPayoutTotals({
   }
 
   if (itemPricePence != null && itemPricePence > 0) {
-    return calculateSellerPayoutTotals(itemPricePence)
+    const totals = calculateSellerPayoutTotals(itemPricePence)
+    return Number(quantity) > 1 && itemPricePence % Number(quantity) === 0
+      ? { ...totals, quantity: Number(quantity), agreedUnitPricePence: itemPricePence / Number(quantity) }
+      : { ...totals, quantity: 1, agreedUnitPricePence: itemPricePence }
   }
 
   if (amountInput) {
     const parsedPence = parsePriceToPence(amountInput)
     if (!parsedPence) return null
-    return calculateSellerPayoutTotals(parsedPence)
+    const totals = calculateSellerPayoutTotals(parsedPence)
+    return Number(quantity) > 1 && parsedPence % Number(quantity) === 0
+      ? { ...totals, quantity: Number(quantity), agreedUnitPricePence: parsedPence / Number(quantity) }
+      : { ...totals, quantity: 1, agreedUnitPricePence: parsedPence }
   }
 
   return null
@@ -41,6 +48,7 @@ function SellerPayoutSummary({
   payment = null,
   order = null,
   amountInput = '',
+  quantity = 1,
   compact = false,
   hubFinance = false,
   showNote = false,
@@ -53,6 +61,7 @@ function SellerPayoutSummary({
     payment,
     order,
     amountInput,
+    quantity,
   })
 
   if (!totals?.itemPricePence) {
@@ -70,8 +79,20 @@ function SellerPayoutSummary({
       }`}
     >
       <dl className="seller-payout-summary__rows">
+        {totals.quantity > 1 ? (
+          <>
+            <div className="seller-payout-summary__row">
+              <dt>Unit price</dt>
+              <dd>{formatPricePence(totals.agreedUnitPricePence)}</dd>
+            </div>
+            <div className="seller-payout-summary__row">
+              <dt>Quantity</dt>
+              <dd>{totals.quantity}</dd>
+            </div>
+          </>
+        ) : null}
         <div className="seller-payout-summary__row">
-          <dt>{offerAmountLabel}</dt>
+          <dt>{totals.quantity > 1 ? 'Item subtotal' : offerAmountLabel}</dt>
           <dd>{formatPricePence(totals.itemPricePence)}</dd>
         </div>
         <div className="seller-payout-summary__row">

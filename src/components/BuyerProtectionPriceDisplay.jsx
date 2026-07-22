@@ -15,6 +15,7 @@ function resolveBuyerProtectionDisplayTotals({
   payment = null,
   order = null,
   amountInput = '',
+  quantity = 1,
 } = {}) {
   if (payment) {
     const totals = resolvePaymentCheckoutTotals(payment)
@@ -30,13 +31,29 @@ function resolveBuyerProtectionDisplayTotals({
 
   const normalizedPrice = normalizeListingPricePence(itemPricePence)
   if (normalizedPrice != null) {
-    return calculateBuyerCheckoutTotals(normalizedPrice)
+    const totals = calculateBuyerCheckoutTotals(normalizedPrice)
+    return Number(quantity) > 1 && normalizedPrice % Number(quantity) === 0
+      ? {
+          ...totals,
+          quantity: Number(quantity),
+          agreedUnitPricePence: normalizedPrice / Number(quantity),
+          itemSubtotalPence: normalizedPrice,
+        }
+      : totals
   }
 
   if (amountInput) {
     const parsedPence = parsePriceToPence(amountInput)
     if (!parsedPence) return null
-    return calculateBuyerCheckoutTotals(parsedPence)
+    const totals = calculateBuyerCheckoutTotals(parsedPence)
+    return Number(quantity) > 1 && parsedPence % Number(quantity) === 0
+      ? {
+          ...totals,
+          quantity: Number(quantity),
+          agreedUnitPricePence: parsedPence / Number(quantity),
+          itemSubtotalPence: parsedPence,
+        }
+      : totals
   }
 
   return null
@@ -80,6 +97,7 @@ function BuyerProtectionPriceDisplay({
   payment = null,
   order = null,
   amountInput = '',
+  quantity = 1,
   compact = false,
   hubFinance = false,
   className = '',
@@ -97,6 +115,7 @@ function BuyerProtectionPriceDisplay({
     payment,
     order,
     amountInput,
+    quantity,
   })
 
   if (!totals?.itemPricePence) {
@@ -124,8 +143,20 @@ function BuyerProtectionPriceDisplay({
           }`}
         >
           <dl className="buyer-protection-price__finance-rows hub-item-finance">
+            {totals.quantity > 1 ? (
+              <>
+                <div className="hub-item-finance__row">
+                  <dt>Unit price</dt>
+                  <dd>{formatPricePence(totals.agreedUnitPricePence)}</dd>
+                </div>
+                <div className="hub-item-finance__row">
+                  <dt>Quantity</dt>
+                  <dd>{totals.quantity}</dd>
+                </div>
+              </>
+            ) : null}
             <div className="hub-item-finance__row">
-              <dt>Offer price</dt>
+              <dt>{totals.quantity > 1 ? 'Item subtotal' : 'Offer price'}</dt>
               <dd>{formatPricePence(totals.itemPricePence)}</dd>
             </div>
             <div className="hub-item-finance__row">
@@ -153,6 +184,11 @@ function BuyerProtectionPriceDisplay({
         <p className="buyer-protection-price__item buyer-protection-price__item--primary">
           {formatPricePence(totals.itemPricePence)}
         </p>
+        {totals.quantity > 1 ? (
+          <p className="buyer-protection-price__total">
+            {totals.quantity} × {formatPricePence(totals.agreedUnitPricePence)} per item
+          </p>
+        ) : null}
         {compact ? (
           <p className="buyer-protection-price__total buyer-protection-price__total--compact">
             <span className="buyer-protection-price__total-amount">

@@ -25,6 +25,7 @@ const messageOfferSelect = `
     seller_id,
     conversation_id,
     amount_pence,
+    quantity,
     status,
     message,
     direction,
@@ -37,6 +38,7 @@ const messageOfferSelect = `
       slug,
       title,
       price_pence,
+      quantity_available,
       status,
       collection_available,
       courier_available,
@@ -719,7 +721,7 @@ export async function fetchConversationMessages(conversationId, { conversation }
   }
 }
 
-export async function insertOfferMessage({ conversationId, offerId, senderId }) {
+export async function insertOfferMessage({ conversationId, offerId, senderId, body = 'Offer' }) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -729,7 +731,7 @@ export async function insertOfferMessage({ conversationId, offerId, senderId }) 
     sender_id: senderId,
     message_type: 'offer',
     offer_id: offerId,
-    body: 'Offer',
+    body,
   }
 
   let { data, error } = await supabase.from('messages').insert(extendedPayload).select(messageFields).single()

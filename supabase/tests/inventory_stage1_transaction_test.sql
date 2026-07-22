@@ -174,7 +174,7 @@ begin
     from public.messages
     where conversation_id = '40000000-0000-0000-0000-000000000001'
       and message_type = 'system'
-      and body = 'Counter-offer accepted.'
+      and body = 'Counter-offer accepted for 2 items: £880.00 total (£440.00 per item).'
   ) then
     raise exception 'FAIL: acceptance system message is missing';
   end if;

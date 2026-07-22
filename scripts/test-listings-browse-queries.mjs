@@ -71,6 +71,7 @@ async function main() {
     p_radius_miles: 50,
     p_sort: 'nearest',
     p_limit: 5,
+    p_offset: 0,
   })
 
   if (rpc.error && rpc.error.code !== 'PGRST202') {

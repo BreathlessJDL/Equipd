@@ -100,7 +100,7 @@ const DUAL_RECIPIENT_EVENT_KEYS = new Set([
   ...PHASE5_DUAL_RECIPIENT_EVENT_KEYS,
 ])
 
-const PAYMENT_DEADLINE_LABEL = '48 hours'
+const PAYMENT_DEADLINE_LABEL = '72 hours'
 
 const SELLER_ONLY_DYNAMIC_KEYS = new Set([
   'seller_service_fee',
@@ -323,6 +323,8 @@ export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyer
   const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'A buyer' })
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
+  const quantity = offer.quantity ?? 1
+  const unitOffer = formatPricePence(offer.amount_pence / quantity)
   const listingPrice = formatPricePence(listing?.price_pence)
   const recipientFirstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
 
@@ -330,8 +332,10 @@ export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyer
     <p>Hi ${recipientFirstName},</p>
     <p><strong>${buyerName}</strong> has made an offer on <strong>${listingTitle}</strong>.</p>
     ${detailRowsHtml({
-      Offer: offerAmount,
-      'Asking price': listingPrice,
+      Quantity: quantity,
+      'Offer total': offerAmount,
+      'Offer per item': unitOffer,
+      'Asking price per item': listingPrice,
       Buyer: buyerName,
     })}
     <p>You can accept, decline, or counter in My Hub. Offers are not binding until you accept.</p>
@@ -363,6 +367,8 @@ export function composeCounterOfferReceivedDynamicData({
 }) {
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
+  const quantity = offer.quantity ?? 1
+  const unitOffer = formatPricePence(offer.amount_pence / quantity)
   const listingPrice = formatPricePence(listing?.price_pence)
   const isSellerCounter = offer.direction === 'seller_to_buyer'
   const senderProfile = isSellerCounter ? sellerProfile : buyerProfile
@@ -379,8 +385,10 @@ export function composeCounterOfferReceivedDynamicData({
     <p>Hi ${recipientFirstName},</p>
     <p><strong>${senderName}</strong> sent a counter offer on <strong>${listingTitle}</strong>.</p>
     ${detailRowsHtml({
-      'Counter offer': offerAmount,
-      'Asking price': listingPrice,
+      Quantity: quantity,
+      'Counter-offer total': offerAmount,
+      'Counter-offer per item': unitOffer,
+      'Asking price per item': listingPrice,
       From: senderName,
     })}
     <p>Review the counter offer in My Hub to accept, decline, or respond.</p>
@@ -407,6 +415,8 @@ export function composeOfferAcceptedDynamicData({ baseUrl, offer, listing, buyer
   const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
+  const quantity = offer.quantity ?? 1
+  const unitOffer = formatPricePence(offer.amount_pence / quantity)
   const buyerProtectionFeePence = calculateBuyerProtectionFee(offer.amount_pence)
   const buyerProtectionFee = formatPricePence(buyerProtectionFeePence)
   const buyerTotal = formatPricePence(offer.amount_pence + buyerProtectionFeePence)
@@ -419,7 +429,9 @@ export function composeOfferAcceptedDynamicData({ baseUrl, offer, listing, buyer
     <p>Hi ${recipientFirstName},</p>
     <p>The seller accepted your offer on <strong>${listingTitle}</strong>.</p>
     ${detailRowsHtml({
-      'Your offer': offerAmount,
+      Quantity: quantity,
+      'Your offer total': offerAmount,
+      'Offer per item': unitOffer,
       'Buyer Protection fee': buyerProtectionFee,
       'Total to pay': buyerTotal,
       Seller: sellerName,
@@ -459,6 +471,8 @@ export function composeCounterOfferAcceptedSellerDynamicData({
   const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
   const listingTitle = listing?.title?.trim() || 'your listing'
   const offerAmount = formatPricePence(offer.amount_pence)
+  const quantity = offer.quantity ?? 1
+  const unitOffer = formatPricePence(offer.amount_pence / quantity)
   const sellerServiceFeePence = calculateSellerServiceFee(offer.amount_pence)
   const sellerNetPence = calculateSellerNetPayout(offer.amount_pence)
   const sellerServiceFee = formatPricePence(sellerServiceFeePence)
@@ -472,7 +486,9 @@ export function composeCounterOfferAcceptedSellerDynamicData({
     <p>Hi ${recipientFirstName},</p>
     <p>The buyer accepted your counter offer on <strong>${listingTitle}</strong>.</p>
     ${detailRowsHtml({
-      'Counter offer': offerAmount,
+      Quantity: quantity,
+      'Counter-offer total': offerAmount,
+      'Counter-offer per item': unitOffer,
       Buyer: buyerName,
       'Seller Service Fee': sellerServiceFee,
       "You'll receive": sellerNetPayout,
@@ -508,6 +524,9 @@ export function composePaymentSuccessfulDynamicData({
   const listingTitle = listing?.title?.trim() || 'your item'
   const orderNumber = formatOrderReference(order.id)
   const orderTotal = formatPricePence(order.buyer_total_pence ?? order.amount_pence)
+  const quantity = order.quantity ?? 1
+  const unitPrice = formatPricePence(order.agreed_unit_price_pence ?? order.amount_pence)
+  const itemSubtotal = formatPricePence(order.item_subtotal_pence ?? order.amount_pence)
   const sellerName = getMarketplaceUserName(sellerProfile, { fallback: 'The seller' })
   const recipientFirstName = getMarketplaceRecipientName(buyerProfile, { fallback: 'there' })
 
@@ -516,6 +535,9 @@ export function composePaymentSuccessfulDynamicData({
     <p>Your payment for <strong>${listingTitle}</strong> was successful. Your order is confirmed.</p>
     ${detailRowsHtml({
       'Order number': orderNumber,
+      Quantity: quantity,
+      'Unit price': unitPrice,
+      'Item subtotal': itemSubtotal,
       Total: orderTotal,
       Seller: sellerName,
     })}
@@ -551,7 +573,9 @@ export function composeNewOrderReceivedDynamicData({
 }) {
   const listingTitle = listing?.title?.trim() || 'your listing'
   const orderNumber = formatOrderReference(order.id)
-  const saleAmount = formatPricePence(order.item_price_pence ?? order.amount_pence)
+  const saleAmount = formatPricePence(order.item_subtotal_pence ?? order.item_price_pence ?? order.amount_pence)
+  const quantity = order.quantity ?? 1
+  const unitPrice = formatPricePence(order.agreed_unit_price_pence ?? order.amount_pence)
   const buyerName = getMarketplaceUserName(buyerProfile, { fallback: 'The buyer' })
   const recipientFirstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
   const sellerServiceFeePence =
@@ -566,6 +590,8 @@ export function composeNewOrderReceivedDynamicData({
     <p><strong>${buyerName}</strong> has paid for <strong>${listingTitle}</strong>. You have a new order to fulfil.</p>
     ${detailRowsHtml({
       'Order number': orderNumber,
+      Quantity: quantity,
+      'Unit price': unitPrice,
       'Sale amount': saleAmount,
       Buyer: buyerName,
       'Seller Service Fee': sellerServiceFee,
@@ -913,7 +939,7 @@ export async function loadMarketplaceParticipants(admin, userIds) {
 async function loadOfferContext(admin, offerId) {
   const { data: offer, error } = await admin
     .from('offers')
-    .select('id, listing_id, buyer_id, seller_id, amount_pence, status, direction, parent_offer_id')
+    .select('id, listing_id, buyer_id, seller_id, amount_pence, quantity, status, direction, parent_offer_id')
     .eq('id', offerId)
     .maybeSingle()
 
@@ -939,7 +965,7 @@ async function loadOrderContext(admin, orderId) {
   const { data: order, error } = await admin
     .from('orders')
     .select(
-      'id, listing_id, buyer_id, seller_id, amount_pence, item_price_pence, buyer_total_pence, seller_service_fee_pence, seller_net_pence, order_type, dispute_window_hours, payout_release_at, payout_status, fulfilment_status, courier_name, courier_company, courier_buyer_tracking_reference, collection_confirmed_at, courier_evidence_submitted_at, courier_delivered_at',
+      'id, listing_id, buyer_id, seller_id, amount_pence, quantity, listing_unit_price_pence, agreed_unit_price_pence, item_subtotal_pence, item_price_pence, buyer_protection_fee_pence, buyer_total_pence, inventory_state, seller_service_fee_pence, seller_net_pence, order_type, dispute_window_hours, payout_release_at, payout_status, fulfilment_status, courier_name, courier_company, courier_buyer_tracking_reference, collection_confirmed_at, courier_evidence_submitted_at, courier_delivered_at',
     )
     .eq('id', orderId)
     .maybeSingle()

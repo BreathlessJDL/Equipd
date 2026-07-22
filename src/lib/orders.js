@@ -68,6 +68,11 @@ const orderFields = `
   buyer_id,
   seller_id,
   amount_pence,
+  quantity,
+  listing_unit_price_pence,
+  agreed_unit_price_pence,
+  item_subtotal_pence,
+  inventory_state,
   item_price_pence,
   buyer_protection_fee_pence,
   buyer_total_pence,
@@ -97,6 +102,11 @@ const orderFields = `
   courier_evidence_submitted_at,
   courier_delivered_at,
   stripe_transfer_id,
+  inventory_reserved_at,
+  inventory_sold_at,
+  inventory_released_at,
+  inventory_restocked_at,
+  inventory_no_restock_at,
   created_at,
   updated_at
 `
@@ -110,6 +120,11 @@ const orderHubFields = `
   buyer_id,
   seller_id,
   amount_pence,
+  quantity,
+  listing_unit_price_pence,
+  agreed_unit_price_pence,
+  item_subtotal_pence,
+  inventory_state,
   item_price_pence,
   buyer_protection_fee_pence,
   buyer_total_pence,
@@ -138,6 +153,11 @@ const orderHubFields = `
   courier_evidence_submitted_at,
   courier_delivered_at,
   stripe_transfer_id,
+  inventory_reserved_at,
+  inventory_sold_at,
+  inventory_released_at,
+  inventory_restocked_at,
+  inventory_no_restock_at,
   created_at,
   updated_at
 `
@@ -205,6 +225,7 @@ const orderDetailSelect = `
     status,
     conversation_id,
     amount_pence,
+    quantity,
     created_at,
     updated_at
   )

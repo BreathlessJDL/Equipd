@@ -1,18 +1,14 @@
 import { useState } from 'react'
 import {
-  getListingErrorMessage,
+  canSubmitListingQuantityUpdate,
+  getListingQuantityMinimumNote,
+  getListingQuantityMinimumTotal,
   parseListingQuantity,
+} from '../../lib/listingQuantity'
+import {
+  getListingErrorMessage,
   updateListingQuantity,
 } from '../../lib/listings'
-
-function InventoryMetric({ label, value }) {
-  return (
-    <div className="listing-inventory__metric">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  )
-}
 
 function SellerInventoryEditor({ listing, onListingChange }) {
   const [newTotal, setNewTotal] = useState(String(listing.quantity_total ?? 1))
@@ -20,10 +16,14 @@ function SellerInventoryEditor({ listing, onListingChange }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const minimumTotal = (listing.quantity_reserved ?? 0) + (listing.quantity_sold ?? 0)
+  const minimumTotal = getListingQuantityMinimumTotal(listing)
+  const minimumNote = getListingQuantityMinimumNote(listing)
+  const canSubmit = canSubmitListingQuantityUpdate({ newTotal, listing })
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (!canSubmit || saving) return
+
     setError('')
     setSuccess('')
 
@@ -34,12 +34,10 @@ function SellerInventoryEditor({ listing, onListingChange }) {
     }
 
     if (quantity < minimumTotal) {
-      setError(`Total quantity cannot be below reserved + sold (${minimumTotal}).`)
-      return
-    }
-
-    if (quantity === listing.quantity_total) {
-      setSuccess('Inventory is already up to date.')
+      setError(
+        minimumNote ??
+          `Quantity cannot be reduced below ${minimumTotal}.`,
+      )
       return
     }
 
@@ -57,65 +55,74 @@ function SellerInventoryEditor({ listing, onListingChange }) {
     }
 
     onListingChange(data)
-    setSuccess('Inventory updated.')
+    setNewTotal(String(data.quantity_total ?? quantity))
+    setSuccess('Quantity updated.')
   }
 
   return (
-    <section className="listing-form__section" aria-labelledby="listing-inventory-title">
-      <h2 id="listing-inventory-title" className="listing-form__section-title">
-        Inventory
+    <section
+      className="listing-form__section listing-form__section--quantity"
+      aria-labelledby="listing-quantity-title"
+    >
+      <h2 id="listing-quantity-title" className="listing-form__section-title">
+        Quantity
       </h2>
-      <div className="listing-form__card listing-inventory">
-        <dl className="listing-inventory__summary">
-          <InventoryMetric label="Total" value={listing.quantity_total ?? 1} />
-          <InventoryMetric label="Available" value={listing.quantity_available ?? 1} />
-          <InventoryMetric label="Reserved" value={listing.quantity_reserved ?? 0} />
-          <InventoryMetric label="Sold" value={listing.quantity_sold ?? 0} />
-        </dl>
+      <div className="listing-form__card listing-form__quantity-card">
+        <form className="listing-form__quantity-editor" onSubmit={handleSubmit}>
+          <div className="listing-form__quantity-field">
+            <label
+              className="listing-form__quantity-label"
+              htmlFor="edit-listing-quantity-total"
+            >
+              Quantity available for this listing
+            </label>
+            <input
+              id="edit-listing-quantity-total"
+              className="listing-form__input listing-form__input--boxed listing-form__quantity-input"
+              type="number"
+              min={minimumTotal}
+              max="999"
+              step="1"
+              inputMode="numeric"
+              value={newTotal}
+              disabled={saving}
+              onChange={(event) => {
+                setNewTotal(event.target.value)
+                setError('')
+                setSuccess('')
+              }}
+              aria-describedby={
+                minimumNote ? 'edit-listing-quantity-minimum-note' : undefined
+              }
+            />
+            {minimumNote ? (
+              <p
+                id="edit-listing-quantity-minimum-note"
+                className="listing-form__hint listing-form__quantity-hint"
+              >
+                {minimumNote}
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              className="listing-form__button listing-form__button--secondary listing-form__quantity-editor-button"
+              disabled={saving || !canSubmit}
+            >
+              {saving ? 'Updating…' : 'Update quantity'}
+            </button>
+          </div>
 
-        <form className="listing-inventory__form" onSubmit={handleSubmit}>
-          <label className="listing-form__row-label" htmlFor="edit-listing-quantity-total">
-            Total quantity
-          </label>
-          <input
-            id="edit-listing-quantity-total"
-            className="listing-form__input listing-form__input--underline"
-            type="number"
-            min={Math.max(1, minimumTotal)}
-            max="999"
-            step="1"
-            inputMode="numeric"
-            value={newTotal}
-            disabled={saving}
-            onChange={(event) => {
-              setNewTotal(event.target.value)
-              setError('')
-              setSuccess('')
-            }}
-            aria-describedby="edit-listing-quantity-hint"
-          />
-          <p id="edit-listing-quantity-hint" className="listing-form__hint listing-form__hint--inline">
-            Reserved and sold items cannot be removed. Current minimum: {Math.max(1, minimumTotal)}.
-          </p>
-          <button
-            type="submit"
-            className="listing-form__button listing-form__button--secondary"
-            disabled={saving}
-          >
-            {saving ? 'Updating…' : 'Update quantity'}
-          </button>
+          {error ? (
+            <p className="listing-form__message listing-form__message--error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {success ? (
+            <p className="listing-form__message listing-form__message--success" role="status">
+              {success}
+            </p>
+          ) : null}
         </form>
-
-        {error ? (
-          <p className="listing-form__message listing-form__message--error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {success ? (
-          <p className="listing-form__message listing-form__message--success" role="status">
-            {success}
-          </p>
-        ) : null}
       </div>
     </section>
   )

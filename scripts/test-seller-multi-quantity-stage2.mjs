@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import {
   MAX_LISTING_QUANTITY,
   MIN_LISTING_QUANTITY,
+  getListingQuantityMinimumNote,
   parseListingQuantity,
 } from '../src/lib/listingQuantity.js'
 import { emptyListingForm, isCreateListingFormDirty } from '../src/lib/createListingForm.js'
@@ -20,6 +21,10 @@ for (const invalid of ['', '0', '1000', '1.5', '1e2', '-1', 'six', null, undefin
 assert.equal(emptyListingForm.quantity, '1')
 assert.equal(isCreateListingFormDirty({ ...emptyListingForm }), false)
 assert.equal(isCreateListingFormDirty({ ...emptyListingForm, quantity: '6' }), true)
+assert.match(
+  getListingQuantityMinimumNote({ quantity_reserved: 1, quantity_sold: 0 }),
+  /1 reserved item/,
+)
 
 const listingsSource = readFileSync(
   new URL('../src/lib/listings.js', import.meta.url),

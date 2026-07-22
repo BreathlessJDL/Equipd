@@ -436,45 +436,79 @@
   border: 1px solid color-mix(in srgb, #16a34a 25%, var(--color-border));
 }
 
-.listing-inventory {
+.listing-form__quantity-editor {
   display: grid;
-  gap: var(--space-lg);
-}
-
-.listing-inventory__summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-sm);
-  margin: 0;
 }
 
-.listing-inventory__metric {
-  padding: var(--space-sm);
+.listing-form__section--quantity {
+  margin-bottom: var(--space-lg);
+}
+
+.listing-form__quantity-card {
+  padding: 1rem 1.1rem;
+}
+
+.listing-form__quantity-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+.listing-form__quantity-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-navy);
+}
+
+.listing-form__input--boxed {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 11rem;
+  padding: 0.55rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: calc(var(--radius) - 2px);
-  background: var(--color-bg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-.listing-inventory__metric dt {
-  margin-bottom: 0.2rem;
-  color: var(--color-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.listing-inventory__metric dd {
+.listing-form__input--boxed::-webkit-outer-spin-button,
+.listing-form__input--boxed::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
-  color: var(--color-navy);
-  font-size: 1.125rem;
-  font-weight: 700;
 }
 
-.listing-inventory__form {
-  display: grid;
-  gap: var(--space-sm);
-  max-width: 22rem;
+.listing-form__input--boxed:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 35%, transparent);
+  outline-offset: 1px;
+  border-color: var(--color-orange);
+}
+
+.listing-form__quantity-hint {
+  margin: 0.5rem 0 0;
+  max-width: 28rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.listing-form__quantity-editor-button {
+  margin-top: 1rem;
+  justify-self: start;
+}
+
+.listing-form__quantity-editor .listing-form__message {
+  margin-top: var(--space-sm);
+  padding: 0.65rem 0.85rem;
 }
 
 @media (max-width: 640px) {
@@ -482,7 +516,17 @@
     width: 100%;
   }
 
-  .listing-inventory__summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .listing-form__quantity-card {
+    padding: 0.95rem 1rem;
+  }
+
+  .listing-form__input--boxed,
+  .listing-form__quantity-input {
+    max-width: none;
+  }
+
+  .listing-form__quantity-editor-button {
+    width: 100%;
+    justify-self: stretch;
   }
 }

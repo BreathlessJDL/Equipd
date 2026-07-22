@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../components/AdminOrders.css'
 import '../components/PageStub.css'
@@ -26,26 +26,27 @@ function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true)
-    setError('')
+  useEffect(() => {
+    let active = true
 
-    const { data, error: fetchError } = await fetchAdminOrders(filter)
+    async function loadOrders() {
+      const { data, error: fetchError } = await fetchAdminOrders(filter)
+      if (!active) return
 
-    if (fetchError) {
-      setError(getAdminErrorMessage(fetchError))
-      setOrders([])
+      if (fetchError) {
+        setError(getAdminErrorMessage(fetchError))
+        setOrders([])
+      } else {
+        setOrders(data ?? [])
+      }
       setLoading(false)
-      return
     }
 
-    setOrders(data ?? [])
-    setLoading(false)
-  }, [filter])
-
-  useEffect(() => {
     loadOrders()
-  }, [loadOrders])
+    return () => {
+      active = false
+    }
+  }, [filter])
 
   return (
     <section className="admin-orders">
@@ -69,7 +70,12 @@ function AdminOrdersPage() {
             className={`admin-orders__filter${
               filter === entry.value ? ' admin-orders__filter--active' : ''
             }`}
-            onClick={() => setFilter(entry.value)}
+            onClick={() => {
+              if (entry.value === filter) return
+              setLoading(true)
+              setError('')
+              setFilter(entry.value)
+            }}
           >
             {entry.label}
           </button>
@@ -93,7 +99,8 @@ function AdminOrdersPage() {
                 <th scope="col">Order</th>
                 <th scope="col">Buyer</th>
                 <th scope="col">Seller</th>
-                <th scope="col">Amount</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Item subtotal</th>
                 <th scope="col">Payment</th>
                 <th scope="col">Fulfilment</th>
                 <th scope="col">Payout</th>
@@ -132,7 +139,8 @@ function AdminOrdersPage() {
                     </td>
                     <td>{formatAdminUserLabel(order.buyer_id, order.buyer_display_name)}</td>
                     <td>{formatAdminUserLabel(order.seller_id, order.seller_display_name)}</td>
-                    <td>{formatPricePence(order.amount_pence)}</td>
+                    <td>{order.quantity ?? 1}</td>
+                    <td>{formatPricePence(order.item_subtotal_pence ?? order.amount_pence)}</td>
                     <td>{formatPaymentStatus(order.payment_status)}</td>
                     <td>{formatOrderFulfilmentStatus(order.fulfilment_status)}</td>
                     <td>{formatPayoutStatus(order.payout_status)}</td>

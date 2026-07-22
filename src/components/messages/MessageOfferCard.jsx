@@ -12,6 +12,7 @@ import {
   formatOfferTimestamp,
   getOfferDisplayStatus,
   getOfferErrorMessage,
+  getOfferUnitAmountPence,
 } from '../../lib/offers'
 import { canPayNow } from '../../lib/payments'
 import {
@@ -48,6 +49,8 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
   const counterPartyRole = isBuyer ? 'buyer' : 'seller'
   const showBuyerPricing = shouldShowBuyerPricing({ userId: user?.id, offer })
   const showSellerPricing = shouldShowSellerPricing({ userId: user?.id, offer })
+  const quantity = offer.quantity ?? 1
+  const unitOfferPence = getOfferUnitAmountPence(offer.amount_pence, quantity)
 
   async function runAction(action) {
     setActing(true)
@@ -130,7 +133,12 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               <p className="message-offer-card__title">{listing?.title ?? 'Listing'}</p>
             )}
             <p className="message-offer-card__amount">
-              {formatPricePence(offer.amount_pence)}
+              Offer for {quantity} {quantity === 1 ? 'item' : 'items'}
+            </p>
+            <p className="message-offer-card__meta">
+              {unitOfferPence ? `${formatPricePence(unitOfferPence)} per item` : ''}
+              {unitOfferPence ? ' · ' : ''}
+              {formatPricePence(offer.amount_pence)} total
             </p>
             {offer.message ? (
               <p className="message-offer-card__note">{offer.message}</p>
@@ -139,11 +147,13 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               <BuyerProtectionPriceDisplay
                 payment={payment ?? null}
                 itemPricePence={payment ? null : offer.amount_pence}
+                quantity={quantity}
               />
             ) : null}
             {showSellerPricing ? (
               <SellerPayoutSummary
                 itemPricePence={offer.amount_pence}
+                quantity={quantity}
                 payment={payment ?? null}
                 compact
                 offerAmountLabel="Offer price"
@@ -242,6 +252,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
       <CounterOfferModal
         open={counterModalOpen}
         listingPricePence={listing?.price_pence}
+        quantity={quantity}
         submitting={acting}
         counterPartyRole={counterPartyRole}
         onClose={() => setCounterModalOpen(false)}
@@ -251,6 +262,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
       <AcceptOfferConfirmationModal
         open={acceptConfirmationOpen}
         itemPricePence={offer.amount_pence}
+        quantity={quantity}
         conversationId={offer.conversation_id ?? conversation?.id ?? null}
         onClose={() => setAcceptConfirmationOpen(false)}
       />

@@ -1,28 +1,79 @@
-import { useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { formatPricePence } from '../../lib/listings'
 import {
+  calculateTotalOfferPence,
+  clampOfferQuantity,
+  formatPenceAsOfferInput,
   getOfferErrorMessage,
-  validateBuyerOfferAmount,
+  parseOfferQuantityInput,
+  parseUnitOfferPence,
+  validateBuyerUnitOfferAmount,
 } from '../../lib/offers'
 import { submitListingOffer } from '../../lib/offerMessaging'
 import BuyerProtectionOfferSummary from '../BuyerProtectionOfferSummary'
 import '../auth/AuthModal.css'
 import './MakeOfferModal.css'
 
+function parseAvailableQuantityFromError(error) {
+  const match = error?.message?.match(
+    /Insufficient inventory:\s*requested\s+\d+,\s*available\s+(\d+)/i,
+  )
+  if (!match) return null
+  const available = Number(match[1])
+  return Number.isSafeInteger(available) ? available : null
+}
+
 function MakeOfferModal({
   open,
   listing,
   user,
   buyerHasPendingOffer = false,
+  quantity: controlledQuantity = null,
+  onQuantityChange = null,
+  onAvailabilityChanged = null,
   onClose,
   onSubmitted,
 }) {
+  const availableQuantity = Number.isSafeInteger(Number(listing?.quantity_available))
+    ? Math.max(1, Number(listing.quantity_available))
+    : 1
   const amountId = useId()
+  const quantityId = useId()
   const messageId = useId()
-  const [offerAmount, setOfferAmount] = useState('')
+  const [unitOfferAmount, setUnitOfferAmount] = useState('')
   const [offerMessage, setOfferMessage] = useState('')
+  const [internalQuantity, setInternalQuantity] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const quantity = clampOfferQuantity(
+    controlledQuantity ?? internalQuantity,
+    availableQuantity,
+  )
+
+  const changeQuantity = useCallback(
+    (nextQuantity) => {
+      const clamped = clampOfferQuantity(nextQuantity, availableQuantity)
+      if (typeof onQuantityChange === 'function') {
+        onQuantityChange(clamped)
+      } else {
+        setInternalQuantity(clamped)
+      }
+      setError('')
+    },
+    [availableQuantity, onQuantityChange],
+  )
+
+  const resetOfferFields = useCallback(() => {
+    setUnitOfferAmount('')
+    setOfferMessage('')
+    setError('')
+    setSubmitting(false)
+  }, [])
+
+  const handleClose = useCallback(() => {
+    resetOfferFields()
+    onClose()
+  }, [onClose, resetOfferFields])
 
   useEffect(() => {
     if (!open) return undefined
@@ -32,7 +83,7 @@ function MakeOfferModal({
 
     function handleKeyDown(event) {
       if (event.key === 'Escape' && !submitting) {
-        onClose()
+        handleClose()
       }
     }
 
@@ -42,16 +93,24 @@ function MakeOfferModal({
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open, onClose, submitting])
+  }, [handleClose, open, submitting])
 
-  useEffect(() => {
-    if (!open) {
-      setOfferAmount('')
-      setOfferMessage('')
-      setError('')
-      setSubmitting(false)
+  function handleQuantityInputChange(rawValue) {
+    const { quantity: nextQuantity, error: quantityError } = parseOfferQuantityInput(
+      rawValue,
+      availableQuantity,
+    )
+    if (quantityError && nextQuantity == null) {
+      setError(quantityError)
+      return
     }
-  }, [open])
+    if (nextQuantity != null) {
+      changeQuantity(nextQuantity)
+      if (quantityError) {
+        setError(quantityError)
+      }
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -60,11 +119,18 @@ function MakeOfferModal({
     setSubmitting(true)
     setError('')
 
-    const amountPence = Math.round(Number.parseFloat(offerAmount) * 100)
-    const amountError = validateBuyerOfferAmount(amountPence, listing.price_pence)
-    if (amountError) {
+    const unitOfferPence = parseUnitOfferPence(unitOfferAmount)
+    const unitError = validateBuyerUnitOfferAmount(unitOfferPence, listing.price_pence)
+    if (unitError) {
       setSubmitting(false)
-      setError(amountError)
+      setError(unitError)
+      return
+    }
+
+    const totalOfferPence = calculateTotalOfferPence(unitOfferPence, quantity)
+    if (totalOfferPence == null) {
+      setSubmitting(false)
+      setError('Enter a valid offer per item greater than zero.')
       return
     }
 
@@ -72,22 +138,37 @@ function MakeOfferModal({
       listingId: listing.id,
       buyerId: user.id,
       sellerId: listing.seller_id,
-      amountInput: offerAmount,
+      amountInput: formatPenceAsOfferInput(totalOfferPence),
       message: offerMessage,
       listingPricePence: listing.price_pence,
+      quantity,
     })
 
     setSubmitting(false)
 
     if (submitError) {
+      const refreshedAvailability = parseAvailableQuantityFromError(submitError)
+      if (refreshedAvailability != null) {
+        if (typeof onAvailabilityChanged === 'function') {
+          onAvailabilityChanged(refreshedAvailability)
+        }
+        changeQuantity(clampOfferQuantity(quantity, refreshedAvailability))
+      }
       setError(getOfferErrorMessage(submitError))
       return
     }
 
+    resetOfferFields()
     onSubmitted(data)
   }
 
   if (!open) return null
+
+  const showQuantity = availableQuantity > 1
+  const unitOfferPence = parseUnitOfferPence(unitOfferAmount)
+  const totalOfferPence = calculateTotalOfferPence(unitOfferPence, quantity)
+  const totalOfferInput =
+    totalOfferPence != null ? formatPenceAsOfferInput(totalOfferPence) : ''
 
   return (
     <div className="auth-modal make-offer-modal" role="presentation">
@@ -96,7 +177,7 @@ function MakeOfferModal({
         className="auth-modal__backdrop"
         aria-label="Close"
         disabled={submitting}
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       <div
@@ -109,7 +190,7 @@ function MakeOfferModal({
           Make an offer
         </h2>
         <p className="make-offer-modal__lead">
-          Enter an offer up to the asking price of {formatPricePence(listing.price_pence)}.
+          Asking price is {formatPricePence(listing.price_pence)} per item.
         </p>
 
         {buyerHasPendingOffer ? (
@@ -121,16 +202,59 @@ function MakeOfferModal({
             <button
               type="button"
               className="listing-detail__button listing-detail__button--secondary make-offer-modal__button"
-              onClick={onClose}
+              onClick={handleClose}
             >
               Cancel
             </button>
           </>
         ) : (
           <form className="make-offer-modal__form" onSubmit={handleSubmit}>
+            {showQuantity ? (
+              <div className="make-offer-modal__field">
+                <label className="make-offer-modal__label" htmlFor={quantityId}>
+                  Quantity
+                </label>
+                <div className="make-offer-modal__quantity-row">
+                  <div className="make-offer-modal__stepper" aria-label="Offer quantity">
+                    <button
+                      type="button"
+                      aria-label="Decrease quantity"
+                      disabled={submitting || quantity <= 1}
+                      onClick={() => changeQuantity(quantity - 1)}
+                    >
+                      −
+                    </button>
+                    <input
+                      id={quantityId}
+                      className="make-offer-modal__quantity-input"
+                      type="number"
+                      min={1}
+                      max={availableQuantity}
+                      step={1}
+                      inputMode="numeric"
+                      value={quantity}
+                      disabled={submitting}
+                      onChange={(event) => handleQuantityInputChange(event.target.value)}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Increase quantity"
+                      disabled={submitting || quantity >= availableQuantity}
+                      onClick={() => changeQuantity(quantity + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span className="make-offer-modal__availability">
+                    {availableQuantity} available
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
             <div className="make-offer-modal__field">
               <label className="make-offer-modal__label" htmlFor={amountId}>
-                Offer amount
+                Offer per item
               </label>
               <input
                 id={amountId}
@@ -140,17 +264,31 @@ function MakeOfferModal({
                 max={(listing.price_pence / 100).toFixed(2)}
                 step="0.01"
                 inputMode="decimal"
-                placeholder="150.00"
-                value={offerAmount}
+                placeholder="500.00"
+                value={unitOfferAmount}
                 disabled={submitting}
                 onChange={(event) => {
-                  setOfferAmount(event.target.value)
+                  setUnitOfferAmount(event.target.value)
                   setError('')
                 }}
               />
+              {unitOfferPence ? (
+                <p className="make-offer-modal__unit-offer">
+                  {formatPricePence(unitOfferPence)} per item
+                </p>
+              ) : null}
             </div>
 
-            <BuyerProtectionOfferSummary amountInput={offerAmount} compact />
+            {totalOfferPence ? (
+              <div className="make-offer-modal__total-offer" aria-live="polite">
+                <span className="make-offer-modal__total-offer-label">Total offer</span>
+                <strong className="make-offer-modal__total-offer-value">
+                  {formatPricePence(totalOfferPence)}
+                </strong>
+              </div>
+            ) : null}
+
+            <BuyerProtectionOfferSummary amountInput={totalOfferInput} compact />
 
             <div className="make-offer-modal__field">
               <label className="make-offer-modal__label" htmlFor={messageId}>
@@ -179,7 +317,7 @@ function MakeOfferModal({
               <button
                 type="submit"
                 className="listing-detail__button listing-detail__button--primary make-offer-modal__button"
-                disabled={submitting || !offerAmount}
+                disabled={submitting || !unitOfferAmount}
               >
                 {submitting ? 'Submitting offer…' : 'Submit offer'}
               </button>
@@ -187,7 +325,7 @@ function MakeOfferModal({
                 type="button"
                 className="listing-detail__button listing-detail__button--secondary make-offer-modal__button"
                 disabled={submitting}
-                onClick={onClose}
+                onClick={handleClose}
               >
                 Cancel
               </button>

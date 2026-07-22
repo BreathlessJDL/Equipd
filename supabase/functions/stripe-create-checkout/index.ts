@@ -1,5 +1,9 @@
 import { handleCors, errorResponse, jsonResponse } from '../_shared/cors.ts'
 import { resolveBuyerCheckoutAmounts } from '../_shared/buyer-protection.ts'
+import {
+  buildCheckoutLineItems,
+  resolveCheckoutCommerceSnapshot,
+} from '../_shared/checkoutCommerce.ts'
 import { checkoutSessionExpiresAt, getAppBaseUrl, getStripe } from '../_shared/stripe.ts'
 import { getAuthenticatedUser, getSupabaseAdmin } from '../_shared/supabase-admin.ts'
 
@@ -46,7 +50,12 @@ Deno.serve(async (req) => {
         amount_pence,
         buyer_protection_fee_pence,
         buyer_total_pence,
+        quantity,
+        listing_unit_price_pence,
+        agreed_unit_price_pence,
+        item_subtotal_pence,
         expires_at,
+        updated_at,
         stripe_checkout_session_id,
         offer:offers!inner(id, status),
         listing:listings!inner(id, title, status, collection_available, courier_available, delivery_notes)
@@ -64,6 +73,13 @@ Deno.serve(async (req) => {
       return errorResponse('Only the buyer can pay for this offer', 403)
     }
 
+    const offer = Array.isArray(payment.offer) ? payment.offer[0] : payment.offer
+    const listing = Array.isArray(payment.listing) ? payment.listing[0] : payment.listing
+
+    if (!offer || !listing) {
+      return errorResponse('Payment commerce relationships are incomplete', 500)
+    }
+
     if (payment.status !== 'pending') {
       return errorResponse('Payment is not ready for checkout', 400)
     }
@@ -72,17 +88,31 @@ Deno.serve(async (req) => {
       return errorResponse('Payment window has expired', 400)
     }
 
-    if (payment.offer?.status !== 'accepted') {
+    if (offer?.status !== 'accepted') {
       return errorResponse('Offer must be accepted before payment', 400)
-    }
-
-    if (payment.listing?.status !== 'reserved') {
-      return errorResponse('Listing is not reserved for payment', 400)
     }
 
     const { data: orderRow, error: orderError } = await admin
       .from('orders')
-      .select('id, order_type, fulfilment_status')
+      .select(
+        `
+        id,
+        payment_id,
+        buyer_id,
+        seller_id,
+        listing_id,
+        quantity,
+        listing_unit_price_pence,
+        agreed_unit_price_pence,
+        item_subtotal_pence,
+        amount_pence,
+        buyer_protection_fee_pence,
+        buyer_total_pence,
+        inventory_state,
+        order_type,
+        fulfilment_status
+      `,
+      )
       .eq('payment_id', paymentId)
       .maybeSingle()
 
@@ -94,6 +124,30 @@ Deno.serve(async (req) => {
     if (!orderRow.order_type) {
       return errorResponse('Select a fulfilment method before checkout', 400)
     }
+
+    if (
+      orderRow.inventory_state !== 'reserved'
+      || orderRow.fulfilment_status !== 'awaiting_payment'
+    ) {
+      return errorResponse('Order reservation is not active', 400)
+    }
+
+    let commerceSnapshot
+    try {
+      commerceSnapshot = resolveCheckoutCommerceSnapshot(payment, orderRow)
+    } catch (snapshotError) {
+      const message =
+        snapshotError instanceof Error ? snapshotError.message : 'Checkout snapshot is invalid'
+      return errorResponse(message, 500)
+    }
+
+    const {
+      quantity,
+      agreedUnitPricePence,
+      itemSubtotalPence,
+      buyerProtectionFeePence,
+      buyerTotalPence,
+    } = commerceSnapshot
 
     const { data: allowedTypes, error: typesError } = await admin.rpc('get_listing_order_types', {
       p_listing_id: payment.listing_id,
@@ -116,49 +170,50 @@ Deno.serve(async (req) => {
       if (existingSession.status === 'open' && existingSession.url) {
         return jsonResponse({ url: existingSession.url })
       }
+
+      if (existingSession.status === 'complete') {
+        return errorResponse('Payment is already processing', 409)
+      }
     }
 
     const checkoutAmounts = resolveBuyerCheckoutAmounts(payment)
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      currency: 'gbp',
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: 'gbp',
-            unit_amount: checkoutAmounts.itemPricePence,
-            product_data: {
-              name: payment.listing.title,
-              description: `Accepted offer on ${payment.listing.title}`,
-            },
-          },
+    if (
+      checkoutAmounts.itemPricePence !== itemSubtotalPence
+      || checkoutAmounts.buyerProtectionFeePence !== buyerProtectionFeePence
+      || checkoutAmounts.buyerTotalPence !== buyerTotalPence
+    ) {
+      return errorResponse('Authoritative checkout totals do not match', 500)
+    }
+
+    const idempotencyVersion = new Date(payment.updated_at).getTime()
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        currency: 'gbp',
+        line_items: buildCheckoutLineItems(commerceSnapshot, listing.title),
+        metadata: {
+          payment_id: payment.id,
+          offer_id: payment.offer_id,
+          listing_id: payment.listing_id,
+          buyer_id: payment.buyer_id,
+          seller_id: payment.seller_id,
+          order_id: orderRow.id,
+          order_type: orderRow.order_type,
+          quantity: String(quantity),
+          agreed_unit_price_pence: String(agreedUnitPricePence),
+          item_subtotal_pence: String(itemSubtotalPence),
+          buyer_protection_fee_pence: String(buyerProtectionFeePence),
+          buyer_total_pence: String(buyerTotalPence),
         },
-        {
-          quantity: 1,
-          price_data: {
-            currency: 'gbp',
-            unit_amount: checkoutAmounts.buyerProtectionFeePence,
-            product_data: {
-              name: 'Buyer Protection',
-              description: 'Equipd Buyer Protection for this purchase',
-            },
-          },
-        },
-      ],
-      metadata: {
-        payment_id: payment.id,
-        offer_id: payment.offer_id,
-        listing_id: payment.listing_id,
-        buyer_id: payment.buyer_id,
-        seller_id: payment.seller_id,
-        order_type: orderRow.order_type,
+        success_url: `${appBaseUrl}/orders/${orderRow.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appBaseUrl}/hub?payment=cancelled`,
+        expires_at: checkoutSessionExpiresAt(payment.expires_at),
       },
-      success_url: `${appBaseUrl}/orders/${orderRow.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appBaseUrl}/hub?payment=cancelled`,
-      expires_at: checkoutSessionExpiresAt(payment.expires_at),
-    })
+      {
+        idempotencyKey: `equipd-checkout:${payment.id}:${idempotencyVersion}`,
+      },
+    )
 
     if (!session.url) {
       return errorResponse('Failed to create checkout session', 500)

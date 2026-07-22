@@ -50,10 +50,8 @@ import {
   canSellerSubmitCourierEvidence,
   canShowCourierEvidenceSummary,
   fetchOrderById,
-  formatOrderFulfilmentStatus,
   formatOrderReference,
   formatOrderTimestamp,
-  formatPayoutStatus,
   getOrderDeliveryMethodDescription,
   getOrderDeliveryMethodLabel,
   getOrderErrorMessage,
@@ -577,14 +575,16 @@ function OrderDetailPage() {
 
         {checkoutSuccessNotice && isPaymentComplete(payment) ? (
           <p className="order-detail__banner order-detail__banner--success" role="status">
-            Payment received. Your order is confirmed — follow the next steps below to complete
+            Payment received{order?.quantity > 1 ? ` for ${order.quantity} items` : ''}. Your order
+            is confirmed — follow the next steps below to complete
             {isSellerDeliveryOrder ? ' delivery' : order?.order_type === ORDER_TYPES.BUYER_COURIER ? ' fulfilment' : ' collection'}.
           </p>
         ) : null}
 
         {checkoutSuccessNotice && !isPaymentComplete(payment) ? (
           <p className="order-detail__banner order-detail__banner--notice" role="status">
-            Payment received. Confirming your order with Stripe…
+            Payment received{order?.quantity > 1 ? ` for ${order.quantity} items` : ''}. Confirming
+            your order with Stripe…
           </p>
         ) : null}
 
@@ -708,6 +708,17 @@ function OrderDetailPage() {
                 offerAmountLabel="Sale price"
                 receiveLabel="You'll receive"
                 showNote
+              />
+            </div>
+          ) : null}
+
+          {viewerRole === 'buyer' ? (
+            <div className="order-detail__overview-payout">
+              <h2 className="order-detail__overview-payout-title">Order total</h2>
+              <OrderFinancialBreakdown
+                order={order}
+                payment={payment}
+                viewerRole="buyer"
               />
             </div>
           ) : null}

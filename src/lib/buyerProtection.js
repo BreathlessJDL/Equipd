@@ -40,6 +40,9 @@ export function calculateBuyerCheckoutTotals(itemPricePence) {
 
   return {
     itemPricePence: normalized,
+    itemSubtotalPence: normalized,
+    agreedUnitPricePence: normalized,
+    quantity: 1,
     buyerProtectionFeePence,
     buyerTotalPence: normalized + buyerProtectionFeePence,
     sellerServiceFeePence,
@@ -66,7 +69,8 @@ export function resolvePaymentCheckoutTotals(payment) {
     return calculateBuyerCheckoutTotals(0)
   }
 
-  const itemPricePence = payment.amount_pence ?? 0
+  const itemPricePence = payment.item_subtotal_pence ?? payment.amount_pence ?? 0
+  const quantity = payment.quantity ?? 1
   const buyerProtectionFeePence =
     payment.buyer_protection_fee_pence ?? calculateBuyerProtectionFee(itemPricePence)
   const buyerTotalPence =
@@ -77,6 +81,9 @@ export function resolvePaymentCheckoutTotals(payment) {
 
   return {
     itemPricePence,
+    itemSubtotalPence: itemPricePence,
+    agreedUnitPricePence: payment.agreed_unit_price_pence ?? itemPricePence,
+    quantity,
     buyerProtectionFeePence,
     buyerTotalPence,
     sellerServiceFeePence,
@@ -89,7 +96,9 @@ export function resolveOrderCheckoutTotals(order) {
     return calculateBuyerCheckoutTotals(0)
   }
 
-  const itemPricePence = order.item_price_pence ?? order.amount_pence ?? 0
+  const itemPricePence =
+    order.item_subtotal_pence ?? order.item_price_pence ?? order.amount_pence ?? 0
+  const quantity = order.quantity ?? 1
   const buyerProtectionFeePence =
     order.buyer_protection_fee_pence ?? calculateBuyerProtectionFee(itemPricePence)
   const buyerTotalPence =
@@ -100,6 +109,9 @@ export function resolveOrderCheckoutTotals(order) {
 
   return {
     itemPricePence,
+    itemSubtotalPence: itemPricePence,
+    agreedUnitPricePence: order.agreed_unit_price_pence ?? itemPricePence,
+    quantity,
     buyerProtectionFeePence,
     buyerTotalPence,
     sellerServiceFeePence,

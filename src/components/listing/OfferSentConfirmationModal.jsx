@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import '../auth/AuthModal.css'
 import './OfferSentConfirmationModal.css'
 
-function OfferSentConfirmationModal({ open, conversationId = null, onClose }) {
+function OfferSentConfirmationModal({ open, conversationId = null, quantity = 1, onClose }) {
   useEffect(() => {
     if (!open) return undefined
 
@@ -45,7 +45,9 @@ function OfferSentConfirmationModal({ open, conversationId = null, onClose }) {
           Offer sent
         </h2>
         <p className="offer-sent-modal__body" role="status">
-          Your offer has been sent to the seller.
+          {quantity > 1
+            ? `Your offer for ${quantity} items has been sent to the seller.`
+            : 'Your offer has been sent to the seller.'}
         </p>
         <div className="offer-sent-modal__actions">
           {conversationId ? (

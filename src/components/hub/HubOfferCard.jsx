@@ -20,7 +20,6 @@ import PayNowWithFulfilment from '../PayNowWithFulfilment'
 import { TransactionCancelButton } from '../TransactionCancel'
 import {
   buildHubNavActions,
-  HubItemNavActions,
   HubItemReviewButton,
   HubItemReviewSubmitted,
 } from './HubItemActions'
@@ -64,9 +63,7 @@ import {
   canShowHandoverQr,
   canSellerSubmitCourierEvidence,
   canShowCourierEvidenceSummary,
-  getCollectionHubStatusLabel,
   getCourierDeliveryHubStatusLabel,
-  getCourierHubStatusLabel,
   getOfferOrder,
   getSellerDeliveryHubStatusLabel,
   getSellerPayoutProcessingMessage,
@@ -187,6 +184,7 @@ function HubOfferCard({
   const metadataItems = getHubOfferMetadataItems({
     partyLabel,
     partyName: partyProfile ? getProfileDisplayName(partyProfile) : null,
+    quantity: offer.quantity ?? 1,
     order,
     isOrderContext: Boolean(orderStatusRole),
     datePrefix: orderStatusRole ? 'Updated' : 'Submitted',
@@ -225,11 +223,13 @@ function HubOfferCard({
       payment={payment ?? null}
       order={order}
       itemPricePence={payment ? null : offer.amount_pence}
+      quantity={offer.quantity ?? 1}
       hubFinance
     />
   ) : showSellerPricing ? (
     <SellerPayoutSummary
       itemPricePence={offer.amount_pence}
+      quantity={offer.quantity ?? 1}
       payment={payment}
       order={order}
       hubFinance
@@ -659,6 +659,7 @@ function HubOfferList({
       <CounterOfferModal
         open={Boolean(counteringOffer)}
         listingPricePence={counteringOffer?.listing?.price_pence}
+        quantity={counteringOffer?.quantity ?? 1}
         submitting={Boolean(actingOfferId)}
         counterPartyRole={
           counteringOffer && userId === counteringOffer.buyer_id ? 'buyer' : 'seller'
@@ -670,6 +671,7 @@ function HubOfferList({
       <AcceptOfferConfirmationModal
         open={Boolean(acceptedOfferConfirmation)}
         itemPricePence={acceptedOfferConfirmation?.amount_pence ?? null}
+        quantity={acceptedOfferConfirmation?.quantity ?? 1}
         conversationId={acceptedOfferConfirmation?.conversation_id ?? null}
         onClose={() => setAcceptedOfferConfirmation(null)}
       />

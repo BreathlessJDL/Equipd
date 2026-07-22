@@ -43,6 +43,102 @@
   color: var(--color-navy);
 }
 
+.make-offer-modal__quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.make-offer-modal__stepper {
+  display: inline-grid;
+  grid-template-columns: 2.5rem minmax(2.75rem, auto) 2.5rem;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--color-surface);
+}
+
+.make-offer-modal__stepper button {
+  min-height: 2.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-navy);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.make-offer-modal__stepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.make-offer-modal__stepper output,
+.make-offer-modal__stepper .make-offer-modal__quantity-input {
+  padding: 0 0.5rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.make-offer-modal__quantity-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.5rem;
+  border: 0;
+  border-inline: 1px solid var(--color-border);
+  background: transparent;
+  font: inherit;
+  color: var(--color-navy);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.make-offer-modal__quantity-input::-webkit-outer-spin-button,
+.make-offer-modal__quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.make-offer-modal__total-offer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: color-mix(in srgb, var(--color-navy) 4%, transparent);
+}
+
+.make-offer-modal__total-offer-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.make-offer-modal__total-offer-value {
+  font-size: 1rem;
+  color: var(--color-navy);
+}
+
+.make-offer-modal__availability,
+.make-offer-modal__unit-offer,
+.make-offer-modal__selection-summary {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.make-offer-modal__selection-summary {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.make-offer-modal__unit-offer {
+  margin: 0;
+}
+
 .make-offer-modal__input,
 .make-offer-modal__textarea {
   width: 100%;

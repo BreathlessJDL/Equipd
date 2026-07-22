@@ -268,6 +268,7 @@ function ListingOffersSection({
                     <BuyerProtectionPriceDisplay
                       payment={isAccepted && payment ? payment : null}
                       itemPricePence={isAccepted && payment ? null : offer.amount_pence}
+                      quantity={offer.quantity ?? 1}
                       compact
                       className="listing-detail__offer-buyer-protection"
                     />
@@ -275,6 +276,7 @@ function ListingOffersSection({
                     <SellerPayoutSummary
                       itemPricePence={offer.amount_pence}
                       payment={isAccepted ? payment : null}
+                      quantity={offer.quantity ?? 1}
                       compact
                       offerAmountLabel="Offer price"
                       receiveLabel="You'll receive"
@@ -282,6 +284,7 @@ function ListingOffersSection({
                   ) : (
                     <BuyerProtectionPriceDisplay
                       itemPricePence={offer.amount_pence}
+                      quantity={offer.quantity ?? 1}
                       compact
                       className="listing-detail__offer-buyer-protection"
                     />
@@ -290,7 +293,10 @@ function ListingOffersSection({
                 </div>
 
                 <p className="listing-detail__offer-meta">
-                  {isOwner ? 'From buyer' : 'Your offer'} · {formatOfferTimestamp(offer.created_at)}
+                  {isOwner ? 'From buyer' : 'Your offer'}
+                  {Number(offer.quantity) > 1 ? ` · Quantity ${offer.quantity}` : ''}
+                  {' · '}
+                  {formatOfferTimestamp(offer.created_at)}
                 </p>
 
                 {isBuyer && isAccepted && payment ? (

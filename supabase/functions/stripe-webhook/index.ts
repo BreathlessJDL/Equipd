@@ -102,31 +102,122 @@ Deno.serve(async (req) => {
               : paymentIntent.latest_charge?.id ?? null
         }
 
-        const { data: capturedPayment, error } = await admin.rpc('mark_payment_captured', {
-          p_payment_id: paymentId,
-          p_stripe_checkout_session_id: session.id,
-          p_stripe_payment_intent_id: paymentIntentId,
-          p_stripe_charge_id: chargeId,
-        })
+        const { data: authoritativePayment, error: paymentLookupError } = await admin
+          .from('payments')
+          .select(
+            'id, quantity, agreed_unit_price_pence, item_subtotal_pence, buyer_protection_fee_pence, buyer_total_pence',
+          )
+          .eq('id', paymentId)
+          .maybeSingle()
+
+        if (paymentLookupError || !authoritativePayment) {
+          console.error('stripe-webhook authoritative payment lookup failed', {
+            payment_id: paymentId,
+            event_id: event.id,
+            error: paymentLookupError?.message ?? 'Payment not found',
+          })
+          return errorResponse('Failed to validate authoritative payment', 500)
+        }
+
+        const expectedQuantity = Number(authoritativePayment.quantity)
+        const expectedUnitAmount = Number(authoritativePayment.agreed_unit_price_pence)
+        const expectedSubtotal = Number(authoritativePayment.item_subtotal_pence)
+        const expectedProtectionFee = Number(authoritativePayment.buyer_protection_fee_pence)
+        const expectedTotal = Number(authoritativePayment.buyer_total_pence)
+        const hasQuantitySnapshot = session.metadata?.quantity != null
+        const legacyQuantityOneSession = !hasQuantitySnapshot && expectedQuantity === 1
+
+        if (
+          !Number.isSafeInteger(expectedQuantity)
+          || expectedQuantity < 1
+          || expectedSubtotal !== expectedUnitAmount * expectedQuantity
+          || expectedTotal !== expectedSubtotal + expectedProtectionFee
+          || session.currency !== 'gbp'
+          || session.amount_total !== expectedTotal
+          || (
+            !legacyQuantityOneSession
+            && (
+              session.metadata?.quantity !== String(expectedQuantity)
+              || session.metadata?.agreed_unit_price_pence !== String(expectedUnitAmount)
+              || session.metadata?.item_subtotal_pence !== String(expectedSubtotal)
+              || session.metadata?.buyer_total_pence !== String(expectedTotal)
+            )
+          )
+        ) {
+          console.error('stripe-webhook checkout snapshot mismatch', {
+            payment_id: paymentId,
+            event_id: event.id,
+            stripe_amount_total: session.amount_total,
+            expected_total: expectedTotal,
+            stripe_currency: session.currency,
+            expected_quantity: expectedQuantity,
+            metadata: session.metadata,
+          })
+          return errorResponse('Checkout session does not match authoritative order', 500)
+        }
+
+        const { data: captureResult, error } = await admin.rpc(
+          'mark_payment_captured_or_exception',
+          {
+            p_payment_id: paymentId,
+            p_stripe_checkout_session_id: session.id,
+            p_stripe_payment_intent_id: paymentIntentId,
+            p_stripe_charge_id: chargeId,
+            p_stripe_event_id: event.id,
+            p_safe_payload_summary: {
+              event_type: event.type,
+              session_id: session.id,
+              payment_status: session.payment_status,
+              amount_total: session.amount_total,
+              currency: session.currency,
+            },
+          },
+        )
 
         if (error) {
-          console.error('stripe-webhook mark_payment_captured failed', {
+          // Exception persistence failures and unexpected capture failures remain retryable.
+          console.error('stripe-webhook mark_payment_captured_or_exception failed', {
             payment_id: paymentId,
             session_id: session.id,
             payment_intent_id: paymentIntentId,
             charge_id: chargeId,
+            event_id: event.id,
             error: error.message,
           })
           return errorResponse(`Failed to capture payment: ${error.message}`, 500)
         }
 
-        console.log('stripe-webhook mark_payment_captured succeeded', {
+        const outcome = captureResult?.outcome ?? null
+
+        console.log('stripe-webhook mark_payment_captured_or_exception succeeded', {
           payment_id: paymentId,
           session_id: session.id,
           payment_intent_id: paymentIntentId,
           charge_id: chargeId,
-          payment_status: capturedPayment?.status ?? null,
+          event_id: event.id,
+          outcome,
+          payment_status: captureResult?.payment_status ?? null,
+          inventory_state: captureResult?.inventory_state ?? null,
+          exception_id: captureResult?.exception_id ?? null,
         })
+
+        if (
+          outcome === 'late_payment_exception' ||
+          outcome === 'already_recorded_exception'
+        ) {
+          // Acknowledge successfully so Stripe stops retrying. No inventory mutation,
+          // fulfilment progression, payout, IndexNow, or ordinary payment emails.
+          break
+        }
+
+        if (outcome !== 'captured' && outcome !== 'already_captured') {
+          console.error('stripe-webhook unexpected capture outcome', {
+            payment_id: paymentId,
+            event_id: event.id,
+            outcome,
+          })
+          return errorResponse(`Unexpected payment capture outcome: ${outcome}`, 500)
+        }
 
         // Isolated IndexNow notify — never affects payment success/failure.
         void import('../_shared/indexNowEdgeNotify.ts')
@@ -134,7 +225,7 @@ Deno.serve(async (req) => {
             notifyIndexNowAfterPaymentCapture(
               admin,
               paymentId,
-              'stripe-webhook:mark_payment_captured',
+              'stripe-webhook:mark_payment_captured_or_exception',
             ))
           .catch((notifyError) => {
             console.error(

@@ -79,6 +79,18 @@ function BuyerProtectionOfferSummary({
 
       {showBreakdown ? (
         <dl className="buyer-protection-offer-summary__rows">
+          {totals.quantity > 1 ? (
+            <>
+              <div className="buyer-protection-offer-summary__row">
+                <dt>Unit price</dt>
+                <dd>{formatPricePence(totals.agreedUnitPricePence)}</dd>
+              </div>
+              <div className="buyer-protection-offer-summary__row">
+                <dt>Quantity</dt>
+                <dd>{totals.quantity}</dd>
+              </div>
+            </>
+          ) : null}
           <div className="buyer-protection-offer-summary__row">
             <dt>{offerAmountLabel}</dt>
             <dd>{formatPricePence(totals.itemPricePence)}</dd>

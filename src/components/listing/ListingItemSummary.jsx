@@ -13,6 +13,7 @@ import {
   getRatingLabel,
 } from '../../lib/listings'
 import { getDisplayableAvailableQuantity } from '../../lib/listingAvailability'
+import { parseOfferQuantityInput } from '../../lib/offers'
 import {
   CollectionPinIcon,
   CourierTruckIcon,
@@ -58,6 +59,9 @@ function ListingItemSummary({
   buyerProfile = null,
   viewerUserId = null,
   isOwner = false,
+  selectedQuantity = 1,
+  onSelectedQuantityChange = null,
+  onQuantityValidationError = null,
 }) {
   const deliveryOptions = getListingDeliveryOptions(listing, { buyerProfile, viewerUserId })
   const listedDate = formatListingListedDate(listing.created_at)
@@ -68,6 +72,27 @@ function ListingItemSummary({
 
   const metaParts = [conditionLabel, listedDate, listing.brand].filter(Boolean)
   const availableQuantity = getDisplayableAvailableQuantity(listing)
+  const showBuyerQuantitySelector =
+    !isOwner && availableQuantity != null && typeof onSelectedQuantityChange === 'function'
+  const unitPricePence = listing.price_pence ?? listing.price
+
+  function handleQuantityInputChange(rawValue) {
+    if (typeof onSelectedQuantityChange !== 'function') return
+    const { quantity: nextQuantity, error } = parseOfferQuantityInput(
+      rawValue,
+      availableQuantity,
+    )
+    if (error && nextQuantity == null) {
+      onQuantityValidationError?.(error)
+      return
+    }
+    if (nextQuantity != null) {
+      onSelectedQuantityChange(nextQuantity)
+      if (error) {
+        onQuantityValidationError?.(error)
+      }
+    }
+  }
 
   return (
     <aside className="listing-summary">
@@ -98,10 +123,52 @@ function ListingItemSummary({
           />
         )}
 
-        {availableQuantity != null ? (
+        {showBuyerQuantitySelector ? (
+          <div className="listing-summary__quantity" aria-label="Purchase quantity">
+            <span className="listing-summary__quantity-label">Quantity</span>
+            <div className="listing-summary__quantity-row">
+              <div className="listing-summary__quantity-stepper">
+                <button
+                  type="button"
+                  aria-label="Decrease selected quantity"
+                  disabled={selectedQuantity <= 1}
+                  onClick={() => onSelectedQuantityChange(selectedQuantity - 1)}
+                >
+                  −
+                </button>
+                <input
+                  className="listing-summary__quantity-input"
+                  type="number"
+                  min={1}
+                  max={availableQuantity}
+                  step={1}
+                  inputMode="numeric"
+                  aria-label="Selected quantity"
+                  value={selectedQuantity}
+                  onChange={(event) => handleQuantityInputChange(event.target.value)}
+                />
+                <button
+                  type="button"
+                  aria-label="Increase selected quantity"
+                  disabled={selectedQuantity >= availableQuantity}
+                  onClick={() => onSelectedQuantityChange(selectedQuantity + 1)}
+                >
+                  +
+                </button>
+              </div>
+              <span className="listing-summary__quantity-available">
+                {availableQuantity} available
+              </span>
+            </div>
+            <div className="listing-summary__quantity-pricing">
+              <span>{formatPricePence(unitPricePence)} per item</span>
+              <strong>{formatPricePence(unitPricePence * selectedQuantity)} item subtotal</strong>
+            </div>
+          </div>
+        ) : availableQuantity != null ? (
           <div className="listing-summary__availability">
             <p className="listing-summary__availability-price">
-              {formatPricePence(listing.price_pence ?? listing.price)} each
+              {formatPricePence(unitPricePence)} each
             </p>
             <p className="listing-summary__availability-count">{availableQuantity} available</p>
           </div>
@@ -166,5 +233,4 @@ function ListingItemSummary({
   )
 }
 
-export { parseListingDescriptionExtras } from '../../lib/listingDetailDisplay'
 export default ListingItemSummary

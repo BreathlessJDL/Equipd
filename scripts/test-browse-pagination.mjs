@@ -59,36 +59,43 @@ async function main() {
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY
   const client = createClient(url, anonKey)
 
-  const page1 = await fetchPage(client, { offset: 0 })
-  const page2 = await fetchPage(client, { offset: 24 })
-  const page3 = await fetchPage(client, { offset: 48 })
+  const { count: expectedCount, error: countError } = await client
+    .from(PUBLIC_BROWSE)
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'active')
+  if (countError) throw countError
+
+  const pages = []
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const page = await fetchPage(client, { offset })
+    pages.push(page)
+    if (page.length < PAGE_SIZE) break
+  }
+
   const filtered = await fetchPage(client, { offset: 0, search: 'life fitness' })
 
-  const all = [...page1, ...page2, ...page3]
+  const all = pages.flat()
   const unique = new Set(all.map((row) => row.id))
 
-  console.log('Page 1:', page1.length)
-  console.log('Page 2:', page2.length)
-  console.log('Page 3:', page3.length)
+  pages.forEach((page, index) => console.log(`Page ${index + 1}:`, page.length))
+  console.log('Expected visible listings:', expectedCount)
   console.log('Total loaded:', all.length, 'unique:', unique.size)
   console.log('All have images:', all.every(hasImage))
   console.log('Filtered "life fitness" page 1:', filtered.length)
 
   const ok =
-    page1.length === 24 &&
-    page2.length === 24 &&
-    page3.length === 6 &&
-    all.length === 54 &&
-    unique.size === 54 &&
+    pages.slice(0, -1).every((page) => page.length === PAGE_SIZE) &&
+    all.length === expectedCount &&
+    unique.size === expectedCount &&
     all.every(hasImage)
 
   if (!ok) {
-    console.error('FAIL: browse pagination counts did not match expected 24 + 24 + 6 = 54')
+    console.error('FAIL: browse pagination did not match the current public view count')
     process.exitCode = 1
     return
   }
 
-  console.log('PASS: browse pagination returns 24, 48, then 54 unique image-backed listings')
+  console.log(`PASS: browse pagination returns ${expectedCount} unique image-backed listings`)
 }
 
 main().catch((error) => {

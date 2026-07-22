@@ -38,6 +38,8 @@ export function calculateSellerPayoutTotals(itemPricePence) {
 
   return {
     itemPricePence: normalized,
+    quantity: 1,
+    agreedUnitPricePence: normalized,
     sellerServiceFeePence,
     sellerNetPence: normalized - sellerServiceFeePence,
   }
@@ -48,7 +50,7 @@ export function resolvePaymentSellerPayoutTotals(payment) {
     return calculateSellerPayoutTotals(0)
   }
 
-  const itemPricePence = payment.amount_pence ?? 0
+  const itemPricePence = payment.item_subtotal_pence ?? payment.amount_pence ?? 0
   const sellerServiceFeePence =
     payment.seller_service_fee_pence ?? calculateSellerServiceFee(itemPricePence)
   const sellerNetPence =
@@ -56,6 +58,8 @@ export function resolvePaymentSellerPayoutTotals(payment) {
 
   return {
     itemPricePence,
+    quantity: payment.quantity ?? 1,
+    agreedUnitPricePence: payment.agreed_unit_price_pence ?? itemPricePence,
     sellerServiceFeePence,
     sellerNetPence,
   }
@@ -66,7 +70,8 @@ export function resolveOrderSellerPayoutTotals(order) {
     return calculateSellerPayoutTotals(0)
   }
 
-  const itemPricePence = order.item_price_pence ?? order.amount_pence ?? 0
+  const itemPricePence =
+    order.item_subtotal_pence ?? order.item_price_pence ?? order.amount_pence ?? 0
   const sellerServiceFeePence =
     order.seller_service_fee_pence ?? calculateSellerServiceFee(itemPricePence)
   const sellerNetPence =
@@ -74,6 +79,8 @@ export function resolveOrderSellerPayoutTotals(order) {
 
   return {
     itemPricePence,
+    quantity: order.quantity ?? 1,
+    agreedUnitPricePence: order.agreed_unit_price_pence ?? itemPricePence,
     sellerServiceFeePence,
     sellerNetPence,
   }

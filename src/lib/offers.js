@@ -5,6 +5,19 @@ import { enrichOfferWithOrder, fetchOrdersByOfferIds, getOfferOrder } from './or
 import { enrichOfferWithPayment, getOfferPayment, isPaymentComplete, paymentFields } from './payments'
 import { fetchPublicProfilesByIds } from './profiles'
 import { supabase } from './supabase'
+import { validateBuyerOfferAmount } from './offerQuantity'
+
+export {
+  OFFER_EXCEEDS_ASKING_PRICE_ERROR,
+  calculateTotalOfferPence,
+  clampOfferQuantity,
+  formatPenceAsOfferInput,
+  getOfferUnitAmountPence,
+  parseOfferQuantityInput,
+  parseUnitOfferPence,
+  validateBuyerOfferAmount,
+  validateBuyerUnitOfferAmount,
+} from './offerQuantity'
 
 export const OFFERS_SCHEMA_MIGRATION_HINT =
   'Database migration required: run supabase/offers-schema-alignment.sql in the Supabase SQL Editor, then wait a moment for the schema cache to refresh.'
@@ -16,6 +29,7 @@ const offerFieldsCore = `
   seller_id,
   conversation_id,
   amount_pence,
+  quantity,
   status,
   message,
   created_at,
@@ -37,6 +51,7 @@ const offerListingSelect = `
     brand,
     model,
     price_pence,
+    quantity_available,
     condition,
     location,
     status,
@@ -116,38 +131,6 @@ async function selectOffers(queryFactory, selectFields = offerFields) {
 
   console.warn('[offers] Falling back to legacy offer select — apply offers-schema-alignment.sql')
   return queryFactory(offerFieldsCore)
-}
-
-async function insertOfferRow(payload) {
-  const extendedPayload = {
-    ...payload,
-    direction: payload.direction ?? 'buyer_to_seller',
-  }
-
-  let { data, error } = await supabase
-    .from('offers')
-    .insert(extendedPayload)
-    .select(offerFields)
-    .single()
-
-  if (!error) {
-    return { data: withDefaultOfferDirection(data), error: null }
-  }
-
-  if (!isMissingSchemaColumnError(error, 'direction')) {
-    return { data: null, error: enrichOfferSchemaError(error) }
-  }
-
-  console.warn('[offers] Retrying offer insert without direction — apply offers-schema-alignment.sql')
-
-  const { direction, parent_offer_id, ...legacyPayload } = extendedPayload
-  const retry = await supabase.from('offers').insert(legacyPayload).select(offerFieldsCore).single()
-
-  if (retry.error) {
-    return { data: null, error: enrichOfferSchemaError(retry.error) }
-  }
-
-  return { data: withDefaultOfferDirection(retry.data), error: null }
 }
 
 function withPrimaryOfferListingImage(query) {
@@ -354,6 +337,24 @@ async function fetchUserOffers({ userId, role, status }) {
 export function getOfferErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
   if (error.message?.includes(OFFERS_SCHEMA_MIGRATION_HINT)) return error.message
+  const inventoryMatch = error.message?.match(
+    /Insufficient inventory:\s*requested\s+\d+,\s*available\s+(\d+)/i,
+  )
+  if (inventoryMatch) {
+    const available = Number(inventoryMatch[1])
+    return available > 0
+      ? `Only ${available} ${available === 1 ? 'item is' : 'items are'} still available. Choose a lower quantity and try again.`
+      : 'This listing has just sold out. Refresh the page to see the latest availability.'
+  }
+  if (error.message?.includes('Listing is not available')) {
+    return 'This listing is no longer available. Refresh the page to see the latest status.'
+  }
+  if (
+    error.message?.includes('create_buyer_offer') &&
+    error.message?.includes('schema cache')
+  ) {
+    return 'Offer submission is temporarily unavailable while the database updates. Wait a minute and try again.'
+  }
   return error.message || 'Something went wrong. Please try again.'
 }
 
@@ -402,21 +403,6 @@ export function canSellerRespondToOffer(offer) {
 
 export function canBuyerRespondToCounterOffer(offer) {
   return isSellerCounterOffer(offer) && offer?.status === 'pending'
-}
-
-export const OFFER_EXCEEDS_ASKING_PRICE_ERROR =
-  'Offers cannot be higher than the asking price.'
-
-export function validateBuyerOfferAmount(amountPence, listingPricePence) {
-  if (
-    listingPricePence != null &&
-    Number.isFinite(listingPricePence) &&
-    amountPence > listingPricePence
-  ) {
-    return OFFER_EXCEEDS_ASKING_PRICE_ERROR
-  }
-
-  return null
 }
 
 export function canBuyerWithdrawOffer(offer, userId) {
@@ -511,6 +497,7 @@ export async function createOffer({
   message,
   conversationId,
   listingPricePence,
+  quantity = 1,
   direction = 'buyer_to_seller',
 }) {
   if (!supabase) {
@@ -526,24 +513,25 @@ export async function createOffer({
   }
 
   if (direction === 'buyer_to_seller') {
-    const amountError = validateBuyerOfferAmount(amountPence, listingPricePence)
+    const amountError = validateBuyerOfferAmount(amountPence, listingPricePence, quantity)
     if (amountError) {
       return { data: null, error: new Error(amountError) }
     }
   }
 
-  const { data, error } = await insertOfferRow({
-    listing_id: listingId,
-    buyer_id: buyerId,
-    seller_id: sellerId,
-    conversation_id: conversationId ?? null,
-    amount_pence: amountPence,
-    message: message?.trim() || null,
-    status: 'pending',
-    direction,
+  if (direction !== 'buyer_to_seller') {
+    return { data: null, error: new Error('New offers must be buyer-to-seller.') }
+  }
+
+  const { data, error } = await supabase.rpc('create_buyer_offer', {
+    p_listing_id: listingId,
+    p_conversation_id: conversationId,
+    p_quantity: quantity,
+    p_total_amount_pence: amountPence,
+    p_message: message?.trim() || null,
   })
 
-  return { data, error }
+  return { data: withDefaultOfferDirection(data), error }
 }
 
 export async function createOfferFromForm({
@@ -554,6 +542,7 @@ export async function createOfferFromForm({
   message,
   conversationId,
   listingPricePence,
+  quantity = 1,
 }) {
   const amountPence = parsePriceToPence(amountInput)
 
@@ -569,6 +558,7 @@ export async function createOfferFromForm({
     message,
     conversationId,
     listingPricePence,
+    quantity,
   })
 }
 

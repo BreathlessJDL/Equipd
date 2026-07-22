@@ -8,6 +8,7 @@ function AcceptOfferConfirmationModal({
   open,
   itemPricePence = null,
   payment = null,
+  quantity = 1,
   conversationId = null,
   onClose,
 }) {
@@ -52,12 +53,15 @@ function AcceptOfferConfirmationModal({
           Offer accepted
         </h2>
         <p className="offer-sent-modal__body" role="status">
-          The buyer can now complete payment. Your payout breakdown:
+          {quantity > 1
+            ? `The offer for ${quantity} items was accepted. The buyer can now complete payment. Your payout breakdown:`
+            : 'The buyer can now complete payment. Your payout breakdown:'}
         </p>
 
         <SellerPayoutSummary
           itemPricePence={itemPricePence}
           payment={payment}
+          quantity={quantity}
           offerAmountLabel="Sale price"
           receiveLabel="You'll receive"
           showNote

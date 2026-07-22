@@ -12,7 +12,7 @@ import {
   getMessageErrorMessage,
   resolveMessageThreadNavigation,
 } from '../lib/messages'
-import { fetchOffersForListing, hasPendingOffer } from '../lib/offers'
+import { clampOfferQuantity, fetchOffersForListing, hasPendingOffer } from '../lib/offers'
 import { useAuth } from '../hooks/useAuth'
 import { useRequireAuth } from '../hooks/useRequireAuth'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
@@ -54,7 +54,10 @@ function ListingDetailPage() {
   const [offers, setOffers] = useState([])
   const [offerModalOpen, setOfferModalOpen] = useState(false)
   const [offerConfirmationOpen, setOfferConfirmationOpen] = useState(false)
+  const [selectedOfferQuantity, setSelectedOfferQuantity] = useState(1)
+  const [quantityValidationError, setQuantityValidationError] = useState('')
   const [submittedConversationId, setSubmittedConversationId] = useState(null)
+  const [submittedOfferQuantity, setSubmittedOfferQuantity] = useState(1)
   const [savedCount, setSavedCount] = useState(0)
   const incrementedSlugRef = useRef(null)
 
@@ -104,10 +107,7 @@ function ListingDetailPage() {
   }, [slug])
 
   useEffect(() => {
-    if (!listing?.id) {
-      setSavedCount(0)
-      return undefined
-    }
+    if (!listing?.id) return undefined
 
     let active = true
 
@@ -166,21 +166,15 @@ function ListingDetailPage() {
     return () => {
       active = false
     }
-  }, [slug, loading, listing?.id, listing?.status])
+  }, [slug, loading, listing])
 
   useEffect(() => {
-    if (!listing?.id || !user?.id) {
-      setOffers([])
-      return undefined
-    }
+    if (!listing?.id || !user?.id) return undefined
 
     const isOwner = listing.seller_id === user.id
     const canViewOffers = isOwner || listing.status === 'active' || listing.status === 'reserved' || listing.status === 'in_progress'
 
-    if (!canViewOffers) {
-      setOffers([])
-      return undefined
-    }
+    if (!canViewOffers) return undefined
 
     let active = true
 
@@ -256,7 +250,7 @@ function ListingDetailPage() {
           canBuyerConfirmOrder(offer.order, offer.payment),
       ) ?? null
     )
-  }, [offers, user?.id])
+  }, [offers, user])
 
   const buyerConfirmedOffer = useMemo(() => {
     if (!user?.id) return null
@@ -270,7 +264,7 @@ function ListingDetailPage() {
           !isOrderCompleted(offer.order),
       ) ?? null
     )
-  }, [offers, user?.id])
+  }, [offers, user])
 
   const buyerCompletedOffer = useMemo(() => {
     if (!user?.id) return null
@@ -283,7 +277,7 @@ function ListingDetailPage() {
           isOrderCompleted(offer.order),
       ) ?? null
     )
-  }, [offers, user?.id])
+  }, [offers, user])
 
   const { recommendations, loading: loadingRecommendations } = useListingRecommendations(listing)
 
@@ -311,6 +305,10 @@ function ListingDetailPage() {
   const isActiveListing = listing.status === 'active'
   const canContactSeller = isActiveListing && !isOwner
   const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
+  const selectedQuantity = clampOfferQuantity(
+    selectedOfferQuantity,
+    listing.quantity_available ?? 1,
+  )
 
   function handleSavedChange(saved) {
     setSavedCount((current) => (saved ? current + 1 : Math.max(0, current - 1)))
@@ -320,6 +318,8 @@ function ListingDetailPage() {
     setOfferModalOpen(false)
     setOffers((current) => [result.offer, ...current])
     setSubmittedConversationId(result.conversation?.id ?? null)
+    setSubmittedOfferQuantity(result.offer?.quantity ?? 1)
+    setSelectedOfferQuantity(1)
     setOfferConfirmationOpen(true)
   }
 
@@ -365,6 +365,12 @@ function ListingDetailPage() {
       {messageError ? (
         <p className="listing-detail__message listing-detail__message--error" role="alert">
           {messageError}
+        </p>
+      ) : null}
+
+      {quantityValidationError ? (
+        <p className="listing-detail__message listing-detail__message--error" role="alert">
+          {quantityValidationError}
         </p>
       ) : null}
     </>
@@ -421,6 +427,18 @@ function ListingDetailPage() {
           buyerProfile={buyerProfile}
           viewerUserId={user?.id ?? null}
           isOwner={isOwner}
+          selectedQuantity={selectedQuantity}
+          onSelectedQuantityChange={
+            canContactSeller
+              ? (quantity) => {
+                  setQuantityValidationError('')
+                  setSelectedOfferQuantity(
+                    clampOfferQuantity(quantity, listing.quantity_available ?? 1),
+                  )
+                }
+              : null
+          }
+          onQuantityValidationError={setQuantityValidationError}
           actions={summaryActions}
           reportListing={
             canReportListing(listing, user?.id) ? (
@@ -481,6 +499,21 @@ function ListingDetailPage() {
         listing={listing}
         user={user}
         buyerHasPendingOffer={buyerHasPendingOffer}
+        quantity={selectedQuantity}
+        onQuantityChange={(quantity) => {
+          setQuantityValidationError('')
+          setSelectedOfferQuantity(
+            clampOfferQuantity(quantity, listing.quantity_available ?? 1),
+          )
+        }}
+        onAvailabilityChanged={(availableQuantity) => {
+          setListing((current) =>
+            current ? { ...current, quantity_available: availableQuantity } : current,
+          )
+          setSelectedOfferQuantity((current) =>
+            clampOfferQuantity(current, availableQuantity),
+          )
+        }}
         onClose={() => setOfferModalOpen(false)}
         onSubmitted={handleOfferSubmitted}
       />
@@ -488,9 +521,11 @@ function ListingDetailPage() {
       <OfferSentConfirmationModal
         open={offerConfirmationOpen}
         conversationId={submittedConversationId}
+        quantity={submittedOfferQuantity}
         onClose={() => {
           setOfferConfirmationOpen(false)
           setSubmittedConversationId(null)
+          setSubmittedOfferQuantity(1)
         }}
       />
     </article>

@@ -299,6 +299,108 @@
   color: var(--color-text);
 }
 
+.listing-summary__quantity {
+  display: grid;
+  gap: 0.65rem;
+  margin: -0.45rem 0 1.1rem;
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-bg) 65%, #fff);
+}
+
+.listing-summary__quantity-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.listing-summary__quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.listing-summary__quantity-stepper {
+  display: inline-grid;
+  grid-template-columns: 2.25rem minmax(2.5rem, auto) 2.25rem;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: var(--color-surface);
+}
+
+.listing-summary__quantity-stepper button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-navy);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.listing-summary__quantity-stepper button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-orange) 10%, transparent);
+}
+
+.listing-summary__quantity-stepper button:disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.listing-summary__quantity-stepper output,
+.listing-summary__quantity-stepper .listing-summary__quantity-input {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  border-inline: 1px solid var(--color-border);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.listing-summary__quantity-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font: inherit;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.listing-summary__quantity-input::-webkit-outer-spin-button,
+.listing-summary__quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.listing-summary__quantity-available {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.listing-summary__quantity-pricing {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.listing-summary__quantity-pricing strong {
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
 .listing-summary__section {
   margin: 0;
   padding: 1.15rem 0;

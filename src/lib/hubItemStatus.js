@@ -20,7 +20,6 @@ import {
   isOrderRefundedForHub,
   isPayoutReleased,
   isSellerAwaitingPayout,
-  ORDER_FULFILMENT_STATUSES,
   ORDER_TYPES,
 } from './orders'
 
@@ -147,6 +146,7 @@ export function getHubItemStatusBadge(
 export function getHubOfferMetadataItems({
   partyLabel,
   partyName,
+  quantity = 1,
   order = null,
   isOrderContext = false,
   datePrefix = 'Submitted',
@@ -158,6 +158,13 @@ export function getHubOfferMetadataItems({
     items.push({
       type: 'party',
       text: `${partyLabel}: ${partyName}`,
+    })
+  }
+
+  if (Number.isSafeInteger(Number(quantity)) && Number(quantity) > 1) {
+    items.push({
+      type: 'quantity',
+      text: `Quantity: ${quantity}`,
     })
   }
 

@@ -1,6 +1,7 @@
 import { validateOptionalMarketplaceMessage } from './marketplaceMessageValidation'
 import { insertOfferMessage, startConversationForListing } from './messages'
 import { createOfferFromForm } from './offers'
+import { formatPricePence } from './listings'
 
 export async function submitListingOffer({
   listingId,
@@ -9,6 +10,7 @@ export async function submitListingOffer({
   amountInput,
   message,
   listingPricePence,
+  quantity = 1,
 }) {
   const messageValidation = validateOptionalMarketplaceMessage(message)
 
@@ -37,6 +39,7 @@ export async function submitListingOffer({
     message: messageValidation.sanitizedBody,
     conversationId: conversation.id,
     listingPricePence,
+    quantity,
   })
 
   if (offerError || !offer) {
@@ -47,6 +50,7 @@ export async function submitListingOffer({
     conversationId: conversation.id,
     offerId: offer.id,
     senderId: buyerId,
+    body: `Offer for ${offer.quantity} ${offer.quantity === 1 ? 'item' : 'items'}: ${formatPricePence(offer.amount_pence)} total (${formatPricePence(offer.amount_pence / offer.quantity)} per item)`,
   })
 
   if (messageError) {
