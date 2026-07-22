@@ -72,7 +72,7 @@ for (const step of SELL_JOURNEY_STEPS) {
     `prerender mobile webp source: ${step.title}`,
   )
   assert(
-    doc.bodyHtml.includes(`media="(min-width: 768px)" type="image/webp" srcset="${step.imageSrcMobile} 800w, ${step.imageSrc} 1600w"`),
+    doc.bodyHtml.includes(`media="(min-width: 768px)" type="image/webp" srcset="${step.imageSrcMobile} 800w, ${step.imageSrc} 1536w"`),
     `prerender desktop webp srcset: ${step.title}`,
   )
   assert(
@@ -105,7 +105,7 @@ for (const step of SELL_JOURNEY_STEPS) {
   assert(step.imageSrcPng?.endsWith('.png'), `png fallback present: ${step.title}`)
   assert(step.imageSrcMobile?.endsWith('-800.webp'), `mobile webp present: ${step.title}`)
   assert(step.imageSrcMobilePng?.endsWith('-800.png'), `mobile png present: ${step.title}`)
-  assert(step.imageWidth === 1600 && step.imageHeight === 900, `consistent 16:9 frame: ${step.title}`)
+  assert(step.imageWidth === 1536 && step.imageHeight === 1024, `consistent 3:2 illustration size: ${step.title}`)
   assert(step.imageAlt, `journey alt text: ${step.title}`)
 }
 
@@ -114,9 +114,9 @@ assert(pageJsx.includes('<picture>'), 'journey images use picture element')
 assert(pageJsx.includes('type="image/webp"'), 'webp source present')
 assert(pageJsx.includes('media="(max-width: 767px)"'), 'mobile-only smaller journey sources')
 assert(
-  pageJsx.includes('${imageSrcMobile} 800w, ${imageSrc} 1600w') ||
-    pageJsx.includes('800w, ${imageSrc} 1600w'),
-  'desktop webp srcset includes 800w and 1600w',
+  pageJsx.includes('${imageSrcMobile} 800w, ${imageSrc} 1536w') ||
+    pageJsx.includes('800w, ${imageSrc} 1536w'),
+  'desktop webp srcset includes 800w and 1536w',
 )
 assert(pageJsx.includes('sizes='), 'responsive sizes attribute present')
 assert(pageJsx.includes('loading="lazy"'), 'below-fold journey images lazy load')
@@ -242,8 +242,8 @@ assert(!pageSource.includes('reading-rail--guide'), 'guide no longer uses narrow
 assert(!pageSource.includes('sell-page__guide-grid'), 'old equal two-column guide grid removed')
 assert(pageSource.includes('sell-page__step-image'), 'journey image class present')
 assert(
-  pageSource.includes('800w') && pageSource.includes('1600w'),
-  'journey images expose 800w + 1600w srcset',
+  pageSource.includes('800w') && pageSource.includes('1536w'),
+  'journey images expose 800w + 1536w srcset',
 )
 assert(pageSource.includes('openGraph'), 'social meta via openGraph')
 assert(pageSource.includes('sell-page__hero-visual'), 'split hero visual present')
@@ -315,9 +315,9 @@ assert(!cssSource.includes('sell-page__hero-collage'), 'obsolete collage styles 
 assert(!cssSource.includes('sell-page__hero-panel--create'), 'obsolete collage panel styles removed')
 assert(!cssSource.includes('background-image:') || !/sell-page__hero[^{]*\{[^}]*background-image:/s.test(cssSource), 'hero is not a full-bleed background image')
 assert(!/margin:\s*0\s+calc\(-1 \* var\(--sell-gutter\)\)/.test(cssSource), 'no negative-gutter breakout hacks')
-assert(cssSource.includes('padding: 4px') || cssSource.includes('padding: 8px') || cssSource.includes('padding: 10px') || cssSource.includes('padding: 3px'), 'tight journey frame padding')
+assert(cssSource.includes('padding: 0') || cssSource.includes('padding: 4px') || cssSource.includes('padding: 8px') || cssSource.includes('padding: 10px') || cssSource.includes('padding: 3px') || cssSource.includes('padding: 2px'), 'journey frame padding present')
 assert(!/\.sell-page__step-image\s*\{[^}]*object-fit:\s*cover/s.test(cssSource), 'journey images never use object-fit cover')
-assert(cssSource.includes('aspect-ratio: 16 / 9'), 'consistent journey frame aspect ratio')
+assert(cssSource.includes('aspect-ratio: 3 / 2'), 'consistent journey frame aspect ratio')
 assert(!cssSource.includes('DIAG:') && !cssSource.includes('TEMPORARY WIDTH DIAGNOSTIC'), 'diagnostic overlays removed')
 assert(!pageSource.includes('data-sell-diag-vw') && !pageSource.includes('diagVw'), 'diagnostic badge removed from JSX')
 assert(cssSource.includes('.sell-page__journey::before'), 'desktop timeline connector')

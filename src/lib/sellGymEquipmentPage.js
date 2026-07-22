@@ -79,8 +79,9 @@ function buildJourneyImageSet(baseName) {
     imageSrcPng: `${JOURNEY_IMAGE_DIR}/${baseName}.png`,
     imageSrcMobile: `${JOURNEY_IMAGE_DIR}/${baseName}-800.webp`,
     imageSrcMobilePng: `${JOURNEY_IMAGE_DIR}/${baseName}-800.png`,
-    imageWidth: 1600,
-    imageHeight: 900,
+    // Native simplified illustration size (3:2)
+    imageWidth: 1536,
+    imageHeight: 1024,
   }
 }
 
@@ -479,8 +480,8 @@ export function buildSellGymEquipmentSeoDocument() {
       <picture>
         <source media="(max-width: 767px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)}" />
         <source media="(max-width: 767px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)}" />
-        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)} 800w, ${escapeHtml(step.imageSrc)} 1600w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
-        <source media="(min-width: 768px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)} 800w, ${escapeHtml(step.imageSrcPng)} 1600w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
+        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)} 800w, ${escapeHtml(step.imageSrc)} 1536w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
+        <source media="(min-width: 768px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)} 800w, ${escapeHtml(step.imageSrcPng)} 1536w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
         <img
           src="${escapeHtml(step.imageSrcPng)}"
           alt="${escapeHtml(step.imageAlt)}"

@@ -117,21 +117,21 @@ function SellJourneyStep({
           <source
             media="(min-width: 768px)"
             type="image/webp"
-            srcSet={`${imageSrcMobile} 800w, ${imageSrc} 1600w`}
+            srcSet={`${imageSrcMobile} 800w, ${imageSrc} 1536w`}
             sizes={SELL_JOURNEY_IMAGE_SIZES}
           />
           <source
             media="(min-width: 768px)"
             type="image/png"
-            srcSet={`${imageSrcMobilePng} 800w, ${imageSrcPng || imageSrc} 1600w`}
+            srcSet={`${imageSrcMobilePng} 800w, ${imageSrcPng || imageSrc} 1536w`}
             sizes={SELL_JOURNEY_IMAGE_SIZES}
           />
           <img
             src={imageSrcPng || imageSrc}
             alt={imageAlt}
             className="sell-page__step-image"
-            width={imageWidth || 1600}
-            height={imageHeight || 900}
+            width={imageWidth || 1536}
+            height={imageHeight || 1024}
             sizes={SELL_JOURNEY_IMAGE_SIZES}
             loading="lazy"
             decoding="async"

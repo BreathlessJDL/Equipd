@@ -885,12 +885,13 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* Match simplified journey illustrations (1536×1024) */
+  aspect-ratio: 3 / 2;
   margin: 0;
-  padding: 4px;
+  padding: 0;
   border: 1px solid color-mix(in srgb, var(--color-navy) 8%, var(--color-border));
   border-radius: var(--sell-radius);
-  background: #f8f9fb;
+  background: #fff;
   box-shadow:
     0 2px 4px color-mix(in srgb, var(--color-navy) 5%, transparent),
     0 16px 36px color-mix(in srgb, var(--color-navy) 9%, transparent);
