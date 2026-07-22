@@ -1,15 +1,15 @@
 .home-valuator {
-  padding: clamp(1.35rem, 2.8vw, 2rem) 0;
+  padding: clamp(1.1rem, 2.2vw, 1.6rem) 0;
 }
 
 /* Used when the host page already provides the content width (e.g. /brands). */
 .home-valuator--contained {
-  padding: 0.35rem 0 1.35rem;
+  padding: 0.35rem 0 1.2rem;
 }
 
 /* Compact spacing on the signed-in homepage feed (same shared component). */
 .home-valuator--signed-in {
-  padding: 0.85rem 0 1rem;
+  padding: 0.75rem 0 0.9rem;
 }
 
 .home-page--feed .home-valuator--signed-in {
@@ -19,85 +19,139 @@
 
 .home-valuator__card {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 1.05fr);
-  gap: 1.5rem 2.35rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(17.5rem, 0.95fr);
+  gap: 1.1rem 2.5rem;
   align-items: center;
-  padding: clamp(1.35rem, 2.4vw, 1.75rem) clamp(1.25rem, 2.4vw, 1.85rem);
-  border: 1px solid rgba(232, 98, 42, 0.14);
-  border-radius: 1.05rem;
-  background:
-    linear-gradient(180deg, #fffdfb 0%, #ffffff 55%),
-    #fff;
-  box-shadow: 0 2px 8px rgba(15, 33, 55, 0.05);
+  min-height: 0;
+  padding: 2.25rem 1.55rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, #fff);
+  border-radius: 1.15rem;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(15, 33, 55, 0.06);
+  overflow: visible;
+}
+
+.home-valuator__main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.9rem;
+  min-width: 0;
+  max-width: 34rem;
+  align-self: center;
+}
+
+.home-valuator__copy {
+  display: grid;
+  gap: 0.45rem;
 }
 
 .home-valuator__eyebrow {
-  margin: 0 0 0.55rem;
-  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-orange);
 }
 
+.home-valuator__eyebrow-icon {
+  display: inline-flex;
+  color: var(--color-orange);
+  flex: 0 0 auto;
+}
+
 .home-valuator__title {
-  margin: 0 0 0.65rem;
-  font-size: clamp(1.45rem, 2.5vw, 1.95rem);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: clamp(1.55rem, 2.35vw, 2.05rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
   color: var(--color-navy);
 }
 
-.home-valuator__title-text--mobile,
-.home-valuator__submit-label--mobile,
-.home-valuator__trust-label--mobile {
+.home-valuator__title-text--mobile {
   display: none;
 }
 
 .home-valuator__lede {
   margin: 0;
-  max-width: 34rem;
+  max-width: 32rem;
   color: var(--color-muted);
-  font-size: 0.975rem;
-  line-height: 1.55;
-}
-
-.home-valuator__action {
-  display: grid;
-  gap: 0.95rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .home-valuator__form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.65rem;
-  align-items: start;
+  margin: 0;
 }
 
-.home-valuator__form .canonical-autocomplete {
+.home-valuator__search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 3.4rem;
+  height: 3.5rem;
+  padding: 0.28rem 0.28rem 0.28rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 33, 55, 0.03);
+  box-sizing: border-box;
+}
+
+.home-valuator__search-icon {
+  display: inline-flex;
+  color: color-mix(in srgb, var(--color-muted) 88%, #fff);
+  flex: 0 0 auto;
+}
+
+.home-valuator__search .canonical-autocomplete {
   min-width: 0;
+  z-index: 5;
 }
 
 .home-valuator__input {
-  min-height: 3.05rem;
-  border-radius: 0.8rem;
-  box-shadow: 0 1px 2px rgba(15, 33, 55, 0.03);
+  min-height: 2.85rem;
+  height: 2.85rem;
+  padding: 0.55rem 0.55rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-valuator__input:focus,
+.home-valuator__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.home-valuator__search:focus-within {
+  border-color: color-mix(in srgb, var(--color-orange) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-orange) 18%, transparent);
 }
 
 .home-valuator__submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3.05rem;
-  padding: 0.85rem 1.2rem;
+  min-height: 2.85rem;
+  height: 2.85rem;
+  padding: 0 1.15rem;
   border: 0;
-  border-radius: 0.8rem;
+  border-radius: 999px;
   background: var(--color-orange);
   color: #fff;
   font: inherit;
+  font-size: 0.9375rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .home-valuator__submit:hover {
@@ -109,28 +163,150 @@
   outline-offset: 2px;
 }
 
-.home-valuator__trust {
+.home-valuator__visual {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 1.15rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  align-items: center;
+  align-self: center;
+  height: 15.625rem; /* 250px */
 }
 
-.home-valuator__trust-item {
+.home-valuator__graph {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.home-valuator__graph-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-valuator__graph-grid {
+  stroke: color-mix(in srgb, var(--color-border) 55%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.home-valuator__graph-label {
+  fill: color-mix(in srgb, var(--color-navy) 58%, var(--color-muted));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.home-valuator__graph-label--y {
+  text-anchor: end;
+}
+
+.home-valuator__graph-label--x {
+  text-anchor: middle;
+  font-size: 11.5px;
+}
+
+.home-valuator__graph-line {
+  fill: none;
+  stroke: var(--color-orange);
+  stroke-width: 3.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home-valuator__graph-point {
+  fill: var(--color-orange);
+  stroke: #fff;
+  stroke-width: 2.5;
+}
+
+.home-valuator__product-card {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.2rem;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.4rem;
+  align-items: center;
+  width: min(100%, 14.75rem); /* ~236px */
+  padding: 0.5rem 0.5rem 0.5rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, #fff);
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(15, 33, 55, 0.1);
+}
+
+.home-valuator__product-copy {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.home-valuator__product-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--color-navy);
+}
+
+.home-valuator__product-label {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.home-valuator__product-value-row {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  line-height: 1.35;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
 }
 
-.home-valuator__trust-icon {
-  display: inline-flex;
+.home-valuator__product-price {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
   color: var(--color-orange);
-  flex: 0 0 auto;
+}
+
+.home-valuator__product-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.14rem 0.38rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #16a34a 12%, #fff);
+  color: #15803d;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.home-valuator__product-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  padding: 0.15rem;
+  border-radius: 0.45rem;
+  background: #f8f9fb;
+  overflow: hidden;
+}
+
+.home-valuator__product-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .home-valuator .visually-hidden {
@@ -145,169 +321,186 @@
   border: 0;
 }
 
-/* Tablet / narrow desktop: stack copy above action (existing behaviour). */
-@media (max-width: 860px) {
+/* Wide desktop: keep a clear gutter; stay compact. */
+@media (min-width: 1280px) {
   .home-valuator__card {
-    grid-template-columns: 1fr;
-    gap: 1.2rem;
+    gap: 1.15rem 3rem;
+    padding: 2.25rem 1.75rem;
   }
 
-  .home-valuator__form {
-    grid-template-columns: 1fr;
-  }
-
-  .home-valuator__submit {
-    width: 100%;
-  }
-
-  .home-valuator__trust {
-    gap: 0.55rem 0.85rem;
+  .home-valuator__product-card {
+    right: 0.45rem;
   }
 }
 
-/* Compact horizontal valuator — mobile only. */
-@media (max-width: 767px) {
-  .home-valuator {
-    padding: 0.85rem 0 1rem;
-  }
-
-  .home-valuator--contained {
-    padding: 0.25rem 0 1rem;
-  }
-
+/* Tablet: keep two columns while space allows. */
+@media (max-width: 1100px) {
   .home-valuator__card {
-    gap: 0.7rem;
-    padding: 0.95rem 0.95rem 0.9rem;
-    border-radius: 0.85rem;
-    box-shadow: 0 1px 4px rgba(15, 33, 55, 0.04);
-    overflow: visible;
-  }
-
-  .home-valuator__copy {
-    text-align: left;
-  }
-
-  .home-valuator__eyebrow {
-    margin: 0 0 0.3rem;
-    font-size: 0.6875rem;
-    letter-spacing: 0.07em;
+    grid-template-columns: minmax(0, 1.08fr) minmax(14.5rem, 0.85fr);
+    gap: 1.1rem 2rem;
+    padding: 1.5rem 1.2rem;
   }
 
   .home-valuator__title {
-    margin: 0;
-    font-size: 1.2rem;
-    line-height: 1.2;
-    letter-spacing: -0.015em;
+    font-size: clamp(1.4rem, 2.6vw, 1.75rem);
   }
 
-  .home-valuator__title-text--desktop,
-  .home-valuator__submit-label--desktop,
-  .home-valuator__trust-label--desktop,
-  .home-valuator__trust-item--desktop-only,
-  .home-valuator__lede {
+  .home-valuator__visual {
+    height: 13.75rem; /* 220px */
+  }
+
+  .home-valuator__product-card {
+    width: min(100%, 13.25rem);
+  }
+
+  .home-valuator__product-media {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+}
+
+@media (max-width: 980px) {
+  .home-valuator__card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    align-items: stretch;
+    padding: 1.1rem 1.05rem;
+  }
+
+  .home-valuator__main {
+    max-width: none;
+    gap: 0.95rem;
+    align-self: stretch;
+  }
+
+  .home-valuator__visual {
+    align-self: stretch;
+    height: auto;
+    min-height: 14.5rem;
+  }
+
+  .home-valuator__graph-svg {
+    max-height: 15.5rem;
+  }
+
+  .home-valuator__search {
+    height: auto;
+  }
+
+  .home-valuator__search .canonical-autocomplete {
+    z-index: 8;
+  }
+
+  .home-valuator__product-card {
+    top: 0.55rem;
+    right: 0.25rem;
+    width: min(100%, 13.5rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .home-valuator__card {
+    padding: 1.1rem 1.05rem;
+  }
+}
+
+/* Mobile: search-only card — hide decorative graph + product overlay. */
+@media (max-width: 767px) {
+  .home-valuator {
+    padding: 0.7rem 0 0.75rem;
+  }
+
+  .home-valuator--contained {
+    padding: 0.2rem 0 0.75rem;
+  }
+
+  .home-valuator__card {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+    min-height: 0;
+    padding: 0.95rem 0.9rem 0.85rem;
+    border-radius: 0.95rem;
+    box-shadow: 0 4px 16px rgba(15, 33, 55, 0.05);
+  }
+
+  .home-valuator__main {
+    max-width: none;
+    gap: 0.75rem;
+    align-self: stretch;
+  }
+
+  .home-valuator__visual {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .home-valuator__eyebrow {
+    font-size: 0.6875rem;
+  }
+
+  .home-valuator__title {
+    font-size: 1.28rem;
+    line-height: 1.18;
+  }
+
+  .home-valuator__title-text--desktop {
     display: none;
   }
 
-  .home-valuator__title-text--mobile,
-  .home-valuator__submit-label--mobile,
-  .home-valuator__trust-label--mobile {
+  .home-valuator__title-text--mobile {
     display: inline;
   }
 
-  .home-valuator__action {
-    gap: 0.65rem;
+  .home-valuator__lede {
+    font-size: 0.875rem;
+    line-height: 1.45;
   }
 
-  .home-valuator__form {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.45rem;
-    align-items: stretch;
+  .home-valuator__search {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 0.45rem 0.35rem;
+    height: auto;
+    min-height: 0;
+    padding: 0.55rem;
+    border-radius: 0.9rem;
   }
 
-  .home-valuator__form .canonical-autocomplete {
-    z-index: 2;
+  .home-valuator__search-icon {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .home-valuator__search .canonical-autocomplete {
+    grid-column: 2;
+    grid-row: 1;
+    z-index: 8;
+  }
+
+  .home-valuator__submit {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    height: auto;
+    min-height: 2.65rem;
+    border-radius: 0.7rem;
   }
 
   .home-valuator__input {
-    min-height: 2.65rem;
-    height: 2.65rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: 0.65rem;
+    min-height: 2.45rem;
+    height: 2.45rem;
     /* ≥16px prevents iOS Safari focus zoom */
     font-size: 1rem;
-    box-sizing: border-box;
-  }
-
-  .home-valuator__submit {
-    width: auto;
-    min-width: 4.75rem;
-    max-width: 6.25rem;
-    min-height: 2.65rem;
-    height: 2.65rem;
-    padding: 0 0.8rem;
-    border-radius: 0.65rem;
-    font-size: 0.875rem;
-    flex-shrink: 0;
-    box-sizing: border-box;
-  }
-
-  .home-valuator__trust {
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0;
-    row-gap: 0.35rem;
-  }
-
-  .home-valuator__trust-item {
-    gap: 0.3rem;
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
-
-  /* General sibling: desktop-only item sits between the two mobile points. */
-  .home-valuator__trust-item:not(.home-valuator__trust-item--desktop-only)
-    ~ .home-valuator__trust-item:not(.home-valuator__trust-item--desktop-only)::before {
-    content: '•';
-    margin-inline: 0.55rem;
-    color: color-mix(in srgb, var(--color-muted) 70%, transparent);
-    font-weight: 600;
-  }
-
-  .home-valuator__trust-icon svg {
-    width: 12px;
-    height: 12px;
   }
 }
 
-/* Prefer shrinking the CTA before stacking on very narrow phones. */
 @media (max-width: 360px) {
-  .home-valuator__submit {
-    min-width: 4.25rem;
-    max-width: 5.25rem;
-    padding: 0 0.55rem;
-    font-size: 0.8125rem;
-  }
-
   .home-valuator__input {
-    padding-inline: 0.65rem;
-    /* Keep ≥16px on the narrowest phones to avoid iOS focus zoom */
     font-size: 1rem;
-  }
-
-  .home-valuator__trust {
-    flex-wrap: wrap;
-  }
-}
-
-/* Last resort: stack only on extremely narrow viewports. */
-@media (max-width: 300px) {
-  .home-valuator__form {
-    grid-template-columns: 1fr;
-  }
-
-  .home-valuator__submit {
-    width: 100%;
-    max-width: none;
   }
 }
