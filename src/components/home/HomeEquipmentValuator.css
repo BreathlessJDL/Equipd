@@ -234,7 +234,8 @@
     height: 2.65rem;
     padding: 0.55rem 0.75rem;
     border-radius: 0.65rem;
-    font-size: 0.9375rem;
+    /* ≥16px prevents iOS Safari focus zoom */
+    font-size: 1rem;
     box-sizing: border-box;
   }
 
@@ -290,7 +291,8 @@
 
   .home-valuator__input {
     padding-inline: 0.65rem;
-    font-size: 0.875rem;
+    /* Keep ≥16px on the narrowest phones to avoid iOS focus zoom */
+    font-size: 1rem;
   }
 
   .home-valuator__trust {

@@ -23,6 +23,7 @@ import {
   getEquipmentProductDisplayName,
   isGenericEquipmentModelLabel,
   pickDepreciationGraphYearTicks,
+  filterYearTicksByMinSpacing,
   resolveValuationSearchMatches,
   searchEquipmentProducts,
   shouldShowRawEquipmentModelOnProductPage,
@@ -178,13 +179,31 @@ assert(
   'timeline positions include manufacture year and early fractional years',
 )
 assert(
-  pickDepreciationGraphYearTicks([2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], { compact: true }).length <= 5,
+  pickDepreciationGraphYearTicks([2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], { compact: true }).length <= 4,
   'compact graph axis reduces year tick density',
 )
 assert(
   pickDepreciationGraphYearTicks([2014, 2015, 2016, 2017, 2018, 2019, 2020], { compact: true })[0] === 2014,
   'graph year ticks always include manufacture start year',
 )
+{
+  const spaced = filterYearTicksByMinSpacing(
+    [
+      { year: 2010, x: 0 },
+      { year: 2012, x: 20 },
+      { year: 2015, x: 50 },
+      { year: 2018, x: 80 },
+      { year: 2026, x: 200 },
+    ],
+    { minSpacingPx: 40 },
+  )
+  assert(spaced[0].year === 2010, 'spacing filter keeps start year')
+  assert(spaced[spaced.length - 1].year === 2026, 'spacing filter keeps end year')
+  assert(spaced.length <= 4, 'spacing filter drops overlapping intermediate years')
+  for (let i = 1; i < spaced.length; i += 1) {
+    assert(spaced[i].x - spaced[i - 1].x >= 40, 'kept ticks respect min spacing')
+  }
+}
 assert(
   graphData.startYear === sampleProducts[0].baseline_manufacture_year,
   'graph start year matches selected manufacture year when no later year is chosen',

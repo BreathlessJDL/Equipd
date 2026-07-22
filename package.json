@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/write-indexnow-key-file.mjs && node scripts/generate-sitemap.mjs && vite build && node scripts/inject-site-structured-data.mjs && node scripts/prerender-seo-catalogue.mjs",
+    "build": "node scripts/write-indexnow-key-file.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-valuation-search-index.mjs && vite build && node scripts/inject-site-structured-data.mjs && node scripts/prerender-seo-catalogue.mjs",
     "sitemap": "node scripts/generate-sitemap.mjs",
+    "generate:valuation-search-index": "node scripts/generate-valuation-search-index.mjs",
+    "predev": "node scripts/generate-valuation-search-index.mjs",
     "indexnow:key-file": "node scripts/write-indexnow-key-file.mjs",
     "indexnow:submit": "node scripts/indexnow-submit.mjs",
     "indexnow:dry-run-report": "node scripts/indexnow-dry-run-report.mjs",

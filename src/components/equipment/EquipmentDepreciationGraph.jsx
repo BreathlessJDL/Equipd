@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
+  filterYearTicksByMinSpacing,
   formatValuationMoney,
   pickDepreciationGraphYearTicks,
 } from '../../lib/equipmentValuation'
@@ -259,7 +260,10 @@ function EquipmentDepreciationGraph({
       graphData.timelineYears ?? [],
       { compact: compactAxis },
     ).filter((year) => year >= graphData.startYear && Number.isInteger(year))
-    const yearTickPositions = yearTicks.map((year) => ({ year, x: yearToX(year) }))
+    const yearTickPositions = filterYearTicksByMinSpacing(
+      yearTicks.map((year) => ({ year, x: yearToX(year) })),
+      { minSpacingPx: compactAxis ? 44 : 36 },
+    )
 
     const yAxisTickPositions = buildYAxisTicks(
       axisMax,

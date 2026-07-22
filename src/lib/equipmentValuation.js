@@ -710,10 +710,15 @@ export function formatValuationRange(low, high, currency = 'GBP') {
   return `${formatValuationMoney(low, currency)} – ${formatValuationMoney(high, currency)}`
 }
 
+import {
+  buildCanonicalProductDisplayNameFromProduct,
+  cleanCanonicalProductDisplayName,
+} from './canonicalProductDisplayName.js'
+
 export function getEquipmentProductDisplayName(product) {
-  return normalizeWhitespace(product?.canonical_product_name)
-    || [product?.brand, product?.model].filter(Boolean).join(' ')
-    || 'Equipment'
+  const built = buildCanonicalProductDisplayNameFromProduct(product)
+  if (built) return built
+  return cleanCanonicalProductDisplayName(product?.canonical_product_name) || 'Equipment'
 }
 
 export function getEquipmentProductSlug(product) {
@@ -871,7 +876,8 @@ export function pickDepreciationGraphYearTicks(years = [], { compact = false } =
   if (!years.length) return []
   if (years.length === 1) return years
 
-  const maxTicks = compact ? 4 : Math.min(8, years.length)
+  // Mobile: fewer labels to avoid overlap on ~390px widths.
+  const maxTicks = compact ? 3 : Math.min(8, years.length)
   if (years.length <= maxTicks) return years
 
   const step = Math.ceil((years.length - 1) / (maxTicks - 1))
@@ -893,6 +899,39 @@ export function pickDepreciationGraphYearTicks(years = [], { compact = false } =
   }
 
   return [...new Set(ticks)]
+}
+
+/**
+ * Drop intermediate year labels that would overlap on a narrow plot.
+ * Always keeps the first and last ticks when present.
+ */
+export function filterYearTicksByMinSpacing(ticks = [], { minSpacingPx = 40 } = {}) {
+  if (!Array.isArray(ticks) || ticks.length <= 2) return ticks ?? []
+
+  const sorted = [...ticks].sort((left, right) => left.x - right.x)
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  const kept = [first]
+
+  for (let index = 1; index < sorted.length - 1; index += 1) {
+    const candidate = sorted[index]
+    const previous = kept[kept.length - 1]
+    if (candidate.x - previous.x < minSpacingPx) continue
+    if (last.x - candidate.x < minSpacingPx) continue
+    kept.push(candidate)
+  }
+
+  if (kept[kept.length - 1] !== last) {
+    // Drop intermediates that collide with the forced end label.
+    while (kept.length > 1 && last.x - kept[kept.length - 1].x < minSpacingPx) {
+      kept.pop()
+    }
+    if (kept[kept.length - 1] !== last) {
+      kept.push(last)
+    }
+  }
+
+  return kept
 }
 
 export function buildEquipmentDepreciationGraphDataFromProduct(

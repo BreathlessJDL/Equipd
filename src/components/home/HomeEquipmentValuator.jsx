@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CanonicalEquipmentAutocomplete from '../CanonicalEquipmentAutocomplete'
 import { getEquipmentProductDisplayName } from '../../lib/equipmentValuation'
 import { buildValuationHref } from '../../lib/valuationNavigation'
+import {
+  prefetchProductConsoleOptions,
+  prefetchValuationSearchIndex,
+} from '../../lib/valuationCatalogCache'
 import './HomeEquipmentValuator.css'
 
 const DEFAULT_TRUST_POINTS = [
@@ -69,6 +73,30 @@ export default function HomeEquipmentValuator({
   const [query, setQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
 
+  useEffect(() => {
+    let idleId = null
+    let timeoutId = null
+
+    function startPrefetch() {
+      prefetchValuationSearchIndex()
+    }
+
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(startPrefetch, { timeout: 1800 })
+    } else {
+      timeoutId = window.setTimeout(startPrefetch, 700)
+    }
+
+    return () => {
+      if (idleId != null && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleId)
+      }
+      if (timeoutId != null) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [])
+
   const titleId = `${idPrefix}-title`
   const inputId = `${idPrefix}-search`
   const TitleTag = titleAs === 'h1' ? 'h1' : 'h2'
@@ -79,11 +107,17 @@ export default function HomeEquipmentValuator({
   const usesResponsiveTitle = Boolean(resolvedTitleMobile)
 
   function goToValuator({ product = selectedProduct, queryText = query } = {}) {
+    if (typeof document !== 'undefined') {
+      document.activeElement?.blur?.()
+    }
+    if (product?.id) {
+      prefetchProductConsoleOptions(product.id)
+    }
     const productKey = product?.canonical_product_key || null
     navigate(buildValuationHref({
       productKey,
       query: productKey ? null : queryText,
-    }))
+    }), productKey ? { state: { product } } : undefined)
   }
 
   function handleSubmit(event) {

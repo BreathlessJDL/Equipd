@@ -486,6 +486,8 @@
   background: #fff;
   color: var(--color-navy);
   font: inherit;
+  /* ≥16px prevents iOS Safari focus zoom on search */
+  font-size: 1rem;
 }
 
 .valuation-page__textarea {

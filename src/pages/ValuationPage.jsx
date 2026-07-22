@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import EquipmentDepreciationGraph from '../components/equipment/EquipmentDepreciationGraph'
 import { usePageMeta } from '../hooks/usePageMeta'
 import EquipmentValuationDetailsFields, {
@@ -7,13 +7,18 @@ import EquipmentValuationDetailsFields, {
 } from '../components/equipment/EquipmentValuationDetailsFields'
 import {
   buildEquipmentProductPagePath,
-  fetchDedupedApprovedCanonicalProducts,
-  fetchConsoleModifiers,
   fetchEquipmentProductByKey,
-  fetchProductConsoleOptions,
 } from '../lib/equipmentProducts'
+import {
+  getValuationSearchIndex,
+  getValuationConsoleModifiers,
+  getProductConsoleOptionsCached,
+  prefetchProductConsoleOptions,
+  prefetchValuationSearchIndex,
+} from '../lib/valuationCatalogCache'
 import { getDefaultCompatibleConsoleName } from '../lib/consoleCompatibility'
 import { buildCreateListingFromValuationPath } from '../lib/createListingFromEquipment'
+import { formatEquipmentProductSearchSuggestion } from '../lib/equipmentProductSearch'
 import {
   VALUATION_CONDITION_OPTIONS,
   INSUFFICIENT_VALUATION_MESSAGE,
@@ -128,7 +133,7 @@ function ProductSummary({ product, currency }) {
 
 function ProductCard({ product, onSelect, currency }) {
   const productPagePath = buildEquipmentProductPagePath(product.canonical_product_key)
-  const series = product.product_family || product.series || ''
+  const suggestion = formatEquipmentProductSearchSuggestion(product)
 
   return (
     <div
@@ -143,14 +148,18 @@ function ProductCard({ product, onSelect, currency }) {
         }
       }}
     >
-      <p className="valuation-page__match-brand">{product.brand}</p>
-      {series ? <p className="valuation-page__match-series">{series}</p> : null}
+      <p className="valuation-page__match-brand">{suggestion.brand || product.brand}</p>
+      {suggestion.series ? (
+        <p className="valuation-page__match-series">{suggestion.series}</p>
+      ) : null}
       <p className="valuation-page__match-title">
-        {product.model || getEquipmentProductDisplayName(product)}
+        {suggestion.model || getEquipmentProductDisplayName(product)}
       </p>
       <div className="valuation-page__match-meta">
-        {product.equipment_type ? (
-          <span className="valuation-page__chip">{product.equipment_type}</span>
+        {suggestion.equipmentType || product.equipment_type ? (
+          <span className="valuation-page__chip">
+            {suggestion.equipmentType || product.equipment_type}
+          </span>
         ) : null}
         <CompletionBadge product={product} />
       </div>
@@ -175,10 +184,15 @@ function ProductCard({ product, onSelect, currency }) {
 
 function ValuationPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const productKeyParam = searchParams.get('product')?.trim()
     || searchParams.get('model')?.trim()
   const initialQueryParam = searchParams.get('q')?.trim() || ''
   const stepParam = searchParams.get('step')?.trim() || ''
+  const routedProduct = location.state?.product
+    && location.state.product?.canonical_product_key === productKeyParam
+    ? location.state.product
+    : null
 
   const [step, setStep] = useState(
     productKeyParam && stepParam !== 'product' ? VALUATION_DETAILS_STEP : 'product',
@@ -190,8 +204,8 @@ function ValuationPage() {
   const [catalogError, setCatalogError] = useState(null)
 
   const [searchQuery, setSearchQuery] = useState(initialQueryParam)
-  const [selectedProduct, setSelectedProduct] = useState(null)
-  const [prefillLoading, setPrefillLoading] = useState(Boolean(productKeyParam))
+  const [selectedProduct, setSelectedProduct] = useState(routedProduct)
+  const [prefillLoading, setPrefillLoading] = useState(Boolean(productKeyParam) && !routedProduct)
   const [prefillError, setPrefillError] = useState(null)
 
   const [condition, setCondition] = useState('Good')
@@ -255,6 +269,32 @@ function ValuationPage() {
     setStep(VALUATION_DETAILS_STEP)
   }, [])
 
+  // Revalidate compact search rows into authoritative product details in the background.
+  useEffect(() => {
+    const key = selectedProduct?.canonical_product_key
+    if (!key) return undefined
+    // Compact index rows omit confidence / source fields — refresh once by key.
+    if (selectedProduct?.original_price_confidence != null || selectedProduct?.baseline_source != null) {
+      return undefined
+    }
+
+    let cancelled = false
+    async function revalidate() {
+      const result = await fetchEquipmentProductByKey(key)
+      if (cancelled || result.error || !result.product) return
+      if (result.product.canonical_product_key !== key) return
+      setSelectedProduct((current) => (
+        current?.canonical_product_key === key ? { ...current, ...result.product } : current
+      ))
+    }
+    revalidate()
+    return () => { cancelled = true }
+  }, [selectedProduct?.canonical_product_key, selectedProduct?.original_price_confidence, selectedProduct?.baseline_source])
+
+  useEffect(() => {
+    prefetchValuationSearchIndex()
+  }, [])
+
   useEffect(() => {
     let cancelled = false
 
@@ -263,8 +303,8 @@ function ValuationPage() {
       setCatalogError(null)
 
       const [productsResult, modifiersResult] = await Promise.all([
-        fetchDedupedApprovedCanonicalProducts(),
-        fetchConsoleModifiers(),
+        getValuationSearchIndex(),
+        getValuationConsoleModifiers(),
       ])
 
       if (cancelled) return
@@ -302,6 +342,20 @@ function ValuationPage() {
         return
       }
 
+      // Fast path: product already passed via router state from homepage search.
+      if (
+        routedProduct
+        && routedProduct.canonical_product_key === productKeyParam
+      ) {
+        if (!cancelled) {
+          prefilledProductKeyRef.current = productKeyParam
+          startValuationForProduct(routedProduct)
+          setPrefillLoading(false)
+          prefetchProductConsoleOptions(routedProduct.id)
+        }
+        return
+      }
+
       setPrefillLoading(true)
       setPrefillError(null)
 
@@ -316,15 +370,14 @@ function ValuationPage() {
         return
       }
 
-      // Wait for catalogue before falling back to a direct key fetch.
-      if (catalogLoading) {
-        return
-      }
-
+      // Do not block details on the full catalogue — fetch the product by key
+      // in parallel while the catalogue continues loading in the background.
       const result = await fetchEquipmentProductByKey(productKeyParam)
       if (cancelled) return
 
       if (result.error) {
+        // Catalogue may still resolve the product; keep waiting if it is loading.
+        if (catalogLoading) return
         prefilledProductKeyRef.current = null
         setPrefillError(result.error)
         setSelectedProduct(null)
@@ -334,6 +387,7 @@ function ValuationPage() {
       }
 
       if (result.notFound || !result.product) {
+        if (catalogLoading) return
         prefilledProductKeyRef.current = null
         setPrefillError(new Error('We could not find that equipment product.'))
         setSelectedProduct(null)
@@ -349,7 +403,44 @@ function ValuationPage() {
 
     prefillProduct()
     return () => { cancelled = true }
-  }, [productKeyParam, products, catalogLoading, selectedProduct?.canonical_product_key, startValuationForProduct])
+  }, [
+    productKeyParam,
+    products,
+    catalogLoading,
+    routedProduct,
+    selectedProduct?.canonical_product_key,
+    startValuationForProduct,
+  ])
+
+  useEffect(() => {
+    if (!selectedProduct?.id) {
+      setProductConsoleOptions([])
+      return undefined
+    }
+
+    let cancelled = false
+
+    async function loadConsoleOptions() {
+      const result = await getProductConsoleOptionsCached(selectedProduct.id)
+      if (cancelled) return
+      const options = result.options ?? []
+      setProductConsoleOptions(options)
+      setActualManufactureYear((previous) => {
+        const nextYear = resolveManufactureYearSelectValue(selectedProduct, previous, {
+          console_compatibility: options,
+        })
+        const defaultConsole = getDefaultCompatibleConsoleName({
+          productConsoleOptions: options,
+          manufactureYear: parseSelectedManufactureYear(nextYear),
+        })
+        setConsoleName(defaultConsole)
+        return nextYear
+      })
+    }
+
+    loadConsoleOptions()
+    return () => { cancelled = true }
+  }, [selectedProduct?.id])
 
   const searchState = useMemo(
     () => resolveValuationSearchMatches(products, searchQuery),
@@ -392,36 +483,6 @@ function ValuationPage() {
       setSelectedProduct(null)
     }
   }, [products, searchQuery, selectedProduct, step, catalogLoading, productKeyParam])
-
-  useEffect(() => {
-    if (!selectedProduct?.id) {
-      setProductConsoleOptions([])
-      return undefined
-    }
-
-    let cancelled = false
-
-    async function loadConsoleOptions() {
-      const result = await fetchProductConsoleOptions(selectedProduct.id)
-      if (cancelled) return
-      const options = result.options ?? []
-      setProductConsoleOptions(options)
-      setActualManufactureYear((previous) => {
-        const nextYear = resolveManufactureYearSelectValue(selectedProduct, previous, {
-          console_compatibility: options,
-        })
-        const defaultConsole = getDefaultCompatibleConsoleName({
-          productConsoleOptions: options,
-          manufactureYear: parseSelectedManufactureYear(nextYear),
-        })
-        setConsoleName(defaultConsole)
-        return nextYear
-      })
-    }
-
-    loadConsoleOptions()
-    return () => { cancelled = true }
-  }, [selectedProduct?.id])
 
   useEffect(() => {
     if (!selectedProduct) return
@@ -480,12 +541,18 @@ function ValuationPage() {
     : null
 
   function handleContinueWithProduct(product = selectedProduct) {
+    if (typeof document !== 'undefined') {
+      document.activeElement?.blur?.()
+    }
+    if (product?.id) {
+      prefetchProductConsoleOptions(product.id)
+    }
     startValuationForProduct(product)
     if (product?.canonical_product_key) {
       const next = new URLSearchParams()
       next.set('product', product.canonical_product_key)
       next.set('step', VALUATION_DETAILS_STEP)
-      setSearchParams(next, { replace: true })
+      setSearchParams(next, { replace: true, state: { product } })
     }
   }
 

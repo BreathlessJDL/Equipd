@@ -6,7 +6,7 @@ import {
 import { formatEquipmentProductSearchSuggestion } from '../lib/equipmentProductSearch'
 import { resolveEquipmentProductImageUrl } from '../lib/equipmentProductImages'
 import { supabase } from '../lib/supabase'
-import { getValuationCatalogProducts } from '../lib/valuationCatalogCache'
+import { getValuationSearchIndex, getValuationSearchIndexLoadState } from '../lib/valuationCatalogCache'
 import './CanonicalEquipmentAutocomplete.css'
 
 const DEFAULT_LIMIT = 10
@@ -90,9 +90,21 @@ export default function CanonicalEquipmentAutocomplete({
 
   async function ensureCatalog() {
     if (catalogFetched && !catalogError) return
+
+    // Synchronous session/memory hit — avoid flashing a loading state.
+    const warm = getValuationSearchIndexLoadState()
+    if (warm.ready) {
+      const result = await getValuationSearchIndex()
+      setCatalog(result.products ?? [])
+      setCatalogError(result.error || null)
+      setCatalogFetched(true)
+      setCatalogLoading(false)
+      return
+    }
+
     setCatalogLoading(true)
     setCatalogError(null)
-    const result = await getValuationCatalogProducts()
+    const result = await getValuationSearchIndex()
     setCatalog(result.products ?? [])
     setCatalogError(result.error || null)
     setCatalogFetched(true)
@@ -109,7 +121,7 @@ export default function CanonicalEquipmentAutocomplete({
         ready: false,
       }
     }
-    if (!catalogFetched) {
+    if (!catalogFetched || catalogLoading) {
       return {
         matches: [],
         hasQuery: true,
@@ -127,13 +139,16 @@ export default function CanonicalEquipmentAutocomplete({
       showNoMatch: resolved.showNoMatch,
       ready: true,
     }
-  }, [catalog, catalogFetched, debouncedQuery, resultLimit])
+  }, [catalog, catalogFetched, catalogLoading, debouncedQuery, resultLimit])
 
   const trimmedValue = String(value || '').trim()
-  const isDebouncing = trimmedValue !== String(debouncedQuery || '').trim()
   const showDropdown = open
     && trimmedValue.length >= MIN_CHARS
     && !selectedProduct
+
+  // Reserve a spinner for actual network index load — not local filtering/debounce.
+  const isIndexLoading = showDropdown && catalogLoading && !catalogFetched
+  const showLoadingMessage = isIndexLoading
 
   function updateQuery(nextValue) {
     onChange(nextValue)
@@ -204,11 +219,10 @@ export default function CanonicalEquipmentAutocomplete({
     }
   }
 
-  const isSearching = showDropdown && (catalogLoading || isDebouncing || !searchState.ready)
   const statusText = !showDropdown
     ? ''
-    : isSearching
-      ? 'Searching equipment models…'
+    : showLoadingMessage
+      ? 'Loading equipment…'
       : catalogError
         ? 'Search unavailable. You can still open the valuator.'
         : searchState.showNoMatch
@@ -255,17 +269,17 @@ export default function CanonicalEquipmentAutocomplete({
 
       {showDropdown ? (
         <div className="canonical-autocomplete__dropdown" id={listboxId} role="listbox" aria-label="Matching equipment models">
-          {isSearching ? (
-            <p className="canonical-autocomplete__message">Searching…</p>
+          {showLoadingMessage ? (
+            <p className="canonical-autocomplete__message">Loading equipment…</p>
           ) : null}
 
-          {!isSearching && catalogError ? (
+          {!showLoadingMessage && catalogError ? (
             <p className="canonical-autocomplete__message">
               Search unavailable. Use Value equipment to continue.
             </p>
           ) : null}
 
-          {!isSearching && !catalogError && searchState.showNoMatch ? (
+          {!showLoadingMessage && !catalogError && searchState.showNoMatch ? (
             <div className="canonical-autocomplete__empty">
               <p className="canonical-autocomplete__message">No matching equipment models found.</p>
               <button
@@ -286,7 +300,7 @@ export default function CanonicalEquipmentAutocomplete({
             </div>
           ) : null}
 
-          {!isSearching && !catalogError && searchState.matches.map((product, index) => {
+          {!showLoadingMessage && !catalogError && searchState.matches.map((product, index) => {
             const active = index === activeIndex
             const suggestion = formatEquipmentProductSearchSuggestion(product)
             return (

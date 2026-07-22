@@ -17,6 +17,8 @@
  * - Silver Line 93/95: fixed integrated LED only — not Elevation Achieve/Engage/Inspire.
  * - Gx Row: fixed LED (medium) — not Elevation entertainment set.
  * - Integrity / Elevation: factory + optional by OEM year windows.
+ * - Home cardio (T3, T5, F3, E1/E3/E5, C1/C3, RS1/RS3): GO / TRACK / TRACK CONNECT timeline by year.
+ * - Home fixed/no-console/legacy (Row HX, G2/G4/G7, X1/X3/X5, R1/R3): no selector.
  */
 
 import {
@@ -51,6 +53,10 @@ export const LIFE_FITNESS_CONSOLE_MODIFIER_BY_KEY = Object.freeze({
   integrity_c: { modifier_percent: 0, tier: 'base' },
   integrity_sl: { modifier_percent: 0, tier: 'base' },
   integrity_x: { modifier_percent: 10, tier: 'mid' },
+  go: { modifier_percent: 0, tier: 'base' },
+  track: { modifier_percent: 6, tier: 'mid' },
+  track_connect: { modifier_percent: 12, tier: 'mid' },
+  track_connect_2: { modifier_percent: 15, tier: 'premium' },
 })
 
 export function getLifeFitnessConsoleModifier(consoleKey) {
@@ -75,6 +81,8 @@ const SRC = {
     'https://www.fitnesssuperstore.com/pages/life-fitness-classic-series-console-comparisons',
   slProduct: 'https://www.lifefitness.com/en-us/catalog/cardio/consoles/sl-console',
   se4Product: 'https://www.lifefitness.com/en-us/catalog/cardio/consoles/se4-console',
+  homeTrackConnect:
+    'https://www.lifefitness.com/en-us/catalog/home/consoles',
 }
 
 export const LIFE_FITNESS_CONSOLE_DEFS = [
@@ -256,6 +264,69 @@ export const LIFE_FITNESS_CONSOLE_DEFS = [
     image_url: IMG('discoverse4'),
     source_url: SRC.se4Intro,
     notes: 'Discover SE4 — first install 9 Dec 2022. Integrity D bases updated for SE4 9 Dec 2023 (LF support).',
+  },
+  // --- Home console family (GO / TRACK / TRACK CONNECT) — never map to commercial Integrity/Elevation ---
+  {
+    console_key: 'go',
+    console_name: 'GO',
+    alternative_names: ['GO Console', 'Life Fitness GO'],
+    start_year: 2011,
+    end_year: null,
+    start_year_approximate: false,
+    is_current: true,
+    display_order: 200,
+    confidence: 'high',
+    image_url: IMG('go'),
+    source_url: SRC.homeTrackConnect,
+    notes: 'HOME ONLY — GO base console on Life Fitness home cardio. Not commercial Integrity/Elevation.',
+    family: 'home',
+  },
+  {
+    console_key: 'track',
+    console_name: 'TRACK',
+    alternative_names: ['TRACK Console', 'Life Fitness TRACK'],
+    start_year: 2011,
+    end_year: 2015,
+    start_year_approximate: false,
+    end_year_approximate: false,
+    is_current: false,
+    display_order: 210,
+    confidence: 'high',
+    image_url: IMG('track'),
+    source_url: SRC.homeTrackConnect,
+    notes: 'HOME ONLY — TRACK console (~2011–2015). Not commercial Discover.',
+    family: 'home',
+  },
+  {
+    console_key: 'track_connect',
+    console_name: 'TRACK CONNECT',
+    alternative_names: ['Track Connect', 'TRACK CONNECT Console'],
+    start_year: 2016,
+    end_year: 2021,
+    start_year_approximate: false,
+    end_year_approximate: false,
+    is_current: false,
+    display_order: 220,
+    confidence: 'high',
+    image_url: IMG('trackconnect'),
+    source_url: SRC.homeTrackConnect,
+    notes: 'HOME ONLY — TRACK CONNECT (~2016–2021). Not commercial Discover SE.',
+    family: 'home',
+  },
+  {
+    console_key: 'track_connect_2',
+    console_name: 'TRACK CONNECT 2.0',
+    alternative_names: ['Track Connect 2.0', 'TRACK CONNECT 2', 'Track Connect 2'],
+    start_year: 2022,
+    end_year: null,
+    start_year_approximate: false,
+    is_current: true,
+    display_order: 230,
+    confidence: 'high',
+    image_url: IMG('trackconnect20'),
+    source_url: SRC.homeTrackConnect,
+    notes: 'HOME ONLY — TRACK CONNECT 2.0 from 2022. Not commercial Discover SE4.',
+    family: 'home',
   },
 ]
 
@@ -533,7 +604,8 @@ const INTEGRITY_KEYS = [
   'life-fitness-cross-trainer-integrity-series-crosstrainer',
 ]
 
-const SILVER_LINE_KEYS = [
+/** Silver Line 93/95 — single fixed OEM console; no valuation selector. */
+export const SILVER_LINE_KEYS = Object.freeze([
   'life-fitness-stepper-stair-climber-silver-line-95si-stepper',
   'life-fitness-exercise-bike-silver-line-93ci-upright-bike',
   'life-fitness-exercise-bike-silver-line-95ci-upright-bike',
@@ -546,7 +618,7 @@ const SILVER_LINE_KEYS = [
   'life-fitness-silver-line-93li-summit-trainer',
   'life-fitness-stepper-stair-climber-silver-line-93si-stepper',
   'life-fitness-silver-line-95li-summit-trainer',
-]
+])
 
 /** Explicitly unmapped — delete any prior rows; hide selector. */
 export const LIFE_FITNESS_EXPLICITLY_UNMAPPED = [
@@ -556,6 +628,10 @@ export const LIFE_FITNESS_EXPLICITLY_UNMAPPED = [
   { key: 'life-fitness-exercise-bike-indoor-bikes-ic6', reason: 'Indoor cycle — no commercial cardio console selector' },
   { key: 'life-fitness-exercise-bike-indoor-bikes-ic7', reason: 'Indoor cycle — no commercial cardio console selector' },
   { key: 'life-fitness-exercise-bike-gx-indoor-bike', reason: 'Indoor cycle — no commercial cardio console selector' },
+  ...SILVER_LINE_KEYS.map((key) => ({
+    key,
+    reason: 'Silver Line — single fixed console; no selector or console modifier',
+  })),
 ]
 
 export const LIFE_FITNESS_UNRESOLVED_PRODUCTS = [
@@ -574,6 +650,193 @@ export const LIFE_FITNESS_UNRESOLVED_PRODUCTS = [
 export const LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY = {
   ...Object.fromEntries(ELEVATION_KEYS.map((key) => [key, buildElevationMappings()])),
   ...Object.fromEntries(INTEGRITY_KEYS.map((key) => [key, buildIntegrityMappings()])),
-  ...Object.fromEntries(SILVER_LINE_KEYS.map((key) => [key, buildSilverLineFixedLed()])),
+  // Silver Line intentionally unmapped — see SILVER_LINE_KEYS / LIFE_FITNESS_EXPLICITLY_UNMAPPED
   'life-fitness-row-machine-gx-row': buildGxRowFixedLed(),
+}
+
+// --- Life Fitness home console timeline ---
+
+const LIFE_FITNESS_HOME_INTERCHANGEABLE = Object.freeze([
+  'T3', 'T5', 'F3', 'E1', 'E3', 'E5', 'C1', 'C3', 'RS1', 'RS3',
+])
+
+const LIFE_FITNESS_HOME_NO_CONSOLE = Object.freeze(['G2', 'G4', 'G7'])
+const LIFE_FITNESS_HOME_LEGACY = Object.freeze(['X1', 'X3', 'X5', 'R1', 'R3'])
+
+function normalizeLfText(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim()
+}
+
+function lifeFitnessHomeHaystack(product = {}) {
+  return [
+    product.model,
+    product.product_family,
+    product.canonical_product_name,
+    product.canonical_product_key,
+  ].map(normalizeLfText).filter(Boolean).join(' ')
+}
+
+export function isLifeFitnessCommercialSeriesProduct(product = {}) {
+  const hay = lifeFitnessHomeHaystack(product).toLowerCase()
+  return (
+    /\bintegrity\b/.test(hay)
+    || /\belevation\b/.test(hay)
+    || /\bsilver\s*line\b/.test(hay)
+    || /\bgx\b/.test(hay)
+    || /\bic\d\b/.test(hay)
+  )
+}
+
+function matchHomeToken(hay, token) {
+  const escaped = String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?:^|[^A-Za-z0-9])${escaped}(?:[^A-Za-z0-9]|$)`, 'i').test(hay)
+}
+
+/**
+ * Classify Life Fitness home catalogue products for console timeline mapping.
+ * Returns null when the product is not part of the home range under this brief.
+ *
+ * @returns {{ kind: 'interchangeable'|'fixed'|'no_console'|'legacy', base: string } | null}
+ */
+export function parseLifeFitnessHomeIdentity(product = {}) {
+  const brandKey = String(product?.brand ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  if (brandKey && brandKey !== 'lifefitness') return null
+  if (isLifeFitnessCommercialSeriesProduct(product)) return null
+
+  const hay = lifeFitnessHomeHaystack(product)
+  if (!hay) return null
+
+  if (/\brow\s*hx\b/i.test(hay) || (/\bhx\b/i.test(hay) && /\brow/i.test(hay))) {
+    return { kind: 'fixed', base: 'Row HX' }
+  }
+
+  // Longer tokens first (RS1/RS3 before shorter codes)
+  for (const base of ['RS1', 'RS3', 'T3', 'T5', 'F3', 'E1', 'E3', 'E5', 'C1', 'C3']) {
+    if (matchHomeToken(hay, base)) {
+      return { kind: 'interchangeable', base }
+    }
+  }
+
+  for (const base of LIFE_FITNESS_HOME_NO_CONSOLE) {
+    if (matchHomeToken(hay, base)) {
+      return { kind: 'no_console', base }
+    }
+  }
+
+  for (const base of LIFE_FITNESS_HOME_LEGACY) {
+    if (matchHomeToken(hay, base)) {
+      return { kind: 'legacy', base }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Home interchangeable timeline.
+ * 2000–2010: no mapping rows → base valuation, selector hidden.
+ * 2011–2015: GO + TRACK
+ * 2016–2021: GO + TRACK CONNECT
+ * 2022+: GO + TRACK CONNECT 2.0
+ */
+export function buildLifeFitnessHomeConsoleMappings() {
+  return [
+    row({
+      console_key: 'go',
+      compatibility_type: 'factory',
+      available_from_year: 2011,
+      available_to_year: null,
+      is_default: true,
+      display_order: 10,
+      confidence: 'high',
+      source_url: SRC.homeTrackConnect,
+      notes: 'Home GO factory console from 2011. Pre-2011 years have no selectable consoles (base valuation).',
+    }),
+    row({
+      console_key: 'track',
+      compatibility_type: 'optional',
+      available_from_year: 2011,
+      available_to_year: 2015,
+      display_order: 20,
+      confidence: 'high',
+      source_url: SRC.homeTrackConnect,
+      notes: 'Home TRACK optional console 2011–2015.',
+    }),
+    row({
+      console_key: 'track_connect',
+      compatibility_type: 'optional',
+      available_from_year: 2016,
+      available_to_year: 2021,
+      display_order: 30,
+      confidence: 'high',
+      source_url: SRC.homeTrackConnect,
+      notes: 'Home TRACK CONNECT optional console 2016–2021.',
+    }),
+    row({
+      console_key: 'track_connect_2',
+      compatibility_type: 'optional',
+      available_from_year: 2022,
+      available_to_year: null,
+      display_order: 40,
+      confidence: 'high',
+      source_url: SRC.homeTrackConnect,
+      notes: 'Home TRACK CONNECT 2.0 optional console from 2022.',
+    }),
+  ]
+}
+
+/**
+ * Discover home products among approved Life Fitness rows and build compat + skip report.
+ */
+export function buildLifeFitnessHomeConsolePlan(products = []) {
+  const byKey = {}
+  const skipped = []
+  const mapped = []
+
+  for (const product of products ?? []) {
+    const key = product?.canonical_product_key
+    if (!key) continue
+    if (String(product.status).toLowerCase() === 'excluded') continue
+    if (LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY[key]) continue
+    if (LIFE_FITNESS_EXPLICITLY_UNMAPPED.some((entry) => entry.key === key)) continue
+
+    const identity = parseLifeFitnessHomeIdentity(product)
+    if (!identity) continue
+
+    if (identity.kind === 'interchangeable') {
+      const mappings = buildLifeFitnessHomeConsoleMappings()
+      byKey[key] = mappings
+      mapped.push({
+        key,
+        name: product.canonical_product_name,
+        base: identity.base,
+        kind: identity.kind,
+        mapping_count: mappings.length,
+      })
+      continue
+    }
+
+    skipped.push({
+      key,
+      name: product.canonical_product_name,
+      base: identity.base,
+      kind: identity.kind,
+      reason: identity.kind === 'fixed'
+        ? 'Fixed / non-interchangeable console — no selector; base valuation'
+        : identity.kind === 'no_console'
+          ? 'No console — no selector; base valuation'
+          : 'Legacy home product — base configuration only; no console selector',
+    })
+  }
+
+  return {
+    byKey,
+    mapped,
+    skipped,
+    summary: {
+      mapped_product_count: mapped.length,
+      skipped_product_count: skipped.length,
+      mapping_row_count: Object.values(byKey).reduce((n, rows) => n + rows.length, 0),
+    },
+  }
 }

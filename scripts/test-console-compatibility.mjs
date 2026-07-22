@@ -22,6 +22,8 @@ import {
 } from '../src/lib/matrixConsoleCompat.js'
 import {
   LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY,
+  LIFE_FITNESS_EXPLICITLY_UNMAPPED,
+  SILVER_LINE_KEYS,
   buildElevationMappings,
   buildIntegrityMappings,
 } from '../src/lib/lifeFitnessConsoleCompat.js'
@@ -727,18 +729,28 @@ const LF_NAMES = {
   assert.ok(!labels(result).includes('Integrity C'))
 }
 
-// Silver Line fixed LED — hide selector
+// Silver Line — no console selector or modifier (explicitly unmapped)
 {
+  assert.equal(SILVER_LINE_KEYS.length, 12, 'Silver Line catalogue key count')
+  for (const key of SILVER_LINE_KEYS) {
+    assert.equal(
+      LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY[key],
+      undefined,
+      `Silver Line key must stay unmapped: ${key}`,
+    )
+    assert.ok(
+      LIFE_FITNESS_EXPLICITLY_UNMAPPED.some((entry) => entry.key === key),
+      `Silver Line key must be explicitly unmapped: ${key}`,
+    )
+  }
+
   const result = getCompatibleConsoleOptions({
     manufactureYear: 2010,
-    options: expandNamed(
-      LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY['life-fitness-treadmill-silver-line-95ti'],
-      LF_NAMES,
-    ),
+    options: [],
   })
-  assert.equal(result.fixedOnly, true)
-  assert.equal(result.showSelector, false)
-  assert.equal(result.defaultConsoleName, 'LED')
+  assert.equal(result.showSelector, false, 'unmapped Silver Line has no selector')
+  assert.equal(result.options.length, 0, 'unmapped Silver Line has no console options')
+  assert.equal(result.defaultConsoleName, '')
 }
 
 console.log('test-console-compatibility: life-fitness ok')
