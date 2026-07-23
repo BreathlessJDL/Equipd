@@ -45,8 +45,8 @@
       "destination": "/index.html"
     },
     {
-      "source": "/listings/([^/]+)",
-      "destination": "/api/public-listing-page?slug=$1"
+      "source": "/listings/:slug",
+      "destination": "/api/public-listing-page?slug=:slug"
     },
     {
       "source": "/((?!.*\\.[^/]+$).*)",
