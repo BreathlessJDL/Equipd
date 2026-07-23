@@ -89,6 +89,15 @@ assert(brandDoc.bodyHtml.includes('Life Fitness Equipment Values'), 'brand ident
 assert(brandDoc.bodyHtml.includes('life-fitness-integrity-treadmill'), 'brand product link')
 assert(brandDoc.bodyHtml.includes('value guide'), 'value guide anchor')
 assert(brandDoc.title.includes('Equipment Values'), 'brand meta title')
+assert(brandDoc.bodyHtml.includes('Common questions'), 'brand faq section')
+assert(
+  brandDoc.jsonLd.some((entry) => entry['@type'] === 'FAQPage'),
+  'brand faq json-ld',
+)
+assert(
+  brandDoc.jsonLd.filter((entry) => entry['@type'] === 'FAQPage').length === 1,
+  'single brand FAQPage entity',
+)
 
 const productDoc = buildEquipmentPageSeoDocument({
   product: products[0],

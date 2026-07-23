@@ -2,41 +2,36 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 33.5rem; /* ~536px */
-  border: 1px solid var(--color-border);
+  min-height: 0;
+  border: 0;
   border-radius: 1rem;
   background: #fff;
   color: inherit;
   text-decoration: none;
-  overflow: hidden; /* radius clip only — images must contain, not crop */
-  box-shadow: 0 1px 3px rgba(15, 33, 55, 0.04);
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border) 55%, transparent);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .equipment-value-card:hover {
-  border-color: #c5ced8;
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(15, 33, 55, 0.07);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-border) 80%, transparent),
+    0 14px 32px rgba(15, 33, 55, 0.07);
 }
 
 .equipment-value-card:focus-visible {
   outline: 2px solid var(--color-orange);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-/*
-  Image wrapper: fixed height controls layout.
-  Images use auto size + max constraints so global `img { height: auto }`
-  cannot force intrinsic height past the box (which overflow:hidden then crops).
-*/
 .equipment-value-card__media {
-  flex: 0 0 16.25rem; /* 260px */
+  flex: 0 0 17rem;
   width: 100%;
-  height: 16.25rem;
+  height: 17rem;
   box-sizing: border-box;
-  padding: 1.5rem; /* 24px */
-  background: #f8f9fb;
-  border-bottom: 1px solid #eef1f4;
+  padding: 1.5rem 1.35rem;
+  background: linear-gradient(180deg, #f4f5f7 0%, #f8f9fb 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,8 +45,6 @@
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  /* Explicitly defeat global img { height: auto } blowout */
-  flex: 0 1 auto;
 }
 
 .equipment-value-card__placeholder {
@@ -61,27 +54,25 @@
   width: 100%;
   height: 100%;
   color: var(--color-muted);
-  font-size: 0.875rem;
-  background: #f3f5f7;
-  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 
 .equipment-value-card__body {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 1.15rem 1.2rem 1.2rem;
+  padding: 1.25rem 1.3rem 1.35rem;
   flex: 1 1 auto;
   min-height: 0;
 }
 
 .equipment-value-card__title {
-  margin: 0;
-  min-height: 3.15em;
-  max-height: 3.15em;
-  font-size: 1.015rem; /* ~16.25px */
-  font-weight: 650;
+  margin: 0 0 1rem;
+  min-height: 2.55em;
+  font-size: 0.9375rem;
+  font-weight: 500;
   line-height: 1.35;
+  letter-spacing: -0.012em;
   color: var(--color-navy);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -89,67 +80,55 @@
   overflow: hidden;
 }
 
-.equipment-value-card__category {
-  margin: 0;
-  min-height: 1.25em;
-  font-size: 0.875rem;
+.equipment-value-card__value-label {
+  margin: 0 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 400;
   color: var(--color-muted);
 }
 
-.equipment-value-card__facts {
-  display: grid;
-  gap: 0.55rem;
-  margin: 0.55rem 0 0;
-  min-height: 6.5rem;
-}
-
-.equipment-value-card__fact {
-  margin: 0;
-  display: grid;
-  gap: 0.12rem;
-}
-
-.equipment-value-card__fact dt {
-  font-size: 0.6875rem;
+.equipment-value-card__value-amount {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.55rem, 2.4vw, 1.85rem);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--color-orange);
 }
 
-.equipment-value-card__fact dd {
+.equipment-value-card__meta {
   margin: 0;
-  font-size: 0.95rem;
-  color: var(--color-navy);
-  font-weight: 600;
-}
-
-.equipment-value-card__fact--value dd {
-  font-size: 1.05rem;
-}
-
-.equipment-value-card__value-year {
-  display: inline;
-  font-size: 0.8rem;
-  font-weight: 550;
   color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.equipment-value-card__meta--spacer {
+  visibility: hidden;
 }
 
 .equipment-value-card__cta {
   margin-top: auto;
-  padding-top: 0.85rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding-top: 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--color-orange);
 }
 
-@media (max-width: 640px) {
-  .equipment-value-card {
-    min-height: 0;
+.equipment-value-card:hover .equipment-value-card__cta {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+@media (max-width: 767px) {
+  .equipment-value-card__media {
+    flex-basis: 15rem;
+    height: 15rem;
   }
 
-  .equipment-value-card__media {
-    flex-basis: 14.5rem;
-    height: 14.5rem;
+  .equipment-value-card__value-amount {
+    font-size: 1.65rem;
+    font-weight: 600;
   }
 }

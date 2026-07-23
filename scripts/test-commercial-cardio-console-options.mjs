@@ -212,8 +212,8 @@ assert(
   getDefaultConsoleNameForProductYear({
     productConsoleOptions: buildConsoleOptionsForProduct(elevationProduct).options,
     manufactureYear: 2018,
-  }) === 'Discover SI',
-  'default console is first available option (Discover SI)',
+  }) === 'discover_si',
+  'default console prefers stable key for first available option (discover_si)',
 )
 assert(
   getDefaultConsoleNameForProductYear({
@@ -250,11 +250,12 @@ assert(
 )
 
 const elevation2015 = optionNamesForProduct(elevationProduct, 2015)
-assert(elevation2015.includes('Discover SE3'), 'Elevation 2015 should include SE3')
+assert(!elevation2015.includes('Discover SE3'), 'Elevation 2015 should not include SE3 before 2016')
 assert(!elevation2015.includes('Discover SE3HD'), 'Elevation 2015 should not include SE3HD')
 assert(!elevation2015.includes('ST'), 'Elevation 2015 should not include ST before 2017')
 
 const elevation2016 = optionNamesForProduct(elevationProduct, 2016)
+assert(elevation2016.includes('Discover SE3'), 'Elevation 2016 should include SE3 from release year')
 assert(!elevation2016.includes('ST'), 'Elevation 2016 should not include ST before 2017')
 
 const elevation2017 = optionNamesForProduct(elevationProduct, 2017)
@@ -268,16 +269,24 @@ assertSameList(
 )
 
 const integrity2016 = optionNamesForProduct(integrityProduct, 2016)
-assert(!integrity2016.includes('ST'), 'Integrity 2016 should not include ST before 2017')
+assertSameList(integrity2016, [], 'Integrity 2016 has no factory consoles before 2017 templates')
 
 const integrity2017 = optionNamesForProduct(integrityProduct, 2017)
-assert(integrity2017.includes('Integrity SL'), 'Integrity 2017 should include SL')
-assert(integrity2017.includes('ST'), 'Integrity 2017 should include ST from release year')
-assert(!integrity2017.includes('Integrity X'), 'Integrity 2017 should not include X')
+assertSameList(
+  integrity2017,
+  ['Integrity C', 'Integrity X', 'ST', 'Discover SE3HD'],
+  'Life Fitness Integrity Series at 2017',
+)
+assert(!integrity2017.includes('Integrity SL'), 'Integrity 2017 should not include SL before 2021')
 assert(!integrity2017.includes('Discover SE4'), 'Integrity 2017 should not include SE4')
 
 const integrity2018 = optionNamesForProduct(integrityProduct, 2018)
 assert(integrity2018.includes('ST'), 'Integrity 2018 should include ST')
+assert(integrity2018.includes('Integrity X'), 'Integrity 2018 should include Integrity X')
+assert(!integrity2018.includes('Integrity SL'), 'Integrity 2018 should not include SL before 2021')
+
+const integrity2021 = optionNamesForProduct(integrityProduct, 2021)
+assert(integrity2021.includes('Integrity SL'), 'Integrity 2021 should include SL from release year')
 
 const silverline2013 = optionNamesForProduct(silverlineProduct, 2013)
 assertSameList(
@@ -363,7 +372,10 @@ const integrityC = integrityModifiers.find((option) => option.console_name === '
 const integritySl = integrityModifiers.find((option) => option.console_name === 'Integrity SL')
 assert((se4?.modifier_percent ?? 0) > (se3hdIntegrity?.modifier_percent ?? 0), 'Life Fitness SE4 modifier > SE3HD')
 assert((integrityXMod?.modifier_percent ?? 0) > (integrityC?.modifier_percent ?? 0), 'Integrity X > Integrity C')
-assert((integrityC?.modifier_percent ?? 0) > (integritySl?.modifier_percent ?? 0), 'Integrity C > Integrity SL')
+assert(
+  (integrityC?.modifier_percent ?? 0) === (integritySl?.modifier_percent ?? 0),
+  'Integrity C and Integrity SL share the base modifier',
+)
 
 const elevationModifiers = buildConsoleOptionsForProduct(elevationProduct).options
 const se3hdElevation = elevationModifiers.find((option) => option.console_name === 'Discover SE3HD')

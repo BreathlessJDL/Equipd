@@ -4,17 +4,25 @@
  */
 
 import { PRODUCT_STATUS } from './intelligenceCanonicalProducts.js'
+import {
+  CONTENT_USAGE_SEGMENT,
+  HOME_USE_CONTENT_BRANDS,
+  isCommercialContentBrand,
+  isHomeLikeUsageSegment,
+  isHomeUseContentBrand,
+  normalizeBrandKey,
+  resolveProductContentUsageSegment,
+} from './equipmentProductContentUsage.js'
 
-export const HOME_USE_CONTENT_BRANDS = Object.freeze([
-  'Peloton',
-  'NordicTrack',
-  'BowFlex',
-])
-
-export const CONTENT_USAGE_SEGMENT = Object.freeze({
-  COMMERCIAL: 'commercial',
-  HOME_USE: 'home_use',
-})
+export {
+  CONTENT_USAGE_SEGMENT,
+  HOME_USE_CONTENT_BRANDS,
+  isCommercialContentBrand,
+  isHomeLikeUsageSegment,
+  isHomeUseContentBrand,
+  normalizeBrandKey,
+  resolveProductContentUsageSegment,
+}
 
 export const CONTENT_GENERATION_STATUS = Object.freeze({
   DRAFT: 'draft',
@@ -37,26 +45,8 @@ export const GENERATE_MISSING_SCOPE_LABELS = Object.freeze({
 export const GENERATE_MISSING_DEFAULT_CONCURRENCY = 3
 export const GENERATE_MISSING_MAX_PER_STEP = 5
 
-const HOME_USE_BRAND_KEYS = new Set(
-  HOME_USE_CONTENT_BRANDS.map((brand) => normalizeBrandKey(brand)),
-)
-
 function normalizeWhitespace(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim()
-}
-
-export function normalizeBrandKey(brand) {
-  return normalizeWhitespace(brand).toLowerCase().replace(/[^a-z0-9]/g, '')
-}
-
-export function isHomeUseContentBrand(brand) {
-  return HOME_USE_BRAND_KEYS.has(normalizeBrandKey(brand))
-}
-
-export function resolveProductContentUsageSegment(product = {}) {
-  return isHomeUseContentBrand(product?.brand)
-    ? CONTENT_USAGE_SEGMENT.HOME_USE
-    : CONTENT_USAGE_SEGMENT.COMMERCIAL
 }
 
 export function isEligibleProductStatusForContentGeneration(status) {

@@ -57,7 +57,7 @@ assert(doc.bodyHtml.includes('seo-sell-guide-heading'), 'guide section in preren
 assert(doc.bodyHtml.includes('<details'), 'guide topics are expandable in prerender')
 assert(doc.bodyHtml.includes('/brands/life-fitness'), 'brand internal links in prerender')
 assert(doc.bodyHtml.includes('A practical guide'), 'guide note in prerender')
-assert(doc.bodyHtml.includes('Free specialist listings'), 'guide highlights in prerender')
+assert(doc.bodyHtml.includes('Free listings'), 'guide highlights in prerender')
 
 // Prerendered journey markup must mirror the React <picture> so the browser
 // resolves the same image URL before and after hydration (no double download).

@@ -141,6 +141,9 @@ async function main() {
   assert(!('overview_text' in sample), 'list payload must not include overview_text')
   assert('content_generation_status' in sample, 'list payload missing content status')
   assert('source_row_count' in sample, 'list payload missing source_row_count')
+  assert('image_reviewed_at' in sample, 'list payload missing image_reviewed_at')
+  assert('approved_image_candidate_id' in sample, 'list payload missing approved_image_candidate_id')
+  assert('latest_image_candidate_score' in sample, 'list payload missing latest image candidate score')
 
   const metaStarted = Date.now()
   const { data: meta, error: metaError } = await client.rpc('admin_equipment_products_dashboard_meta')

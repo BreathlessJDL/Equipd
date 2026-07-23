@@ -71,7 +71,7 @@ export async function notifyIndexNowAfterPaymentCapture(admin: any, paymentId: s
     const urls = dedupeIndexNowUrls([
       buildListingIndexNowUrl(listing.slug),
       buildLocationIndexNowUrl(citySlugFromListing(listing)),
-    ].filter(Boolean))
+    ].filter((url): url is string => Boolean(url)))
 
     if (!urls.length) {
       return { skipped: true, reason: 'no_urls' }

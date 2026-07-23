@@ -965,3 +965,106 @@
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
 }
+
+.admin-products__selection-label {
+  align-self: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-navy, #0f172a);
+}
+
+.admin-products__image-status-cell {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-products__image-search-state {
+  font-size: 0.75rem;
+  color: var(--color-muted, #64748b);
+}
+
+.admin-products__image-search-section {
+  margin-top: 0.75rem;
+}
+
+.admin-products__image-search-section-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.admin-products__image-search-history-toggle {
+  display: inline-flex;
+  align-items: center;
+  margin: 0.35rem 0 0.75rem;
+  padding: 0.35rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary, #2563eb);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-products__image-search-history-toggle:hover {
+  text-decoration: underline;
+}
+
+.admin-products__image-search-history {
+  margin-top: 0.35rem;
+}
+
+.admin-products__image-search-jobs {
+  margin-bottom: 1rem;
+}
+
+.admin-products__image-search-jobs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-products__image-search-job {
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.admin-products__image-search-job--active {
+  border-color: color-mix(in srgb, var(--color-primary, #2563eb) 45%, #e2e8f0);
+}
+
+.admin-products__image-search-job-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.admin-products__image-search-job-status {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-muted, #64748b);
+}
+
+.admin-products__image-search-progress {
+  height: 0.45rem;
+  margin: 0.55rem 0;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.admin-products__image-search-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary, #2563eb);
+}

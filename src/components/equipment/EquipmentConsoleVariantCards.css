@@ -74,16 +74,19 @@
   object-position: center center;
 }
 
-.equipment-console-variants__placeholder {
+.equipment-console-variants__placeholder,
+.equipment-console-variants__fallback {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.35rem;
   width: 100%;
   height: 6.5rem;
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: center;
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  font-size: 0.6875rem;
+  line-height: 1.35;
   color: var(--color-muted);
   background:
     linear-gradient(
@@ -91,6 +94,17 @@
       color-mix(in srgb, var(--color-bg) 75%, #fff) 0%,
       color-mix(in srgb, var(--color-surface) 92%, #fff) 100%
     );
+}
+
+.equipment-console-variants__fallback-icon {
+  display: block;
+  flex: 0 0 auto;
+  opacity: 0.55;
+}
+
+.equipment-console-variants__fallback-label {
+  display: block;
+  max-width: 6.5rem;
 }
 
 .equipment-console-variants__name {
@@ -153,7 +167,8 @@
 
   .equipment-console-variants__media,
   .equipment-console-variants__image-wrap,
-  .equipment-console-variants__placeholder {
+  .equipment-console-variants__placeholder,
+  .equipment-console-variants__fallback {
     height: 5.75rem;
     border-radius: 0.75rem;
   }
@@ -163,9 +178,10 @@
     max-height: 4.85rem;
   }
 
-  .equipment-console-variants__placeholder {
-    padding: 0.75rem;
-    font-size: 0.75rem;
+  .equipment-console-variants__placeholder,
+  .equipment-console-variants__fallback {
+    padding: 0.65rem;
+    font-size: 0.625rem;
   }
 
   .equipment-console-variants__name {

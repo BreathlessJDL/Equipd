@@ -6,6 +6,7 @@
  */
 
 import { BRAND_REGISTRY, resolveBrandRegistryEntry } from './brandCatalogueCore.js'
+import { displayNameStartsWithPhrase } from './canonicalProductDisplayName.js'
 
 const MIN_PARTIAL_SEARCH_TOKEN_LENGTH = 2
 const MIN_PARTIAL_INTENT_TOKEN_LENGTH = 4
@@ -1105,9 +1106,12 @@ export function scoreEquipmentProductSearchMatch(product, parsedQuery) {
  */
 export function formatEquipmentProductSearchSuggestion(product) {
   const brand = String(product?.brand ?? '').trim()
-  const series = String(product?.product_family || product?.series || '').trim()
+  let series = String(product?.product_family || product?.series || '').trim()
   const model = String(product?.model ?? '').trim()
   const equipmentType = String(product?.equipment_type ?? '').trim()
+  if (series && model && displayNameStartsWithPhrase(model, series)) {
+    series = ''
+  }
   return {
     brand,
     series,

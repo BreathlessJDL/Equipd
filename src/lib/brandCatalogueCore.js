@@ -4,6 +4,10 @@
  */
 
 import { brandsMatch, normalizeBrandKey } from './consoleModifierMatch.js'
+import {
+  buildCanonicalProductDisplayNameFromProduct,
+  cleanCanonicalProductDisplayName,
+} from './canonicalProductDisplayName.js'
 
 /** Preferred production canonical origin for SEO, sitemap, and absolute public URLs. */
 export const EQUIPD_SITE_ORIGIN = 'https://www.equipd.co.uk'
@@ -530,9 +534,15 @@ export function normalizePublicSeriesDisplayLabel(brand, family) {
 
 /**
  * Soften “Discovery Series” wording in Precor public product titles without changing keys.
+ * Also collapses duplicated brand/series/model wording via the shared display-name builder.
  */
 export function formatPublicCanonicalProductDisplayName(product) {
-  const name = String(product?.canonical_product_name ?? '').replace(/\s+/g, ' ').trim()
+  const built = buildCanonicalProductDisplayNameFromProduct(product)
+    || cleanCanonicalProductDisplayName(product?.canonical_product_name, {
+      brand: product?.brand,
+      series: product?.product_family ?? product?.series,
+    })
+  const name = String(built ?? '').replace(/\s+/g, ' ').trim()
   if (!name) return name
   if (normalizeBrandKey(product?.brand) !== 'precor') return name
   return name

@@ -1,4 +1,66 @@
+import { useState } from 'react'
 import './EquipmentConsoleVariantCards.css'
+
+function ConsoleImageFallback() {
+  return (
+    <div className="equipment-console-variants__fallback" role="img" aria-label="Image unavailable">
+      <svg
+        className="equipment-console-variants__fallback-icon"
+        viewBox="0 0 48 36"
+        width="40"
+        height="30"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect
+          x="2"
+          y="2"
+          width="44"
+          height="32"
+          rx="3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+        />
+        <rect
+          x="8"
+          y="8"
+          width="32"
+          height="16"
+          rx="1.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <circle cx="24" cy="30" r="1.5" fill="currentColor" />
+      </svg>
+      <span className="equipment-console-variants__fallback-label">Image unavailable</span>
+    </div>
+  )
+}
+
+function ConsoleVariantImage({ imageUrl, alt }) {
+  const [failed, setFailed] = useState(false)
+
+  if (!imageUrl || failed) {
+    return <ConsoleImageFallback />
+  }
+
+  return (
+    <div className="equipment-console-variants__image-wrap">
+      <img
+        src={imageUrl}
+        alt={alt}
+        className="equipment-console-variants__image"
+        width={320}
+        height={240}
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  )
+}
 
 export default function EquipmentConsoleVariantCards({
   variants = [],
@@ -45,23 +107,11 @@ export default function EquipmentConsoleVariantCards({
               }
             >
               <div className="equipment-console-variants__media">
-                {imageUrl ? (
-                  <div className="equipment-console-variants__image-wrap">
-                    <img
-                      src={imageUrl}
-                      alt={consoleLabel}
-                      className="equipment-console-variants__image"
-                      width={320}
-                      height={240}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                ) : (
-                  <div className="equipment-console-variants__placeholder" aria-hidden="true">
-                    <span>Image coming soon</span>
-                  </div>
-                )}
+                <ConsoleVariantImage
+                  key={imageUrl || `missing:${variant}`}
+                  imageUrl={imageUrl}
+                  alt={consoleLabel}
+                />
               </div>
               <p className="equipment-console-variants__name">{variant}</p>
               {isIntegrated ? (

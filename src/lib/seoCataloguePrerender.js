@@ -35,6 +35,7 @@ import {
   normalizeFaqItems,
   renderFaqPageScriptTag,
 } from './faqPageStructuredData.js'
+import { buildBrandFaqItems as buildBrandFaqItemsForSeo } from './brandPageCurated.js'
 import { renderProductScriptTag } from './productPageStructuredData.js'
 import { injectSiteStructuredDataIntoHtml } from './siteStructuredData.js'
 
@@ -229,7 +230,7 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
   }
 }
 
-export function buildBrandPageSeoDocument({ brand, products = [], categories = [] } = {}) {
+export function buildBrandPageSeoDocument({ brand, products = [], categories = [], series = [] } = {}) {
   if (!brand?.slug) return null
 
   const title = `${brand.displayName} Equipment Values and Model Guides | Equipd`
@@ -241,12 +242,30 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
     label: `${product.displayName || product.canonical_product_name} value guide`,
   })).filter((link) => link.href && link.label)
 
+  // Keep FAQPage JSON-LD synchronised with the visible brand FAQ copy.
+  const faqItems = buildBrandFaqItemsForSeo(brand.displayName)
+  const faqSchema = buildFaqPageSchemaNode(faqItems, {
+    canonicalUrl: brand.absoluteUrl || getBrandAbsoluteUrl(brand.slug),
+  })
+
   const categoryBits = categories.length
     ? `<section aria-labelledby="seo-brand-categories-heading">
     <h2 id="seo-brand-categories-heading">Browse by equipment type</h2>
     <ul>${categories.map((category) => (
       `<li>${escapeHtml(category.label || category.name || category.equipmentType)} (${escapeHtml(category.count ?? category.productCount)})</li>`
     )).join('')}</ul>
+  </section>`
+    : ''
+
+  const seriesBits = series.length
+    ? `<section aria-labelledby="seo-brand-series-heading">
+    <h2 id="seo-brand-series-heading">Browse by series</h2>
+    <ul>${series.map((entry) => {
+      const name = entry.name || entry.label
+      if (!name) return ''
+      const href = `${path}?series=${encodeURIComponent(name)}`
+      return `<li><a href="${escapeHtml(href)}">${escapeHtml(name)}</a> (${escapeHtml(entry.productCount ?? entry.count ?? '')})</li>`
+    }).join('')}</ul>
   </section>`
     : ''
 
@@ -262,14 +281,17 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
     <p>${escapeHtml(intro)}</p>
     <p>${escapeHtml(brand.productCount)} equipment models covered${brand.listingCount ? ` · ${escapeHtml(brand.listingCount)} current marketplace listings` : ''}</p>
   </header>
+  ${seriesBits}
   ${categoryBits}
   <section aria-labelledby="seo-brand-products-heading">
     <h2 id="seo-brand-products-heading">Explore ${escapeHtml(brand.displayName)} equipment values</h2>
     ${renderLinkList(productLinks, { labelledBy: 'seo-brand-products-heading' })}
   </section>
+  ${renderFaqSection(faqItems)}
   <p>
     <a href="${escapeHtml(brand.browseListingsHref || `/browse?brand=${encodeURIComponent(brand.displayName)}`)}">View current ${escapeHtml(brand.displayName)} marketplace listings</a>
     · <a href="/valuation">Value your equipment</a>
+    · <a href="${escapeHtml(`${path}?catalogue=1`)}">All ${escapeHtml(brand.displayName)} models</a>
     · <a href="/brands">All brand value guides</a>
   </p>
 </article>`.trim()
@@ -282,6 +304,7 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
     jsonLd: [
       buildBrandPageJsonLd(brand, products),
       buildBrandPageBreadcrumbSchema(brand),
+      faqSchema,
     ].filter(Boolean),
     bodyHtml: body,
   }
@@ -486,9 +509,14 @@ export function buildBrandPayloadFromProducts(brandSlug, products = [], listingC
   }
 
   const categoryMap = new Map()
+  const seriesMap = new Map()
   for (const product of matched) {
     const type = String(product.equipment_type || '').trim() || 'Other'
     categoryMap.set(type, (categoryMap.get(type) || 0) + 1)
+    const seriesName = getProductSeriesLabel(product)
+    if (seriesName) {
+      seriesMap.set(seriesName, (seriesMap.get(seriesName) || 0) + 1)
+    }
   }
 
   return {
@@ -498,5 +526,8 @@ export function buildBrandPayloadFromProducts(brandSlug, products = [], listingC
     categories: [...categoryMap.entries()]
       .map(([label, count]) => ({ label, count }))
       .sort((left, right) => left.label.localeCompare(right.label)),
+    series: [...seriesMap.entries()]
+      .map(([name, productCount]) => ({ name, productCount }))
+      .sort((left, right) => right.productCount - left.productCount || left.name.localeCompare(right.name)),
   }
 }

@@ -11,6 +11,7 @@
  *   explicitly to Lifestyle / Endurance / Performance / Performance Plus.
  * - Touch XL only on treadmills and ClimbMills.
  * - Onyx uses fixed Onyx 32"/22" touchscreen masters — never modular LED/Touch.
+ * - Home (T30/T50/…): XR / XER / XIR timeline from 2016; never map home consoles onto commercial.
  *
  * Primary sources:
  * - https://content.johnsonfit.com/inc/uploaded_media/09479aec1bb4f1a49466388e6f30afa5/owners_guide/e579c7a6f962e02fc7421b1081bd6eb0.pdf
@@ -39,8 +40,8 @@ export const MATRIX_CONSOLE_MODIFIER_BY_KEY = Object.freeze({
   onyx_32: { modifier_percent: 30, tier: 'premium' },
   onyx_22: { modifier_percent: 25, tier: 'premium' },
   xr: { modifier_percent: 0, tier: 'base' },
-  xer: { modifier_percent: 15, tier: 'mid' },
-  xir: { modifier_percent: 25, tier: 'premium' },
+  xer: { modifier_percent: 8, tier: 'mid' },
+  xir: { modifier_percent: 15, tier: 'premium' },
   xur: { modifier_percent: 25, tier: 'premium' },
 })
 
@@ -51,6 +52,11 @@ export function getMatrixConsoleModifier(consoleKey) {
 const LED_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.led}`
 const TOUCH_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.touch}`
 const TOUCH_XL_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.touchxl}`
+const XR_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.xr}`
+const XER_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.xer}`
+const XIR_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.xir}`
+const ONYX_22_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.onyx22}`
+const ONYX_32_IMG = `${MATRIX_CONSOLE_IMAGE_BASE}/${MATRIX_CONSOLE_IMAGE_FILES.onyx32}`
 
 export const MATRIX_CONSOLE_DEFS = [
   // --- Historic commercial (digit-series era) ---
@@ -241,7 +247,7 @@ export const MATRIX_CONSOLE_DEFS = [
     is_current: true,
     display_order: 140,
     confidence: 'high',
-    image_url: null,
+    image_url: ONYX_32_IMG,
     source_url: 'https://www.manualslib.com/guide/4242108/matrix-onyx-fitness-console-user-manual.html',
     notes: 'Onyx Collection fixed 32" immersive touchscreen. Treadmill only. Not modular Touch XL.',
     family: 'commercial_onyx',
@@ -256,24 +262,24 @@ export const MATRIX_CONSOLE_DEFS = [
     is_current: true,
     display_order: 150,
     confidence: 'high',
-    image_url: null,
+    image_url: ONYX_22_IMG,
     source_url: 'https://www.manualslib.com/guide/4242108/matrix-onyx-fitness-console-user-manual.html',
     notes: 'Onyx Collection fixed 22" immersive touchscreen. ClimbMill / Ascent / bikes. Not modular Touch XL.',
     family: 'commercial_onyx',
   },
 
-  // --- Home (Matrix Home Fitness) — never map to commercial catalogue products ---
+  // --- Home (Matrix Home Fitness) — map only to home catalogue products ---
   {
     console_key: 'xr',
     console_name: 'XR',
     alternative_names: ['XR Console', '8.5" LCD'],
-    start_year: 2018,
+    start_year: 2016,
     end_year: null,
-    start_year_approximate: true,
+    start_year_approximate: false,
     is_current: true,
     display_order: 200,
     confidence: 'high',
-    image_url: null,
+    image_url: XR_IMG,
     source_url: 'https://matrixhomefitness.com/blogs/blog/how-to-pick-the-perfect-console',
     notes: 'HOME ONLY — 8.5" LCD. Do not map to commercial digit or modular products.',
     family: 'home',
@@ -282,13 +288,13 @@ export const MATRIX_CONSOLE_DEFS = [
     console_key: 'xer',
     console_name: 'XER',
     alternative_names: ['XER Console', '10" Touchscreen'],
-    start_year: 2018,
+    start_year: 2016,
     end_year: null,
-    start_year_approximate: true,
+    start_year_approximate: false,
     is_current: true,
     display_order: 210,
     confidence: 'high',
-    image_url: null,
+    image_url: XER_IMG,
     source_url: 'https://matrixhomefitness.com/blogs/blog/how-to-pick-the-perfect-console',
     notes: 'HOME ONLY — 10" entry touchscreen. Not commercial xe/7xe.',
     family: 'home',
@@ -297,13 +303,13 @@ export const MATRIX_CONSOLE_DEFS = [
     console_key: 'xir',
     console_name: 'XIR',
     alternative_names: ['XIR Console', '16" Home Touch'],
-    start_year: 2018,
+    start_year: 2016,
     end_year: null,
-    start_year_approximate: true,
+    start_year_approximate: false,
     is_current: true,
     display_order: 220,
     confidence: 'high',
-    image_url: null,
+    image_url: XIR_IMG,
     source_url: 'https://matrixhomefitness.com/blogs/blog/how-to-pick-the-perfect-console',
     notes: 'HOME ONLY — 16" home touchscreen. Not commercial Touch.',
     family: 'home',
@@ -312,15 +318,15 @@ export const MATRIX_CONSOLE_DEFS = [
     console_key: 'xur',
     console_name: 'XUR',
     alternative_names: ['XUR Console', '22" Home Touch'],
-    start_year: 2019,
+    start_year: 2016,
     end_year: null,
-    start_year_approximate: true,
+    start_year_approximate: false,
     is_current: true,
     display_order: 230,
     confidence: 'high',
     image_url: null,
     source_url: 'https://matrixhomefitness.com/blogs/blog/how-to-pick-the-perfect-console',
-    notes: 'HOME ONLY — 22" home touchscreen. Not commercial Touch XL.',
+    notes: 'HOME ONLY — 22" home touchscreen. Not commercial Touch XL. Not auto-mapped to selectable home products.',
     family: 'home',
   },
 ]
@@ -355,6 +361,14 @@ const MODULAR_SOURCE =
 
 const ONYX_CONSOLE_SOURCE =
   'https://www.manualslib.com/guide/4242108/matrix-onyx-fitness-console-user-manual.html'
+
+const HOME_CONSOLE_SOURCE =
+  'https://matrixhomefitness.com/blogs/blog/how-to-pick-the-perfect-console'
+
+const MATRIX_HOME_ENTRY_BASES = Object.freeze(['T30', 'TF30', 'E30', 'A30', 'U30', 'R30'])
+const MATRIX_HOME_PREMIUM_FULL_BASES = Object.freeze(['T50', 'TF50', 'E50', 'A50', 'U50', 'R50'])
+const MATRIX_HOME_PREMIUM_NO_XR_BASES = Object.freeze(['T75', 'C50'])
+const MATRIX_HOME_FIXED_BASES = Object.freeze(['ICR50', 'CXR50'])
 
 const LETTER_META = {
   T: { label: 'Treadmill', equipment_type: 'Treadmill', key: (base) => `matrix-fitness-treadmill-${base.toLowerCase()}-treadmill` },
@@ -451,6 +465,11 @@ function factoryMapping(consoleKey, {
   notes,
   display_order = 10,
   is_default = false,
+  compatibility_type = 'factory',
+  available_from_year = null,
+  available_to_year = undefined,
+  from_year_approximate = null,
+  to_year_approximate = null,
 } = {}) {
   const years = CONSOLE_YEAR_BY_KEY[consoleKey] ?? {
     from: 2008,
@@ -461,11 +480,11 @@ function factoryMapping(consoleKey, {
   const modifier = getMatrixConsoleModifier(consoleKey)
   return {
     console_key: consoleKey,
-    compatibility_type: 'factory',
-    available_from_year: years.from,
-    available_to_year: years.to,
-    from_year_approximate: years.fromApprox,
-    to_year_approximate: years.toApprox,
+    compatibility_type,
+    available_from_year: available_from_year ?? years.from,
+    available_to_year: available_to_year === undefined ? years.to : available_to_year,
+    from_year_approximate: from_year_approximate ?? years.fromApprox,
+    to_year_approximate: to_year_approximate ?? years.toApprox,
     is_default,
     display_order,
     tier: modifier?.tier ?? 'base',
@@ -529,6 +548,7 @@ export function isMatrixOnyxProduct(product) {
 
 export function isMatrixModernModularProduct(product) {
   if (isMatrixOnyxProduct(product)) return false
+  if (parseMatrixHomeIdentity(product)) return false
   if (parseMatrixDigitIdentity(product)) return false
   const family = normalizeText(product?.product_family).toLowerCase()
   return (
@@ -536,6 +556,241 @@ export function isMatrixModernModularProduct(product) {
     || family.includes('endurance')
     || family.includes('performance')
   )
+}
+
+function matchMatrixHomeToken(hay, token) {
+  const escaped = String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?:^|[^A-Za-z0-9])${escaped}(?:[^A-Za-z0-9]|$)`, 'i').test(hay)
+}
+
+function matrixHomeHaystack(product = {}) {
+  return [
+    product.model,
+    product.product_family,
+    product.canonical_product_name,
+    product.canonical_product_key,
+  ].map(normalizeText).filter(Boolean).join(' ')
+}
+
+export function isMatrixCommercialSeriesProduct(product = {}) {
+  const hay = matrixHomeHaystack(product).toLowerCase()
+  return (
+    /\blifestyle\b/.test(hay)
+    || /\bendurance\b/.test(hay)
+    || /\bperformance\b/.test(hay)
+    || /\bonyx\b/.test(hay)
+  )
+}
+
+/**
+ * Classify Matrix Home catalogue products for XR/XER/XIR timeline mapping.
+ * Must not collide with commercial digit bases (T3) or modern commercial series.
+ *
+ * @returns {{ kind: 'entry'|'premium_full'|'premium_no_xr'|'fixed'|'rower'|'strength', base: string } | null}
+ */
+export function parseMatrixHomeIdentity(product = {}) {
+  const brandKey = String(product?.brand ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  if (brandKey && brandKey !== 'matrix' && brandKey !== 'matrixfitness') return null
+  if (isMatrixOnyxProduct(product)) return null
+  if (isMatrixCommercialSeriesProduct(product)) return null
+
+  const hay = matrixHomeHaystack(product)
+  if (!hay) return null
+  const lower = hay.toLowerCase()
+
+  if (
+    /\bhome\s+functional\s+trainer\b/i.test(hay)
+    || (/\bfunctional\s+trainer\b/i.test(hay) && /\bhome\s+strength\b/i.test(hay))
+    || (
+      /\bfunctional\s+trainer\b/i.test(hay)
+      && /\bhome\b/i.test(lower)
+      && !/\bg3\b|\baura\b|\bmulti\s+stations?\b/i.test(hay)
+    )
+  ) {
+    return { kind: 'strength', base: 'Home Functional Trainer' }
+  }
+
+  if (
+    /\bhome\s+rower\b/i.test(hay)
+    || (
+      /\brower\b/i.test(hay)
+      && /\bhome\b/i.test(lower)
+      && !matchMatrixHomeToken(hay, 'R30')
+      && !matchMatrixHomeToken(hay, 'R50')
+    )
+  ) {
+    return { kind: 'rower', base: 'Matrix Home Rower' }
+  }
+
+  // Longer tokens first (TF50 before T50, ICR50 before C50, etc.)
+  const orderedBases = [
+    ...MATRIX_HOME_FIXED_BASES,
+    'TF50', 'TF30', 'T75', 'T50', 'T30',
+    'E50', 'E30', 'A50', 'A30', 'U50', 'U30', 'R50', 'R30', 'C50',
+  ]
+
+  for (const base of orderedBases) {
+    if (!matchMatrixHomeToken(hay, base)) continue
+    if (MATRIX_HOME_FIXED_BASES.includes(base)) {
+      return { kind: 'fixed', base }
+    }
+    if (MATRIX_HOME_ENTRY_BASES.includes(base)) {
+      return { kind: 'entry', base }
+    }
+    if (MATRIX_HOME_PREMIUM_FULL_BASES.includes(base)) {
+      return { kind: 'premium_full', base }
+    }
+    if (MATRIX_HOME_PREMIUM_NO_XR_BASES.includes(base)) {
+      return { kind: 'premium_no_xr', base }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Home console mappings from 2016 onwards.
+ * Entry: XR + XER. Premium full: XR + XER + XIR. Premium no XR: XER + XIR.
+ */
+export function buildMatrixHomeConsoleMappings(identityOrBase) {
+  const kind = typeof identityOrBase === 'string'
+    ? null
+    : identityOrBase?.kind
+  const base = typeof identityOrBase === 'string'
+    ? identityOrBase
+    : identityOrBase?.base
+
+  let resolvedKind = kind
+  if (!resolvedKind && base) {
+    if (MATRIX_HOME_ENTRY_BASES.includes(base)) resolvedKind = 'entry'
+    else if (MATRIX_HOME_PREMIUM_FULL_BASES.includes(base)) resolvedKind = 'premium_full'
+    else if (MATRIX_HOME_PREMIUM_NO_XR_BASES.includes(base)) resolvedKind = 'premium_no_xr'
+  }
+
+  if (!resolvedKind || resolvedKind === 'fixed' || resolvedKind === 'rower' || resolvedKind === 'strength') {
+    return []
+  }
+
+  const label = base || 'Matrix home'
+  const rows = []
+
+  if (resolvedKind === 'entry' || resolvedKind === 'premium_full') {
+    rows.push(factoryMapping('xr', {
+      compatibility_type: 'factory',
+      available_from_year: 2016,
+      available_to_year: null,
+      from_year_approximate: false,
+      to_year_approximate: false,
+      is_default: true,
+      display_order: 10,
+      source_url: HOME_CONSOLE_SOURCE,
+      notes: `Home XR factory console on Matrix ${label} from 2016.`,
+    }))
+    rows.push(factoryMapping('xer', {
+      compatibility_type: 'optional',
+      available_from_year: 2016,
+      available_to_year: null,
+      from_year_approximate: false,
+      to_year_approximate: false,
+      display_order: 20,
+      source_url: HOME_CONSOLE_SOURCE,
+      notes: `Home XER optional console on Matrix ${label} from 2016.`,
+    }))
+  }
+
+  if (resolvedKind === 'premium_full') {
+    rows.push(factoryMapping('xir', {
+      compatibility_type: 'optional',
+      available_from_year: 2016,
+      available_to_year: null,
+      from_year_approximate: false,
+      to_year_approximate: false,
+      display_order: 30,
+      source_url: HOME_CONSOLE_SOURCE,
+      notes: `Home XIR optional console on Matrix ${label} from 2016.`,
+    }))
+  }
+
+  if (resolvedKind === 'premium_no_xr') {
+    rows.push(factoryMapping('xer', {
+      compatibility_type: 'factory',
+      available_from_year: 2016,
+      available_to_year: null,
+      from_year_approximate: false,
+      to_year_approximate: false,
+      is_default: true,
+      display_order: 10,
+      source_url: HOME_CONSOLE_SOURCE,
+      notes: `Home XER factory console on Matrix ${label} from 2016 (no XR).`,
+    }))
+    rows.push(factoryMapping('xir', {
+      compatibility_type: 'optional',
+      available_from_year: 2016,
+      available_to_year: null,
+      from_year_approximate: false,
+      to_year_approximate: false,
+      display_order: 20,
+      source_url: HOME_CONSOLE_SOURCE,
+      notes: `Home XIR optional console on Matrix ${label} from 2016.`,
+    }))
+  }
+
+  return rows
+}
+
+/**
+ * Discover Matrix home products and build compat + skip report.
+ */
+export function buildMatrixHomeConsolePlan(products = []) {
+  const byKey = {}
+  const mapped = []
+  const skipped = []
+
+  for (const product of products ?? []) {
+    const key = product?.canonical_product_key
+    if (!key) continue
+    if (String(product.status).toLowerCase() === 'excluded') continue
+
+    const identity = parseMatrixHomeIdentity(product)
+    if (!identity) continue
+
+    if (identity.kind === 'entry' || identity.kind === 'premium_full' || identity.kind === 'premium_no_xr') {
+      const mappings = buildMatrixHomeConsoleMappings(identity)
+      byKey[key] = mappings
+      mapped.push({
+        key,
+        name: product.canonical_product_name,
+        base: identity.base,
+        kind: identity.kind,
+        mapping_count: mappings.length,
+        console_keys: mappings.map((row) => row.console_key),
+      })
+      continue
+    }
+
+    skipped.push({
+      key,
+      name: product.canonical_product_name,
+      base: identity.base,
+      kind: identity.kind,
+      reason: identity.kind === 'strength'
+        ? 'Strength / Home Functional Trainer — no console'
+        : identity.kind === 'rower'
+          ? 'Matrix Home Rower — fixed console; no selector'
+          : 'Fixed / non-interchangeable console — no selector; base valuation',
+    })
+  }
+
+  return {
+    byKey,
+    mapped,
+    skipped,
+    summary: {
+      mapped_product_count: mapped.length,
+      skipped_product_count: skipped.length,
+      mapping_row_count: Object.values(byKey).reduce((n, rows) => n + rows.length, 0),
+    },
+  }
 }
 
 function matrixEquipmentSupportsTouchXl(product) {
@@ -706,6 +961,10 @@ export function buildMatrixBaseConsolidationPlan(products = []) {
 
   for (const product of products) {
     if (String(product.status).toLowerCase() === 'excluded') continue
+    if (parseMatrixHomeIdentity(product)) {
+      skipped.push({ product, reason: 'matrix_home_range' })
+      continue
+    }
     if (isExcludedSpecialty(product)) {
       skipped.push({ product, reason: 'specialty_unmapped' })
       continue
@@ -772,6 +1031,7 @@ export function buildMatrixBaseConsolidationPlan(products = []) {
 
 /**
  * Build product_key → console mappings for Matrix cardio products.
+ * Home: XR / XER / XIR from 2016 (never on commercial).
  * Digit bases: historic year-filtered factory options.
  * Modern series: modular LED / Premium LED / Touch (/ Touch XL where supported).
  * Onyx: fixed Onyx 32"/22" touchscreen only.
@@ -783,6 +1043,13 @@ export function buildMatrixCompatByProductKey(products) {
     const key = product.canonical_product_key
     if (!key) continue
     if (isExcludedSpecialty(product)) continue
+
+    const homeIdentity = parseMatrixHomeIdentity(product)
+    if (homeIdentity) {
+      const homeMappings = buildMatrixHomeConsoleMappings(homeIdentity)
+      if (homeMappings.length) byKey[key] = homeMappings
+      continue
+    }
 
     if (isMatrixOnyxProduct(product)) {
       byKey[key] = buildMatrixOnyxFixedConsoleMappings(product)

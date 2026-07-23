@@ -39,6 +39,48 @@ const IMPORTS = [
     console_key: 'pts',
     dest_basename: 'pts.png',
   },
+  {
+    filename: 'go console.jpg',
+    brand: 'Life Fitness',
+    console_key: 'go',
+    dest_basename: 'go.jpg',
+  },
+  {
+    filename: 'track console.jpg',
+    brand: 'Life Fitness',
+    console_key: 'track',
+    dest_basename: 'track.jpg',
+  },
+  {
+    filename: 'track connect console.png',
+    brand: 'Life Fitness',
+    console_key: 'track_connect',
+    dest_basename: 'track-connect.png',
+  },
+  {
+    filename: 'track connect console 2.0.png',
+    brand: 'Life Fitness',
+    console_key: 'track_connect_2',
+    dest_basename: 'track-connect-2.png',
+  },
+  {
+    filename: 'xr console.jpg',
+    brand: 'Matrix Fitness',
+    console_key: 'xr',
+    dest_basename: 'xr.jpg',
+  },
+  {
+    filename: 'XER console.jpg',
+    brand: 'Matrix Fitness',
+    console_key: 'xer',
+    dest_basename: 'xer.jpg',
+  },
+  {
+    filename: 'XIR console.jpg',
+    brand: 'Matrix Fitness',
+    console_key: 'xir',
+    dest_basename: 'xir.jpg',
+  },
 ]
 
 function loadEnv() {

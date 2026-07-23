@@ -67,6 +67,39 @@
   font-size: 0.8125rem;
 }
 
+.admin-intelligence-import__changes {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.admin-intelligence-import__change-warn {
+  color: color-mix(in srgb, #a15c00 85%, #000);
+}
+
+.admin-intelligence-import__action {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.admin-intelligence-import__action--create {
+  color: color-mix(in srgb, #0a7a3e 90%, #000);
+}
+
+.admin-intelligence-import__action--update {
+  color: color-mix(in srgb, var(--color-primary) 90%, #000);
+}
+
+.admin-intelligence-import__action--unchanged {
+  color: var(--color-muted, #667);
+}
+
+.admin-intelligence-import__action--fail {
+  color: var(--color-danger);
+}
+
 .admin-intelligence-import__table tr[data-invalid='true'] {
   background: color-mix(in srgb, var(--color-danger) 5%, #fff);
 }

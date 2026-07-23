@@ -145,8 +145,8 @@ function buildDesiredRows() {
     { brand: 'Matrix', console_key: 'touch', console_name: 'Touch', console_tier: 'mid', modifier_type: 'percentage', modifier_value: 15, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias' },
     { brand: 'Matrix', console_key: 'touch_xl', console_name: 'Touch XL', console_tier: 'premium', modifier_type: 'percentage', modifier_value: 25, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias' },
     { brand: 'Matrix', console_key: 'xr', console_name: 'XR', console_tier: 'base', modifier_type: 'percentage', modifier_value: 0, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias' },
-    { brand: 'Matrix', console_key: 'xer', console_name: 'XER', console_tier: 'mid', modifier_type: 'percentage', modifier_value: 15, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias' },
-    { brand: 'Matrix', console_key: 'xir', console_name: 'XIR', console_tier: 'premium', modifier_type: 'percentage', modifier_value: 25, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias' },
+    { brand: 'Matrix', console_key: 'xer', console_name: 'XER', console_tier: 'mid', modifier_type: 'percentage', modifier_value: 8, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias — home XER' },
+    { brand: 'Matrix', console_key: 'xir', console_name: 'XIR', console_tier: 'premium', modifier_type: 'percentage', modifier_value: 15, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias — home XIR' },
     { brand: 'Matrix', console_key: 'xur', console_name: 'XUR', console_tier: 'premium', modifier_type: 'percentage', modifier_value: 25, confidence: 95, source: 'hierarchy_research_2026_07', notes: 'Matrix brand alias' },
   )
 

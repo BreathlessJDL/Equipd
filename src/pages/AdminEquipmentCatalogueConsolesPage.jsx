@@ -8,6 +8,10 @@ import {
   fetchProductConsoleCompatAdmin,
   upsertEquipmentConsole,
 } from '../lib/equipmentConsoleAdmin'
+import {
+  resolveEquipmentConsoleImageUrl,
+  validateEquipmentConsoleImagePath,
+} from '../lib/equipmentConsoleImages'
 import { fetchEquipmentProducts } from '../lib/equipmentProducts'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './AdminIntelligencePage.css'
@@ -90,6 +94,13 @@ function AdminEquipmentCatalogueConsolesPage() {
     [products, compatRows, brand],
   )
 
+  const imagePathValidation = useMemo(
+    () => validateEquipmentConsoleImagePath(form.image_url),
+    [form.image_url],
+  )
+  const previewImageUrl = imagePathValidation.resolvedUrl
+    || resolveEquipmentConsoleImageUrl(form.image_url)
+
   const filteredCompat = useMemo(() => {
     if (attentionFilter === 'low') {
       return compatRows.filter((row) => row.confidence === 'low')
@@ -104,8 +115,18 @@ function AdminEquipmentCatalogueConsolesPage() {
     event.preventDefault()
     setSaving(true)
     setMessage('')
+    setError('')
+
+    const validation = validateEquipmentConsoleImagePath(form.image_url)
+    if (!validation.ok) {
+      setSaving(false)
+      setError(validation.error)
+      return
+    }
+
     const payload = {
       ...form,
+      image_url: validation.resolvedUrl || (form.image_url ? String(form.image_url).trim() : ''),
       start_year: form.start_year === '' ? null : Number(form.start_year),
       end_year: form.end_year === '' ? null : Number(form.end_year),
       display_order: Number(form.display_order ?? 0),
@@ -189,11 +210,17 @@ function AdminEquipmentCatalogueConsolesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {consoles.map((row) => (
+                    {consoles.map((row) => {
+                      const thumbUrl = resolveEquipmentConsoleImageUrl(row)
+                      return (
                       <tr key={row.id}>
                         <td>
-                          {row.image_url ? (
-                            <img src={row.image_url} alt="" className="admin-consoles__thumb" />
+                          {thumbUrl ? (
+                            <img
+                              src={thumbUrl}
+                              alt=""
+                              className="admin-consoles__thumb"
+                            />
                           ) : (
                             <span className="admin-consoles__muted">—</span>
                           )}
@@ -209,7 +236,8 @@ function AdminEquipmentCatalogueConsolesPage() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -275,8 +303,21 @@ function AdminEquipmentCatalogueConsolesPage() {
                 <input
                   value={form.image_url}
                   onChange={(event) => setForm((prev) => ({ ...prev, image_url: event.target.value }))}
+                  placeholder="/equipment-console-images/{brand}/normalized/{filename}"
                 />
               </label>
+              {form.image_url ? (
+                <div className="admin-consoles__image-preview">
+                  {imagePathValidation.ok && previewImageUrl ? (
+                    <img src={previewImageUrl} alt="" className="admin-consoles__thumb" />
+                  ) : null}
+                  {imagePathValidation.error ? (
+                    <p className="admin-consoles__image-error">{imagePathValidation.error}</p>
+                  ) : previewImageUrl ? (
+                    <p className="admin-consoles__muted"><code>{previewImageUrl}</code></p>
+                  ) : null}
+                </div>
+              ) : null}
               <label className="admin-consoles__form-wide">
                 Source URL
                 <input

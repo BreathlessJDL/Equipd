@@ -253,10 +253,30 @@ Do NOT force every overview to be unique. Products in the same family should sha
 
 ## Usage segment (critical)
 
-Check source payload field usage_segment:
+Check source payload field usage_segment. Use ONLY the rules for that segment:
 
-- commercial: commercial / club equipment wording is allowed when supported by identity.
-- home_use: this is consumer / home connected fitness equipment. Do NOT claim commercial construction, commercial gym use, gym-floor suitability, continuous club use, selectorised commercial mechanics, heavy-duty commercial frames, or commercial servicing expectations unless that exact wording is present in source data (it normally will not be). Describe home fitness / connected fitness positioning accurately from known identity only.
+### commercial
+Commercial / club equipment wording is allowed when supported by identity.
+Acceptable: designed for commercial use, suitable for commercial gyms, built for busy fitness facilities, ideal for health clubs (when identity supports it).
+Never describe commercial catalogue products as home treadmills / home bikes / home gym consumer products.
+
+### home
+This is mainstream home fitness equipment.
+Allowed: designed for home use, built for home fitness, ideal for home gyms, popular with home users, suitable for regular home training, compact footprint, folding design, home workout.
+NEVER mention: commercial, health club, fitness facility, busy gym, high-traffic, commercial gym, commercial facility.
+
+### premium_home
+Premium / connected home fitness (e.g. Peloton, NordicTrack, BowFlex).
+Same bans as home. Prefer connected home fitness / home training identity. Do not invent apps, subscriptions, or screen specs.
+
+### strength
+Remain neutral on venue.
+Describe construction, training style, adjustability, attachments and exercise capability from known identity only.
+Do not repeatedly push home or commercial facility claims unless genuinely required by brand identity — and never invent them.
+
+### light_commercial
+Allowed: home or light commercial use, studio use, PT studio, small fitness facility.
+Never exaggerate into full high-traffic commercial club use unless source identity clearly supports it.
 
 ## Overview structure
 
@@ -282,7 +302,7 @@ Selectorised / plate-loaded / functional / benches / racks / accessories:
 - Completeness only if supported by source data
 - NEVER mention console configuration or consoles
 
-Home-use cardio (usage_segment = home_use):
+Home / premium_home cardio:
 - Manufacture year, condition, model identity
 - Connected fitness / subscription features only if present in source data
 - Never invent Peloton App, iFIT, or screen specifications
@@ -306,21 +326,34 @@ Acceptable natural language (commercial segment):
 - manufactured from around 2012
 - designed for commercial fitness facilities
 
-Acceptable natural language (home_use segment):
+Acceptable natural language (home / premium_home):
 - home treadmill, home exercise bike, connected home fitness equipment
+- designed for home use, built for home fitness, ideal for home gyms
 - manufactured from around 2014
-- popular home connected fitness model (only if identity supports it — do not invent popularity claims beyond model identity)
+- compact footprint / folding design only when identity supports it (do not invent)
+
+Acceptable natural language (light_commercial):
+- suitable for home or light commercial use
+- PT studio / small fitness facility use when identity supports it
+
+Acceptable natural language (strength):
+- selectorised strength machine, plate-loaded press, adjustable bench
+- manufactured from around 2015
+- avoid venue hype unless brand identity clearly requires it
 
 ## Desired tone examples
 
-Selectorised (commercial):
-"The Technogym Element Chest Press is a commercial selectorised strength machine from the Element range, manufactured from around 2012. It was developed for chest-focused strength training and formed part of Technogym’s wider Element circuit. Its estimated original RRP was approximately £4,995. The manufacture year, exact model and overall condition are the main factors affecting its current used market value."
+Selectorised (commercial / strength):
+"The Technogym Element Chest Press is a selectorised strength machine from the Element range, manufactured from around 2012. It was developed for chest-focused strength training and formed part of Technogym’s wider Element circuit. Its estimated original RRP was approximately £4,995. The manufacture year, exact model and overall condition are the main factors affecting its current used market value."
 
 Cardio with consoles (commercial):
 "The Life Fitness Integrity Series Treadmill is a premium commercial treadmill manufactured from around 2017. It forms part of the Integrity cardio range and was available with several console configurations, including Integrity SL, Integrity C, ST, Discover SE3 HD and Discover SE4. The estimated original RRP was approximately £20,100. Manufacture year, condition and console configuration can all significantly affect its current used value."
 
-Home bike (home_use):
+Home bike (home / premium_home):
 "The Peloton Bike is a home indoor exercise bike manufactured from around 2014. It is a connected home fitness product identified by its Bike model line. Its estimated original RRP was approximately £1,500. Manufacture year and overall condition are the main factors affecting its current used market value."
+
+Home treadmill (home):
+"The Sole F85 is a home treadmill from the F Series, built for regular home training. It is designed for home use and popular with home gym users. Manufacture year and overall condition are the main factors affecting its current used market value."
 
 ## seo_title (max 60 characters)
 
@@ -344,25 +377,55 @@ Respond with JSON only:
   "faqs": [{ "question": "string", "answer": "string" }]
 }`
 
-const HOME_USE_CONTENT_RULES = `## Home-use segment rules (mandatory)
+const HOME_SEGMENT_CONTENT_RULES = `## Home / premium_home segment rules (mandatory)
 
-usage_segment is home_use.
+usage_segment is home or premium_home.
 
-Do NOT claim:
-- commercial construction
-- commercial gym use / club use
+Allowed phrases:
+- designed for home use
+- built for home fitness
+- ideal for home gyms
+- popular with home users
+- suitable for regular home training
+- compact footprint
+- folding design
+- home workout
+
+Do NOT claim or mention:
+- commercial / commercial use / commercial gym / commercial facility
+- health club
+- fitness facility / busy fitness facilities
+- busy gym
+- high-traffic / high traffic
 - gym-floor suitability
-- selectorised commercial strength mechanics (unless equipment_type truly is selectorised strength)
 - heavy-duty commercial frames
 - commercial servicing expectations
-- continuous high-traffic club use
 
 Do describe:
 - home fitness equipment identity from brand/model/type
-- connected fitness only when source data supports it
+- connected fitness only when source data supports it (premium_home)
 - valuation factors from known year / RRP / condition context only
 
 Never invent subscription plans, screen sizes, incline ranges, resistance specs, or apps.`
+
+const LIGHT_COMMERCIAL_CONTENT_RULES = `## Light commercial segment rules (mandatory)
+
+usage_segment is light_commercial.
+
+Allowed:
+- home or light commercial use
+- studio use / PT studio
+- small fitness facility
+
+Do NOT exaggerate into full commercial club / high-traffic health-club wording unless source identity clearly supports it.`
+
+const STRENGTH_SEGMENT_CONTENT_RULES = `## Strength segment rules (mandatory)
+
+usage_segment is strength.
+
+Remain venue-neutral.
+Focus on construction, training style, adjustability, attachments and exercise capability from known identity.
+Do not repeatedly mention home or commercial facilities unless the brand identity makes that essential — and never invent venue claims.`
 
 const CATEGORY_OVERVIEW_GUIDANCE = {
   [PRODUCT_CONTENT_CATEGORIES.CARDIO]: `## Category: Cardio
@@ -371,12 +434,12 @@ Write a concise cardio overview (preferred 70–120 words; max 140).
 
 - Identify brand, model, family/series, and cardio type from equipment_type exactly.
 - Ground identity in the provided fields: brand, product_family, model, equipment_type, usage_segment.
-- If equipment_type is an indoor bike / exercise bike / studio cycle / indoor cycle: describe it as a home indoor cycling bike when usage_segment is home_use. Do NOT describe bikes as strength equipment, selectorised machines, weight-stack products, cable machines, multi-gyms, cross trainers, or treadmills.
+- If equipment_type is an indoor bike / exercise bike / studio cycle / indoor cycle: describe it as a home indoor cycling bike when usage_segment is home or premium_home. Do NOT describe bikes as strength equipment, selectorised machines, weight-stack products, cable machines, multi-gyms, cross trainers, or treadmills.
 - If equipment_type is a treadmill: do not describe it as a bike, rower, or strength machine.
 - If equipment_type is a rower / rowing machine: do not describe it as a treadmill, bike, or cross trainer.
 - If equipment_type is a cross trainer / elliptical: do not describe it as a cable crossover or strength crossover.
 - If equipment_type is a stepper / stair climber / climber: describe it as cardio stair / step equipment. Do NOT describe steppers as selectorised strength, pin-loaded, plate-loaded, weight-stack or strength-station machines.
-- Respect usage_segment for commercial vs home wording.
+- Respect usage_segment for commercial vs home vs light-commercial wording.
 - Use "manufactured from around {year}" when a year is known.
 - List console names only if console_options is non-empty in source.
 - Mention estimated original RRP if present. If original_base_price is null, do not invent an RRP.
@@ -393,7 +456,7 @@ Write a concise selectorised strength overview (preferred 70–120 words; max 14
 - Mention estimated original RRP if present.
 - Used-value factors: manufacture year, exact model/series, overall condition. Never mention consoles.
 - Reuse family wording across Element / similar ranges — only the movement name changes.
-- Only use commercial facility wording when usage_segment is commercial.`,
+- Respect usage_segment: only use commercial facility wording when usage_segment is commercial; stay neutral for strength; never use commercial gym claims for home / premium_home.`,
 
   [PRODUCT_CONTENT_CATEGORIES.PLATE_LOADED]: `## Category: Plate-loaded strength
 
@@ -403,7 +466,7 @@ Write a concise plate-loaded overview (preferred 70–120 words; max 140).
 - Manufacture year and RRP if known.
 - Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.
 - Do not invent plate capacities or frame specs.
-- Only use commercial facility wording when usage_segment is commercial.`,
+- Respect usage_segment venue rules.`,
 
   [PRODUCT_CONTENT_CATEGORIES.FUNCTIONAL]: `## Category: Functional / cable equipment
 
@@ -413,7 +476,7 @@ Write a concise functional/cable overview (preferred 70–120 words; max 140).
 - Manufacture year and RRP if known.
 - Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.
 - Do not invent pulley layouts or attachments.
-- Only use commercial facility wording when usage_segment is commercial.`,
+- Respect usage_segment venue rules.`,
 
   [PRODUCT_CONTENT_CATEGORIES.BENCHES_RACKS]: `## Category: Benches, racks and accessories
 
@@ -422,7 +485,7 @@ Write a concise free-weight area overview (preferred 70–120 words; max 140).
 - Identify brand, model, family, bench/rack/accessory positioning.
 - Manufacture year and RRP if known.
 - Used-value factors: manufacture year, exact model/series, condition. Never mention consoles.
-- Only use commercial facility wording when usage_segment is commercial.`,
+- Respect usage_segment venue rules.`,
 }
 
 export function buildProductContentSystemPrompt(category, { sourcePayload = null } = {}) {
@@ -439,8 +502,16 @@ export function buildProductContentSystemPrompt(category, { sourcePayload = null
     CATEGORY_OVERVIEW_GUIDANCE[resolvedCategory],
   ]
 
-  if (usageSegment === CONTENT_USAGE_SEGMENT.HOME_USE) {
-    parts.push('', HOME_USE_CONTENT_RULES)
+  if (
+    usageSegment === CONTENT_USAGE_SEGMENT.HOME
+    || usageSegment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME
+    || usageSegment === 'home_use'
+  ) {
+    parts.push('', HOME_SEGMENT_CONTENT_RULES)
+  } else if (usageSegment === CONTENT_USAGE_SEGMENT.LIGHT_COMMERCIAL) {
+    parts.push('', LIGHT_COMMERCIAL_CONTENT_RULES)
+  } else if (usageSegment === CONTENT_USAGE_SEGMENT.STRENGTH) {
+    parts.push('', STRENGTH_SEGMENT_CONTENT_RULES)
   }
 
   if (isTechnogymCrossoverCardioProduct(sourcePayload ?? {})) {

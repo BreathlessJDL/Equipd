@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import EquipmentCatalogueNav from '../components/admin/EquipmentCatalogueNav.jsx'
+import BulkImageApprovalModal from '../components/admin/BulkImageApprovalModal.jsx'
+import ProductImageSearchConfirmModal from '../components/admin/ProductImageSearchConfirmModal.jsx'
+import ProductImageSearchJobPanel from '../components/admin/ProductImageSearchJobPanel.jsx'
 import { getAdminErrorMessage } from '../lib/admin'
 import {
   CATALOGUE_ATTENTION,
@@ -15,9 +18,10 @@ import {
   approveEquipmentProductImage,
   buildEquipmentProductImageUpdateFields,
   buildEquipmentProductPagePath,
-  bulkApproveEquipmentProducts,
+  bulkApproveEquipmentProductImages,
   bulkApproveHighConfidenceProducts,
   bulkExcludeEquipmentProducts,
+  bulkRejectEquipmentProductImages,
   bulkRejectBlockedEquipmentProductImages,
   evaluateHighConfidenceApprovalCandidates,
   excludeEquipmentProduct,
@@ -26,12 +30,14 @@ import {
   productHasBaselineYear,
   productHasRrp,
   PRODUCT_STATUS,
+  previewBulkEquipmentProductImageApproval,
   rejectEquipmentProductImage,
   replaceEquipmentProductImage,
   suggestEquipmentProductImageFromSearch,
   updateEquipmentProduct,
   uploadAndReplaceEquipmentProductImageFile,
 } from '../lib/equipmentProducts.js'
+import { getEquipmentProductDisplayName } from '../lib/equipmentValuation.js'
 import {
   applyEquipmentProductListQueryPatch,
   buildContentStatusMapFromListRows,
@@ -48,6 +54,23 @@ import {
   parseEquipmentProductListQueryParams,
 } from '../lib/equipmentProductsAdminList.js'
 import {
+  cancelEquipmentProductImageSearchJob,
+  clearCompletedEquipmentProductImageSearchJobs,
+  createEquipmentProductImageSearchJob,
+  deleteEquipmentProductImageSearchJob,
+  fetchJobItemStatusesForProducts,
+  formatImageSearchSelectionLabel,
+  IMAGE_SEARCH_JOB_MAX_PRODUCTS,
+  IMAGE_SEARCH_SELECTION_MODE,
+  IMAGE_STATUS_FILTER_OPTIONS,
+  listEquipmentProductImageSearchJobs,
+  previewEquipmentProductImageSearchJob,
+  productRowImageSearchLabel,
+  rerunEquipmentProductImageSearchJob,
+  retryEquipmentProductImageSearchJob,
+  runEquipmentProductImageSearchJobStep,
+} from '../lib/equipmentProductImageSearchJobs.js'
+import {
   EQUIPMENT_PRODUCT_IMAGE_STATUS,
   appendEquipmentProductImageCacheBuster,
   buildEquipmentProductImagePublicUrl,
@@ -55,6 +78,9 @@ import {
   productHasDisplayableImage,
   resolveEquipmentProductImageDisplayUrl,
 } from '../lib/equipmentProductImages.js'
+import {
+  isBulkImageApprovalShortcutVisible,
+} from '../lib/equipmentProductImageReview.js'
 import { supabase } from '../lib/supabase.js'
 import {
   assessEquipmentProductImageRisk,
@@ -103,7 +129,7 @@ function ProductImageCell({ product, thumbUrl, onImageAudit }) {
         {thumbUrl ? (
           <img
             src={thumbUrl}
-            alt={product.canonical_product_name}
+            alt={getEquipmentProductDisplayName(product)}
             className="admin-products__image-thumb"
           />
         ) : (
@@ -253,7 +279,7 @@ function ProductSourceRowsModal({
         <header className="admin-products__modal-header">
           <div>
             <h2>Source rows</h2>
-            <p className="admin-products__modal-subtitle">{product.canonical_product_name}</p>
+            <p className="admin-products__modal-subtitle">{getEquipmentProductDisplayName(product)}</p>
           </div>
           <button type="button" className="admin-intelligence__button" onClick={onClose}>Close</button>
         </header>
@@ -368,8 +394,7 @@ function getAdminProductImageThumbUrl(product) {
 
 function productHasPendingImageApproval(product) {
   if (!product) return false
-  return product.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.SUGGESTED
-    && Boolean(product.image_url || product.image_storage_path)
+  return Boolean(product.image_url || product.image_storage_path)
 }
 
 function resolveUpdatedProductFromImageAction(result, fallbackProduct) {
@@ -480,7 +505,7 @@ function ProductImageAuditModal({
         <header className="admin-products__modal-header">
           <div>
             <h2 id="product-image-audit-title">Image audit</h2>
-            <p className="admin-products__modal-subtitle">{product.canonical_product_name}</p>
+            <p className="admin-products__modal-subtitle">{getEquipmentProductDisplayName(product)}</p>
           </div>
           <button type="button" className="admin-intelligence__button" onClick={onClose}>Close</button>
         </header>
@@ -489,7 +514,7 @@ function ProductImageAuditModal({
             {previewImageUrl ? (
               <img
                 src={previewImageUrl}
-                alt={product.canonical_product_name}
+                alt={getEquipmentProductDisplayName(product)}
                 className="admin-products__image-preview"
               />
             ) : (
@@ -722,7 +747,7 @@ function ProductEditModal({
     <div className="admin-products__modal-backdrop" role="presentation" onClick={onClose}>
       <div className="admin-products__modal admin-products__modal--edit" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <header className="admin-products__modal-header">
-          <h2>Edit — {product.canonical_product_name}</h2>
+          <h2>Edit — {getEquipmentProductDisplayName(product)}</h2>
           <button type="button" className="admin-intelligence__button" onClick={onClose}>Close</button>
         </header>
         <div className="equipment-catalogue-quick-filters" style={{ padding: '0 1.25rem' }}>
@@ -939,6 +964,12 @@ function HighConfidenceApproveModal({
 function BulkApprovalSummary({ summary, onDismiss }) {
   if (!summary) return null
 
+  const primaryLabel = summary.excluded != null ? 'Excluded' : 'Approved'
+  const primaryCount = summary.excluded ?? summary.approved ?? 0
+  const failureMessage = summary.excluded != null
+    ? `${summary.failures.length} product(s) could not be excluded. Check admin permissions or product state.`
+    : `${summary.failures.length} product(s) could not be approved. Check admin permissions or product state.`
+
   return (
     <div className="admin-products__approval-summary" role="status">
       <div className="admin-products__approval-summary-header">
@@ -946,9 +977,13 @@ function BulkApprovalSummary({ summary, onDismiss }) {
         <button type="button" className="admin-intelligence__button" onClick={onDismiss}>Dismiss</button>
       </div>
       <p>
-        Approved <strong>{summary.approved}</strong>
-        {' · '}
-        Skipped <strong>{summary.skipped}</strong>
+        {primaryLabel} <strong>{primaryCount}</strong>
+        {summary.skipped > 0 ? (
+          <>
+            {' · '}
+            Skipped <strong>{summary.skipped}</strong>
+          </>
+        ) : null}
         {summary.failures?.length ? (
           <>
             {' · '}
@@ -958,7 +993,7 @@ function BulkApprovalSummary({ summary, onDismiss }) {
       </p>
       {summary.failures?.length ? (
         <p className="admin-products__confirm-warning">
-          {summary.failures.length} product(s) could not be approved. Check admin permissions or product state.
+          {failureMessage}
         </p>
       ) : null}
       {summary.skippedReasons?.length ? (
@@ -995,6 +1030,11 @@ export default function AdminIntelligenceProductsPage() {
     equipmentType: equipmentTypeFilter,
     completion: completionFilter,
     attention: attentionFilter,
+    imageFilter: imageFilterValue,
+    imageSearchJobId,
+    imageSourceDomain,
+    minImageConfidence,
+    minCandidateScore,
     sort,
     sortDir,
   } = listQuery
@@ -1012,6 +1052,7 @@ export default function AdminIntelligenceProductsPage() {
   const [searchInput, setSearchInput] = useState(() => listQuery.search)
   const pendingSearchWriteRef = useRef(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [selectionMode, setSelectionMode] = useState(IMAGE_SEARCH_SELECTION_MODE.PAGE)
   const [selectedProductId, setSelectedProductId] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
   const [editProduct, setEditProduct] = useState(null)
@@ -1027,11 +1068,26 @@ export default function AdminIntelligenceProductsPage() {
   const [highConfidencePreview, setHighConfidencePreview] = useState(null)
   const [highConfidenceLoading, setHighConfidenceLoading] = useState(false)
   const [approvalSummary, setApprovalSummary] = useState(null)
+  const [bulkImageApprovalOpen, setBulkImageApprovalOpen] = useState(false)
+  const [bulkImageApprovalPreview, setBulkImageApprovalPreview] = useState(null)
+  const [bulkImageApprovalBusy, setBulkImageApprovalBusy] = useState(false)
+  const [bulkImageApprovalTruncated, setBulkImageApprovalTruncated] = useState(false)
+  const [bulkImageApprovalMode, setBulkImageApprovalMode] = useState(IMAGE_SEARCH_SELECTION_MODE.PAGE)
   const [completionExporting, setCompletionExporting] = useState(false)
   const [researchExportOpen, setResearchExportOpen] = useState(false)
   const [researchImportOpen, setResearchImportOpen] = useState(false)
   const [openActionsMenuId, setOpenActionsMenuId] = useState(null)
   const [imageActionMessage, setImageActionMessage] = useState('')
+  const [imageSearchModalOpen, setImageSearchModalOpen] = useState(false)
+  const [imageSearchPreview, setImageSearchPreview] = useState(null)
+  const [imageSearchIncludeApproved, setImageSearchIncludeApproved] = useState(false)
+  const [imageSearchBusy, setImageSearchBusy] = useState(false)
+  const [imageSearchJobs, setImageSearchJobs] = useState([])
+  const [imageSearchActiveJobs, setImageSearchActiveJobs] = useState([])
+  const [imageSearchCompletedJobs, setImageSearchCompletedJobs] = useState([])
+  const [activeImageSearchJobId, setActiveImageSearchJobId] = useState(null)
+  const [jobItemStatusByProductId, setJobItemStatusByProductId] = useState(() => new Map())
+  const imageSearchWorkerRef = useRef(false)
 
   const updateListQuery = useCallback((patch, options = {}) => {
     setSearchParams((previous) => (
@@ -1058,18 +1114,24 @@ export default function AdminIntelligenceProductsPage() {
     setSearchInput(debouncedSearch)
   }, [debouncedSearch])
 
-  const prevFilterIdentityRef = useRef(`${brandFilter}|${statusFilter}|${equipmentTypeFilter}|${completionFilter}|${attentionFilter}|${debouncedSearch}|${sort}|${sortDir}|${pageSize}`)
+  const prevFilterIdentityRef = useRef(`${brandFilter}|${statusFilter}|${equipmentTypeFilter}|${completionFilter}|${attentionFilter}|${imageFilterValue}|${imageSearchJobId}|${imageSourceDomain}|${minImageConfidence}|${minCandidateScore}|${debouncedSearch}|${sort}|${sortDir}|${pageSize}`)
   useEffect(() => {
-    const identity = `${brandFilter}|${statusFilter}|${equipmentTypeFilter}|${completionFilter}|${attentionFilter}|${debouncedSearch}|${sort}|${sortDir}|${pageSize}`
+    const identity = `${brandFilter}|${statusFilter}|${equipmentTypeFilter}|${completionFilter}|${attentionFilter}|${imageFilterValue}|${imageSearchJobId}|${imageSourceDomain}|${minImageConfidence}|${minCandidateScore}|${debouncedSearch}|${sort}|${sortDir}|${pageSize}`
     if (prevFilterIdentityRef.current === identity) return
     prevFilterIdentityRef.current = identity
     setSelectedIds(new Set())
+    setSelectionMode(IMAGE_SEARCH_SELECTION_MODE.PAGE)
   }, [
     brandFilter,
     statusFilter,
     equipmentTypeFilter,
     completionFilter,
     attentionFilter,
+    imageFilterValue,
+    imageSearchJobId,
+    imageSourceDomain,
+    minImageConfidence,
+    minCandidateScore,
     debouncedSearch,
     sort,
     sortDir,
@@ -1158,6 +1220,11 @@ export default function AdminIntelligenceProductsPage() {
           equipmentType: equipmentTypeFilter,
           completion: completionFilter,
           attention: attentionFilter,
+          imageFilter: imageFilterValue,
+          imageSearchJobId,
+          imageSourceDomain,
+          minImageConfidence,
+          minCandidateScore,
           page,
           pageSize,
           sort,
@@ -1227,6 +1294,7 @@ export default function AdminIntelligenceProductsPage() {
       setTotalCount(listResult.totalCount)
       setContentByProductId(buildContentStatusMapFromListRows(listResult.products))
       setSelectedIds((current) => {
+        if (selectionMode === IMAGE_SEARCH_SELECTION_MODE.FILTERED) return current
         if (!current.size) return current
         const visible = new Set(listResult.products.map((product) => product.id))
         const next = new Set([...current].filter((id) => visible.has(id)))
@@ -1248,6 +1316,12 @@ export default function AdminIntelligenceProductsPage() {
     equipmentTypeFilter,
     completionFilter,
     attentionFilter,
+    imageFilterValue,
+    imageSearchJobId,
+    imageSourceDomain,
+    minImageConfidence,
+    minCandidateScore,
+    selectionMode,
     page,
     pageSize,
     sort,
@@ -1344,21 +1418,6 @@ export default function AdminIntelligenceProductsPage() {
     setEditProduct(detailed)
   }, [products])
 
-  const productsById = useMemo(
-    () => new Map(products.map((product) => [product.id, product])),
-    [products],
-  )
-
-  const selectedApprovableIds = useMemo(() => (
-    [...selectedIds].filter((id) => {
-      const product = productsById.get(id)
-      return product && (
-        product.status === PRODUCT_STATUS.PENDING
-        || product.status === PRODUCT_STATUS.NEEDS_REVIEW
-      )
-    })
-  ), [selectedIds, productsById])
-
   const selectedProduct = useMemo(
     () => products.find((product) => product.id === selectedProductId) ?? null,
     [products, selectedProductId],
@@ -1379,11 +1438,55 @@ export default function AdminIntelligenceProductsPage() {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize) || 1)
   const allPageSelected = products.length > 0
     && products.every((product) => selectedIds.has(product.id))
+  const allFilteredSelected = selectionMode === IMAGE_SEARCH_SELECTION_MODE.FILTERED
+  const imageSearchSelectionCount = allFilteredSelected
+    ? totalCount
+    : selectedIds.size
+  const bulkImageApproveSelectionCount = allFilteredSelected
+    ? totalCount
+    : selectedIds.size
+  const imageSearchSelectionLabel = formatImageSearchSelectionLabel({
+    selectionMode: allFilteredSelected
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : IMAGE_SEARCH_SELECTION_MODE.PAGE,
+    selectedCount: imageSearchSelectionCount,
+    totalMatching: totalCount,
+  })
+  const bulkImageShortcutVisible = isBulkImageApprovalShortcutVisible({
+    brand: brandFilter,
+    imageFilter: imageFilterValue,
+  })
   const brandSelectOptions = ensureSelectedFilterOption(brandOptions, brandFilter)
   const equipmentTypeSelectOptions = ensureSelectedFilterOption(
     equipmentTypeOptions,
     equipmentTypeFilter,
   )
+
+  const currentListFilters = useMemo(() => ({
+    search: debouncedSearch,
+    brand: brandFilter,
+    status: statusFilter,
+    equipmentType: equipmentTypeFilter,
+    completion: completionFilter,
+    attention: attentionFilter,
+    imageFilter: imageFilterValue,
+    imageSearchJobId,
+    imageSourceDomain,
+    minImageConfidence,
+    minCandidateScore,
+  }), [
+    debouncedSearch,
+    brandFilter,
+    statusFilter,
+    equipmentTypeFilter,
+    completionFilter,
+    attentionFilter,
+    imageFilterValue,
+    imageSearchJobId,
+    imageSourceDomain,
+    minImageConfidence,
+    minCandidateScore,
+  ])
 
   function setAttentionFilter(nextAttention) {
     updateListQuery({ attention: nextAttention || CATALOGUE_ATTENTION.ALL })
@@ -1394,20 +1497,155 @@ export default function AdminIntelligenceProductsPage() {
   }
 
   function toggleSelectAll() {
-    if (allPageSelected) {
+    if (allPageSelected && !allFilteredSelected) {
       setSelectedIds(new Set())
+      setSelectionMode(IMAGE_SEARCH_SELECTION_MODE.PAGE)
       return
     }
+    setSelectionMode(IMAGE_SEARCH_SELECTION_MODE.PAGE)
     setSelectedIds(new Set(products.map((product) => product.id)))
   }
 
+  function selectAllMatchingFiltered() {
+    setSelectionMode(IMAGE_SEARCH_SELECTION_MODE.FILTERED)
+    setSelectedIds(new Set(products.map((product) => product.id)))
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set())
+    setSelectionMode(IMAGE_SEARCH_SELECTION_MODE.PAGE)
+  }
+
   function toggleSelect(productId) {
+    setSelectionMode(IMAGE_SEARCH_SELECTION_MODE.PAGE)
     setSelectedIds((current) => {
       const next = new Set(current)
       if (next.has(productId)) next.delete(productId)
       else next.add(productId)
       return next
     })
+  }
+
+  async function refreshImageSearchJobs() {
+    const {
+      active,
+      completed,
+      error: jobsError,
+    } = await listEquipmentProductImageSearchJobs({
+      activeLimit: 20,
+      completedLimit: 20,
+    })
+    if (jobsError) {
+      console.warn('Image search jobs refresh failed', jobsError)
+      return
+    }
+    setImageSearchActiveJobs(active)
+    setImageSearchCompletedJobs(completed)
+    setImageSearchJobs([...active, ...completed])
+  }
+
+  async function refreshJobItemStatuses(productList = products) {
+    const ids = productList.map((product) => product.id).filter(Boolean)
+    const { byProductId } = await fetchJobItemStatusesForProducts(ids)
+    setJobItemStatusByProductId(byProductId)
+  }
+
+  async function processImageSearchJob(jobId) {
+    if (!jobId || imageSearchWorkerRef.current) return
+    imageSearchWorkerRef.current = true
+    setImageSearchBusy(true)
+    setActiveImageSearchJobId(jobId)
+    try {
+      let done = false
+      while (!done) {
+        const { data, error: stepError } = await runEquipmentProductImageSearchJobStep(jobId)
+        if (stepError) {
+          setActionError(getAdminErrorMessage(stepError))
+          break
+        }
+        if (data?.job) {
+          setImageSearchActiveJobs((current) => {
+            const others = current.filter((job) => job.id !== data.job.id)
+            if (['queued', 'running', 'paused', 'failed'].includes(data.job.status)) {
+              return [data.job, ...others]
+            }
+            return others
+          })
+          if (['completed', 'cancelled'].includes(data.job.status)) {
+            setImageSearchCompletedJobs((current) => [
+              data.job,
+              ...current.filter((job) => job.id !== data.job.id),
+            ])
+          }
+          setImageSearchJobs((current) => {
+            const others = current.filter((job) => job.id !== data.job.id)
+            return [data.job, ...others]
+          })
+        }
+        done = Boolean(data?.done) || Number(data?.remaining) === 0
+        await refreshJobItemStatuses()
+        await loadProducts({ showLoading: false })
+        if (!done) {
+          await new Promise((resolve) => window.setTimeout(resolve, 400))
+        }
+      }
+    } finally {
+      imageSearchWorkerRef.current = false
+      setImageSearchBusy(false)
+      await refreshImageSearchJobs()
+      await refreshJobItemStatuses()
+    }
+  }
+
+  async function openImageSearchModal() {
+    setActionError('')
+    setImageSearchBusy(true)
+    const mode = allFilteredSelected
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : IMAGE_SEARCH_SELECTION_MODE.PAGE
+    const { preview, error: previewError } = await previewEquipmentProductImageSearchJob({
+      selectionMode: mode,
+      productIds: [...selectedIds],
+      filters: currentListFilters,
+      includeApproved: imageSearchIncludeApproved,
+      maxProducts: IMAGE_SEARCH_JOB_MAX_PRODUCTS,
+    })
+    setImageSearchBusy(false)
+    if (previewError) {
+      setActionError(getAdminErrorMessage(previewError))
+      return
+    }
+    setImageSearchPreview(preview)
+    setImageSearchModalOpen(true)
+  }
+
+  async function startImageSearchJob() {
+    setImageSearchBusy(true)
+    setActionError('')
+    const mode = allFilteredSelected
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : IMAGE_SEARCH_SELECTION_MODE.PAGE
+    const { result, error: createError } = await createEquipmentProductImageSearchJob({
+      selectionMode: mode,
+      productIds: [...selectedIds],
+      filters: currentListFilters,
+      includeApproved: imageSearchIncludeApproved,
+      maxProducts: IMAGE_SEARCH_JOB_MAX_PRODUCTS,
+    })
+    setImageSearchBusy(false)
+    if (createError) {
+      setActionError(getAdminErrorMessage(createError))
+      return
+    }
+    setImageSearchModalOpen(false)
+    const job = result?.job
+    if (job?.id) {
+      setImageSearchActiveJobs((current) => [job, ...current.filter((entry) => entry.id !== job.id)])
+      setImageSearchJobs((current) => [job, ...current.filter((entry) => entry.id !== job.id)])
+      setActiveImageSearchJobId(job.id)
+      clearSelection()
+      await processImageSearchJob(job.id)
+    }
   }
 
   async function openSourceRows(product) {
@@ -1461,26 +1699,60 @@ export default function AdminIntelligenceProductsPage() {
     await reloadAfterMutation()
   }
 
-  async function runBulkApproval(ids, {
-    safeCandidatesOnly = false,
-    title = 'Bulk approval complete',
-    emptyMessage = 'Select products to approve.',
-    confirmMessage,
-  }) {
-    if (!ids.length) {
-      setActionError(emptyMessage)
+  async function openBulkImageApprovalModal({
+    forceFiltered = false,
+  } = {}) {
+    const mode = (forceFiltered || allFilteredSelected)
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : IMAGE_SEARCH_SELECTION_MODE.PAGE
+    setBulkImageApprovalMode(mode)
+
+    if (mode === IMAGE_SEARCH_SELECTION_MODE.PAGE && selectedIds.size === 0) {
+      setActionError('Select at least one product first.')
       return
     }
 
-    const message = confirmMessage
-      ?? `You are about to approve ${ids.length} selected product(s) on this page. Continue?`
-    if (!window.confirm(message)) return
+    setBulkImageApprovalBusy(true)
+    setActionError('')
+    const result = await previewBulkEquipmentProductImageApproval({
+      selectionMode: mode,
+      productIds: [...selectedIds],
+      filters: currentListFilters,
+    })
+    setBulkImageApprovalBusy(false)
 
-    setBulkLoading(true)
+    if (result.error) {
+      setActionError(getAdminErrorMessage(result.error))
+      return
+    }
+
+    setBulkImageApprovalPreview(result.preview)
+    setBulkImageApprovalTruncated(Boolean(result.truncated))
+    setBulkImageApprovalOpen(true)
+  }
+
+  async function confirmBulkImageApproval({
+    forceFiltered = false,
+  } = {}) {
+    const mode = forceFiltered
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : (bulkImageApprovalMode || (
+        allFilteredSelected
+          ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+          : IMAGE_SEARCH_SELECTION_MODE.PAGE
+      ))
+    setBulkImageApprovalBusy(true)
     setActionError('')
     setApprovalSummary(null)
-    const result = await bulkApproveEquipmentProducts(ids, { safeCandidatesOnly })
-    setBulkLoading(false)
+
+    const result = await bulkApproveEquipmentProductImages({
+      selectionMode: mode,
+      productIds: [...selectedIds],
+      filters: currentListFilters,
+    })
+
+    setBulkImageApprovalBusy(false)
+    setBulkImageApprovalOpen(false)
 
     if (result.error && result.approved === 0) {
       setActionError(getAdminErrorMessage(result.error))
@@ -1488,46 +1760,120 @@ export default function AdminIntelligenceProductsPage() {
     }
 
     if (result.approved === 0 && !result.failures?.length) {
-      setActionError('No pending or needs_review products were approved from the selection.')
+      setActionError('No images were approved from the selection.')
+      return
+    }
+
+    if (result.updatedProducts?.length) {
+      for (const product of result.updatedProducts) {
+        applyProductRowUpdate(product)
+      }
+    }
+
+    setApprovalSummary({
+      title: mode === IMAGE_SEARCH_SELECTION_MODE.FILTERED
+        ? 'Bulk image approval complete (all filtered)'
+        : 'Bulk image approval complete',
+      approved: result.approved,
+      skipped: result.skipped,
+      skippedReasons: result.skippedReasons,
+      failures: result.failures,
+    })
+    clearSelection()
+    await reloadAfterMutation()
+  }
+
+  async function handleBulkRejectImages() {
+    const mode = allFilteredSelected
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : IMAGE_SEARCH_SELECTION_MODE.PAGE
+    if (mode === IMAGE_SEARCH_SELECTION_MODE.PAGE && selectedIds.size === 0) {
+      setActionError('Select at least one product first.')
+      return
+    }
+    const scopeLabel = mode === IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      ? `all ${totalCount.toLocaleString('en-GB')} matching filtered`
+      : `${selectedIds.size} selected`
+    if (!window.confirm(`Reject pending images for ${scopeLabel} product(s)?`)) return
+
+    setBulkLoading(true)
+    setActionError('')
+    const result = await bulkRejectEquipmentProductImages({
+      selectionMode: mode,
+      productIds: [...selectedIds],
+      filters: currentListFilters,
+    })
+    setBulkLoading(false)
+
+    if (result.error && result.rejected === 0) {
+      setActionError(getAdminErrorMessage(result.error))
+      return
+    }
+    if (result.updatedProducts?.length) {
+      for (const product of result.updatedProducts) {
+        applyProductRowUpdate(product)
+      }
+    }
+    if (result.rejected === 0 && !result.failures?.length) {
+      setActionError('No pending images were rejected from the selection.')
       return
     }
 
     setApprovalSummary({
-      title,
-      approved: result.approved,
+      title: mode === IMAGE_SEARCH_SELECTION_MODE.FILTERED
+        ? 'Bulk image rejection complete (all filtered)'
+        : 'Bulk image rejection complete',
+      approved: result.rejected,
       skipped: result.skipped,
       failures: result.failures,
     })
-    setSelectedIds(new Set())
+    clearSelection()
     await reloadAfterMutation()
   }
 
-  async function handleBulkApproveSelected() {
-    await runBulkApproval(selectedApprovableIds, {
-      safeCandidatesOnly: false,
-      title: 'Bulk approval complete',
-      emptyMessage: 'Select pending or needs_review products on this page to approve.',
-    })
-  }
-
-  async function handleBulkExclude() {
-    const ids = [...selectedIds]
-    if (!ids.length) {
-      setActionError('Select products on this page to exclude.')
+  async function handleBulkExcludeProducts() {
+    const mode = allFilteredSelected
+      ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      : IMAGE_SEARCH_SELECTION_MODE.PAGE
+    if (mode === IMAGE_SEARCH_SELECTION_MODE.PAGE && selectedIds.size === 0) {
+      setActionError('Select at least one product first.')
       return
     }
-
-    if (!window.confirm(`Exclude ${ids.length} product(s) on this page? They will be skipped from research.`)) return
+    const scopeLabel = mode === IMAGE_SEARCH_SELECTION_MODE.FILTERED
+      ? `all ${totalCount.toLocaleString('en-GB')} matching filtered`
+      : `${selectedIds.size} selected`
+    if (!window.confirm(
+      `Exclude ${scopeLabel} product(s) from the catalogue? Excluded products are hidden from public views.`,
+    )) return
 
     setBulkLoading(true)
     setActionError('')
-    const result = await bulkExcludeEquipmentProducts(ids)
+    setApprovalSummary(null)
+    const result = await bulkExcludeEquipmentProducts({
+      selectionMode: mode,
+      productIds: [...selectedIds],
+      filters: currentListFilters,
+    })
     setBulkLoading(false)
-    if (result.error) {
+
+    if (result.error && result.excluded === 0) {
       setActionError(getAdminErrorMessage(result.error))
       return
     }
-    setSelectedIds(new Set())
+    if (result.excluded === 0 && !result.failures?.length) {
+      setActionError('No products were excluded from the selection.')
+      return
+    }
+
+    setApprovalSummary({
+      title: mode === IMAGE_SEARCH_SELECTION_MODE.FILTERED
+        ? 'Bulk exclusion complete (all filtered)'
+        : 'Bulk exclusion complete',
+      excluded: result.excluded,
+      skipped: 0,
+      failures: result.failures,
+    })
+    clearSelection()
     await reloadAfterMutation()
   }
 
@@ -1700,6 +2046,44 @@ export default function AdminIntelligenceProductsPage() {
     return items
   }, [page, totalPages])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { active, completed } = await listEquipmentProductImageSearchJobs({
+        activeLimit: 20,
+        completedLimit: 20,
+      })
+      if (cancelled) return
+      setImageSearchActiveJobs(active)
+      setImageSearchCompletedJobs(completed)
+      setImageSearchJobs([...active, ...completed])
+      const running = active.find((job) => ['queued', 'running'].includes(job.status))
+      if (running?.id) {
+        setActiveImageSearchJobId(running.id)
+        processImageSearchJob(running.id)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  // Resume active jobs once on mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!products.length) return
+    refreshJobItemStatuses(products)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products])
+
+  const activeImageSearchJob = imageSearchActiveJobs.find((job) => (
+    ['queued', 'running', 'paused'].includes(job.status)
+  ))
+  const imageSearchActionDisabled = bulkLoading
+    || imageSearchBusy
+    || (selectedIds.size === 0 && !allFilteredSelected)
+    || Boolean(activeImageSearchJob)
+
   return (
     <div className="admin-intelligence admin-products">
       <EquipmentCatalogueNav
@@ -1741,6 +2125,80 @@ export default function AdminIntelligenceProductsPage() {
         onDismiss={() => setImageActionMessage('')}
       />
       <BulkApprovalSummary summary={approvalSummary} onDismiss={() => setApprovalSummary(null)} />
+
+      <ProductImageSearchJobPanel
+        activeJobs={imageSearchActiveJobs}
+        completedJobs={imageSearchCompletedJobs}
+        activeJobId={activeImageSearchJobId}
+        working={imageSearchBusy}
+        onRefresh={refreshImageSearchJobs}
+        onCancel={async (jobId) => {
+          setImageSearchBusy(true)
+          const { error: cancelError } = await cancelEquipmentProductImageSearchJob(jobId)
+          setImageSearchBusy(false)
+          if (cancelError) setActionError(getAdminErrorMessage(cancelError))
+          await refreshImageSearchJobs()
+          await loadProducts({ showLoading: false })
+        }}
+        onRetryFailed={async (jobId) => {
+          setImageSearchBusy(true)
+          const { error: retryError } = await retryEquipmentProductImageSearchJob(jobId, ['failed'])
+          setImageSearchBusy(false)
+          if (retryError) {
+            setActionError(getAdminErrorMessage(retryError))
+            return
+          }
+          await processImageSearchJob(jobId)
+        }}
+        onRetryNoResult={async (jobId) => {
+          setImageSearchBusy(true)
+          const { error: retryError } = await retryEquipmentProductImageSearchJob(jobId, ['no_result'])
+          setImageSearchBusy(false)
+          if (retryError) {
+            setActionError(getAdminErrorMessage(retryError))
+            return
+          }
+          await processImageSearchJob(jobId)
+        }}
+        onDelete={async (jobId) => {
+          setImageSearchBusy(true)
+          const { error: deleteError } = await deleteEquipmentProductImageSearchJob(jobId)
+          setImageSearchBusy(false)
+          if (deleteError) {
+            setActionError(getAdminErrorMessage(deleteError))
+            return
+          }
+          await refreshImageSearchJobs()
+        }}
+        onRunAgain={async (jobId) => {
+          setImageSearchBusy(true)
+          const { result, error: rerunError } = await rerunEquipmentProductImageSearchJob(jobId)
+          setImageSearchBusy(false)
+          if (rerunError) {
+            setActionError(getAdminErrorMessage(rerunError))
+            return
+          }
+          const job = result?.job
+          if (job?.id) {
+            setImageSearchActiveJobs((current) => [job, ...current.filter((entry) => entry.id !== job.id)])
+            setImageSearchJobs((current) => [job, ...current.filter((entry) => entry.id !== job.id)])
+            setActiveImageSearchJobId(job.id)
+            await processImageSearchJob(job.id)
+          } else {
+            await refreshImageSearchJobs()
+          }
+        }}
+        onClearCompleted={async () => {
+          setImageSearchBusy(true)
+          const { error: clearError } = await clearCompletedEquipmentProductImageSearchJobs()
+          setImageSearchBusy(false)
+          if (clearError) {
+            setActionError(getAdminErrorMessage(clearError))
+            return
+          }
+          await refreshImageSearchJobs()
+        }}
+      />
 
       {catalogueSummary ? (
         <section className="equipment-catalogue-summary" aria-label="Catalogue summary">
@@ -1862,6 +2320,18 @@ export default function AdminIntelligenceProductsPage() {
             </select>
           </label>
           <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Image status</span>
+            <select
+              className="admin-intelligence__select"
+              value={imageFilterValue}
+              onChange={(e) => updateListQuery({ imageFilter: e.target.value })}
+            >
+              {IMAGE_STATUS_FILTER_OPTIONS.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="admin-intelligence__field">
             <span className="admin-intelligence__label">Completion</span>
             <select
               className="admin-intelligence__select"
@@ -1875,6 +2345,49 @@ export default function AdminIntelligenceProductsPage() {
               <option value={COMPLETION_DASHBOARD_FILTER.MISSING_BASELINE}>Missing baseline</option>
               <option value={COMPLETION_DASHBOARD_FILTER.MISSING_BOTH}>Missing both</option>
             </select>
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Search job</span>
+            <input
+              className="admin-intelligence__input"
+              value={imageSearchJobId}
+              onChange={(e) => updateListQuery({ imageSearchJobId: e.target.value })}
+              placeholder="Job id"
+            />
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Source domain</span>
+            <input
+              className="admin-intelligence__input"
+              value={imageSourceDomain}
+              onChange={(e) => updateListQuery({ imageSourceDomain: e.target.value })}
+              placeholder="example.com"
+            />
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Confidence</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              className="admin-intelligence__input"
+              value={minImageConfidence}
+              onChange={(e) => updateListQuery({ minImageConfidence: e.target.value })}
+              placeholder="70"
+            />
+          </label>
+          <label className="admin-intelligence__field">
+            <span className="admin-intelligence__label">Candidate score</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              className="admin-intelligence__input"
+              value={minCandidateScore}
+              onChange={(e) => updateListQuery({ minCandidateScore: e.target.value })}
+              placeholder="70"
+            />
           </label>
           <label className="admin-intelligence__field">
             <span className="admin-intelligence__label">Page size</span>
@@ -1910,7 +2423,7 @@ export default function AdminIntelligenceProductsPage() {
           <label className="admin-products__select-all">
             <input
               type="checkbox"
-              checked={allPageSelected}
+              checked={allPageSelected || allFilteredSelected}
               onChange={toggleSelectAll}
               disabled={!products.length}
             />
@@ -1918,20 +2431,65 @@ export default function AdminIntelligenceProductsPage() {
           </label>
           <button
             type="button"
-            className="admin-intelligence__button admin-intelligence__button--primary"
-            disabled={bulkLoading || selectedApprovableIds.length === 0}
-            onClick={handleBulkApproveSelected}
+            className="admin-intelligence__button admin-intelligence__button--secondary"
+            onClick={selectAllMatchingFiltered}
+            disabled={!totalCount}
           >
-            Approve selected ({selectedApprovableIds.length})
+            Select all {totalCount.toLocaleString('en-GB')} matching
+          </button>
+          {(selectedIds.size > 0 || allFilteredSelected) ? (
+            <span className="admin-products__selection-label">{imageSearchSelectionLabel}</span>
+          ) : null}
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--primary"
+            disabled={imageSearchActionDisabled}
+            onClick={openImageSearchModal}
+            title={activeImageSearchJob ? 'An image search job is already running' : undefined}
+          >
+            Retry search
+          </button>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-intelligence__button--primary"
+            disabled={
+              bulkLoading
+              || bulkImageApprovalBusy
+              || (
+                !allFilteredSelected
+                && selectedIds.size === 0
+              )
+            }
+            onClick={() => openBulkImageApprovalModal()}
+          >
+            Approve selected ({bulkImageApproveSelectionCount})
           </button>
           <button
             type="button"
             className="admin-intelligence__button"
-            disabled={bulkLoading || selectedIds.size === 0}
-            onClick={handleBulkExclude}
+            disabled={bulkLoading || (selectedIds.size === 0 && !allFilteredSelected)}
+            onClick={handleBulkRejectImages}
           >
-            Delete / exclude ({selectedIds.size})
+            Reject selected ({bulkImageApproveSelectionCount})
           </button>
+          <button
+            type="button"
+            className="admin-intelligence__button admin-products__actions-menu-item--danger"
+            disabled={bulkLoading || (selectedIds.size === 0 && !allFilteredSelected)}
+            onClick={handleBulkExcludeProducts}
+          >
+            Exclude selected ({bulkImageApproveSelectionCount})
+          </button>
+          {bulkImageShortcutVisible ? (
+            <button
+              type="button"
+              className="admin-intelligence__button admin-intelligence__button--secondary"
+              disabled={bulkLoading || bulkImageApprovalBusy || !totalCount}
+              onClick={() => openBulkImageApprovalModal({ forceFiltered: true })}
+            >
+              Approve pending images
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-intelligence__button admin-intelligence__button--secondary"
@@ -2018,7 +2576,7 @@ export default function AdminIntelligenceProductsPage() {
                           type="checkbox"
                           checked={selectedIds.has(product.id)}
                           onChange={() => toggleSelect(product.id)}
-                          aria-label={`Select ${product.canonical_product_name}`}
+                          aria-label={`Select ${getEquipmentProductDisplayName(product)}`}
                         />
                       </td>
                       <td className="admin-products__col-image">
@@ -2045,7 +2603,7 @@ export default function AdminIntelligenceProductsPage() {
                             font: 'inherit',
                           }}
                         >
-                          <strong>{product.canonical_product_name}</strong>
+                          <strong>{getEquipmentProductDisplayName(product)}</strong>
                           {product.product_family || product.model ? (
                             <span style={{ color: 'var(--color-muted)', fontSize: '0.8125rem' }}>
                               {[product.product_family, product.model].filter(Boolean).join(' · ')}
@@ -2057,7 +2615,22 @@ export default function AdminIntelligenceProductsPage() {
                       <td>{product.equipment_type || '—'}</td>
                       <td>{formatPrice(product)}</td>
                       <td>{product.baseline_manufacture_year || '—'}</td>
-                      <td>{getCatalogueImageStatusLabel(product)}</td>
+                      <td>
+                        <div className="admin-products__image-status-cell">
+                          <span>{getCatalogueImageStatusLabel(product)}</span>
+                          {productRowImageSearchLabel(
+                            product,
+                            jobItemStatusByProductId.get(product.id)?.status,
+                          ) ? (
+                            <span className="admin-products__image-search-state">
+                              {productRowImageSearchLabel(
+                                product,
+                                jobItemStatusByProductId.get(product.id)?.status,
+                              )}
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
                       <td>{getCatalogueContentStatusLabel(product, contentByProductId)}</td>
                       <td>
                         <span className={`equipment-catalogue-status${catalogueStatus === 'Ready' ? ' equipment-catalogue-status--ready' : ' equipment-catalogue-status--attention'}`}>
@@ -2169,6 +2742,53 @@ export default function AdminIntelligenceProductsPage() {
           onProductUpdated={handleImageProductUpdated}
         />
       ) : null}
+
+      <BulkImageApprovalModal
+        open={bulkImageApprovalOpen}
+        busy={bulkImageApprovalBusy}
+        selectionMode={bulkImageApprovalMode}
+        selectedCount={bulkImageApproveSelectionCount}
+        totalMatching={totalCount}
+        filters={currentListFilters}
+        preview={bulkImageApprovalPreview}
+        truncated={bulkImageApprovalTruncated}
+        onCancel={() => {
+          setBulkImageApprovalOpen(false)
+          setBulkImageApprovalPreview(null)
+          setBulkImageApprovalTruncated(false)
+          setBulkImageApprovalMode(IMAGE_SEARCH_SELECTION_MODE.PAGE)
+        }}
+        onConfirm={() => confirmBulkImageApproval()}
+      />
+
+      <ProductImageSearchConfirmModal
+        open={imageSearchModalOpen}
+        busy={imageSearchBusy}
+        selectionMode={allFilteredSelected
+          ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+          : IMAGE_SEARCH_SELECTION_MODE.PAGE}
+        selectedCount={imageSearchSelectionCount}
+        totalMatching={totalCount}
+        preview={imageSearchPreview}
+        filters={currentListFilters}
+        includeApproved={imageSearchIncludeApproved}
+        onIncludeApprovedChange={async (checked) => {
+          setImageSearchIncludeApproved(checked)
+          const mode = allFilteredSelected
+            ? IMAGE_SEARCH_SELECTION_MODE.FILTERED
+            : IMAGE_SEARCH_SELECTION_MODE.PAGE
+          const { preview } = await previewEquipmentProductImageSearchJob({
+            selectionMode: mode,
+            productIds: [...selectedIds],
+            filters: currentListFilters,
+            includeApproved: checked,
+            maxProducts: IMAGE_SEARCH_JOB_MAX_PRODUCTS,
+          })
+          setImageSearchPreview(preview)
+        }}
+        onCancel={() => setImageSearchModalOpen(false)}
+        onConfirm={startImageSearchJob}
+      />
 
       <HighConfidenceApproveModal
         open={highConfidenceModalOpen}

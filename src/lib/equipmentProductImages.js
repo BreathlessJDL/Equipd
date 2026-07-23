@@ -80,10 +80,13 @@ export const MISSING_STORAGE_OBJECT_FAILURE_REASON = 'missing_storage_object'
 
 export const EQUIPMENT_PRODUCT_IMAGE_STATUS = {
   MISSING: 'missing',
+  QUEUED: 'queued',
+  SEARCHING: 'searching',
   SUGGESTED: 'suggested',
   APPROVED: 'approved',
   REJECTED: 'rejected',
   FAILED: 'failed',
+  NO_RESULT: 'no_result',
 }
 
 export const PRIORITY_IMAGE_SOURCE_DOMAINS = [
@@ -161,6 +164,7 @@ function buildGenericEquipmentProductImageSearchQueries(product) {
   const required = requiredIdentityQueryTokens(product)
 
   pushUnique(canonical)
+  pushUnique([brand, series, model, equipmentType, 'official product image'].filter(Boolean).join(' '))
   pushUnique([brand, ...required, model, equipmentType].filter(Boolean).join(' '))
   pushUnique([brand, series, model].filter(Boolean).join(' '))
 

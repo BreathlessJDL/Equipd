@@ -21,6 +21,7 @@ function CameraIcon({ className = '' }) {
 function ListingImageGallery({
   images = [],
   title = 'Listing photo',
+  imageAlt = null,
   saveButton = null,
   savedCountOverlay = null,
 }) {
@@ -31,6 +32,8 @@ function ListingImageGallery({
   const hasMultiple = images.length > 1
   const safeIndex = hasImages ? Math.min(selectedIndex, images.length - 1) : 0
   const currentImage = hasImages ? images[safeIndex] : null
+  const mainAlt = imageAlt || title
+  const thumbAltBase = imageAlt || title
 
   useEffect(() => {
     if (selectedIndex >= images.length) {
@@ -132,7 +135,16 @@ function ListingImageGallery({
                 }`}
                 onClick={() => setSelectedIndex(index)}
               >
-                <img src={image.url} alt="" className="listing-gallery__thumb-image" draggable={false} />
+                <img
+                  src={image.url}
+                  alt={
+                    images.length > 1
+                      ? `${thumbAltBase} — photo ${index + 1}`
+                      : thumbAltBase
+                  }
+                  className="listing-gallery__thumb-image"
+                  draggable={false}
+                />
               </button>
             ))}
           </div>
@@ -150,7 +162,7 @@ function ListingImageGallery({
             <>
               <img
                 src={currentImage.url}
-                alt={title}
+                alt={mainAlt}
                 className="listing-gallery__main-image"
                 draggable={false}
               />

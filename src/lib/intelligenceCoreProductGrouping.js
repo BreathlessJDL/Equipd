@@ -9,6 +9,10 @@ import {
   isTechnogymBrand,
   stripTechnogymNonPricingVariants,
 } from './technogymCoreProductGrouping.js'
+import {
+  buildCanonicalProductDisplayName,
+  displayNameStartsWithPhrase,
+} from './canonicalProductDisplayName.js'
 
 export const CORE_PRODUCT_GROUP_STATUS = {
   PENDING: 'pending',
@@ -702,8 +706,8 @@ function resolveGroupStatus(members = []) {
  * for naming only — canonical keys remain distinct via slugifyCoreProductKey.
  */
 export function modelStartsWithFamilyPhrase(coreModel, productFamily) {
-  const familyText = normalizeWhitespace(productFamily)
-  const modelText = normalizeWhitespace(coreModel)
+  const familyText = String(productFamily ?? '').replace(/\s+/g, ' ').trim()
+  const modelText = String(coreModel ?? '').replace(/\s+/g, ' ').trim()
   if (!familyText || !modelText) return false
 
   const familyLower = familyText.toLowerCase()
@@ -711,22 +715,15 @@ export function modelStartsWithFamilyPhrase(coreModel, productFamily) {
   if (modelLower === familyLower) return true
   // e.g. family "Bike", model "Bike+" — do not emit "Brand Bike Bike+"
   if (modelLower === `${familyLower}+`) return true
-  return modelLower.startsWith(`${familyLower} `)
+  return displayNameStartsWithPhrase(modelText, familyText)
 }
 
 export function buildCoreProductName(brand, productFamily, coreModel) {
-  const brandText = normalizeWhitespace(brand)
-  const familyText = normalizeWhitespace(productFamily)
-  const modelText = normalizeWhitespace(coreModel)
-  const parts = []
-  if (brandText) parts.push(brandText)
-  // Skip family when the model already starts with that complete family phrase
-  // (e.g. family "Commercial", model "Commercial 1750").
-  if (familyText && !modelStartsWithFamilyPhrase(modelText, familyText)) {
-    parts.push(familyText)
-  }
-  if (modelText) parts.push(modelText)
-  return parts.join(' ')
+  return buildCanonicalProductDisplayName({
+    brand,
+    series: productFamily,
+    model: coreModel,
+  })
 }
 
 export function buildCoreProductKeyFromFields({

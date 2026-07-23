@@ -14,14 +14,23 @@ function formatMoney(amount, currency = 'GBP') {
   }
 }
 
+/**
+ * Curated brand valuation card — image + valuation dominate hierarchy.
+ */
 export default function EquipmentValueGuideCard({
   product,
   priority = false,
+  showEquipmentType = false,
 }) {
   if (!product?.href) return null
 
   const rrpLabel = formatMoney(product.originalRrp, product.currency)
   const alt = product.displayName || 'Equipment'
+  const metaBits = [
+    product.yearLabel || null,
+    rrpLabel ? `RRP ${rrpLabel}` : null,
+    showEquipmentType && product.equipmentType ? product.equipmentType : null,
+  ].filter(Boolean)
 
   return (
     <Link to={product.href} className="equipment-value-card">
@@ -42,42 +51,21 @@ export default function EquipmentValueGuideCard({
       </div>
       <div className="equipment-value-card__body">
         <h3 className="equipment-value-card__title">{product.displayName}</h3>
-        <p className="equipment-value-card__category">
-          {product.equipmentType || '\u00A0'}
+
+        <p className="equipment-value-card__value-label">Typical value today</p>
+        <p className="equipment-value-card__value-amount">
+          {product.estimatedValueLabel || 'See guide'}
         </p>
 
-        <dl className="equipment-value-card__facts">
-          {product.yearLabel ? (
-            <div className="equipment-value-card__fact">
-              <dt>Production</dt>
-              <dd>{product.yearLabel}</dd>
-            </div>
-          ) : null}
-          {product.estimatedValueLabel ? (
-            <div className="equipment-value-card__fact equipment-value-card__fact--value">
-              <dt>Estimated used value by year</dt>
-              <dd>
-                <span className="equipment-value-card__value-amount">
-                  {product.estimatedValueLabel}
-                </span>
-                {product.yearLabel ? (
-                  <span className="equipment-value-card__value-year">
-                    {' '}
-                    · based on {product.yearLabel}
-                  </span>
-                ) : null}
-              </dd>
-            </div>
-          ) : null}
-          {rrpLabel ? (
-            <div className="equipment-value-card__fact">
-              <dt>Original RRP</dt>
-              <dd>From {rrpLabel}</dd>
-            </div>
-          ) : null}
-        </dl>
+        {metaBits.length ? (
+          <p className="equipment-value-card__meta">{metaBits.join(' · ')}</p>
+        ) : (
+          <p className="equipment-value-card__meta equipment-value-card__meta--spacer" aria-hidden="true">
+            &nbsp;
+          </p>
+        )}
 
-        <span className="equipment-value-card__cta">View value guide →</span>
+        <span className="equipment-value-card__cta">View valuation →</span>
       </div>
     </Link>
   )

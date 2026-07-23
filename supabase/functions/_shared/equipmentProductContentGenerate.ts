@@ -81,7 +81,10 @@ async function sha256Hex(value: string) {
 }
 
 function buildSystemPrompt(sourcePayload: Record<string, unknown>) {
-  const home = sourcePayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE
+  const segment = String(sourcePayload.usage_segment ?? '')
+  const home = segment === CONTENT_USAGE_SEGMENT.HOME
+    || segment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME
+    || segment === 'home_use'
   return [
     'You write concise product overviews for Equipd, a UK fitness equipment valuation platform.',
     'Respond with JSON only: {"overview_text":"","seo_title":"","seo_meta_description":"","faqs":[{"question":"","answer":""}]}.',
@@ -89,8 +92,8 @@ function buildSystemPrompt(sourcePayload: Record<string, unknown>) {
     'Preferred overview length 70–120 words (55–140 absolute).',
     'Mention original_base_price only when present. Never invent RRP.',
     home
-      ? 'usage_segment is home_use. Do NOT claim commercial construction, commercial gym use, gym-floor suitability, club use, heavy-duty commercial frames, or commercial servicing. Describe home / connected fitness identity from known brand/model/type only.'
-      : 'usage_segment is commercial. Commercial catalogue wording is allowed when supported by identity.',
+      ? 'usage_segment is home/premium_home. Do NOT claim commercial construction, commercial gym use, health clubs, busy fitness facilities, gym-floor suitability, club use, heavy-duty commercial frames, or commercial servicing. Describe home fitness identity from known brand/model/type only.'
+      : 'usage_segment is commercial/strength/light_commercial. Follow that segment: commercial club wording only when commercial; stay neutral for strength; allow studio/light commercial for light_commercial without full club exaggeration.',
   ].join('\n')
 }
 
@@ -142,9 +145,22 @@ async function callOpenAi({
 }
 
 function assertHomeUseSafe(overview: string, sourcePayload: Record<string, unknown>) {
-  if (sourcePayload.usage_segment !== CONTENT_USAGE_SEGMENT.HOME_USE) return
+  const segment = String(sourcePayload.usage_segment ?? '')
+  const home = segment === CONTENT_USAGE_SEGMENT.HOME
+    || segment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME
+    || segment === 'home_use'
+  if (!home) return
   const banned = [
     'commercial gym',
+    'commercial facility',
+    'commercial use',
+    'commercial-grade',
+    'commercial grade',
+    'health club',
+    'busy gym',
+    'high-traffic',
+    'high traffic',
+    'fitness facility',
     'commercial construction',
     'gym-floor',
     'gym floor',
@@ -153,7 +169,7 @@ function assertHomeUseSafe(overview: string, sourcePayload: Record<string, unkno
   ]
   const haystack = overview.toLowerCase()
   const hit = banned.find((phrase) => haystack.includes(phrase))
-  if (hit) throw new Error(`home_use commercial wording: ${hit}`)
+  if (hit) throw new Error(`home/premium_home commercial wording: ${hit}`)
 }
 
 export async function generateMissingDraftsForProductIds(

@@ -66,6 +66,24 @@
   background: #f6f7f9;
 }
 
+.admin-consoles__image-preview {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: -0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-consoles__image-preview .admin-consoles__thumb {
+  width: 96px;
+  height: 72px;
+}
+
+.admin-consoles__image-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.8125rem;
+}
+
 .admin-consoles__muted {
   color: #667085;
   font-size: 0.8rem;

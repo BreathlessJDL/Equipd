@@ -10,6 +10,7 @@ import {
   isWellnessTvConsoleOption,
   normalizeConsoleCompatOption,
 } from './consoleCompatibility.js'
+import { resolveEquipmentConsoleImageUrl } from './equipmentConsoleImages.js'
 import { matchConsoleModifier, normalizeConsoleKey } from './consoleModifierMatch.js'
 
 export { isWellnessTvConsoleOption }
@@ -90,8 +91,13 @@ export function buildProductConsoleImageMap(productConsoleOptions = []) {
   const map = {}
   for (const option of productConsoleOptions) {
     const normalized = normalizeConsoleCompatOption(option)
-    if (normalized.console_name && normalized.image_url) {
-      map[normalized.console_name] = normalized.image_url
+    if (!normalized.console_name) continue
+    const resolvedUrl = resolveEquipmentConsoleImageUrl({
+      image_url: normalized.image_url,
+      image_storage_path: normalized.image_storage_path,
+    })
+    if (resolvedUrl) {
+      map[normalized.console_name] = resolvedUrl
     }
   }
   return map

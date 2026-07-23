@@ -129,7 +129,7 @@ export const SELL_BENEFITS = Object.freeze([
   },
   {
     title: 'Reach the right audience',
-    body: 'Equipd is built for home and commercial gym equipment — not general classified clutter.',
+    body: 'Equipd is built for home and commercial gym equipment, not general classified clutter.',
   },
 ])
 
@@ -138,10 +138,10 @@ export const SELL_GUIDE_HEADING = 'Selling gym equipment in the UK'
 export const SELL_GUIDE_NOTE = 'A practical guide'
 
 export const SELL_GUIDE_INTRO =
-  'If you want to sell gym equipment without the noise of general classifieds, Equipd is a specialist fitness equipment marketplace: free listings, buyers who understand the kit, clear handover options and secure payouts across the UK.'
+  'Selling gym equipment is easier when you are talking to the right buyers. Equipd is a UK fitness equipment marketplace with free listings, clear handover options and secure payouts.'
 
 export const SELL_GUIDE_HIGHLIGHTS = Object.freeze([
-  'Free specialist listings',
+  'Free listings',
   'Home and commercial equipment',
   'Secure payments and flexible handover',
 ])
@@ -151,20 +151,20 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     id: 'specialist-marketplace',
     title: 'Why use a specialist fitness marketplace?',
     paragraphs: [
-      'General platforms attract browsers. A dedicated fitness equipment marketplace attracts people who already know what a commercial treadmill, spinner or plate-loaded machine is worth living with — and what fair used pricing looks like.',
-      'That focus usually means better conversations, fewer wasted enquiries and a cleaner path from listing to handover when you sell used gym equipment online. You are not competing with sofas, bikes or random household clutter for attention.',
-      'Equipd is built around product context, messaging and protected checkout so both home sellers and facility operators can move kit with less friction.',
+      'On general sites, your treadmill or rack often sits next to sofas, cars and household junk. Plenty of browsers will message you. Fewer of them know what used gym equipment is actually worth.',
+      'Equipd is built for fitness equipment. People come here looking for treadmills, spin bikes, racks and commercial machines. That usually means clearer conversations and fewer wasted enquiries.',
+      'You can list for free, message buyers on the platform, and get paid through Stripe once the sale is complete.',
     ],
     bullets: [
       {
         before: 'Ready to sell? ',
         link: { to: CREATE_LISTING_PATH, label: 'Create your equipment listing' },
-        after: ' directly.',
+        after: '.',
       },
       {
         before: 'Read ',
         link: { to: HOW_SELLING_WORKS_PATH, label: 'how selling on Equipd works' },
-        after: ' from listing to payout.',
+        after: ', from listing to payout.',
       },
     ],
   },
@@ -172,21 +172,21 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     id: 'home-and-commercial',
     title: 'Home gym and commercial gym equipment',
     paragraphs: [
-      'You can sell home gym equipment — treadmills, bikes, racks, free weights and compact strength pieces — when you upgrade, move or clear space. Clear photos of wear points and a realistic asking price help serious buyers decide quickly.',
-      'You can also sell commercial gym equipment from studios, hotels and facilities, including cardio fleets and selectorised strength. Buyers on Equipd expect commercial-grade condition notes, service history where you have it, and honest availability for collection.',
-      'Whether you are clearing a spare room or refreshing a floor, the same listing flow covers home and commercial kit.',
+      'You can sell home gym equipment when you upgrade, move house or clear space. Treadmills, bikes, racks, free weights and smaller strength machines all work well. Clear photos of wear and an honest asking price help buyers decide quickly.',
+      'You can also sell commercial gym equipment from studios, hotels and facilities. That includes cardio fleets and selectorised strength. Buyers will expect clear condition notes, any service history you have, and practical details for collection.',
+      'The listing process is the same either way. Add the details, set your price and choose how you want to hand the equipment over.',
     ],
     bullets: [
       { before: 'Browse live stock on the ', link: { to: BROWSE_PATH, label: 'marketplace' }, after: '.' },
       {
-        before: 'See ',
+        before: 'See current ',
         link: { to: `${BROWSE_PATH}?rating=full_commercial`, label: 'commercial equipment' },
-        after: ' listings buyers already shop.',
+        after: ' listings.',
       },
       {
-        before: 'Scan ',
+        before: 'Browse ',
         link: { to: BROWSE_PATH, label: 'home equipment' },
-        after: ' and other fitness categories before you price yours.',
+        after: ' and other fitness categories before you set a price.',
       },
       {
         before: 'Compare model guides and values via ',
@@ -199,8 +199,8 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     id: 'brands',
     title: 'Popular brands buyers look for',
     paragraphs: [
-      'Serious buyers often filter by brand and series. Accurate model names, serial plates and clear photos help your listing sit next to trusted product guides — and stand out when someone is searching for a specific frame or console.',
-      'Major fitness brands regularly attract strong demand on a specialist marketplace. If you are unsure of the exact model, photograph the badge and console so buyers can confirm before they offer.',
+      'Many buyers search by brand and model. Use the correct name where you can. Photograph the badge, serial plate and console so people can confirm what they are buying.',
+      'Life Fitness, Technogym, Matrix and similar brands are in steady demand. If you are unsure of the exact model, clear photos usually help a buyer work it out before they make an offer.',
     ],
     brandLinks: [
       { label: 'Life Fitness', to: getBrandPagePath('life-fitness') },
@@ -211,7 +211,7 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
       { label: 'Cybex', to: getBrandPagePath('cybex') },
     ],
     paragraphsAfter: [
-      'Explore more manufacturers when you need a precise match in the ',
+      'See more brands in the ',
     ],
     brandsDirectory: { to: BRANDS_PATH, label: 'Equipd brands directory' },
   },
@@ -219,15 +219,15 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     id: 'pricing',
     title: 'Pricing guidance and valuations',
     paragraphs: [
-      'Asking price is still your choice. Condition, age, completeness and local collection practicality all move the needle on what buyers will pay for used gym equipment in the UK.',
-      'You can create a listing directly without knowing the original RRP or completing a valuation. If you would like pricing guidance, the optional valuation tool can help you review available product and used-market context before choosing your asking price.',
-      'Well-priced listings with honest condition notes typically attract faster offers than optimistic asking prices that sit for weeks.',
+      'You choose the asking price. Age, condition, missing parts and how easy collection is all affect what used gym equipment sells for in the UK.',
+      'You do not need a gym equipment valuation to list. If you want a sense of price first, use the free valuation tool. It is optional.',
+      'Honest condition notes and a realistic price usually bring offers sooner than an inflated ask that sits for weeks.',
     ],
     bullets: [
       {
         before: 'Use the ',
         link: { to: VALUATION_PATH, label: 'free equipment valuation tool' },
-        after: ' for optional pricing guidance.',
+        after: ' if you want pricing guidance.',
       },
       {
         before: 'Browse ',
@@ -240,9 +240,9 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     id: 'handover-and-payments',
     title: 'Collection, delivery and secure payments',
     paragraphs: [
-      'Handover can be buyer collection, seller delivery or a buyer-arranged courier. Collection and seller delivery use Equipd’s QR confirmation flow; courier orders use evidence and delivery confirmation so both sides know when risk transfers.',
-      'Payments run through Stripe Connect. When the order completes under Buyer Protection, your payout is released — so selling exercise equipment does not mean chasing cash on the doorstep or relying on informal bank transfers.',
-      'Listings are free. When an item sells, Equipd applies a 2% Seller Service Fee deducted from your payout. You see the sale price, fee and amount you receive before you accept.',
+      'You can offer buyer collection, seller delivery or a buyer-arranged courier. Collection and seller delivery use Equipd’s QR confirmation. Courier sales use collection evidence and delivery confirmation, so both sides know when the handover is done.',
+      'Payments go through Stripe Connect. Once the order completes under Buyer Protection, your payout is released. You do not need to take cash on the doorstep or rely on informal bank transfers.',
+      'Listings are free. When an item sells, Equipd takes a 2% Seller Service Fee from your payout. You see the sale price, fee and amount you receive before you accept.',
     ],
     bullets: [
       {
@@ -256,9 +256,9 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     id: 'vs-general-marketplaces',
     title: 'How Equipd differs from Facebook Marketplace and eBay',
     paragraphs: [
-      'Facebook Marketplace and eBay are broad. Equipd is narrower on purpose: fitness-specific listings, structured product context, protected checkout and a seller fee that only applies when you sell.',
-      'That focus helps when you want to sell gym machines, commercial cardio or home strength kit without negotiating through scattered messages and unclear payment norms. Buyers come expecting gym equipment — not a general car-boot browse.',
-      'If your goal is to sell gym equipment UK-wide with less friction and more trust, a specialist used gym equipment marketplace is usually a clearer route than starting from scratch on a general platform.',
+      'Facebook Marketplace and eBay cover almost everything. Equipd focuses on fitness equipment: clearer listings, messaging on the platform and protected checkout. You only pay a seller fee when you sell.',
+      'That helps when you want to sell used gym equipment, commercial cardio or home strength machines. Buyers arrive expecting gym equipment, and payment and handover follow a set process.',
+      'If you want a place to buy and sell gym equipment with people already looking for it, Equipd is usually simpler than starting again on a general marketplace.',
     ],
   },
 ])
@@ -266,68 +266,68 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
 export const SELL_FAQ_NOTE = 'A few quick answers'
 
 export const SELL_FAQ_INTRO =
-  'Find answers about listing fees, valuations, payments, collection and selling home or commercial gym equipment.'
+  'Common questions on fees, pricing, payments, collection and selling home or commercial gym equipment.'
 
 export const SELL_FAQ_ITEMS = Object.freeze([
   {
     question: 'How much does it cost to list gym equipment?',
     answer:
-      'Creating a listing is free. When an item sells, Equipd applies a 2% Seller Service Fee, which is deducted from your payout before funds are transferred through Stripe.',
+      'Listing is free. When an item sells, Equipd takes a 2% Seller Service Fee from your payout before funds are sent through Stripe.',
   },
   {
     question: 'How do I sell used gym equipment on Equipd?',
     answer:
-      'Create a listing with photos, information about the equipment, its condition, your asking price and your preferred fulfilment option. Buyers can then contact you or make an offer through Equipd.',
+      'Create a listing with photos, the equipment details, its condition, your asking price and how you want to hand it over. Buyers can then message you or make an offer on Equipd.',
   },
   {
     question: 'Can I sell commercial gym equipment?',
     answer:
-      'Yes. Studios, gyms and facilities can list commercial cardio, strength and functional equipment on Equipd for buyers across the UK.',
+      'Yes. Studios, gyms and facilities can list commercial cardio, strength and functional equipment for buyers across the UK.',
   },
   {
     question: 'Can I sell home gym equipment?',
     answer:
-      'Yes. Equipd supports home gym equipment as well as commercial kit — including treadmills, bikes, racks, weights and other fitness equipment.',
+      'Yes. You can sell home gym equipment on Equipd, including treadmills, bikes, racks, weights and other fitness equipment.',
   },
   {
     question: 'Do I need to value my equipment before listing?',
     answer:
-      'No. You can create a listing immediately without completing a valuation. Equipd’s free valuation tool is optional and can help you estimate a suitable asking price before listing.',
+      'No. You can list straight away. The free valuation tool is optional if you want help choosing an asking price.',
   },
   {
     question: 'Can I sell without using the valuation tool?',
     answer:
-      'Yes. Go directly to Create a Listing and enter your equipment and selling details. The valuation tool is available only if you would like additional guidance on pricing.',
+      'Yes. Go to Create a Listing and enter your equipment details. Use the valuation tool only if you want pricing guidance first.',
   },
   {
     question: 'How do I receive payment?',
     answer:
-      'Payments and seller payouts are processed through Stripe Connect. Funds are released after the order is successfully completed under the current Buyer Protection process.',
+      'Through Stripe Connect. Funds are released after the order completes under Buyer Protection.',
   },
   {
     question: 'Can buyers collect equipment?',
     answer:
-      'Yes. Equipd supports buyer collection, seller delivery and buyer-arranged courier. Collection and seller delivery use the Equipd QR handover flow.',
+      'Yes. You can offer buyer collection, seller delivery or a buyer-arranged courier. Collection and seller delivery use the Equipd QR handover flow.',
   },
   {
     question: 'What brands can I sell?',
     answer:
-      'You can list equipment from major fitness brands such as Life Fitness, Technogym, Matrix, Concept2, Precor, Cybex and many others. Accurate brand and model details help serious buyers find your listing.',
+      'You can list major fitness brands such as Life Fitness, Technogym, Matrix, Concept2, Precor and Cybex. Accurate brand and model details help buyers find your listing.',
   },
   {
     question: 'What happens when I receive an offer?',
     answer:
-      'You can chat with the buyer in Equipd messaging and accept, decline or respond to the offer using the live offer tools.',
+      'You can message the buyer in Equipd and accept, decline or reply to the offer.',
   },
   {
     question: 'What is the Seller Service Fee?',
     answer:
-      'When your item sells, Equipd deducts a 2% Seller Service Fee from your payout before funds are transferred through Stripe. You will see the sale price, fee and amount you receive before accepting offers.',
+      'When your item sells, Equipd deducts a 2% Seller Service Fee from your payout before funds are sent through Stripe. You see the sale price, fee and amount you receive before you accept.',
   },
   {
     question: 'Can a buyer arrange a courier?',
     answer:
-      'Yes. For buyer-arranged courier orders, the buyer organises collection and delivery. The seller provides handover evidence when the courier collects, and the buyer confirms delivery once the equipment arrives.',
+      'Yes. The buyer organises collection and delivery. You provide handover evidence when the courier collects, and the buyer confirms delivery once the equipment arrives.',
   },
 ])
 

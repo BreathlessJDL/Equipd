@@ -128,7 +128,10 @@ export function getCatalogueImageStatusLabel(product) {
     && product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.APPROVED) {
     return 'Approved'
   }
-  if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.SUGGESTED) return 'Suggested'
+  if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.SUGGESTED) return 'Pending review'
+  if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.QUEUED) return 'Search queued'
+  if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.SEARCHING) return 'Searching'
+  if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.NO_RESULT) return 'No result'
   if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.REJECTED) return 'Rejected'
   if (product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.FAILED) return 'Failed'
   if (productNeedsImage(product)) return 'Missing'

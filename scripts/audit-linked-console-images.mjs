@@ -709,9 +709,13 @@ async function main() {
     separate_console_image_table: false,
     image_status_values: ['none', 'pending', 'approved', 'rejected'],
     public_page_usable_rule:
-      'buildProductConsoleImageMap uses equipment_consoles.image_url (via compat join). image_storage_path and image_status are not currently checked by the public UI.',
+      'buildProductConsoleImageMap resolves equipment_consoles.image_url / image_storage_path via resolveEquipmentConsoleImageUrl (src/lib/equipmentConsoleImages.js). Prefer static /equipment-console-images/{brand}/normalized/{filename}.',
     storage_and_url_both_supported_in_schema: true,
-    static_public_convention: '/equipment-console-images/{brand-slug}/[normalized/]{filename}',
+    static_public_convention: '/equipment-console-images/{brand-slug}/normalized/{filename}',
+    related_audits: [
+      'scripts/audit-public-console-images.mjs',
+      'npm run audit:public-console-images:deploy',
+    ],
     fixed_integrated_displays:
       'Represented as equipment_consoles rows with product_console_compat.compatibility_type = fixed (e.g. Matrix onyx_22 / onyx_32).',
   }

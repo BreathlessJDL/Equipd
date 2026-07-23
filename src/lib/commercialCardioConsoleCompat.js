@@ -20,6 +20,10 @@ export const LIFE_FITNESS_CONSOLE_IMAGE_FILES = {
   achieve: 'achieve.jpg',
   engage: 'engage.jpg',
   inspire: 'inspire.jpg',
+  go: 'go.jpg',
+  track: 'track.jpg',
+  trackconnect: 'track-connect.png',
+  trackconnect20: 'track-connect-2.png',
 }
 
 const LIFE_FITNESS_CONSOLE_IMAGE_ALIASES = {
@@ -27,6 +31,10 @@ const LIFE_FITNESS_CONSOLE_IMAGE_ALIASES = {
   integrityxconsole: 'integrityx',
   integritycconsole: 'integrityc',
   sl: 'integritysl',
+  track_connect: 'trackconnect',
+  trackconnect2: 'trackconnect20',
+  track_connect_2: 'trackconnect20',
+  trackconnect2_0: 'trackconnect20',
 }
 
 export const TECHNOGYM_CONSOLE_IMAGE_BASE = '/equipment-console-images/technogym/normalized'
@@ -57,12 +65,26 @@ export const MATRIX_CONSOLE_IMAGE_FILES = {
   led: 'Matrix LED.webp',
   touch: 'Matrix Touch.png',
   touchxl: 'Matrix Touch XL.png',
+  xr: 'xr.jpg',
+  xer: 'xer.jpg',
+  xir: 'xir.jpg',
+  onyx22: 'onyx-22.png',
+  onyx32: 'onyx-32.png',
 }
 
 const MATRIX_CONSOLE_IMAGE_ALIASES = {
   matrixled: 'led',
   matrixtouchconsole: 'touch',
   matrixtouchxlconsole: 'touchxl',
+  xrconsole: 'xr',
+  xerconsole: 'xer',
+  xirconsole: 'xir',
+  onyx22: 'onyx22',
+  onyx_22: 'onyx22',
+  onyx22touchscreen: 'onyx22',
+  onyx32: 'onyx32',
+  onyx_32: 'onyx32',
+  onyx32touchscreen: 'onyx32',
 }
 
 export const COMMERCIAL_CARDIO_CONSOLE_GROUPS = {

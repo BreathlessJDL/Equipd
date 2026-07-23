@@ -26,6 +26,10 @@ const FILTER_CHANGE_KEYS = new Set([
   'sort',
   'sortDir',
   'imageFilter',
+  'imageSearchJobId',
+  'imageSourceDomain',
+  'minImageConfidence',
+  'minCandidateScore',
   'pageSize',
 ])
 
@@ -60,6 +64,10 @@ export function buildEquipmentProductListQueryParams(state = {}) {
   const sort = String(state.sort ?? '').trim()
   const sortDir = String(state.sortDir ?? '').trim().toLowerCase()
   const imageFilter = String(state.imageFilter ?? '').trim()
+  const imageSearchJobId = String(state.imageSearchJobId ?? '').trim()
+  const imageSourceDomain = String(state.imageSourceDomain ?? '').trim()
+  const minImageConfidence = String(state.minImageConfidence ?? '').trim()
+  const minCandidateScore = String(state.minCandidateScore ?? '').trim()
 
   if (page > 1) params.set('page', String(page))
   if (pageSize !== EQUIPMENT_PRODUCT_LIST_DEFAULT_PAGE_SIZE) {
@@ -72,6 +80,10 @@ export function buildEquipmentProductListQueryParams(state = {}) {
   if (completion && completion !== 'all') params.set('completion', completion)
   if (attention && attention !== 'all') params.set('attention', attention)
   if (imageFilter && imageFilter !== 'all') params.set('imageFilter', imageFilter)
+  if (imageSearchJobId) params.set('imageSearchJobId', imageSearchJobId)
+  if (imageSourceDomain) params.set('imageSourceDomain', imageSourceDomain)
+  if (minImageConfidence) params.set('minImageConfidence', minImageConfidence)
+  if (minCandidateScore) params.set('minCandidateScore', minCandidateScore)
   if (sort && sort !== 'canonical_product_name') params.set('sort', sort)
   if (sortDir === 'desc') params.set('sortDir', 'desc')
   return params
@@ -102,6 +114,10 @@ export function parseEquipmentProductListQueryParams(searchParams) {
     completion: String(get('completion') || '').trim(),
     attention: String(get('attention') || 'all').trim() || 'all',
     imageFilter: String(get('imageFilter') || '').trim(),
+    imageSearchJobId: String(get('imageSearchJobId') || '').trim(),
+    imageSourceDomain: String(get('imageSourceDomain') || '').trim(),
+    minImageConfidence: String(get('minImageConfidence') || '').trim(),
+    minCandidateScore: String(get('minCandidateScore') || '').trim(),
     sort,
     sortDir: String(get('sortDir') || 'asc').trim().toLowerCase() === 'desc' ? 'desc' : 'asc',
   }
@@ -125,6 +141,10 @@ export function mergeEquipmentProductListQuery(current = {}, patch = {}, {
     completion: '',
     attention: 'all',
     imageFilter: '',
+    imageSearchJobId: '',
+    imageSourceDomain: '',
+    minImageConfidence: '',
+    minCandidateScore: '',
     sort: 'canonical_product_name',
     sortDir: 'asc',
     ...current,
@@ -139,6 +159,10 @@ export function mergeEquipmentProductListQuery(current = {}, patch = {}, {
   next.completion = String(next.completion ?? '').trim()
   next.attention = String(next.attention ?? 'all').trim() || 'all'
   next.imageFilter = String(next.imageFilter ?? '').trim()
+  next.imageSearchJobId = String(next.imageSearchJobId ?? '').trim()
+  next.imageSourceDomain = String(next.imageSourceDomain ?? '').trim()
+  next.minImageConfidence = String(next.minImageConfidence ?? '').trim()
+  next.minCandidateScore = String(next.minCandidateScore ?? '').trim()
   next.pageSize = clampEquipmentProductListPageSize(next.pageSize)
   next.page = Math.max(1, Math.trunc(Number(next.page) || 1))
   next.sort = EQUIPMENT_PRODUCT_LIST_SORTS.includes(next.sort)
@@ -180,6 +204,12 @@ export function buildAdminListEquipmentProductsRpcArgs(query = {}) {
   const attention = String(query.attention ?? '').trim()
   const completion = String(query.completion ?? '').trim()
   const imageFilter = String(query.imageFilter ?? '').trim()
+  const imageSearchJobId = String(query.imageSearchJobId ?? '').trim()
+  const imageSourceDomain = String(query.imageSourceDomain ?? '').trim()
+  const minImageConfidenceRaw = String(query.minImageConfidence ?? '').trim()
+  const minCandidateScoreRaw = String(query.minCandidateScore ?? '').trim()
+  const minImageConfidence = minImageConfidenceRaw ? Number(minImageConfidenceRaw) : null
+  const minCandidateScore = minCandidateScoreRaw ? Number(minCandidateScoreRaw) : null
 
   return {
     p_search: String(query.search ?? '').trim() || null,
@@ -189,6 +219,10 @@ export function buildAdminListEquipmentProductsRpcArgs(query = {}) {
     p_completion: !completion || completion === 'all' ? null : completion,
     p_attention: !attention || attention === 'all' ? null : attention,
     p_image_filter: !imageFilter || imageFilter === 'all' ? null : imageFilter,
+    p_image_search_job_id: imageSearchJobId || null,
+    p_image_source_domain: imageSourceDomain || null,
+    p_min_image_confidence: Number.isFinite(minImageConfidence) ? minImageConfidence : null,
+    p_min_candidate_score: Number.isFinite(minCandidateScore) ? minCandidateScore : null,
     p_page: page,
     p_page_size: pageSize,
     p_sort: EQUIPMENT_PRODUCT_LIST_SORTS.includes(query.sort)

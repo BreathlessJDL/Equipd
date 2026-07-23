@@ -155,8 +155,8 @@ function read(rel) {
 // --- 5. Brand-card value wording ---
 {
   const card = read('src/components/EquipmentValueGuideCard.jsx')
-  assert.match(card, /Estimated used value by year/, 'clear estimate label')
-  assert.match(card, /based on \{product\.yearLabel\}/, 'ties amount to year')
+  assert.match(card, /Typical value today/, 'clear estimate label')
+  assert.match(card, /product\.yearLabel/, 'shows year context in card meta')
 }
 
 // --- 6. Technogym Stepper cardio routing ---
@@ -248,8 +248,8 @@ function read(rel) {
   const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
   assert.match(
     valuator,
-    /Search over 1,000 fitness products and get an estimated current used value in just a few simple steps\./,
-    'valuator lede uses fitness products wording',
+    /Instant market valuations based on thousands of listings, historical prices and current UK resale trends\./,
+    'valuator lede uses current market-valuation wording',
   )
   assert.doesNotMatch(valuator, /commercial fitness products/, 'valuator lede is not commercial-only')
 }

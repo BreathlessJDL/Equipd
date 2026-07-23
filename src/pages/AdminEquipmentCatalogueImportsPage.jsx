@@ -18,8 +18,8 @@ function AdminEquipmentCatalogueImportsPage() {
         <h2 className="admin-intelligence__panel-title">Catalogue imports</h2>
         <div className="admin-intelligence__stats">
           <Link to="/admin/intelligence/import" className="admin-intelligence__stat" style={{ textDecoration: 'none' }}>
-            <span>Source CSV</span>
-            <strong>Import intelligence CSV</strong>
+            <span>Canonical CSV</span>
+            <strong>Import researched products</strong>
           </Link>
           <Link to="/admin/intelligence/original-prices-lifecycle" className="admin-intelligence__stat" style={{ textDecoration: 'none' }}>
             <span>Research spreadsheet</span>
@@ -27,8 +27,9 @@ function AdminEquipmentCatalogueImportsPage() {
           </Link>
         </div>
         <p className="admin-intelligence__lead" style={{ marginTop: '1rem' }}>
-          Use the research queue for spreadsheet import/export of original prices and manufacture years.
-          Source CSV import still upserts raw intelligence rows that feed the catalogue.
+          Canonical CSV upserts products by slug and writes original RRP and baseline manufacture year
+          directly onto catalogue products. Use the research queue for spreadsheet-assisted bulk edits.
+          Raw automated intelligence ingestion remains separate and conservative.
         </p>
       </section>
     </div>

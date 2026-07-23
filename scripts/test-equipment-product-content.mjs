@@ -27,6 +27,8 @@ import {
   TECHNOGYM_CROSSOVER_CARDIO_PROMPT_CONTEXT,
   validateConsoleFaqs,
   validateHomeUseOverviewWording,
+  validateCommercialOverviewWording,
+  findCommercialHomePhrases,
   validateCategoryIncompatibleTerminology,
   findCategoryIncompatibleTerms,
   findInventedProductFeaturePhrases,
@@ -1092,9 +1094,9 @@ const noPricePayload = buildProductContentSourcePayload({
   original_base_price: null,
 })
 assert(noPricePayload.original_base_price == null, 'source payload does not invent price')
-assert(noPricePayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, 'Peloton uses home_use segment')
+assert(noPricePayload.usage_segment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME, 'Peloton uses premium_home segment')
 
-const homeFixtures = [
+const premiumHomeFixtures = [
   { brand: 'Peloton', model: 'Bike', name: 'Peloton Bike', type: 'Exercise Bike' },
   { brand: 'Peloton', model: 'Bike+', name: 'Peloton Bike+', type: 'Exercise Bike' },
   { brand: 'NordicTrack', model: 'Commercial 1750', name: 'NordicTrack Commercial 1750', type: 'Treadmill' },
@@ -1103,7 +1105,7 @@ const homeFixtures = [
   { brand: 'BowFlex', model: 'VeloCore 16i', name: 'BowFlex VeloCore 16i', type: 'Exercise Bike' },
 ]
 
-for (const fixture of homeFixtures) {
+for (const fixture of premiumHomeFixtures) {
   assert(isHomeUseContentBrand(fixture.brand), `${fixture.brand} is home-use brand`)
   const payload = buildProductContentSourcePayload({
     id: `home-${fixture.model}`,
@@ -1114,7 +1116,7 @@ for (const fixture of homeFixtures) {
     status: PRODUCT_STATUS.APPROVED,
     original_base_price: null,
   })
-  assert(payload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, `${fixture.name} usage_segment home_use`)
+  assert(payload.usage_segment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME, `${fixture.name} usage_segment premium_home`)
   assert(payload.equipment_type === fixture.type, `${fixture.name} keeps equipment type`)
   const commercialClaim = [
     `${fixture.name} is built with commercial construction for continuous club use on the gym floor.`,
@@ -1134,6 +1136,84 @@ for (const fixture of homeFixtures) {
   ].join(' ')
   validateHomeUseOverviewWording(safeOverview, payload)
 }
+
+const mainstreamHomeFixtures = [
+  { brand: 'ProForm', model: 'Pro 2000', name: 'ProForm Pro 2000', type: 'Treadmill' },
+  { brand: 'Sole', model: 'F85', name: 'Sole F85', type: 'Treadmill' },
+  { brand: 'Horizon Fitness', model: '7.0 AT', name: 'Horizon Fitness 7.0 AT', type: 'Treadmill' },
+  { brand: 'York Fitness', model: 'Barbarian', name: 'York Fitness Barbarian', type: 'Multi Gym' },
+  { brand: 'Reebok', model: 'Jet 300', name: 'Reebok Jet 300', type: 'Treadmill' },
+  { brand: 'Schwinn', model: 'IC4', name: 'Schwinn IC4', type: 'Exercise Bike' },
+  { brand: 'WaterRower', model: 'A1', name: 'WaterRower A1', type: 'Rower' },
+]
+
+for (const fixture of mainstreamHomeFixtures) {
+  assert(isHomeUseContentBrand(fixture.brand), `${fixture.brand} is home brand`)
+  const segment = resolveProductContentUsageSegment({
+    brand: fixture.brand,
+    equipment_type: fixture.type,
+    model: fixture.model,
+  })
+  assert(segment === CONTENT_USAGE_SEGMENT.HOME, `${fixture.name} usage_segment home`)
+  const payload = buildProductContentSourcePayload({
+    id: `mh-${fixture.model}`,
+    brand: fixture.brand,
+    model: fixture.model,
+    canonical_product_name: fixture.name,
+    equipment_type: fixture.type,
+    status: PRODUCT_STATUS.APPROVED,
+  })
+  let rejectedHomeCommercial = false
+  try {
+    validateHomeUseOverviewWording(
+      `${fixture.name} is suitable for commercial gyms and ideal for health clubs in busy fitness facilities.`,
+      payload,
+    )
+  } catch {
+    rejectedHomeCommercial = true
+  }
+  assert(rejectedHomeCommercial, `${fixture.name} rejects commercial gym claims`)
+}
+
+assert(
+  resolveProductContentUsageSegment({ brand: 'Wattbike', equipment_type: 'Exercise Bike' })
+    === CONTENT_USAGE_SEGMENT.LIGHT_COMMERCIAL,
+  'Wattbike is light_commercial',
+)
+assert(
+  resolveProductContentUsageSegment({ brand: 'Life Fitness', equipment_type: 'Chest Press' })
+    === CONTENT_USAGE_SEGMENT.STRENGTH,
+  'commercial brand strength stays strength-neutral',
+)
+assert(
+  resolveProductContentUsageSegment({ brand: 'ProForm', equipment_type: 'Multi Gym' })
+    === CONTENT_USAGE_SEGMENT.HOME,
+  'home-brand strength stays home',
+)
+
+const commercialIntegrityPayload = buildProductContentSourcePayload({
+  brand: 'Life Fitness',
+  product_family: 'Integrity Series',
+  model: 'Treadmill',
+  equipment_type: 'Treadmill',
+  canonical_product_name: 'Life Fitness Integrity Series Treadmill',
+  status: PRODUCT_STATUS.APPROVED,
+})
+assert(commercialIntegrityPayload.usage_segment === CONTENT_USAGE_SEGMENT.COMMERCIAL, 'LF Integrity is commercial')
+assert(
+  findCommercialHomePhrases('This home treadmill is designed for home use and ideal for home gyms.').length > 0,
+  'detects home wording on commercial copy',
+)
+let rejectedCommercialHome = false
+try {
+  validateCommercialOverviewWording(
+    'The Life Fitness Integrity Series Treadmill is a home treadmill designed for home use.',
+    commercialIntegrityPayload,
+  )
+} catch {
+  rejectedCommercialHome = true
+}
+assert(rejectedCommercialHome, 'commercial brands reject home treadmill claims')
 
 const crossoverHomePayload = buildProductContentSourcePayload({
   brand: 'BowFlex',
@@ -1287,7 +1367,7 @@ const veloCoreProduct = {
 
 const veloPayload = buildProductContentSourcePayload(veloCoreProduct)
 assert(veloPayload.equipment_category === PRODUCT_CONTENT_CATEGORIES.CARDIO, 'VeloCore routes to cardio')
-assert(veloPayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, 'VeloCore home_use')
+assert(veloPayload.usage_segment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME, 'VeloCore premium_home')
 assert(
   resolveProductContentCategory({ brand: 'Peloton', equipment_type: 'Indoor Bike', model: 'Bike', canonical_product_name: 'Peloton Bike' })
     === PRODUCT_CONTENT_CATEGORIES.CARDIO,
@@ -1416,7 +1496,7 @@ const pelotonHomePayload = buildProductContentSourcePayload({
   equipment_type: 'Indoor Bike',
   canonical_product_name: 'Peloton Bike',
 })
-assert(pelotonHomePayload.usage_segment === CONTENT_USAGE_SEGMENT.HOME_USE, 'Peloton Bike home_use')
+assert(pelotonHomePayload.usage_segment === CONTENT_USAGE_SEGMENT.PREMIUM_HOME, 'Peloton Bike premium_home')
 let rejectedPelotonCommercial = false
 try {
   validateHomeUseOverviewWording(

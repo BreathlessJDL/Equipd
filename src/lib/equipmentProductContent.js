@@ -12,6 +12,10 @@ import {
   CONTENT_USAGE_SEGMENT,
   resolveProductContentUsageSegment,
 } from './equipmentProductContentGenerateMissing.js'
+import {
+  isCommercialContentBrand,
+  isHomeLikeUsageSegment,
+} from './equipmentProductContentUsage.js'
 
 export const EQUIPMENT_PRODUCT_CONTENT_STATUS = {
   DRAFT: 'draft',
@@ -383,9 +387,22 @@ export function validateOverviewEquipdMention(overviewText) {
 
 export const HOME_USE_BANNED_COMMERCIAL_PHRASES = [
   'commercial construction',
+  'commercial-grade',
+  'commercial grade',
   'commercial gym',
   'commercial facility',
   'commercial facilities',
+  'commercial use',
+  'designed for commercial use',
+  'suitable for commercial gyms',
+  'built for busy fitness facilities',
+  'busy fitness facilities',
+  'ideal for health clubs',
+  'health club',
+  'health clubs',
+  'fitness facility',
+  'fitness facilities',
+  'busy gym',
   'gym-floor',
   'gym floor',
   'designed for commercial fitness facilities',
@@ -395,8 +412,25 @@ export const HOME_USE_BANNED_COMMERCIAL_PHRASES = [
   'commercial strength',
   'club use',
   'continuous club',
+  'high-traffic',
+  'high traffic',
   'high-traffic commercial',
   'commercial servicing',
+]
+
+export const COMMERCIAL_BANNED_HOME_PHRASES = [
+  'designed for home use',
+  'built for home fitness',
+  'ideal for home gyms',
+  'popular with home users',
+  'home treadmill',
+  'home bike',
+  'home exercise bike',
+  'home workout',
+  'home gym equipment',
+  'for home gyms',
+  'residential use',
+  'compact home',
 ]
 
 export function findHomeUseCommercialPhrases(text) {
@@ -404,16 +438,41 @@ export function findHomeUseCommercialPhrases(text) {
   return HOME_USE_BANNED_COMMERCIAL_PHRASES.filter((phrase) => haystack.includes(phrase.toLowerCase()))
 }
 
+export function findCommercialHomePhrases(text) {
+  const haystack = String(text ?? '').toLowerCase()
+  return COMMERCIAL_BANNED_HOME_PHRASES.filter((phrase) => haystack.includes(phrase.toLowerCase()))
+}
+
 export function validateHomeUseOverviewWording(overviewText, sourcePayload = null) {
   const segment = sourcePayload?.usage_segment
     || resolveProductContentUsageSegment(sourcePayload ?? {})
-  if (segment !== CONTENT_USAGE_SEGMENT.HOME_USE) return
+  if (!isHomeLikeUsageSegment(segment)) return
 
   const violations = findHomeUseCommercialPhrases(overviewText)
   if (!violations.length) return
 
   throw new Error(
-    `home_use overview_text contains commercial-only wording without evidence: ${violations.map((phrase) => `"${phrase}"`).join(', ')}`,
+    `home/premium_home overview_text contains commercial-only wording without evidence: ${violations.map((phrase) => `"${phrase}"`).join(', ')}`,
+  )
+}
+
+export function validateCommercialOverviewWording(overviewText, sourcePayload = null) {
+  const segment = sourcePayload?.usage_segment
+    || resolveProductContentUsageSegment(sourcePayload ?? {})
+  const brand = sourcePayload?.brand
+  const isCommercialSegment = segment === CONTENT_USAGE_SEGMENT.COMMERCIAL
+  const isStrictCommercialBrand = isCommercialContentBrand(brand)
+
+  if (!isCommercialSegment && !isStrictCommercialBrand) return
+  // Strength segment on commercial brands should still avoid consumer home claims.
+  if (segment === CONTENT_USAGE_SEGMENT.STRENGTH && !isStrictCommercialBrand) return
+  if (isHomeLikeUsageSegment(segment)) return
+
+  const violations = findCommercialHomePhrases(overviewText)
+  if (!violations.length) return
+
+  throw new Error(
+    `commercial overview_text contains home-use wording: ${violations.map((phrase) => `"${phrase}"`).join(', ')}`,
   )
 }
 
@@ -641,6 +700,7 @@ export function validateProductContent({
   validateInventedProductFeatures(overviewText, sourcePayload)
   validateOverviewEquipdMention(overviewText)
   validateHomeUseOverviewWording(overviewText, sourcePayload)
+  validateCommercialOverviewWording(overviewText, sourcePayload)
   validateCategoryIncompatibleTerminology(overviewText, sourcePayload)
   validateOverviewConsoleMentions(overviewText, sourcePayload)
   validateContinuousProductionClaims(overviewText, sourcePayload)
@@ -765,6 +825,9 @@ export async function generateProductContentWithOpenAI({
             || validationError.message.includes('Console-variant FAQs')
             || validationError.message.includes('At least 2 FAQs')
             || validationError.message.includes('must not describe Technogym Crossover')
+            || validationError.message.includes('commercial-only wording')
+            || validationError.message.includes('contains home-use wording')
+            || validationError.message.includes('incompatible with')
           )
 
         if (!canRetry) {

@@ -3,13 +3,15 @@
  * Seed curated Life Fitness console master + product_console_compat.
  * Replaces template backfill. Clears legacy product_console_options for the brand.
  *
+ * Includes commercial Elevation / Integrity / Silver Line and home GO/TRACK timeline.
+ *
  * Usage:
  *   node scripts/seed-life-fitness-console-compat.mjs
  *   node scripts/seed-life-fitness-console-compat.mjs --apply
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   LIFE_FITNESS_BRAND,
@@ -17,6 +19,7 @@ import {
   LIFE_FITNESS_CONSOLE_DEFS,
   LIFE_FITNESS_EXPLICITLY_UNMAPPED,
   LIFE_FITNESS_UNRESOLVED_PRODUCTS,
+  buildLifeFitnessHomeConsolePlan,
 } from '../src/lib/lifeFitnessConsoleCompat.js'
 import { isCardioEquipmentProduct, isStrengthEquipmentProduct } from '../src/lib/equipmentCardio.js'
 
@@ -49,11 +52,9 @@ async function main() {
   const args = parseArgs(process.argv)
   const env = loadEnv()
   const supabase = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY)
-  const productKeys = Object.keys(LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY)
 
   console.log(`Life Fitness console seed (${args.dryRun ? 'dry-run' : 'APPLY'})`)
   console.log(`Consoles: ${LIFE_FITNESS_CONSOLE_DEFS.length}`)
-  console.log(`Mapped product keys: ${productKeys.length}`)
   console.log('Explicitly unmapped:', LIFE_FITNESS_EXPLICITLY_UNMAPPED.map((entry) => entry.key).join(', '))
   console.log('Unresolved notes:', LIFE_FITNESS_UNRESOLVED_PRODUCTS.map((entry) => entry.name).join('; '))
 
@@ -106,13 +107,25 @@ async function main() {
     .eq('status', 'approved')
   if (productsError) throw productsError
 
+  const homePlan = buildLifeFitnessHomeConsolePlan(products ?? [])
+  const compatByKey = {
+    ...LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY,
+    ...homePlan.byKey,
+  }
+  const productKeys = Object.keys(compatByKey)
+
+  console.log(`Commercial + static mapped keys: ${Object.keys(LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY).length}`)
+  console.log(`Home interchangeable mapped: ${homePlan.summary.mapped_product_count}`)
+  console.log(`Home skipped (fixed/no-console/legacy): ${homePlan.summary.skipped_product_count}`)
+
   const productByKey = new Map((products ?? []).map((row) => [row.canonical_product_key, row]))
   const allIds = (products ?? []).map((row) => row.id)
   const missingKeys = productKeys.filter((key) => !productByKey.has(key))
   if (missingKeys.length) console.warn('Mapped keys not in DB:', missingKeys.join(', '))
 
   const compatRows = []
-  for (const [productKey, mappings] of Object.entries(LIFE_FITNESS_COMPAT_BY_PRODUCT_KEY)) {
+  const mappingPreview = []
+  for (const [productKey, mappings] of Object.entries(compatByKey)) {
     const product = productByKey.get(productKey)
     if (!product) continue
     if (isStrengthEquipmentProduct(product)) {
@@ -149,6 +162,16 @@ async function main() {
         confidence: mapping.confidence ?? 'medium',
         is_active: true,
       })
+      mappingPreview.push({
+        product: product.canonical_product_name,
+        key: productKey,
+        console_key: mapping.console_key,
+        compatibility_type: mapping.compatibility_type,
+        available_from_year: mapping.available_from_year,
+        available_to_year: mapping.available_to_year ?? null,
+        modifier_percent: Number(mapping.modifier_percent ?? 0),
+        is_default: Boolean(mapping.is_default),
+      })
       console.log(
         `${args.dryRun ? 'Would map' : 'Map'} ${product.canonical_product_name} → ${mapping.console_key} `
         + `[${mapping.compatibility_type}] ${mapping.available_from_year}–${mapping.available_to_year ?? 'open'} `
@@ -179,6 +202,27 @@ async function main() {
     console.log(`Would clear compat + options for ${allIds.length} products; insert ${compatRows.length} rows`)
   }
 
+  const report = {
+    generated_at: new Date().toISOString(),
+    mode: args.dryRun ? 'dry-run' : 'apply',
+    brand: LIFE_FITNESS_BRAND,
+    console_keys: consoleRows.map((row) => row.console_key),
+    home: homePlan.summary,
+    home_mapped: homePlan.mapped,
+    home_skipped: homePlan.skipped,
+    compat_row_count: compatRows.length,
+    mappings: mappingPreview,
+    missing_keys: missingKeys,
+  }
+
+  mkdirSync(join(process.cwd(), 'reports'), { recursive: true })
+  const outPath = join(
+    process.cwd(),
+    'reports',
+    args.dryRun ? 'life-fitness-console-compat-dry-run.json' : 'life-fitness-console-compat-apply.json',
+  )
+  writeFileSync(outPath, JSON.stringify(report, null, 2))
+  console.log(`Wrote ${outPath}`)
   console.log(`Compat rows: ${compatRows.length}`)
   console.log(args.dryRun ? 'Dry-run complete. Re-run with --apply to write.' : 'Apply complete.')
 }
