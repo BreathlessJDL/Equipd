@@ -15,17 +15,42 @@ import {
   getOfferUnitAmountPence,
 } from '../../lib/offers'
 import { canPayNow } from '../../lib/payments'
-import {
-  shouldShowBuyerPricing,
-  shouldShowSellerPricing,
-} from '../../lib/pricingViewerRole'
 import PayNowWithFulfilment from '../PayNowWithFulfilment'
-import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
-import SellerPayoutSummary from '../SellerPayoutSummary'
 import { formatMessageTimestamp } from '../../lib/messages'
+import { CircleCheckIcon, NewOfferTagIcon } from '../icons/NotificationIcons'
 import CounterOfferModal from './CounterOfferModal'
 import AcceptOfferConfirmationModal from '../listing/AcceptOfferConfirmationModal'
 import './MessageOfferCard.css'
+
+function OfferCalendarIcon({ className = '' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="2.25"
+        y="3.25"
+        width="11.5"
+        height="10.5"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
+      <path d="M2.25 6.5h11.5" stroke="currentColor" strokeWidth="1.25" />
+      <path
+        d="M5.25 2.25v2M10.75 2.25v2"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
 
 function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
   const offer = message.offer
@@ -47,10 +72,16 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
   const showPayNow = isBuyer && offer.status === 'accepted' && canPayNow(payment)
   const displayStatus = getOfferDisplayStatus(offer)
   const counterPartyRole = isBuyer ? 'buyer' : 'seller'
-  const showBuyerPricing = shouldShowBuyerPricing({ userId: user?.id, offer })
-  const showSellerPricing = shouldShowSellerPricing({ userId: user?.id, offer })
   const quantity = offer.quantity ?? 1
   const unitOfferPence = getOfferUnitAmountPence(offer.amount_pence, quantity)
+  const quantityLabel = `Offer for ${quantity} ${quantity === 1 ? 'item' : 'items'}`
+  const primaryAmountLabel = formatPricePence(offer.amount_pence)
+  const unitAmountLabel = quantity > 1 && unitOfferPence
+    ? `${formatPricePence(unitOfferPence)} per item`
+    : null
+  const statusVariant = displayStatus.variant === 'declined'
+    ? 'rejected'
+    : displayStatus.variant
 
   async function runAction(action) {
     setActing(true)
@@ -101,13 +132,19 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
     <>
       <div
         className={`message-offer-card${isMine ? ' message-offer-card--mine' : ''}`}
-        aria-label={`Offer ${formatPricePence(offer.amount_pence)}`}
+        aria-label={`Offer ${primaryAmountLabel}`}
       >
         <div className="message-offer-card__header">
-          <span className="message-offer-card__badge">Offer</span>
+          <div className="message-offer-card__badge">
+            <NewOfferTagIcon className="message-offer-card__badge-icon" />
+            <span>Offer</span>
+          </div>
           <span
-            className={`message-offer-card__status message-offer-card__status--${displayStatus.variant}`}
+            className={`message-offer-card__status message-offer-card__status--${statusVariant}`}
           >
+            {statusVariant === 'accepted' ? (
+              <CircleCheckIcon className="message-offer-card__status-icon" />
+            ) : null}
             {displayStatus.label}
           </span>
         </div>
@@ -132,40 +169,26 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
             ) : (
               <p className="message-offer-card__title">{listing?.title ?? 'Listing'}</p>
             )}
-            <p className="message-offer-card__amount">
-              Offer for {quantity} {quantity === 1 ? 'item' : 'items'}
-            </p>
-            <p className="message-offer-card__meta">
-              {unitOfferPence ? `${formatPricePence(unitOfferPence)} per item` : ''}
-              {unitOfferPence ? ' · ' : ''}
-              {formatPricePence(offer.amount_pence)} total
-            </p>
+            <p className="message-offer-card__quantity">{quantityLabel}</p>
+            <div className="message-offer-card__price">
+              <span className="message-offer-card__price-label">Offer price</span>
+              <p className="message-offer-card__amount">{primaryAmountLabel}</p>
+              {unitAmountLabel ? (
+                <p className="message-offer-card__unit-amount">{unitAmountLabel}</p>
+              ) : null}
+            </div>
             {offer.message ? (
               <p className="message-offer-card__note">{offer.message}</p>
-            ) : null}
-            {showBuyerPricing ? (
-              <BuyerProtectionPriceDisplay
-                payment={payment ?? null}
-                itemPricePence={payment ? null : offer.amount_pence}
-                quantity={quantity}
-              />
-            ) : null}
-            {showSellerPricing ? (
-              <SellerPayoutSummary
-                itemPricePence={offer.amount_pence}
-                quantity={quantity}
-                payment={payment ?? null}
-                compact
-                offerAmountLabel="Offer price"
-                receiveLabel="You'll receive"
-              />
             ) : null}
           </div>
         </div>
 
-        <time className="message-offer-card__time" dateTime={message.created_at}>
-          {formatMessageTimestamp(message.created_at)}
-        </time>
+        <div className="message-offer-card__footer">
+          <OfferCalendarIcon className="message-offer-card__footer-icon" />
+          <time className="message-offer-card__time" dateTime={message.created_at}>
+            {formatMessageTimestamp(message.created_at)}
+          </time>
+        </div>
 
         {actionError ? (
           <p className="message-offer-card__error" role="alert">
@@ -241,7 +264,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
               onPayComplete={() => setPaying(false)}
             />
             {payment?.expires_at ? (
-              <p className="message-offer-card__meta">
+              <p className="message-offer-card__pay-by">
                 Pay by {formatOfferTimestamp(payment.expires_at)}
               </p>
             ) : null}

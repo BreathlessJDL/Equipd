@@ -40,12 +40,16 @@ try {
   }
 
   const multiSummary = renderToStaticMarkup(
-    React.createElement(ListingItemSummary, {
-      listing,
-      selectedQuantity: 4,
-      onSelectedQuantityChange: () => {},
-      actions: React.createElement('button', null, 'Make an offer'),
-    }),
+    React.createElement(
+      MemoryRouter,
+      null,
+      React.createElement(ListingItemSummary, {
+        listing,
+        selectedQuantity: 4,
+        onSelectedQuantityChange: () => {},
+        actions: React.createElement('button', null, 'Make an offer'),
+      }),
+    ),
   )
   assert.match(multiSummary, /Decrease selected quantity/)
   assert.match(multiSummary, /Increase selected quantity/)
@@ -56,11 +60,15 @@ try {
   assert.match(multiSummary, /£2,380 item subtotal/)
 
   const quantityOneSummary = renderToStaticMarkup(
-    React.createElement(ListingItemSummary, {
-      listing: { ...listing, quantity_available: 1 },
-      selectedQuantity: 1,
-      onSelectedQuantityChange: () => {},
-    }),
+    React.createElement(
+      MemoryRouter,
+      null,
+      React.createElement(ListingItemSummary, {
+        listing: { ...listing, quantity_available: 1 },
+        selectedQuantity: 1,
+        onSelectedQuantityChange: () => {},
+      }),
+    ),
   )
   assert.doesNotMatch(quantityOneSummary, /Purchase quantity/)
   assert.doesNotMatch(quantityOneSummary, /item subtotal/)
@@ -139,8 +147,12 @@ try {
     ),
   )
   assert.match(offerCard, /Offer for 3 items/)
+  assert.match(offerCard, /Offer price/)
+  assert.match(offerCard, /£1,500/)
   assert.match(offerCard, /£500 per item/)
-  assert.match(offerCard, /£1,500 total/)
+  assert.doesNotMatch(offerCard, /Seller Service Fee/)
+  assert.doesNotMatch(offerCard, /You'll receive/)
+  assert.doesNotMatch(offerCard, /Buyer Protection/)
 
   const checkoutSummary = renderToStaticMarkup(
     React.createElement(PaymentCheckoutSummary, {
