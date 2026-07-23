@@ -1,7 +1,51 @@
 {
   "rewrites": [
     {
-      "source": "/listings/(?!new$|leeds$|manchester$|birmingham$|london$|sheffield$|bristol$|liverpool$|newcastle$|glasgow$|cardiff$)([^/]+)",
+      "source": "/listings/new",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/leeds",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/manchester",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/birmingham",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/london",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/sheffield",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/bristol",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/liverpool",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/newcastle",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/glasgow",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/cardiff",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/listings/([^/]+)",
       "destination": "/api/public-listing-page?slug=$1"
     },
     {
