@@ -63,6 +63,7 @@ assert(brandsDoc.title.endsWith('| Equipd'), 'brands title ends with Equipd')
 assert(brandsDoc.description.includes('equipment value guides by brand'), 'brands meta description')
 assert(brandsDoc.bodyHtml.includes('<h1>Used Gym Equipment Values by Brand</h1>'), 'brands h1')
 assert(brandsDoc.bodyHtml.includes('Browse equipment by brand'), 'brands browse section')
+assert(brandsDoc.openGraph['og:image'].includes('sell-gym-equipment-og.png'), 'brands og image')
 assert(brandsDoc.canonicalPath === '/brands', 'brands canonical unchanged')
 assert(brandsDoc.bodyHtml.includes('/brands/life-fitness'), 'brands crawlable link')
 assert(

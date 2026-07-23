@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import EquipmentDepreciationGraph from '../components/equipment/EquipmentDepreciationGraph'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { buildSocialOpenGraph } from '../lib/socialPreview'
 import EquipmentValuationDetailsFields, {
   shouldResetConsoleForYearChange,
 } from '../components/equipment/EquipmentValuationDetailsFields'
@@ -224,18 +225,13 @@ function ValuationPage() {
     description:
       'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
     canonicalPath: '/valuation',
-    openGraph: {
-      'og:title': 'Instant Equipment Valuation | Equipd',
-      'og:description':
+    openGraph: buildSocialOpenGraph({
+      title: 'Instant Equipment Valuation | Equipd',
+      description:
         'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
-      'og:url': 'https://www.equipd.co.uk/valuation',
-      'og:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
-      'twitter:card': 'summary_large_image',
-      'twitter:title': 'Instant Equipment Valuation | Equipd',
-      'twitter:description':
-        'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
-      'twitter:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
-    },
+      url: 'https://www.equipd.co.uk/valuation',
+      fallbackImage: true,
+    }),
   })
 
   // Scroll to page top after each major step change (skips first mount).

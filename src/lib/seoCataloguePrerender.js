@@ -25,6 +25,7 @@ import {
   buildEquipmentProductPagePath,
   getEquipmentProductPublicName,
 } from './equipmentPageSeo.js'
+import { buildSocialOpenGraph } from './socialPreview.js'
 import {
   buildBrandsIndexBreadcrumbSchema,
   buildBrandPageBreadcrumbSchema,
@@ -222,6 +223,12 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
     title,
     description,
     canonicalPath: path,
+    openGraph: buildSocialOpenGraph({
+      title,
+      description,
+      url: `${EQUIPD_SITE_ORIGIN}${path}`,
+      fallbackImage: true,
+    }),
     jsonLd: [
       buildBrandCollectionJsonLd(brands),
       buildBrandsIndexBreadcrumbSchema(),
@@ -301,6 +308,12 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
     title,
     description,
     canonicalPath: path,
+    openGraph: buildSocialOpenGraph({
+      title,
+      description,
+      url: brand.absoluteUrl || getBrandAbsoluteUrl(brand.slug),
+      fallbackImage: true,
+    }),
     jsonLd: [
       buildBrandPageJsonLd(brand, products),
       buildBrandPageBreadcrumbSchema(brand),

@@ -35,6 +35,7 @@ import {
   buildSocialOpenGraph,
   getEquipdDefaultSocialImageUrl,
 } from '../src/lib/socialPreview.js'
+import { buildValuationSeoDocument } from '../src/lib/valuationPageSeo.js'
 
 function assert(condition, label) {
   if (!condition) throw new Error(label)
@@ -198,6 +199,13 @@ const faqResult = buildFaqPageSchema([
 assertEqual(faqResult.schema['@type'], 'FAQPage', 'FAQPage when Q&A present')
 assertEqual(faqResult.schema.mainEntity[0].name, 'How do I sell?', 'FAQ question matches')
 assertEqual(faqResult.schema.mainEntity[0].acceptedAnswer.text, 'Create a listing on Equipd.', 'FAQ answer matches')
+
+// --- Valuation landing (no FAQ schema) ---
+const valuationDoc = buildValuationSeoDocument()
+assertEqual(valuationDoc.path, '/valuation', 'valuation path')
+assert(valuationDoc.title.includes('Instant Equipment Valuation'), 'valuation title')
+assert(valuationDoc.openGraph['og:image'], 'valuation og image')
+assert(!JSON.stringify(valuationDoc.jsonLd).includes('FAQPage'), 'valuation has no FAQPage')
 
 // --- Seller shop: AggregateRating only with real reviews ---
 const shopProfile = { id: 'u1', username: 'fitclearance', display_name: 'Fit Clearance' }

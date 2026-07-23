@@ -37,6 +37,7 @@ import {
   fetchPublicSellerProfilesForListings,
 } from '../src/lib/listingPrerenderData.js'
 import { buildSellGymEquipmentSeoDocument } from '../src/lib/sellGymEquipmentPage.js'
+import { buildValuationSeoDocument } from '../src/lib/valuationPageSeo.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 const PRODUCT_SELECT = [
@@ -359,7 +360,10 @@ async function main() {
 
   await runWithConcurrency(routes, 8, renderRoute)
 
-  const staticMarketingPages = [buildSellGymEquipmentSeoDocument()]
+  const staticMarketingPages = [
+    buildSellGymEquipmentSeoDocument(),
+    buildValuationSeoDocument(),
+  ]
   console.log(`[prerender] Rendering ${staticMarketingPages.length} static marketing page(s)…`)
 
   for (const document of staticMarketingPages) {
