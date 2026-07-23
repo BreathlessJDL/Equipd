@@ -235,6 +235,8 @@ function EditListingPage() {
       delivery_notes: payload.delivery_notes,
       seller_delivery_radius_miles: payload.seller_delivery_radius_miles,
       status: targetStatus,
+      equipment_product_id: payload.equipment_product_id,
+      canonical_product_key: payload.canonical_product_key,
     })
 
     if (error) {

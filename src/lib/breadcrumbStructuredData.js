@@ -176,11 +176,22 @@ export function buildLocationPageBreadcrumbSchema(location) {
  * Marketplace listing trail. Category query URLs are not indexable landings,
  * so the hierarchy is Home → Browse → Listing.
  */
+export function buildListingBreadcrumbItems(listing) {
+  const title = normalizeBreadcrumbName(listing?.title)
+  if (!title) return []
+  return [
+    { name: 'Home', path: '/' },
+    { name: 'Browse', path: '/browse' },
+    { name: title, path: listing?.slug ? `/listings/${String(listing.slug).trim()}` : null },
+  ]
+}
+
 export function buildListingBreadcrumbSchema(listing) {
   const title = normalizeBreadcrumbName(listing?.title)
   const slug = String(listing?.slug ?? '').trim()
   const status = String(listing?.status ?? '').trim().toLowerCase()
-  if (!title || !slug || status !== 'active') return null
+  if (!title || !slug) return null
+  if (status !== 'active' && status !== 'sold') return null
 
   const path = `/listings/${slug}`
   return buildBreadcrumbSchema(

@@ -24,6 +24,7 @@ import {
 import { parseListingQuantity } from './listingQuantity'
 import { supabase } from './supabase'
 import { notifyIndexNowForListingChange } from './indexNowNotify'
+import { normalizeListingEquipmentProductWriteFields } from './listingDiscovery'
 
 export { getCategoryDisplayName, getRatingLabel } from './listingOptions'
 export {
@@ -190,6 +191,11 @@ export function prepareListingPayload(form, status, existingListing = null) {
     ? parseSellerDeliveryRadiusInput(form.deliveryRangeMiles)
     : null
 
+  const equipmentProductFields = normalizeListingEquipmentProductWriteFields({
+    equipmentProductId: form.equipmentProductId,
+    equipmentProductKey: form.equipmentProductKey,
+  })
+
   return {
     category_id: form.categoryId || null,
     title: title.slice(0, 120),
@@ -205,6 +211,7 @@ export function prepareListingPayload(form, status, existingListing = null) {
     courier_available: deliveryFields.courier_available,
     delivery_notes: deliveryFields.delivery_notes,
     seller_delivery_radius_miles: sellerDeliveryRadiusMiles,
+    ...equipmentProductFields,
     status,
   }
 }
@@ -242,6 +249,11 @@ export function listingToForm(listing) {
     collectionAvailable: listing.collection_available !== false,
     courierAvailable: Boolean(listing.courier_available),
     deliveryNotes: listing.delivery_notes ?? '',
+    equipmentProductId: listing.equipment_product_id ?? '',
+    equipmentProductKey: listing.canonical_product_key ?? '',
+    equipmentProductFamily: '',
+    estimatedOriginalRrp: null,
+    estimatedOriginalRrpCurrency: 'GBP',
   }
 }
 
@@ -472,6 +484,8 @@ export async function createListing(sellerId, fields) {
       quantity_total: quantity,
       status: fields.status,
       source: 'manual',
+      equipment_product_id: fields.equipment_product_id ?? null,
+      canonical_product_key: fields.canonical_product_key ?? null,
     })
     .select('*')
     .single()
@@ -548,6 +562,12 @@ export async function updateListing(listingId, fields) {
     updates.seller_delivery_radius_miles = fields.seller_delivery_radius_miles
   }
   if (fields.status !== undefined) updates.status = fields.status
+  if (fields.equipment_product_id !== undefined) {
+    updates.equipment_product_id = fields.equipment_product_id
+  }
+  if (fields.canonical_product_key !== undefined) {
+    updates.canonical_product_key = fields.canonical_product_key
+  }
 
   const { data, error } = await supabase
     .from('listings')
@@ -706,7 +726,14 @@ function appendRecommendedListings(collected, seen, listings, limit) {
   }
 }
 
-async function fetchRecommendedBatch({ listingId, categoryId = '', brand = '', limit }) {
+async function fetchRecommendedBatch({
+  listingId,
+  categoryId = '',
+  brand = '',
+  equipmentProductId = '',
+  equipmentProductIds = null,
+  limit,
+} = {}) {
   if (!supabase) {
     return { data: [], error: new Error('Supabase is not configured.') }
   }
@@ -725,6 +752,14 @@ async function fetchRecommendedBatch({ listingId, categoryId = '', brand = '', l
       .limit(limit),
   )
 
+  if (equipmentProductId) {
+    query = query.eq('equipment_product_id', equipmentProductId)
+  }
+
+  if (Array.isArray(equipmentProductIds) && equipmentProductIds.length > 0) {
+    query = query.in('equipment_product_id', equipmentProductIds)
+  }
+
   if (categoryId) {
     query = query.eq('category_id', categoryId)
   }
@@ -737,6 +772,13 @@ async function fetchRecommendedBatch({ listingId, categoryId = '', brand = '', l
   const { data, error } = await query
 
   if (error) {
+    // Graceful fallback when mapping columns are not yet migrated in an environment.
+    if (
+      /equipment_product_id|canonical_product_key/i.test(error.message || '')
+      && (equipmentProductId || equipmentProductIds?.length)
+    ) {
+      return { data: [], error: null }
+    }
     return { data: [], error }
   }
 
@@ -746,10 +788,109 @@ async function fetchRecommendedBatch({ listingId, categoryId = '', brand = '', l
   }
 }
 
+async function fetchSiblingEquipmentProductIds({
+  equipmentProductId,
+  brand,
+  productFamily,
+} = {}) {
+  if (!supabase || !productFamily || !brand) return []
+
+  let query = supabase
+    .from('equipment_products')
+    .select('id')
+    .eq('status', 'approved')
+    .eq('brand', brand)
+    .eq('product_family', productFamily)
+    .limit(40)
+
+  if (equipmentProductId) {
+    query = query.neq('id', equipmentProductId)
+  }
+
+  const { data, error } = await query
+  if (error || !data?.length) return []
+  return data.map((row) => row.id).filter(Boolean)
+}
+
+/**
+ * Active public marketplace listings mapped to a canonical equipment product.
+ * Uses persisted equipment_product_id / canonical_product_key only — no fuzzy title matching.
+ */
+export async function fetchActiveListingsForMappedEquipmentProduct(
+  product,
+  { limit = 8 } = {},
+) {
+  const productId = String(product?.id ?? '').trim()
+  const productKey = String(product?.canonical_product_key ?? '').trim()
+  if (!productId && !productKey) {
+    return { data: [], error: null }
+  }
+
+  if (!supabase) {
+    return { data: [], error: new Error('Supabase is not configured.') }
+  }
+
+  const max = Math.max(1, Math.min(24, Number(limit) || 8))
+  const cardFields = await getCardListingSelectFields()
+
+  let query = withPrimaryListingImageOnly(
+    supabase
+      .from(PUBLIC_BROWSE_LISTINGS_SOURCE)
+      .select(
+        `${cardFields}, category:categories(id, name, slug), ${CARD_LISTING_IMAGE_FIELDS}`,
+      )
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(max),
+  )
+
+  if (productId && productKey) {
+    query = query.or(
+      `equipment_product_id.eq.${productId},canonical_product_key.eq.${productKey}`,
+    )
+  } else if (productId) {
+    query = query.eq('equipment_product_id', productId)
+  } else {
+    query = query.eq('canonical_product_key', productKey)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    // Columns may be missing on older envs before Stage 3 migration.
+    if (/equipment_product_id|canonical_product_key/i.test(error.message || '')) {
+      return { data: [], error: null }
+    }
+    return { data: [], error }
+  }
+
+  const enriched = await attachPublicAvailabilityToListings(
+    (data ?? []).map(enrichListingWithImages),
+  )
+
+  // Deduplicate by id while preserving order.
+  const seen = new Set()
+  const unique = []
+  for (const listing of enriched) {
+    if (!listing?.id || seen.has(listing.id)) continue
+    seen.add(listing.id)
+    unique.push(listing)
+  }
+
+  return { data: unique, error: null }
+}
+
+/**
+ * Similar listings with Stage 3 ranking priority:
+ * 1 same equipment product → 2 same series/family → 3 brand+category → 4 category → 5 recent.
+ * Uses public browse source (active, visible, non-test) and excludes the current listing.
+ */
 export async function fetchRecommendedListings({
   listingId,
   categoryId = '',
   brand = '',
+  equipmentProductId = '',
+  productFamily = '',
   limit = RECOMMENDED_LISTINGS_LIMIT,
 } = {}) {
   if (!supabase) {
@@ -763,19 +904,44 @@ export async function fetchRecommendedListings({
   const collected = []
   const seen = new Set([listingId])
   const trimmedBrand = brand?.trim() ?? ''
+  const trimmedProductId = String(equipmentProductId ?? '').trim()
+  const trimmedFamily = String(productFamily ?? '').trim()
 
-  if (categoryId && trimmedBrand) {
+  if (trimmedProductId) {
+    const { data, error } = await fetchRecommendedBatch({
+      listingId,
+      equipmentProductId: trimmedProductId,
+      limit,
+    })
+    if (error) return { data: [], error }
+    appendRecommendedListings(collected, seen, data, limit)
+  }
+
+  if (collected.length < limit && trimmedFamily && trimmedBrand) {
+    const siblingIds = await fetchSiblingEquipmentProductIds({
+      equipmentProductId: trimmedProductId || null,
+      brand: trimmedBrand,
+      productFamily: trimmedFamily,
+    })
+    if (siblingIds.length > 0) {
+      const { data, error } = await fetchRecommendedBatch({
+        listingId,
+        equipmentProductIds: siblingIds,
+        limit: limit - collected.length,
+      })
+      if (error) return { data: collected, error }
+      appendRecommendedListings(collected, seen, data, limit)
+    }
+  }
+
+  if (collected.length < limit && categoryId && trimmedBrand) {
     const { data, error } = await fetchRecommendedBatch({
       listingId,
       categoryId,
       brand: trimmedBrand,
-      limit,
+      limit: limit - collected.length,
     })
-
-    if (error) {
-      return { data: [], error }
-    }
-
+    if (error) return { data: collected, error }
     appendRecommendedListings(collected, seen, data, limit)
   }
 
@@ -785,11 +951,7 @@ export async function fetchRecommendedListings({
       categoryId,
       limit: limit - collected.length,
     })
-
-    if (error) {
-      return { data: collected, error }
-    }
-
+    if (error) return { data: collected, error }
     appendRecommendedListings(collected, seen, data, limit)
   }
 
@@ -799,11 +961,16 @@ export async function fetchRecommendedListings({
       brand: trimmedBrand,
       limit: limit - collected.length,
     })
+    if (error) return { data: collected, error }
+    appendRecommendedListings(collected, seen, data, limit)
+  }
 
-    if (error) {
-      return { data: collected, error }
-    }
-
+  if (collected.length < limit) {
+    const { data, error } = await fetchRecommendedBatch({
+      listingId,
+      limit: limit - collected.length,
+    })
+    if (error) return { data: collected, error }
     appendRecommendedListings(collected, seen, data, limit)
   }
 

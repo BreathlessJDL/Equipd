@@ -23,16 +23,25 @@ import ListingDetailSaveButton from '../components/listing/ListingDetailSaveButt
 import ListingRecommendations from '../components/listing/ListingRecommendations'
 import ListingSavedCountOverlay from '../components/listing/ListingSavedCountOverlay'
 import ListingSellerDescription from '../components/listing/ListingSellerDescription'
+import ListingEquipmentIntelligence from '../components/listing/ListingEquipmentIntelligence'
 import MakeOfferModal from '../components/listing/MakeOfferModal'
 import OfferSentConfirmationModal from '../components/listing/OfferSentConfirmationModal'
 import ListingSaveButton from '../components/ListingSaveButton'
 import ReportTrigger from '../components/ReportTrigger'
+import PageBreadcrumbs from '../components/PageBreadcrumbs'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
+import ProductSchema from '../components/seo/ProductSchema'
 import { ErrorState, LoadingState } from '../components/ui/UiState'
 import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '../lib/orders'
 import { useListingRecommendations } from '../hooks/useListingRecommendations'
-import { usePageTitle } from '../hooks/usePageTitle'
-import { buildListingBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { buildListingBreadcrumbSchema, buildListingBreadcrumbItems } from '../lib/breadcrumbStructuredData'
+import { buildListingPageSeo } from '../lib/listingPageSeo'
+import { buildListingProductSchema } from '../lib/listingPageStructuredData'
+import { getListingValuationHref, resolveListingProductMapping } from '../lib/listingDiscovery'
+import { isSoldListingStatus } from '../lib/listingSoldLifecycle'
+import { fetchApprovedEquipmentProductForListing } from '../lib/equipmentProducts'
+import { fetchPublicProfile } from '../lib/profiles'
 import { fetchListingSavedCount } from '../lib/savedListings'
 import { canReportListing, REPORT_TYPES } from '../lib/reports'
 
@@ -59,14 +68,107 @@ function ListingDetailPage() {
   const [submittedConversationId, setSubmittedConversationId] = useState(null)
   const [submittedOfferQuantity, setSubmittedOfferQuantity] = useState(1)
   const [savedCount, setSavedCount] = useState(0)
+  const [sellerPublicProfile, setSellerPublicProfile] = useState(null)
+  const [equipmentProduct, setEquipmentProduct] = useState(null)
   const incrementedSlugRef = useRef(null)
 
-  usePageTitle(listing?.title ?? (loading ? null : 'Listing Not Found'))
+  const listingSeo = useMemo(
+    () => buildListingPageSeo({ listing: listing || null, equipmentProduct }),
+    [listing, equipmentProduct],
+  )
+
+  usePageMeta({
+    title: listing
+      ? listingSeo.titleForHook
+      : (loading ? null : 'Listing Not Found'),
+    description: listing
+      ? listingSeo.description
+      : (loading
+        ? null
+        : 'This listing could not be found on Equipd.'),
+    canonicalPath: listing ? listingSeo.canonicalPath : null,
+    noIndex: loading || !listing || listingSeo.noIndex,
+    robotsContent: listing ? listingSeo.robotsContent : (loading ? null : 'noindex, follow'),
+    openGraph: listing ? listingSeo.openGraph : null,
+  })
 
   const breadcrumbSchema = useMemo(
     () => (listing ? buildListingBreadcrumbSchema(listing) : null),
     [listing],
   )
+
+  const breadcrumbItems = useMemo(() => {
+    if (!listing) return []
+    const items = buildListingBreadcrumbItems(listing)
+    return items.map((item, index) => ({
+      label: item.name,
+      to: index < items.length - 1 ? item.path : undefined,
+    }))
+  }, [listing])
+
+  const productSchema = useMemo(
+    () => (
+      listing
+        ? buildListingProductSchema({
+          listing,
+          equipmentProduct,
+          canonicalUrl: listingSeo.canonicalUrl,
+          sellerProfile: sellerPublicProfile,
+        })
+        : null
+    ),
+    [listing, equipmentProduct, listingSeo.canonicalUrl, sellerPublicProfile],
+  )
+
+  useEffect(() => {
+    if (!listing?.seller_id) {
+      setSellerPublicProfile(null)
+      return undefined
+    }
+
+    let active = true
+    setSellerPublicProfile(null)
+
+    async function loadSellerProfile() {
+      const { data } = await fetchPublicProfile(listing.seller_id)
+      if (!active) return
+      setSellerPublicProfile(data || null)
+    }
+
+    loadSellerProfile()
+
+    return () => {
+      active = false
+    }
+  }, [listing?.seller_id])
+
+  useEffect(() => {
+    if (!listing) {
+      setEquipmentProduct(null)
+      return undefined
+    }
+
+    const mapping = resolveListingProductMapping(listing)
+    if (!mapping.hasMapping) {
+      setEquipmentProduct(null)
+      return undefined
+    }
+
+    let active = true
+    setEquipmentProduct(null)
+
+    async function loadEquipmentProduct() {
+      const { product } = await fetchApprovedEquipmentProductForListing(listing)
+      if (!active) return
+      setEquipmentProduct(product || null)
+    }
+
+    loadEquipmentProduct()
+
+    return () => {
+      active = false
+    }
+  }, [listing?.id, listing?.equipment_product_id, listing?.canonical_product_key])
 
   useEffect(() => {
     if (!slug) return undefined
@@ -279,7 +381,10 @@ function ListingDetailPage() {
     )
   }, [offers, user])
 
-  const { recommendations, loading: loadingRecommendations } = useListingRecommendations(listing)
+  const { recommendations, loading: loadingRecommendations } = useListingRecommendations(
+    listing,
+    equipmentProduct,
+  )
 
   if (loading) {
     return (
@@ -303,7 +408,9 @@ function ListingDetailPage() {
 
   const isOwner = isListingOwner(listing, user?.id)
   const isActiveListing = listing.status === 'active'
+  const isSoldListing = isSoldListingStatus(listing)
   const canContactSeller = isActiveListing && !isOwner
+  const valuationHref = getListingValuationHref(listing, equipmentProduct)
   const buyerHasPendingOffer = user ? hasPendingOffer(offers, user.id) : false
   const selectedQuantity = clampOfferQuantity(
     selectedOfferQuantity,
@@ -325,7 +432,24 @@ function ListingDetailPage() {
 
   const summaryActions = (
     <>
-      {isOwner ? (
+      {isSoldListing ? (
+        <>
+          <a
+            href="#listing-similar-listings"
+            className="listing-detail__button listing-detail__button--primary"
+          >
+            View Similar Listings
+          </a>
+          <Link
+            to={valuationHref}
+            className="listing-detail__button listing-detail__button--secondary"
+          >
+            Value This Equipment
+          </Link>
+        </>
+      ) : null}
+
+      {!isSoldListing && isOwner ? (
         <Link
           to={`/listings/${listing.slug}/edit`}
           className="listing-detail__button listing-detail__button--primary"
@@ -378,16 +502,21 @@ function ListingDetailPage() {
 
   return (
     <article className="listing-detail">
+      <ProductSchema schema={productSchema} />
       <BreadcrumbSchema schema={breadcrumbSchema} />
+      <PageBreadcrumbs items={breadcrumbItems} className="listing-detail__breadcrumbs" />
       <div className="listing-detail__hero">
         <div className="listing-detail__primary">
           <div className="listing-detail__media">
             <ListingImageGallery
               images={listing.listing_images ?? []}
-              title={listing.title}
-              savedCountOverlay={<ListingSavedCountOverlay count={savedCount} />}
+              title={listingSeo.imageAlt || listing.title}
+              imageAlt={listingSeo.imageAlt || listing.title}
+              savedCountOverlay={
+                isSoldListing ? null : <ListingSavedCountOverlay count={savedCount} />
+              }
               saveButton={
-                !isOwner && listing.status === 'active' ? (
+                !isSoldListing && !isOwner && listing.status === 'active' ? (
                   <ListingSaveButton
                     listing={listing}
                     className="listing-save-button--detail"
@@ -414,16 +543,25 @@ function ListingDetailPage() {
                     strokeLinecap="round"
                   />
                 </svg>
-                <span>Photos shown are of the actual item being sold by the seller.</span>
+                <span>
+                  {isSoldListing
+                    ? 'Photos shown are of the item that was sold on Equipd.'
+                    : 'Photos shown are of the actual item being sold by the seller.'}
+                </span>
               </p>
             ) : null}
           </div>
 
           <ListingSellerDescription listing={listing} />
+          <ListingEquipmentIntelligence
+            listing={listing}
+            equipmentProduct={equipmentProduct}
+          />
         </div>
 
         <ListingItemSummary
           listing={listing}
+          equipmentProduct={equipmentProduct}
           buyerProfile={buyerProfile}
           viewerUserId={user?.id ?? null}
           isOwner={isOwner}
@@ -486,12 +624,14 @@ function ListingDetailPage() {
         recommendations={recommendations}
         loading={loadingRecommendations}
         placement="desktop"
+        showWhenEmpty={isSoldListing}
       />
 
       <ListingRecommendations
         recommendations={recommendations}
         loading={loadingRecommendations}
         placement="mobile"
+        showWhenEmpty={isSoldListing}
       />
 
       <MakeOfferModal

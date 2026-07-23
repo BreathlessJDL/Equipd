@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { getProductSeriesLabel } from '../../lib/brandCatalogueCore'
+import { buildCanonicalProductDisplayNameFromProduct } from '../../lib/canonicalProductDisplayName'
 import { resolveEquipmentProductImageDisplayUrl } from '../../lib/equipmentProductImages'
 import { supabase } from '../../lib/supabase'
 import './RelatedEquipmentCard.css'
@@ -30,7 +31,13 @@ export default function RelatedEquipmentCard({
   const resolvedHref = href || null
   if (!product || !resolvedHref) return null
 
-  const displayName = String(name || product.canonical_product_name || product.model || 'Equipment').trim()
+  const displayName = String(
+    name
+    || buildCanonicalProductDisplayNameFromProduct(product)
+    || product.canonical_product_name
+    || product.model
+    || 'Equipment',
+  ).trim()
   const brand = String(product.brand || '').trim()
   const series = getProductSeriesLabel(product)
   const metaLabel = resolveMetaLabel(product, series)

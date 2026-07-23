@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
- * Generate public/sitemap.xml including brands and approved canonical products.
- * Uses the same public catalogue filter + route list as SEO prerender.
+ * Generate public/sitemap.xml including brands, approved canonical products,
+ * and publicly visible active marketplace listings.
+ *
+ * Uses the same public catalogue filter + route list as SEO prerender, and
+ * listings_public_browse for marketplace visibility (same predicate as browse).
  *
  * Usage:
  *   node scripts/generate-sitemap.mjs
@@ -16,6 +19,11 @@ import {
   isPublicBrandCatalogueProduct,
 } from '../src/lib/brandCatalogueCore.js'
 import { buildSeoRouteList } from '../src/lib/seoCataloguePrerender.js'
+import {
+  buildListingSitemapEntries,
+  shouldSplitSitemap,
+  summarizeSitemapEntries,
+} from '../src/lib/listingSitemap.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 function xmlEscape(value) {
@@ -64,6 +72,63 @@ async function fetchApprovedProducts(supabase) {
   return products
 }
 
+/**
+ * Public active listings via listings_public_browse (canonical visibility predicate).
+ * Eligible sold listings via listings table (readability + sold_at); browse stays active-only.
+ */
+async function fetchPublicActiveListingsForSitemap(supabase) {
+  const listings = []
+  const pageSize = 1000
+  let from = 0
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('listings_public_browse')
+      .select('id, slug, status, updated_at, published_at, created_at, quantity_available, is_test_data')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .range(from, from + pageSize - 1)
+
+    if (error) throw error
+    if (!data?.length) break
+    listings.push(...data)
+    if (data.length < pageSize) break
+    from += pageSize
+  }
+
+  return listings
+}
+
+async function fetchEligibleSoldListingsForSitemap(supabase) {
+  const listings = []
+  const pageSize = 1000
+  let from = 0
+  // Fetch sold rows with publication proof; archive window applied in JS helpers.
+  const cutoff = new Date()
+  cutoff.setUTCFullYear(cutoff.getUTCFullYear() - 2)
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('id, slug, status, updated_at, published_at, created_at, sold_at, is_test_data, source')
+      .eq('status', 'sold')
+      .eq('is_test_data', false)
+      .not('published_at', 'is', null)
+      .not('sold_at', 'is', null)
+      .gte('sold_at', cutoff.toISOString())
+      .order('sold_at', { ascending: false })
+      .range(from, from + pageSize - 1)
+
+    if (error) throw error
+    if (!data?.length) break
+    listings.push(...data)
+    if (data.length < pageSize) break
+    from += pageSize
+  }
+
+  return listings
+}
+
 async function main() {
   loadLocalEnv()
   const { url, key } = getSupabaseEnv()
@@ -78,6 +143,11 @@ async function main() {
   const products = await fetchApprovedProducts(supabase)
   const publicProducts = products.filter(isPublicBrandCatalogueProduct)
   const directory = buildBrandDirectoryFromProducts(publicProducts)
+  const publicListings = await fetchPublicActiveListingsForSitemap(supabase)
+  const soldListings = await fetchEligibleSoldListingsForSitemap(supabase)
+  const listingEntries = buildListingSitemapEntries([...publicListings, ...soldListings])
+  const activeListingCount = buildListingSitemapEntries(publicListings).length
+  const soldListingCount = listingEntries.length - activeListingCount
 
   const brandLastmod = new Map()
   for (const product of publicProducts) {
@@ -125,7 +195,12 @@ async function main() {
     }
   }
 
-  // Sitemap index once product volume warrants splitting (50k URL soft limit).
+  for (const listingEntry of listingEntries) {
+    entries.push(urlEntry(listingEntry.loc, listingEntry.lastmod))
+  }
+
+  // Keep a single urlset while comfortably under soft limits.
+  // Split into a sitemap index only if shouldSplitSitemap() trips (~45k URLs / ~45MB).
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -134,11 +209,38 @@ async function main() {
     '',
   ].join('\n')
 
+  const splitNeeded = shouldSplitSitemap({
+    urlCount: entries.length,
+    byteLength: Buffer.byteLength(xml, 'utf8'),
+  })
+
+  if (splitNeeded) {
+    console.warn(
+      '[sitemap] Soft split threshold exceeded — consider a sitemap index '
+      + '(static / brands / equipment / listings). Keeping a single file for this run.',
+    )
+  }
+
   const outPath = join(process.cwd(), 'public', 'sitemap.xml')
   writeFileSync(outPath, xml, 'utf8')
+
+  const summary = summarizeSitemapEntries(
+    entries.map((block) => {
+      const match = block.match(/<loc>([^<]+)<\/loc>/)
+      return match ? { loc: match[1].replace(/&amp;/g, '&') } : null
+    }).filter(Boolean),
+  )
+
   console.log(
     `Wrote ${outPath} with ${entries.length} URLs `
-    + `(${directory.brands.length} brands, ${publicProducts.length} products)`,
+    + `(${directory.brands.length} brands, ${publicProducts.length} products, `
+    + `${listingEntries.length} listings [${activeListingCount} active + ${soldListingCount} sold]; `
+    + `${Buffer.byteLength(xml, 'utf8')} bytes)`,
+  )
+  console.log(
+    `[sitemap] breakdown home=${summary.home} browse=${summary.browse} `
+    + `static=${summary.static + summary.valuation} brands=${summary.brandsIndex + summary.brands} `
+    + `equipment=${summary.equipment} listings=${summary.listings}`,
   )
 }
 

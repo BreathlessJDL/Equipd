@@ -49,6 +49,13 @@ import {
   normalizeEquipmentProductImageStoragePath,
   BLOCKED_DEALER_IMAGE_REJECTION_REASON,
 } from './equipmentProductImages.js'
+import {
+  summarizeEquipmentProductImageBulkApprovalSelection,
+} from './equipmentProductImageReview.js'
+import {
+  fetchAdminEquipmentProductsByIds,
+  fetchAdminEquipmentProductsForExport,
+} from './equipmentProductsAdminList.js'
 import { selectRelatedEquipmentProducts } from './equipmentPageSeo.js'
 
 export const EQUIPMENT_INTELLIGENCE_APPROVAL_FIELDS = 'id, brand, series, model, equipment_type, product_family, slug, variant_name, core_product_key, is_base_product, core_product_group_status, core_product_group_confidence, original_rrp, currency, best_original_price, best_original_price_confidence, baseline_manufacture_year, manufacture_start_year, manufacture_end_year'
@@ -83,6 +90,9 @@ export const EQUIPMENT_PRODUCT_FIELDS = [
   'image_status',
   'image_failure_reason',
   'image_updated_at',
+  'image_reviewed_at',
+  'image_reviewed_by',
+  'approved_image_candidate_id',
   'created_at',
   'updated_at',
 ].join(', ')
@@ -176,6 +186,52 @@ export async function fetchEquipmentProductByKey(canonicalProductKey) {
     error,
     notFound: !data && !error,
   }
+}
+
+/**
+ * Public approved product by id — for listing detail when equipment_product_id is persisted.
+ */
+export async function fetchApprovedEquipmentProductById(productId) {
+  const id = String(productId ?? '').trim()
+  if (!id) {
+    return { product: null, error: null, notFound: true }
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return { product: null, error: new Error('Supabase is not configured.'), notFound: false }
+  }
+
+  const { data, error } = await supabase
+    .from('equipment_products')
+    .select(EQUIPMENT_PRODUCT_FIELDS)
+    .eq('id', id)
+    .eq('status', PRODUCT_STATUS.APPROVED)
+    .maybeSingle()
+
+  return {
+    product: data ?? null,
+    error,
+    notFound: !data && !error,
+  }
+}
+
+/**
+ * Resolve an approved equipment product from a listing’s persisted mapping only.
+ * Does not fuzzy-match seller titles.
+ */
+export async function fetchApprovedEquipmentProductForListing(listing) {
+  const id = String(listing?.equipment_product_id ?? '').trim()
+  if (id) {
+    const byId = await fetchApprovedEquipmentProductById(id)
+    if (byId.product || byId.error) return byId
+  }
+
+  const key = String(listing?.canonical_product_key ?? '').trim()
+  if (key) {
+    return fetchEquipmentProductByKey(key)
+  }
+
+  return { product: null, error: null, notFound: true }
 }
 
 /**
@@ -1026,6 +1082,161 @@ export async function rejectEquipmentProductImage(productId, reason = null) {
   return { data, error }
 }
 
+async function fetchBulkImageReviewProducts({
+  selectionMode = 'page',
+  productIds = [],
+  filters = {},
+  maxRows = 10000,
+} = {}) {
+  if (selectionMode === 'filtered') {
+    const result = await fetchAdminEquipmentProductsForExport({
+      brand: filters.brand || '',
+      equipmentType: filters.equipmentType || '',
+      completion: filters.completion || '',
+      status: filters.status || '',
+      search: filters.search || '',
+      attention: filters.attention || 'all',
+      imageFilter: filters.imageFilter || '',
+      imageSearchJobId: filters.imageSearchJobId || '',
+      imageSourceDomain: filters.imageSourceDomain || '',
+      minImageConfidence: filters.minImageConfidence || '',
+      minCandidateScore: filters.minCandidateScore || '',
+      sort: filters.sort || 'brand',
+      sortDir: filters.sortDir || 'asc',
+      pageSize: 100,
+      maxRows,
+    })
+    if (result.error) return { products: [], truncated: false, error: result.error }
+    return { products: result.products, truncated: result.truncated, error: null }
+  }
+
+  const result = await fetchAdminEquipmentProductsByIds(productIds, { maxRows })
+  return {
+    products: result.products,
+    truncated: result.truncated,
+    error: result.error,
+  }
+}
+
+export async function previewBulkEquipmentProductImageApproval({
+  selectionMode = 'page',
+  productIds = [],
+  filters = {},
+  maxRows = 10000,
+} = {}) {
+  const scoped = await fetchBulkImageReviewProducts({ selectionMode, productIds, filters, maxRows })
+  if (scoped.error) {
+    return {
+      preview: null,
+      products: [],
+      truncated: Boolean(scoped.truncated),
+      error: scoped.error,
+    }
+  }
+
+  const summary = summarizeEquipmentProductImageBulkApprovalSelection(scoped.products ?? [])
+  return {
+    preview: summary,
+    products: scoped.products ?? [],
+    truncated: Boolean(scoped.truncated),
+    error: null,
+  }
+}
+
+export async function bulkApproveEquipmentProductImages({
+  selectionMode = 'page',
+  productIds = [],
+  filters = {},
+  maxRows = 10000,
+} = {}) {
+  const scoped = await fetchBulkImageReviewProducts({ selectionMode, productIds, filters, maxRows })
+  if (scoped.error) {
+    return {
+      pendingCount: 0,
+      approved: 0,
+      skipped: 0,
+      skippedReasons: [],
+      skippedReasonCounts: {},
+      failures: [],
+      updatedProducts: [],
+      truncated: Boolean(scoped.truncated),
+      error: scoped.error,
+    }
+  }
+
+  const products = scoped.products ?? []
+  const summary = summarizeEquipmentProductImageBulkApprovalSelection(products)
+  const failures = []
+  const updatedProducts = []
+
+  for (const product of products) {
+    const result = await approveEquipmentProductImage(product.id)
+    if (result.error) {
+      failures.push({ productId: product.id, error: result.error })
+      continue
+    }
+    if (result.data?.id) updatedProducts.push(result.data)
+  }
+
+  return {
+    pendingCount: summary.pendingCount,
+    selectedCount: summary.selectedCount,
+    approved: updatedProducts.length,
+    skipped: 0,
+    skippedReasons: [],
+    skippedReasonCounts: {},
+    failures,
+    updatedProducts,
+    truncated: Boolean(scoped.truncated),
+    error: failures.length && !updatedProducts.length ? failures[0].error : null,
+  }
+}
+
+export async function bulkRejectEquipmentProductImages({
+  selectionMode = 'page',
+  productIds = [],
+  filters = {},
+  reason = 'Rejected in admin image audit',
+  maxRows = 10000,
+} = {}) {
+  const scoped = await fetchBulkImageReviewProducts({ selectionMode, productIds, filters, maxRows })
+  if (scoped.error) {
+    return {
+      rejected: 0,
+      skipped: 0,
+      failures: [],
+      updatedProducts: [],
+      truncated: Boolean(scoped.truncated),
+      error: scoped.error,
+    }
+  }
+
+  const targets = (scoped.products ?? []).filter((product) => (
+    product?.image_status === EQUIPMENT_PRODUCT_IMAGE_STATUS.SUGGESTED
+    && Boolean(product?.image_url || product?.image_storage_path)
+  ))
+  const failures = []
+  const updatedProducts = []
+
+  for (const product of targets) {
+    const result = await rejectEquipmentProductImage(product.id, reason)
+    if (result.error) {
+      failures.push({ productId: product.id, error: result.error })
+      continue
+    }
+    if (result.data?.id) updatedProducts.push(result.data)
+  }
+
+  return {
+    rejected: updatedProducts.length,
+    skipped: Math.max(0, (scoped.products?.length ?? 0) - targets.length),
+    failures,
+    updatedProducts,
+    truncated: Boolean(scoped.truncated),
+    error: failures.length && !updatedProducts.length ? failures[0].error : null,
+  }
+}
+
 export async function bulkRejectBlockedEquipmentProductImages(products = [], {
   reason = null,
 } = {}) {
@@ -1229,22 +1440,42 @@ export async function bulkApproveSingleSourceNeedsReviewProducts(
   return { approved, skipped, error: null }
 }
 
-export async function bulkExcludeEquipmentProducts(productIds = []) {
-  if (!isSupabaseConfigured || !supabase || !productIds.length) {
-    return { excluded: 0, error: null }
+export async function bulkExcludeEquipmentProducts({
+  selectionMode = 'page',
+  productIds = [],
+  filters = {},
+  maxRows = 10000,
+} = {}) {
+  const scoped = await fetchBulkImageReviewProducts({ selectionMode, productIds, filters, maxRows })
+  if (scoped.error) {
+    return {
+      excluded: 0,
+      failures: [],
+      truncated: Boolean(scoped.truncated),
+      error: scoped.error,
+    }
   }
 
+  const products = scoped.products ?? []
+  const failures = []
   let excluded = 0
 
-  for (const productId of productIds) {
-    const { error } = await supabase.rpc('admin_exclude_equipment_product', {
-      p_product_id: productId,
-    })
-    if (error) return { excluded, error }
+  for (const product of products) {
+    const result = await excludeEquipmentProduct(product.id)
+    if (result.error) {
+      failures.push({ productId: product.id, error: result.error })
+      continue
+    }
     excluded += 1
   }
 
-  return { excluded, error: null }
+  return {
+    excluded,
+    selectedCount: products.length,
+    failures,
+    truncated: Boolean(scoped.truncated),
+    error: failures.length && excluded === 0 ? failures[0].error : null,
+  }
 }
 
 export async function bulkApproveHighConfidenceProducts(

@@ -308,6 +308,8 @@ function AddListingPage() {
       seller_delivery_radius_miles: payload.seller_delivery_radius_miles,
       quantity_total: quantity,
       status,
+      equipment_product_id: payload.equipment_product_id,
+      canonical_product_key: payload.canonical_product_key,
     }
 
     let listing

@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import { fetchRecommendedListings } from '../lib/listings'
 
-export function useListingRecommendations(listing) {
+export function useListingRecommendations(listing, equipmentProduct = null) {
   const [recommendations, setRecommendations] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const listingId = listing?.id
+  const categoryId = listing?.category_id ?? listing?.category?.id
+  const brand = listing?.brand
+  const equipmentProductId = listing?.equipment_product_id || equipmentProduct?.id || null
+  const productFamily = equipmentProduct?.product_family || null
+
   useEffect(() => {
-    if (!listing?.id) {
+    if (!listingId) {
       setRecommendations([])
       setLoading(false)
       return undefined
@@ -18,9 +24,11 @@ export function useListingRecommendations(listing) {
       setLoading(true)
 
       const { data } = await fetchRecommendedListings({
-        listingId: listing.id,
-        categoryId: listing.category_id ?? listing.category?.id,
-        brand: listing.brand,
+        listingId,
+        categoryId,
+        brand,
+        equipmentProductId,
+        productFamily,
       })
 
       if (!active) return
@@ -34,7 +42,7 @@ export function useListingRecommendations(listing) {
     return () => {
       active = false
     }
-  }, [listing?.id, listing?.category_id, listing?.category?.id, listing?.brand])
+  }, [listingId, categoryId, brand, equipmentProductId, productFamily])
 
   return { recommendations, loading }
 }

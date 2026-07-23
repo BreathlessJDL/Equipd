@@ -544,6 +544,23 @@ export async function ensureConversationForListing({ listingId, buyerId, sellerI
     return { data: existing, error: null }
   }
 
+  const { data: listingRow, error: listingError } = await supabase
+    .from('listings')
+    .select('id, status')
+    .eq('id', listingId)
+    .maybeSingle()
+
+  if (listingError) {
+    return { data: null, error: listingError }
+  }
+
+  if (!listingRow || String(listingRow.status).toLowerCase() !== 'active') {
+    return {
+      data: null,
+      error: new Error('Messaging can only be started on active listings.'),
+    }
+  }
+
   const { data, error } = await supabase
     .from('conversations')
     .insert({
@@ -574,6 +591,27 @@ export async function resolveMessageThreadNavigation({ listingId, buyerId, selle
 
   if (existing) {
     return { path: `/messages/${existing.id}`, error: null }
+  }
+
+  if (!supabase) {
+    return { path: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const { data: listingRow, error: listingError } = await supabase
+    .from('listings')
+    .select('id, status')
+    .eq('id', listingId)
+    .maybeSingle()
+
+  if (listingError) {
+    return { path: null, error: listingError }
+  }
+
+  if (!listingRow || String(listingRow.status).toLowerCase() !== 'active') {
+    return {
+      path: null,
+      error: new Error('Messaging can only be started on active listings.'),
+    }
   }
 
   return { path: `/messages/draft/${listingId}`, error: null }
@@ -616,6 +654,13 @@ export async function fetchDraftConversationContext({ listingId, buyerId }) {
 
   if (buyerId === listing.seller_id) {
     return { data: null, error: new Error('You cannot message yourself.') }
+  }
+
+  if (String(listing.status).toLowerCase() !== 'active') {
+    return {
+      data: null,
+      error: new Error('Messaging can only be started on active listings.'),
+    }
   }
 
   const { data: profiles, error: profilesError } = await supabase

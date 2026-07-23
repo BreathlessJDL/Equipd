@@ -6,9 +6,9 @@ import {
 } from '../../lib/productPageStructuredData'
 
 /**
- * Keeps a single Product JSON-LD script in document.head for eligible
- * equipment guide pages. Removes it on unmount so SPA navigation does not
- * leave stale Product schema on ineligible routes.
+ * Keeps a single Product JSON-LD script in document.head for the current route
+ * (catalogue equipment guide or marketplace listing). Removes it on unmount so
+ * SPA navigation does not leave stale Product schema.
  *
  * @param {{ schema?: object | null }} props
  */

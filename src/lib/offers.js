@@ -512,6 +512,23 @@ export async function createOffer({
     return { data: null, error: new Error('Enter a valid offer amount greater than zero.') }
   }
 
+  const { data: listingRow, error: listingError } = await supabase
+    .from('listings')
+    .select('id, status')
+    .eq('id', listingId)
+    .maybeSingle()
+
+  if (listingError) {
+    return { data: null, error: listingError }
+  }
+
+  if (!listingRow || String(listingRow.status).toLowerCase() !== 'active') {
+    return {
+      data: null,
+      error: new Error('Offers can only be made on active listings.'),
+    }
+  }
+
   if (direction === 'buyer_to_seller') {
     const amountError = validateBuyerOfferAmount(amountPence, listingPricePence, quantity)
     if (amountError) {

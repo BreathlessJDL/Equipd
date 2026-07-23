@@ -10,6 +10,7 @@ import { getDisplayableAvailableQuantity } from '../lib/listingAvailability'
 import { formatListingLocationCard } from '../lib/listingLocation'
 import { formatListingDistanceLabel } from '../lib/listingDistance'
 import { getListingPrimaryImageUrl } from '../lib/listingImages'
+import { buildListingImageAltText } from '../lib/listingPageSeo'
 import ListingSaveButton from './ListingSaveButton'
 import './ListingCard.css'
 
@@ -40,9 +41,10 @@ function getConditionTone(value) {
 
 function ListingCardImage({ listing }) {
   const imageUrl = getListingPrimaryImageUrl(listing)
+  const imageAlt = buildListingImageAltText(listing)
 
   if (imageUrl) {
-    return <img src={imageUrl} alt="" className="listing-card__image" />
+    return <img src={imageUrl} alt={imageAlt} className="listing-card__image" />
   }
 
   return <div className="listing-card__image listing-card__image--placeholder">No photo</div>

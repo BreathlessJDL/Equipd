@@ -417,9 +417,14 @@ export function shouldNotifyListingChange({ previous = null, next = null, action
 
   const wasPublic = previous ? isPublicListingStatus(previous.status) : false
   const isPublic = next ? isPublicListingStatus(next.status) : false
+  const nextStatus = String(next?.status ?? '').trim().toLowerCase()
 
   if (!wasPublic && isPublic) {
     return { notify: true, reason: 'listing_published' }
+  }
+  // Sold pages remain publicly readable (Stage 5). Treat as content change, not removal.
+  if (wasPublic && nextStatus === 'sold') {
+    return { notify: true, reason: 'listing_sold' }
   }
   if (wasPublic && !isPublic) {
     return { notify: true, reason: 'listing_unpublished' }

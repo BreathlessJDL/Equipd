@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/listings/(?!new$|leeds$|manchester$|birmingham$|london$|sheffield$|bristol$|liverpool$|newcastle$|glasgow$|cardiff$)([^/]+)",
+      "destination": "/api/public-listing-page?slug=$1"
+    },
+    {
       "source": "/((?!.*\\.[^/]+$).*)",
       "destination": "/index.html"
     }
@@ -14,6 +18,12 @@
     },
     {
       "source": "/equipment/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/listings/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]

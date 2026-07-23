@@ -1,7 +1,9 @@
 /**
  * Product JSON-LD lifecycle helpers (markers, HTML tags, SPA sync).
- * Product field construction lives in equipmentPageSeo.buildEquipmentProductJsonLd —
- * do not create a second Product builder here.
+ * Field construction:
+ * - Catalogue equipment pages → equipmentPageSeo.buildEquipmentProductJsonLd
+ * - Marketplace listing pages → listingPageStructuredData.buildListingProductSchema
+ * Do not merge those builders; each URL must expose at most one Product entity.
  */
 
 /** Matches siteStructuredData.SITE_SCHEMA_ATTR without importing that module (avoids cycles). */

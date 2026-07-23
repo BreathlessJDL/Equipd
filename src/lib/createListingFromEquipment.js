@@ -1,6 +1,7 @@
 import { emptyListingForm } from './createListingForm.js'
 import { LISTING_CATEGORY_OPTIONS } from './listingOptions.js'
 import { resolveManufactureYearSelectValue } from './equipmentValuation.js'
+import { buildCanonicalProductDisplayNameFromProduct } from './canonicalProductDisplayName.js'
 
 const VALUATION_TO_LISTING_CONDITION = {
   Excellent: 'like_new',
@@ -102,11 +103,21 @@ export function buildCreateListingFromValuationPath({
   if (product?.id) params.set('productId', product.id)
   if (product?.canonical_product_key) params.set('equipment', product.canonical_product_key)
 
-  const title = String(displayName || product?.canonical_product_name || '').trim()
-  if (title) params.set('title', title)
+  const resolvedDisplayName = String(
+    displayName
+    || buildCanonicalProductDisplayNameFromProduct(product)
+    || product?.canonical_product_name
+    || '',
+  ).trim()
+  if (resolvedDisplayName) params.set('title', resolvedDisplayName)
   if (product?.brand) params.set('brand', product.brand)
 
-  const model = String(product?.canonical_product_name || product?.model || '').trim()
+  const model = String(
+    buildCanonicalProductDisplayNameFromProduct(product)
+    || product?.canonical_product_name
+    || product?.model
+    || '',
+  ).trim()
   if (model) params.set('model', model)
 
   const year = manufactureYear ?? valuation?.depreciation_year_used
@@ -162,14 +173,22 @@ export function buildListingFormPrefillFromValuation({
 
   const prefill = { ...productPrefill }
 
-  const title = displayName || valuationParams?.title || product?.canonical_product_name || ''
+  const title = displayName
+    || valuationParams?.title
+    || buildCanonicalProductDisplayNameFromProduct(product)
+    || product?.canonical_product_name
+    || ''
   if (title) prefill.title = title
 
   if (valuationParams?.brand || product?.brand) {
     prefill.brand = valuationParams?.brand || product.brand
   }
 
-  const model = valuationParams?.model || product?.canonical_product_name || product?.model || ''
+  const model = valuationParams?.model
+    || buildCanonicalProductDisplayNameFromProduct(product)
+    || product?.canonical_product_name
+    || product?.model
+    || ''
   if (model) prefill.model = model
 
   const listingCondition = valuationParams?.condition
@@ -221,7 +240,10 @@ export function buildListingFormPrefillFromEquipmentProduct(product, categories 
   if (!product) return { ...emptyListingForm }
 
   const displayName = String(
-    product.canonical_product_name || product.model || '',
+    buildCanonicalProductDisplayNameFromProduct(product)
+    || product.canonical_product_name
+    || product.model
+    || '',
   ).trim()
 
   return {

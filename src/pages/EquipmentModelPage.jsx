@@ -23,9 +23,11 @@ import {
   fetchEquipmentProductPageData,
   fetchRelatedPublicEquipmentProducts,
 } from '../lib/equipmentProducts'
+import { fetchActiveListingsForMappedEquipmentProduct } from '../lib/listings'
 import { getBrandPagePath, getBrandSlug } from '../lib/brandCatalogueCore'
 import EquipmentConsoleVariantCards from '../components/equipment/EquipmentConsoleVariantCards'
 import RelatedEquipmentCard from '../components/equipment/RelatedEquipmentCard'
+import ListingCard from '../components/ListingCard'
 import {
   EquipmentProductAboutSection,
   EquipmentProductFaqSection,
@@ -163,6 +165,7 @@ function EquipmentModelPage() {
   const [modifiers, setModifiers] = useState([])
   const [pageContent, setPageContent] = useState(null)
   const [relatedEntries, setRelatedEntries] = useState([])
+  const [marketplaceListings, setMarketplaceListings] = useState([])
   const [actualManufactureYear, setActualManufactureYear] = useState('')
   const [consoleName, setConsoleName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -362,6 +365,27 @@ function EquipmentModelPage() {
       product_console_options: productConsoleOptions,
     })
   }, [product, currentYear, selectedManufactureYear, consoleName, modifiers, productConsoleOptions])
+
+  useEffect(() => {
+    if (!product) {
+      setMarketplaceListings([])
+      return undefined
+    }
+
+    let active = true
+
+    async function loadMarketplaceListings() {
+      const { data } = await fetchActiveListingsForMappedEquipmentProduct(product, { limit: 8 })
+      if (!active) return
+      setMarketplaceListings(data ?? [])
+    }
+
+    loadMarketplaceListings()
+
+    return () => {
+      active = false
+    }
+  }, [product?.id, product?.canonical_product_key])
 
   useEffect(() => {
     if (!product) return
@@ -618,6 +642,30 @@ function EquipmentModelPage() {
               contentBadgeLabel={pageContent.contentBadgeLabel}
             />
           </div>
+        ) : null}
+
+        {marketplaceListings.length > 0 ? (
+          <section
+            className="equipment-model-page__marketplace"
+            aria-labelledby="equipment-marketplace-title"
+          >
+            <h2 id="equipment-marketplace-title" className="equipment-model-page__section-title">
+              Currently for sale
+            </h2>
+            <p className="equipment-model-page__marketplace-intro">
+              Active Equipd marketplace listings mapped to this equipment.
+            </p>
+            <ul className="equipment-model-page__marketplace-grid">
+              {marketplaceListings.map((listing) => (
+                <li key={listing.id}>
+                  <ListingCard listing={listing} variant="home" />
+                </li>
+              ))}
+            </ul>
+            <p className="equipment-model-page__marketplace-browse">
+              <Link to="/browse">Browse all marketplace listings</Link>
+            </p>
+          </section>
         ) : null}
 
         {relatedEntries.length > 0 ? (

@@ -73,6 +73,27 @@ export async function saveListing(_userId, listingId) {
     return { data: null, error: authError ?? new Error('You must be signed in to save listings.') }
   }
 
+  const { data: listing, error: listingError } = await supabase
+    .from('listings')
+    .select('id, status, seller_id, is_test_data')
+    .eq('id', listingId)
+    .maybeSingle()
+
+  if (listingError) {
+    return { data: null, error: listingError }
+  }
+
+  if (!listing || String(listing.status).toLowerCase() !== 'active') {
+    return {
+      data: null,
+      error: new Error('Only active marketplace listings can be saved.'),
+    }
+  }
+
+  if (listing.seller_id === user.id) {
+    return { data: null, error: new Error("You can't save your own listing.") }
+  }
+
   const { data, error } = await supabase
     .from('saved_listings')
     .insert({

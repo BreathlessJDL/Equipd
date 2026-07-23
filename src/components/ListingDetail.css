@@ -5,6 +5,10 @@
   padding-bottom: var(--space-2xl);
 }
 
+.listing-detail__breadcrumbs {
+  margin: 0 0 0.85rem;
+}
+
 .listing-detail__hero {
   display: grid;
   /* Gallery ~68–70%+; purchase panel fixed ~360–380px */
@@ -164,6 +168,13 @@
   letter-spacing: -0.01em;
 }
 
+.listing-detail__recommendations-empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
 .listing-detail__recommendations-track {
   display: flex;
   flex-wrap: nowrap;
@@ -247,6 +258,36 @@
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-muted);
+}
+
+.listing-summary__sold-state {
+  margin-bottom: 1rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 70%, var(--color-surface));
+}
+
+.listing-summary__sold-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.listing-summary__sold-copy {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.listing-summary__sold-price {
+  margin: 0.65rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-navy);
 }
 
 .listing-summary__header {
@@ -419,6 +460,22 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-muted);
+}
+
+.listing-summary__inline-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  font-weight: 600;
+}
+
+.listing-summary__inline-link:hover {
+  color: var(--color-teal, #0f766e);
+}
+
+.listing-summary__valuation-link-wrap {
+  margin: 0.85rem 0 0;
+  font-size: 0.875rem;
 }
 
 .listing-summary__specs {

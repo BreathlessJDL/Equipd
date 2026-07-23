@@ -52,7 +52,7 @@ function formatYearRange(product) {
   const start = product.production_start_year || product.baseline_manufacture_year
   const end = product.production_end_year
   if (start && end && start !== end) return `${start}–${end}`
-  if (start) return String(start)
+  if (start) return `${start}+`
   if (end) return String(end)
   return null
 }

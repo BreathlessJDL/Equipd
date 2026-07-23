@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import BuyerProtectionPriceDisplay from '../BuyerProtectionPriceDisplay'
 import SellerPayoutSummary from '../SellerPayoutSummary'
 import {
@@ -13,6 +14,12 @@ import {
   getRatingLabel,
 } from '../../lib/listings'
 import { getDisplayableAvailableQuantity } from '../../lib/listingAvailability'
+import {
+  getListingBrandPageHref,
+  getListingBrowseTypeHref,
+  getListingValuationHref,
+} from '../../lib/listingDiscovery'
+import { isSoldListingStatus } from '../../lib/listingSoldLifecycle'
 import { parseOfferQuantityInput } from '../../lib/offers'
 import {
   CollectionPinIcon,
@@ -54,6 +61,7 @@ function SummaryRow({ label, value, children }) {
 
 function ListingItemSummary({
   listing,
+  equipmentProduct = null,
   actions = null,
   reportListing = null,
   buyerProfile = null,
@@ -63,17 +71,26 @@ function ListingItemSummary({
   onSelectedQuantityChange = null,
   onQuantityValidationError = null,
 }) {
-  const deliveryOptions = getListingDeliveryOptions(listing, { buyerProfile, viewerUserId })
+  const isSold = isSoldListingStatus(listing)
+  const deliveryOptions = isSold
+    ? []
+    : getListingDeliveryOptions(listing, { buyerProfile, viewerUserId })
   const listedDate = formatListingListedDate(listing.created_at)
   const categoryName = getCategoryDisplayName(listing)
   const conditionLabel = getConditionLabel(listing.condition)
   const ratingLabel = getRatingLabel(listing.rating)
   const locationLabel = formatListingLocationDetail(listing)
+  const brandHref = getListingBrandPageHref(listing.brand)
+  const categoryHref = getListingBrowseTypeHref(listing, equipmentProduct)
+  const valuationHref = getListingValuationHref(listing, equipmentProduct)
 
   const metaParts = [conditionLabel, listedDate, listing.brand].filter(Boolean)
-  const availableQuantity = getDisplayableAvailableQuantity(listing)
+  const availableQuantity = isSold ? null : getDisplayableAvailableQuantity(listing)
   const showBuyerQuantitySelector =
-    !isOwner && availableQuantity != null && typeof onSelectedQuantityChange === 'function'
+    !isSold
+    && !isOwner
+    && availableQuantity != null
+    && typeof onSelectedQuantityChange === 'function'
   const unitPricePence = listing.price_pence ?? listing.price
 
   function handleQuantityInputChange(rawValue) {
@@ -96,7 +113,7 @@ function ListingItemSummary({
 
   return (
     <aside className="listing-summary">
-      {listing.status !== 'active' ? (
+      {!isSold && listing.status !== 'active' ? (
         <span className="listing-summary__status">{formatListingStatus(listing.status)}</span>
       ) : null}
 
@@ -108,7 +125,19 @@ function ListingItemSummary({
       </header>
 
       <section className="listing-summary__purchase" aria-label="Price and actions">
-        {isOwner ? (
+        {isSold ? (
+          <div className="listing-summary__sold-state" role="status">
+            <p className="listing-summary__sold-title">This item has now sold</p>
+            <p className="listing-summary__sold-copy">
+              This listing has been completed on Equipd.
+            </p>
+            {unitPricePence != null ? (
+              <p className="listing-summary__sold-price">
+                Listed at {formatPricePence(unitPricePence)}
+              </p>
+            ) : null}
+          </div>
+        ) : isOwner ? (
           <SellerPayoutSummary
             itemPricePence={listing.price_pence ?? listing.price}
             offerAmountLabel="Asking price"
@@ -184,13 +213,34 @@ function ListingItemSummary({
           Listing details
         </h2>
         <dl className="listing-summary__specs">
-          <SummaryRow label="Category" value={categoryName} />
-          <SummaryRow label="Brand" value={listing.brand} />
+          <SummaryRow label="Category" value={categoryName}>
+            {categoryName && categoryHref ? (
+              <Link to={categoryHref} className="listing-summary__inline-link">
+                {categoryName}
+              </Link>
+            ) : (
+              categoryName
+            )}
+          </SummaryRow>
+          <SummaryRow label="Brand" value={listing.brand}>
+            {listing.brand && brandHref ? (
+              <Link to={brandHref} className="listing-summary__inline-link">
+                {listing.brand}
+              </Link>
+            ) : (
+              listing.brand
+            )}
+          </SummaryRow>
           <SummaryRow label="Model" value={listing.model} />
           <SummaryRow label="Condition" value={conditionLabel} />
           <SummaryRow label="Usage rating" value={ratingLabel} />
           <SummaryRow label="Location" value={locationLabel} />
         </dl>
+        <p className="listing-summary__valuation-link-wrap">
+          <Link to={valuationHref} className="listing-summary__inline-link">
+            Value this equipment
+          </Link>
+        </p>
       </section>
 
       {deliveryOptions.length > 0 ? (

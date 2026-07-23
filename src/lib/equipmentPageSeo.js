@@ -12,6 +12,10 @@ import {
   getProductSeriesLabel,
   isPublicBrandCatalogueProduct,
 } from './brandCatalogueCore.js'
+import {
+  buildCanonicalProductDisplayNameFromProduct,
+  cleanCanonicalProductDisplayName,
+} from './canonicalProductDisplayName.js'
 import { buildEquipmentBreadcrumbSchema } from './breadcrumbStructuredData.js'
 import { LISTING_CATEGORY_OPTIONS } from './listingOptions.js'
 import { supportsProductConsoleOptions } from './equipmentCardio.js'
@@ -36,9 +40,9 @@ function absoluteUrl(pathOrUrl) {
 }
 
 export function getEquipmentProductPublicName(product) {
-  return normalizeWhitespace(product?.canonical_product_name)
-    || [product?.brand, product?.model].filter(Boolean).join(' ')
-    || 'Gym equipment'
+  const built = buildCanonicalProductDisplayNameFromProduct(product)
+  if (built) return built
+  return cleanCanonicalProductDisplayName(product?.canonical_product_name) || 'Gym equipment'
 }
 
 export function buildEquipmentProductPagePath(canonicalProductKey) {
