@@ -17,6 +17,8 @@
     "inject:site-schema": "node scripts/inject-site-structured-data.mjs",
     "test:seo-prerender": "node scripts/test-seo-catalogue-prerender.mjs",
     "test:sell-gym-equipment-page": "node scripts/test-sell-gym-equipment-page.mjs",
+    "test:buy-used-gym-equipment-page": "node scripts/test-buy-used-gym-equipment-page.mjs",
+    "generate:buy-used-gym-equipment-assets": "node scripts/generate-buy-used-gym-equipment-assets.mjs",
     "generate:sell-equipment-header-transparent": "node scripts/generate-sell-equipment-header-transparent.mjs",
     "test:equipment-page-seo": "node scripts/test-equipment-page-seo.mjs",
     "test:listing-page-seo": "node scripts/test-listing-page-seo.mjs",
@@ -107,7 +109,8 @@
     "test:intelligence-lifecycle-evidence": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligenceLifecycleEvidence_test.ts",
     "test:intelligence-price-selection": "npx deno run --allow-read --no-check supabase/functions/_shared/intelligencePriceSelection_test.ts",
     "test:technogym-page-fetch": "npx deno run --allow-env --allow-net --no-check scripts/test-technogym-page-fetch.ts",
-    "test:pricing-status": "node scripts/test-pricing-status-regression.mjs"
+    "test:pricing-status": "node scripts/test-pricing-status-regression.mjs",
+    "import:buy-used-gym-equipment-assets": "node scripts/import-buy-used-gym-equipment-assets.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

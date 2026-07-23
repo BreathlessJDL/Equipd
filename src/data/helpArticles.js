@@ -253,6 +253,14 @@ export const HELP_ARTICLES = [
         type: 'paragraph',
         text: "Equipd's goal is to provide a safe and transparent marketplace for used gym equipment.",
       },
+      {
+        type: 'paragraph',
+        segments: [
+          { text: 'Prefer a quick overview first? See ' },
+          { link: { label: 'Buy Used Gym Equipment', to: '/buy-used-gym-equipment' } },
+          { text: ' for the buyer journey, then browse live listings when you are ready.' },
+        ],
+      },
     ],
   },
   {

@@ -66,9 +66,8 @@ export const SELL_HERO_ARTWORK = Object.freeze({
 })
 
 /**
- * Shared sizes attribute for journey images. Must match the React page so the
- * prerendered markup and the hydrated markup resolve to the same image URL
- * (otherwise the browser downloads both the -800 and full-size variants).
+ * Mobile sizes helper retained for documentation / future responsive srcsets.
+ * Desktop journey sources now use the full 1536w asset only (no density pick).
  */
 export const SELL_JOURNEY_IMAGE_SIZES =
   '(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw'
@@ -259,6 +258,13 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
       'Facebook Marketplace and eBay cover almost everything. Equipd focuses on fitness equipment: clearer listings, messaging on the platform and protected checkout. You only pay a seller fee when you sell.',
       'That helps when you want to sell used gym equipment, commercial cardio or home strength machines. Buyers arrive expecting gym equipment, and payment and handover follow a set process.',
       'If you want a place to buy and sell gym equipment with people already looking for it, Equipd is usually simpler than starting again on a general marketplace.',
+    ],
+    bullets: [
+      {
+        before: 'Looking to buy instead? ',
+        link: { to: '/buy-used-gym-equipment', label: 'Buy used gym equipment' },
+        after: ' on Equipd.',
+      },
     ],
   },
 ])
@@ -480,14 +486,13 @@ export function buildSellGymEquipmentSeoDocument() {
       <picture>
         <source media="(max-width: 767px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)}" />
         <source media="(max-width: 767px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)}" />
-        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)} 800w, ${escapeHtml(step.imageSrc)} 1536w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
-        <source media="(min-width: 768px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)} 800w, ${escapeHtml(step.imageSrcPng)} 1536w" sizes="${SELL_JOURNEY_IMAGE_SIZES}" />
+        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrc)}" />
+        <source media="(min-width: 768px)" type="image/png" srcset="${escapeHtml(step.imageSrcPng)}" />
         <img
           src="${escapeHtml(step.imageSrcPng)}"
           alt="${escapeHtml(step.imageAlt)}"
           width="${step.imageWidth}"
           height="${step.imageHeight}"
-          sizes="${SELL_JOURNEY_IMAGE_SIZES}"
           loading="lazy"
           decoding="async"
         />

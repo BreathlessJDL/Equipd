@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCategories } from '../../lib/listings'
 import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
-import { isBrowseShellRoute, isMessagesThreadRoute, isSellGymEquipmentRoute } from '../../lib/siteHeaderRoutes'
+import { isBrowseShellRoute, isMarketingLandingRoute, isMessagesThreadRoute } from '../../lib/siteHeaderRoutes'
 import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
 import SiteStructuredData from '../seo/SiteStructuredData'
 import GlobalSiteHeader from './GlobalSiteHeader'
@@ -21,7 +21,7 @@ function AppShell() {
   const isEquipmentProductRoute = /^\/equipment\//.test(location.pathname)
   const isBrandsRoute = location.pathname === '/brands'
     || location.pathname.startsWith('/brands/')
-  const isSellGymEquipmentRoutePage = isSellGymEquipmentRoute(location.pathname)
+  const isMarketingLandingRoutePage = isMarketingLandingRoute(location.pathname)
   const isListingDetailRoute =
     /^\/listings\/[^/]+$/.test(location.pathname) && !usesBrowseShellFooter
 
@@ -86,10 +86,10 @@ function AppShell() {
 
       <main
         className={`app-shell__main${
-          usesBrowseShellFooter || isSellGymEquipmentRoutePage ? ' app-shell__main--home' : ''
+          usesBrowseShellFooter || isMarketingLandingRoutePage ? ' app-shell__main--home' : ''
         }${isEquipmentProductRoute ? ' app-shell__main--equipment' : ''}${
           isBrandsRoute ? ' app-shell__main--brands' : ''
-        }${isSellGymEquipmentRoutePage ? ' app-shell__main--sell' : ''}${
+        }${isMarketingLandingRoutePage ? ' app-shell__main--sell' : ''}${
           isListingDetailRoute ? ' app-shell__main--listing-detail' : ''
         }${hideSiteFooter ? ' app-shell__main--messages' : ''}`}
       >

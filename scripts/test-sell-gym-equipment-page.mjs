@@ -72,8 +72,12 @@ for (const step of SELL_JOURNEY_STEPS) {
     `prerender mobile webp source: ${step.title}`,
   )
   assert(
-    doc.bodyHtml.includes(`media="(min-width: 768px)" type="image/webp" srcset="${step.imageSrcMobile} 800w, ${step.imageSrc} 1536w"`),
-    `prerender desktop webp srcset: ${step.title}`,
+    doc.bodyHtml.includes(`media="(min-width: 768px)" type="image/webp" srcset="${step.imageSrc}"`),
+    `prerender desktop webp uses full-res source: ${step.title}`,
+  )
+  assert(
+    !doc.bodyHtml.includes(`${step.imageSrcMobile} 800w`),
+    `prerender desktop does not offer 800w candidate: ${step.title}`,
   )
   assert(
     doc.bodyHtml.includes(`src="${step.imageSrcPng}"`),
@@ -113,12 +117,12 @@ const pageJsx = readFileSync(join(process.cwd(), 'src', 'pages', 'SellGymEquipme
 assert(pageJsx.includes('<picture>'), 'journey images use picture element')
 assert(pageJsx.includes('type="image/webp"'), 'webp source present')
 assert(pageJsx.includes('media="(max-width: 767px)"'), 'mobile-only smaller journey sources')
+assert(pageJsx.includes('media="(min-width: 768px)"'), 'desktop full-res journey sources')
 assert(
-  pageJsx.includes('${imageSrcMobile} 800w, ${imageSrc} 1536w') ||
-    pageJsx.includes('800w, ${imageSrc} 1536w'),
-  'desktop webp srcset includes 800w and 1536w',
+  pageJsx.includes('srcSet={imageSrc}') || pageJsx.includes('srcSet={imageSrc}'),
+  'desktop webp uses full-res source only',
 )
-assert(pageJsx.includes('sizes='), 'responsive sizes attribute present')
+assert(!pageJsx.includes('800w, ${imageSrc} 1536w'), 'desktop no longer density-picks 800w')
 assert(pageJsx.includes('loading="lazy"'), 'below-fold journey images lazy load')
 assert(!pageJsx.includes('imageSrcSet'), 'no density srcset that prefers -800 on desktop')
 assert(!pageJsx.toLowerCase().includes('buyer protection fee'), 'no buyer fee on page')
@@ -242,9 +246,10 @@ assert(!pageSource.includes('reading-rail--guide'), 'guide no longer uses narrow
 assert(!pageSource.includes('sell-page__guide-grid'), 'old equal two-column guide grid removed')
 assert(pageSource.includes('sell-page__step-image'), 'journey image class present')
 assert(
-  pageSource.includes('800w') && pageSource.includes('1536w'),
-  'journey images expose 800w + 1536w srcset',
+  pageSource.includes('srcSet={imageSrc}') && pageSource.includes('media="(min-width: 768px)"'),
+  'journey images load full-res on desktop',
 )
+assert(!pageSource.includes('800w, ${imageSrc} 1536w'), 'desktop journey no longer offers 800w candidate')
 assert(pageSource.includes('openGraph'), 'social meta via openGraph')
 assert(pageSource.includes('sell-page__hero-visual'), 'split hero visual present')
 assert(pageSource.includes('sell-page__hero-artwork'), 'hero artwork wrapper present')
@@ -322,7 +327,9 @@ assert(!cssSource.includes('DIAG:') && !cssSource.includes('TEMPORARY WIDTH DIAG
 assert(!pageSource.includes('data-sell-diag-vw') && !pageSource.includes('diagVw'), 'diagnostic badge removed from JSX')
 assert(cssSource.includes('.sell-page__journey::before'), 'desktop timeline connector')
 assert(cssSource.includes('prefers-reduced-motion'), 'reduced motion supported')
-assert(cssSource.includes('scale(1.22)'), 'desktop journey hover enlargement ~1.22')
+assert(cssSource.includes('scale(1.05)'), 'desktop journey hover enlargement ~1.05 on image')
+assert(!cssSource.includes('scale(1.22)'), 'aggressive card scale hover removed')
+assert(cssSource.includes('.sell-page__step:hover .sell-page__step-image'), 'hover scales image inside frame')
 assert(cssSource.includes('(min-width: 1100px) and (hover: hover) and (pointer: fine)'), 'hover enlarge limited to desktop fine pointers')
 assert(cssSource.includes('z-index: 20'), 'hovered journey card raises above neighbours')
 assert(cssSource.includes('overflow: visible') || cssSource.includes('overflow-x: clip'), 'overflow handling present')

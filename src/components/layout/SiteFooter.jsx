@@ -14,6 +14,7 @@ const FOOTER_COLUMNS = [
   {
     title: 'Buy',
     links: [
+      { label: 'Buy Used Gym Equipment', to: '/buy-used-gym-equipment' },
       { label: 'Browse Listings', to: '/browse' },
       { label: 'Equipment Values', to: '/brands' },
       { label: 'Instant Valuation', to: '/valuation' },

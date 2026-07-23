@@ -12,6 +12,14 @@ export function isSellGymEquipmentRoute(pathname) {
   return pathname === '/sell-gym-equipment'
 }
 
+export function isBuyUsedGymEquipmentRoute(pathname) {
+  return pathname === '/buy-used-gym-equipment'
+}
+
+export function isMarketingLandingRoute(pathname) {
+  return isSellGymEquipmentRoute(pathname) || isBuyUsedGymEquipmentRoute(pathname)
+}
+
 export function isMobileHomepageRoute(pathname) {
   return pathname === '/'
 }

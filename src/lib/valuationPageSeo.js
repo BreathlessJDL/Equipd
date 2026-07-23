@@ -45,6 +45,7 @@ export function buildValuationSeoDocument() {
   <p>
     <a href="/brands">Browse equipment values by brand</a>
     · <a href="/browse">View current marketplace listings</a>
+    · <a href="/buy-used-gym-equipment">Buy used gym equipment</a>
     · <a href="/sell-gym-equipment">Sell gym equipment</a>
   </p>
 </article>`.trim()

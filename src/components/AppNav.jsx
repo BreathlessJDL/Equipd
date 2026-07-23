@@ -12,12 +12,14 @@ const CREATE_LISTING_PATH = '/listings/new'
 
 const loggedOutPublicNavLinks = [
   { to: '/brands', label: 'Equipment Values' },
+  { to: '/buy-used-gym-equipment', label: 'Buy Equipment' },
   { to: '/sell-gym-equipment', label: 'Sell Equipment' },
 ]
 
 const loggedInPublicNavLinks = [
   { to: '/browse', label: 'Browse' },
   { to: '/brands', label: 'Equipment Values' },
+  { to: '/buy-used-gym-equipment', label: 'Buy Equipment' },
   { to: '/sell-gym-equipment', label: 'Sell Equipment' },
 ]
 
@@ -116,6 +118,13 @@ function AppNav({
               onClick={onNavigate}
             >
               Equipment Values
+            </NavLink>
+            <NavLink
+              to="/buy-used-gym-equipment"
+              className={({ isActive }) => linkClass(isActive)}
+              onClick={onNavigate}
+            >
+              Buy Equipment
             </NavLink>
             <NavLink
               to="/sell-gym-equipment"

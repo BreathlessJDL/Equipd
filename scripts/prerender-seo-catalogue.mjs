@@ -37,6 +37,7 @@ import {
   fetchPublicSellerProfilesForListings,
 } from '../src/lib/listingPrerenderData.js'
 import { buildSellGymEquipmentSeoDocument } from '../src/lib/sellGymEquipmentPage.js'
+import { buildBuyUsedGymEquipmentSeoDocument } from '../src/lib/buyUsedGymEquipmentPage.js'
 import { buildValuationSeoDocument } from '../src/lib/valuationPageSeo.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
@@ -362,6 +363,7 @@ async function main() {
 
   const staticMarketingPages = [
     buildSellGymEquipmentSeoDocument(),
+    buildBuyUsedGymEquipmentSeoDocument(),
     buildValuationSeoDocument(),
   ]
   console.log(`[prerender] Rendering ${staticMarketingPages.length} static marketing page(s)…`)

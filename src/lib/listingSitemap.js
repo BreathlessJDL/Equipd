@@ -147,6 +147,7 @@ export function summarizeSitemapEntries(entries = []) {
         pathname === '/about'
         || pathname === '/help'
         || pathname === '/sell-gym-equipment'
+        || pathname === '/buy-used-gym-equipment'
       ) {
         counts.static += 1
       } else {

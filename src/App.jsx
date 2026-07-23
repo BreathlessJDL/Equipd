@@ -38,6 +38,7 @@ import HelpCentrePage from './pages/HelpCentrePage'
 import HelpArticlePage from './pages/HelpArticlePage'
 import PriceGuidePage from './pages/PriceGuidePage'
 import SellRedirectPage from './pages/SellRedirectPage'
+import BuyUsedGymEquipmentPage from './pages/BuyUsedGymEquipmentPage'
 import SellGymEquipmentPage from './pages/SellGymEquipmentPage'
 import ValuationPage from './pages/ValuationPage'
 import SupportFlowPage from './pages/SupportFlowPage'
@@ -90,6 +91,7 @@ function App() {
             <Route path="equipment/:canonical_product_key" element={<EquipmentModelPage />} />
             <Route path="valuation" element={<ValuationPage />} />
             <Route path="sell-gym-equipment" element={<SellGymEquipmentPage />} />
+            <Route path="buy-used-gym-equipment" element={<BuyUsedGymEquipmentPage />} />
             <Route path="sell" element={<SellRedirectPage />} />
             <Route path="help" element={<HelpCentrePage />} />
             <Route path="help/:slug" element={<HelpArticlePage />} />

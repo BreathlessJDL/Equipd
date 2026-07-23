@@ -140,6 +140,15 @@ function LoggedOutMobileMenu({ onClose, onHomeBrandClick }) {
       <ul className="home-mobile-menu__menu-list home-mobile-menu__menu-list--account">
         <li>
           <Link
+            to="/buy-used-gym-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Buy Equipment</span>
+          </Link>
+        </li>
+        <li>
+          <Link
             to="/sell-gym-equipment"
             className="home-mobile-menu__row home-mobile-menu__row--account"
             onClick={onClose}

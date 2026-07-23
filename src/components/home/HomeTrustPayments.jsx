@@ -87,6 +87,8 @@ function HomeTrustPayments() {
         </div>
 
         <p className="home-trust-payments__links">
+          <Link to="/buy-used-gym-equipment">Buy used gym equipment</Link>
+          <span aria-hidden="true"> · </span>
           <Link to={TRUST_LINKS.buyerProtection}>Buyer protection</Link>
         </p>
       </div>
