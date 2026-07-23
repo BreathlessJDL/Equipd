@@ -149,14 +149,18 @@ assert(og['og:image'].includes('sell-gym-equipment-og.png'), 'fallback OG image'
 
 // --- Breadcrumbs ---
 const listingCrumbs = buildListingBreadcrumbSchema(activeListing, {
-  brandSlug: 'life-fitness',
-  brandDisplayName: 'Life Fitness',
+  categoryName: 'Treadmills',
+  categoryPath: '/browse?category=treadmills',
 })
 const listingNames = listingCrumbs.itemListElement.map((i) => i.name)
 assertEqual(listingNames[0], 'Home', 'listing crumb Home')
 assertEqual(listingNames[1], 'Browse', 'listing crumb Browse')
-assertEqual(listingNames[2], 'Life Fitness', 'listing crumb brand')
-assertEqual(listingNames[3], activeListing.title, 'listing crumb leaf uses listing title')
+assertEqual(listingNames[2], 'Treadmills', 'listing crumb category')
+assertEqual(listingNames.length, 3, 'listing crumb trail stops at category')
+assert(
+  !listingNames.includes(activeListing.title),
+  'listing title is not repeated in breadcrumbs',
+)
 
 const brandCrumbs = buildBrandPageBreadcrumbSchema({
   displayName: 'Precor',

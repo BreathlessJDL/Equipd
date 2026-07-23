@@ -76,11 +76,11 @@ export default function EquipmentValuationDetailsFields({
             </option>
           ))}
         </select>
-        <p className="valuation-page__hint">
-          {supportsConsoles
-            ? 'Select the year this item was manufactured. Console options depend on the year selected.'
-            : 'Select the year this item was manufactured.'}
-        </p>
+        {!supportsConsoles ? (
+          <p className="valuation-page__hint">
+            Select the year this item was manufactured.
+          </p>
+        ) : null}
       </div>
 
       {showConsoleSelect ? (
@@ -88,6 +88,9 @@ export default function EquipmentValuationDetailsFields({
           <label className="valuation-page__label" htmlFor={consoleId}>
             Console / monitor
           </label>
+          <p className="valuation-page__hint valuation-page__hint--console">
+            Available console variants and images update when you change the manufacture year.
+          </p>
           <select
             id={consoleId}
             className="valuation-page__select"

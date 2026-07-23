@@ -55,6 +55,13 @@
   overflow: hidden;
 }
 
+@media (max-width: 767px) {
+  /* Header already shows the listing title on mobile — keep price/protection here. */
+  .message-thread-listing-summary__title--compact {
+    display: none;
+  }
+}
+
 .message-thread-listing-summary__price {
   margin: 0.15rem 0 0;
   font-size: 0.9375rem;

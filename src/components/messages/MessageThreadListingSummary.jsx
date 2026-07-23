@@ -66,7 +66,9 @@ function MessageThreadListingSummary({
         </div>
 
         <div className="message-thread-listing-summary__content">
-          <h3 className="message-thread-listing-summary__title">{listingTitle}</h3>
+          <h3 className="message-thread-listing-summary__title message-thread-listing-summary__title--compact">
+            {listingTitle}
+          </h3>
 
           {pricePence != null ? (
             <p className="message-thread-listing-summary__price">{formatPricePence(pricePence)}</p>

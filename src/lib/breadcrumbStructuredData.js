@@ -19,14 +19,23 @@ export function absoluteBreadcrumbUrl(pathOrUrl = '/') {
       ? new URL(raw)
       : new URL(raw.startsWith('/') ? raw : `/${raw}`, EQUIPD_SITE_ORIGIN)
 
-    // Canonical www origin; drop query/hash for breadcrumb item URLs.
+    // Canonical www origin. Keep meaningful browse filters; drop tracking noise.
     let pathname = parsed.pathname || '/'
     if (pathname !== '/' && pathname.endsWith('/')) {
       pathname = pathname.replace(/\/+$/, '')
     }
 
-    if (pathname === '/') return `${EQUIPD_SITE_ORIGIN}/`
-    return `${EQUIPD_SITE_ORIGIN}${pathname}`
+    const kept = new URLSearchParams()
+    for (const key of ['category', 'rating']) {
+      const value = parsed.searchParams.get(key)
+      if (value) kept.set(key, value)
+    }
+    const search = kept.toString() ? `?${kept.toString()}` : ''
+
+    if (pathname === '/') {
+      return search ? `${EQUIPD_SITE_ORIGIN}/${search}` : `${EQUIPD_SITE_ORIGIN}/`
+    }
+    return `${EQUIPD_SITE_ORIGIN}${pathname}${search}`
   } catch {
     return `${EQUIPD_SITE_ORIGIN}/`
   }
@@ -43,11 +52,13 @@ export function normalizeBreadcrumbItems(items = []) {
   const normalized = []
   for (const entry of items) {
     const name = normalizeBreadcrumbName(entry?.name ?? entry?.label)
-    const item = absoluteBreadcrumbUrl(
-      entry?.item ?? entry?.url ?? entry?.path ?? entry?.href ?? entry?.to,
-    )
-    if (!name || !item) continue
-    normalized.push({ name, item })
+    if (!name) continue
+    const rawPath = entry?.item ?? entry?.url ?? entry?.path ?? entry?.href ?? entry?.to
+    const hasPath = rawPath != null && String(rawPath).trim() !== ''
+    normalized.push({
+      name,
+      item: hasPath ? absoluteBreadcrumbUrl(rawPath) : null,
+    })
   }
   return normalized
 }
@@ -61,18 +72,22 @@ export function buildBreadcrumbSchema(items, { canonicalUrl = null } = {}) {
   const list = normalizeBreadcrumbItems(items)
   if (!list.length) return null
 
-  const pageUrl = absoluteBreadcrumbUrl(canonicalUrl || list[list.length - 1].item)
+  const lastLinkedItem = [...list].reverse().find((entry) => entry.item)?.item
+  const pageUrl = absoluteBreadcrumbUrl(canonicalUrl || lastLinkedItem || '/')
 
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     '@id': `${pageUrl}#breadcrumb`,
-    itemListElement: list.map((entry, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: entry.name,
-      item: entry.item,
-    })),
+    itemListElement: list.map((entry, index) => {
+      const listItem = {
+        '@type': 'ListItem',
+        position: index + 1,
+        name: entry.name,
+      }
+      if (entry.item) listItem.item = entry.item
+      return listItem
+    }),
   }
 }
 
@@ -174,12 +189,12 @@ export function buildLocationPageBreadcrumbSchema(location) {
 
 /**
  * Marketplace listing trail.
- * Prefer Home → Browse → Brand → Listing when a public brand page exists.
- * Category query URLs are not indexable landings, so they are omitted.
+ * Prefer Home → Browse → Category for a compact, non-duplicative trail.
+ * The listing title remains the page H1, not a breadcrumb crumb.
  */
 export function buildListingBreadcrumbItems(listing, {
-  brandSlug = null,
-  brandDisplayName = null,
+  categoryName = null,
+  categoryPath = null,
 } = {}) {
   const title = normalizeBreadcrumbName(listing?.title)
   if (!title) return []
@@ -189,23 +204,29 @@ export function buildListingBreadcrumbItems(listing, {
     { name: 'Browse', path: '/browse' },
   ]
 
-  const slug = String(brandSlug ?? '').trim()
-  const brandName = normalizeBreadcrumbName(brandDisplayName)
-  if (slug && brandName) {
-    items.push({ name: brandName, path: `/brands/${slug}` })
-  }
+  const resolvedCategoryName = normalizeBreadcrumbName(
+    categoryName ?? listing?.category?.name,
+  )
+  const resolvedCategoryPath = String(
+    categoryPath
+      ?? (listing?.category?.slug
+        ? `/browse?category=${encodeURIComponent(String(listing.category.slug).trim())}`
+        : ''),
+  ).trim() || null
 
-  items.push({
-    name: title,
-    path: listing?.slug ? `/listings/${String(listing.slug).trim()}` : null,
-  })
+  if (resolvedCategoryName) {
+    items.push({
+      name: resolvedCategoryName,
+      path: resolvedCategoryPath,
+    })
+  }
 
   return items
 }
 
 export function buildListingBreadcrumbSchema(listing, {
-  brandSlug = null,
-  brandDisplayName = null,
+  categoryName = null,
+  categoryPath = null,
 } = {}) {
   const title = normalizeBreadcrumbName(listing?.title)
   const listingSlug = String(listing?.slug ?? '').trim()
@@ -214,7 +235,7 @@ export function buildListingBreadcrumbSchema(listing, {
   if (status !== 'active' && status !== 'sold') return null
 
   const path = `/listings/${listingSlug}`
-  const items = buildListingBreadcrumbItems(listing, { brandSlug, brandDisplayName })
+  const items = buildListingBreadcrumbItems(listing, { categoryName, categoryPath })
   return buildBreadcrumbSchema(items, { canonicalUrl: path })
 }
 

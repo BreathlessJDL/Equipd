@@ -110,6 +110,23 @@
   color: var(--color-muted);
 }
 
+.equipment-valuation-card__console-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0.45rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.equipment-valuation-card__console-hint-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: color-mix(in srgb, var(--color-navy) 45%, var(--color-muted));
+}
+
 .equipment-valuation-card__summary {
   display: grid;
   gap: 0.65rem;

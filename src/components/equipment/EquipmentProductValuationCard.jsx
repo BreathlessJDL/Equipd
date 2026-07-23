@@ -101,6 +101,22 @@ export default function EquipmentProductValuationCard({
                 <label className="equipment-valuation-card__label" htmlFor="equipment-product-console">
                   Console variant
                 </label>
+                <p className="equipment-valuation-card__console-hint">
+                  <span className="equipment-valuation-card__console-hint-icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                      <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.35" />
+                      <path
+                        d="M8 7.25V11.5M8 5.1v.2"
+                        stroke="currentColor"
+                        strokeWidth="1.35"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <span>
+                    Available console variants and images update when you change the manufacture year.
+                  </span>
+                </p>
                 <select
                   id="equipment-product-console"
                   className="equipment-valuation-card__select"

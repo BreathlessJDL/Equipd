@@ -570,8 +570,7 @@
 
 /* -------------------------------------------------------------------------- */
 /* Mobile — single column, explicit visual order                              */
-/* Image → Title → Valuation → Overview → Consoles → Graph → Disclaimer       */
-/* -------------------------------------------------------------------------- */
+/* Image → Title → Valuation → Consoles → Overview → About → Graph → Disclaimer */
 
 @media (max-width: 719px) {
   .equipment-model-page__layout {
@@ -581,9 +580,9 @@
   .equipment-model-page__media { order: 1; }
   .equipment-model-page__identity { order: 2; }
   .equipment-model-page__valuation { order: 3; }
-  .equipment-model-page__overview { order: 4; }
-  .equipment-model-page__generated-about { order: 5; }
-  .equipment-model-page__consoles { order: 6; }
+  .equipment-model-page__consoles { order: 4; }
+  .equipment-model-page__overview { order: 5; }
+  .equipment-model-page__generated-about { order: 6; }
   .equipment-model-page__graph { order: 7; }
   .equipment-model-page__generated-faq { order: 8; }
   .equipment-model-page__related { order: 9; }
@@ -594,5 +593,9 @@
   .equipment-model-page__image-placeholder {
     aspect-ratio: 4 / 3;
     max-height: none;
+  }
+
+  .equipment-model-page__consoles {
+    margin-top: 0;
   }
 }

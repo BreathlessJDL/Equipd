@@ -3,7 +3,8 @@ import './PageBreadcrumbs.css'
 
 /**
  * Simple crawlable breadcrumbs.
- * items: [{ label, to? }] — last item is current page (no link).
+ * items: [{ label, to? }]
+ * Linked when `to` is present. Unlinked final crumbs use aria-current="page".
  */
 export default function PageBreadcrumbs({ items = [], className = '' }) {
   if (!items.length) return null
@@ -16,14 +17,17 @@ export default function PageBreadcrumbs({ items = [], className = '' }) {
           return (
             <li key={`${item.label}-${index}`} className="page-breadcrumbs__item">
               {index > 0 ? <span className="page-breadcrumbs__sep" aria-hidden="true">/</span> : null}
-              {isLast || !item.to ? (
-                <span className="page-breadcrumbs__current" aria-current="page">
-                  {item.label}
-                </span>
-              ) : (
+              {item.to ? (
                 <Link to={item.to} className="page-breadcrumbs__link">
                   {item.label}
                 </Link>
+              ) : (
+                <span
+                  className="page-breadcrumbs__current"
+                  aria-current={isLast ? 'page' : undefined}
+                >
+                  {item.label}
+                </span>
               )}
             </li>
           )

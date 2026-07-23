@@ -4,6 +4,7 @@ import '../components/ListingDetail.css'
 import '../components/PageStub.css'
 import {
   fetchListingBySlug,
+  getCategoryDisplayName,
   getListingErrorMessage,
   incrementListingViews,
   isListingOwner,
@@ -36,11 +37,13 @@ import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '.
 import { useListingRecommendations } from '../hooks/useListingRecommendations'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { buildListingBreadcrumbSchema, buildListingBreadcrumbItems } from '../lib/breadcrumbStructuredData'
-import { getListingBrandPageHref } from '../lib/listingDiscovery'
-import { getBrandDisplayName, getBrandSlug, resolveBrandRegistryEntry } from '../lib/brandCatalogueCore'
+import {
+  getListingBrowseTypeHref,
+  getListingValuationHref,
+  resolveListingProductMapping,
+} from '../lib/listingDiscovery'
 import { buildListingPageSeo } from '../lib/listingPageSeo'
 import { buildListingProductSchema } from '../lib/listingPageStructuredData'
-import { getListingValuationHref, resolveListingProductMapping } from '../lib/listingDiscovery'
 import { isSoldListingStatus } from '../lib/listingSoldLifecycle'
 import { fetchApprovedEquipmentProductForListing } from '../lib/equipmentProducts'
 import { fetchPublicProfile } from '../lib/profiles'
@@ -94,28 +97,28 @@ function ListingDetailPage() {
     openGraph: listing ? listingSeo.openGraph : null,
   })
 
-  const listingBrandContext = useMemo(() => {
-    if (!listing) return { brandSlug: null, brandDisplayName: null }
-    const brandName = listing.brand || equipmentProduct?.brand || null
-    const entry = resolveBrandRegistryEntry(brandName)
-    const brandSlug = entry?.slug || (getListingBrandPageHref(brandName) ? getBrandSlug(brandName) : null)
-    const brandDisplayName = entry?.displayName || (brandSlug ? getBrandDisplayName(brandName) : null)
-    return { brandSlug, brandDisplayName }
+  const listingBreadcrumbContext = useMemo(() => {
+    if (!listing) {
+      return { categoryName: null, categoryPath: null }
+    }
+    return {
+      categoryName: getCategoryDisplayName(listing),
+      categoryPath: getListingBrowseTypeHref(listing, equipmentProduct),
+    }
   }, [listing, equipmentProduct])
 
   const breadcrumbSchema = useMemo(
-    () => (listing ? buildListingBreadcrumbSchema(listing, listingBrandContext) : null),
-    [listing, listingBrandContext],
+    () => (listing ? buildListingBreadcrumbSchema(listing, listingBreadcrumbContext) : null),
+    [listing, listingBreadcrumbContext],
   )
 
   const breadcrumbItems = useMemo(() => {
     if (!listing) return []
-    const items = buildListingBreadcrumbItems(listing, listingBrandContext)
-    return items.map((item, index) => ({
+    return buildListingBreadcrumbItems(listing, listingBreadcrumbContext).map((item) => ({
       label: item.name,
-      to: index < items.length - 1 ? item.path : undefined,
+      to: item.path || undefined,
     }))
-  }, [listing, listingBrandContext])
+  }, [listing, listingBreadcrumbContext])
 
   const productSchema = useMemo(
     () => (

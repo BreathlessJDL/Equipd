@@ -115,9 +115,14 @@ const listing = buildListingBreadcrumbSchema({
   slug: 'life-fitness-e1-go-console',
   title: 'Life Fitness E1 Elliptical Trainer with Go Console',
   status: 'active',
+  category: { name: 'Crosstrainers', slug: 'crosstrainers' },
 })
 assert(listing.itemListElement.map((i) => i.name).join(' > ')
-  === 'Home > Browse > Life Fitness E1 Elliptical Trainer with Go Console', 'listing hierarchy')
+  === 'Home > Browse > Crosstrainers', 'listing hierarchy')
+assert(
+  listing.itemListElement[2].item.includes('/browse?category=crosstrainers'),
+  'listing category breadcrumb links to browse filter',
+)
 assert(
   !buildListingBreadcrumbSchema({ slug: 'x', title: 'Draft', status: 'draft' }),
   'no breadcrumb for draft listing',

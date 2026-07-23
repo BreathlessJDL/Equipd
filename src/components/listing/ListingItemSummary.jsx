@@ -236,12 +236,31 @@ function ListingItemSummary({
           <SummaryRow label="Usage rating" value={ratingLabel} />
           <SummaryRow label="Location" value={locationLabel} />
         </dl>
-        <p className="listing-summary__valuation-link-wrap">
-          <Link to={valuationHref} className="listing-summary__inline-link">
-            Value this equipment
-          </Link>
-        </p>
       </section>
+
+      <div className="listing-summary__valuation-cta">
+        <Link to={valuationHref} className="listing-summary__valuation-button">
+          <span className="listing-summary__valuation-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none">
+              <path
+                d="M2.5 11.5 6 8l2.25 2.25L13.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10.25 4.5H13.5V7.75"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          Value this equipment
+        </Link>
+      </div>
 
       {deliveryOptions.length > 0 ? (
         <section

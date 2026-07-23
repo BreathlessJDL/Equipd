@@ -11,7 +11,6 @@ import MakeOfferModal from '../components/listing/MakeOfferModal'
 import MessageThreadListingSummary from '../components/messages/MessageThreadListingSummary'
 import MessageThreadSafetyBanner from '../components/messages/MessageThreadSafetyBanner'
 import MessageThreadHeader from '../components/messages/MessageThreadHeader'
-import ReportTrigger from '../components/ReportTrigger'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { notifyUnreadMessagesChanged } from '../hooks/useUnreadMessageCount'
@@ -736,15 +735,14 @@ function MessagesPage() {
                 conversation={selectedConversation}
                 userId={user?.id}
                 onBack={() => navigate('/messages')}
-                report={
-                  selectedConversation.id && canReportConversation(selectedConversation, user?.id) ? (
-                    <ReportTrigger
-                      reportType={REPORT_TYPES.CONVERSATION}
-                      conversationId={selectedConversation.id}
-                      label="Report conversation"
-                      className="report-trigger"
-                    />
-                  ) : null
+                reportProps={
+                  selectedConversation.id && canReportConversation(selectedConversation, user?.id)
+                    ? {
+                        reportType: REPORT_TYPES.CONVERSATION,
+                        conversationId: selectedConversation.id,
+                        label: 'Report conversation',
+                      }
+                    : null
                 }
               />
 

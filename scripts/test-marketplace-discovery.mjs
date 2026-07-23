@@ -127,27 +127,38 @@ assert(getListingCardHref(activeListing).startsWith('/listings/'), 'homepage/bra
 assertNull(getListingCardHref({ title: 'no slug' }), 'missing slug has no href')
 
 // 21–22 breadcrumbs
-const crumbItems = buildListingBreadcrumbItems(activeListing)
-assertEqual(crumbItems.length, 3, 'Home → Browse → Listing')
+const crumbListing = {
+  ...activeListing,
+  category: { name: 'Spin Bikes', slug: 'spin-bikes' },
+}
+const crumbItems = buildListingBreadcrumbItems(crumbListing)
+assertEqual(crumbItems.length, 3, 'Home → Browse → Category')
 assertEqual(crumbItems[0].path, '/', 'breadcrumb home')
 assertEqual(crumbItems[1].path, '/browse', 'breadcrumb browse')
-assertEqual(crumbItems[2].path, '/listings/proform-tour-clc-manchester', 'breadcrumb listing path')
-const crumbSchema = buildListingBreadcrumbSchema(activeListing)
+assertEqual(crumbItems[2].path, '/browse?category=spin-bikes', 'breadcrumb category path')
+assertEqual(crumbItems[2].name, 'Spin Bikes', 'breadcrumb category name')
+const crumbSchema = buildListingBreadcrumbSchema(crumbListing)
 assertEqual(findBreadcrumbSchemas([crumbSchema]).length, 1, 'one BreadcrumbList')
 assertEqual(
   crumbSchema.itemListElement[2].item,
-  `${EQUIPD_SITE_ORIGIN}/listings/proform-tour-clc-manchester`,
-  'JSON-LD final crumb matches listing URL',
+  `${EQUIPD_SITE_ORIGIN}/browse?category=spin-bikes`,
+  'JSON-LD final crumb matches category browse URL',
 )
 assertEqual(
   crumbSchema.itemListElement[1].item,
   `${EQUIPD_SITE_ORIGIN}/browse`,
   'JSON-LD browse matches visible browse',
 )
+assertEqual(
+  crumbSchema['@id'],
+  `${EQUIPD_SITE_ORIGIN}/listings/proform-tour-clc-manchester#breadcrumb`,
+  'breadcrumb @id stays on listing page',
+)
 const soldForCrumb = {
   ...soldListing,
   published_at: '2026-01-01T00:00:00.000Z',
   sold_at: '2026-06-01T00:00:00.000Z',
+  category: { name: 'Spin Bikes', slug: 'spin-bikes' },
 }
 assert(buildListingBreadcrumbSchema(soldForCrumb), 'eligible sold has breadcrumb schema')
 
