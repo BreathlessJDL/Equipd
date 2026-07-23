@@ -26,6 +26,8 @@
     "test:sold-listing-lifecycle": "node scripts/test-sold-listing-lifecycle.mjs",
     "test:listing-prerender": "node scripts/test-listing-prerender.mjs",
     "test:search-appearance": "node scripts/test-search-appearance.mjs",
+    "test:merchant-feed": "node scripts/test-merchant-feed.mjs",
+    "report:merchant-readiness": "node scripts/report-merchant-readiness.mjs",
     "test:site-structured-data": "node scripts/test-site-structured-data.mjs",
     "test:seo-canonical-origin": "node scripts/test-seo-canonical-origin.mjs",
     "test:cookie-consent": "node scripts/test-cookie-consent.mjs",

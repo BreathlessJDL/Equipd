@@ -49,11 +49,25 @@
       "destination": "/api/public-listing-page?slug=:slug"
     },
     {
+      "source": "/feeds/google-merchant.xml",
+      "destination": "/api/merchant-product-feed"
+    },
+    {
+      "source": "/feeds/google-merchant",
+      "destination": "/api/merchant-product-feed"
+    },
+    {
       "source": "/((?!.*\\.[^/]+$).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/feeds/google-merchant.xml",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=900, s-maxage=900" }
+      ]
+    },
     {
       "source": "/brands/(.*)",
       "headers": [
