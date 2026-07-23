@@ -74,7 +74,7 @@ const matrixWithImage = {
 }
 
 assert(
-  buildEquipmentPageTitle(cardio) === 'Life Fitness Integrity Series Treadmill Value, Original RRP & Information',
+  buildEquipmentPageTitle(cardio) === 'Life Fitness Integrity Series Treadmill Used Value & Price Guide',
   'cardio title hook form',
 )
 assert(
@@ -184,7 +184,7 @@ const doc = buildEquipmentPageSeoDocument({
   hasConsoleOptions: true,
   imageUrl: cardio.image_url,
 })
-assert(doc.title.includes('Value, Original RRP & Information'), 'prerender title pattern')
+assert(doc.title.includes('Used Value & Price Guide'), 'prerender title pattern')
 assert(doc.title.endsWith('| Equipd'), 'prerender site suffix once')
 assert(doc.bodyHtml.includes('<h1>Life Fitness Integrity Series Treadmill</h1>'), 'h1')
 assert(doc.bodyHtml.includes('Overview'), 'overview h2')
@@ -198,7 +198,7 @@ const strengthDoc = buildEquipmentPageSeoDocument({
   hasConsoleOptions: false,
 })
 assert(!strengthDoc.description.includes('console options'), 'strength prerender desc')
-assert(strengthDoc.openGraph['og:image'].includes('equipd-full-logo'), 'fallback social image')
+assert(strengthDoc.openGraph['og:image'].includes('sell-gym-equipment-og.png'), 'fallback social image')
 
 const template = `<!doctype html>
 <html lang="en">

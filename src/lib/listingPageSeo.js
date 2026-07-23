@@ -10,6 +10,7 @@ import {
   isEligiblePublicSoldListing,
   isSoldListingStatus,
 } from './listingSoldLifecycle.js'
+import { buildSocialOpenGraph, getEquipdDefaultSocialImageUrl } from './socialPreview.js'
 
 const CONDITION_LABELS = {
   new: 'New',
@@ -181,9 +182,9 @@ export function buildListingPageMetaDescription(listing, {
   const bits = []
 
   if (sold) {
-    bits.push(`This ${stripLeadingUsed(productName)} has sold on Equipd.`)
+    bits.push(`This ${stripLeadingUsed(productName)} has now sold on Equipd.`)
     if (condition) bits.push(`It was listed in ${String(condition).toLowerCase()} condition.`)
-    bits.push('View similar active listings or value this equipment on Equipd.')
+    bits.push('Browse similar equipment currently available, or value this equipment on Equipd.')
   } else {
     const lead = [`Buy this used ${stripLeadingUsed(productName)}`]
     if (condition) lead.push(`in ${String(condition).toLowerCase()} condition`)
@@ -271,22 +272,7 @@ export function buildListingPageSeo({ listing, equipmentProduct = null, now = ne
     ? (isEligiblePublicSoldListing(listing) ? soldIndexing.robotsContent : 'noindex, follow')
     : (indexable ? 'index, follow' : 'noindex, follow')
   const titleWithSite = `${titleForHook} | Equipd`
-
-  const openGraph = {
-    'og:type': 'website',
-    'og:site_name': 'Equipd',
-    'og:title': titleWithSite,
-    'og:description': description,
-    'og:url': canonicalUrl,
-    'twitter:card': socialImage ? 'summary_large_image' : 'summary',
-    'twitter:title': titleWithSite,
-    'twitter:description': description,
-  }
-
-  if (socialImage) {
-    openGraph['og:image'] = socialImage
-    openGraph['twitter:image'] = socialImage
-  }
+  const resolvedSocialImage = socialImage || getEquipdDefaultSocialImageUrl()
 
   return {
     titleForHook,
@@ -296,9 +282,15 @@ export function buildListingPageSeo({ listing, equipmentProduct = null, now = ne
     canonicalUrl,
     noIndex: !indexable,
     robotsContent,
-    openGraph,
+    openGraph: buildSocialOpenGraph({
+      title: titleWithSite,
+      description,
+      url: canonicalUrl,
+      image: resolvedSocialImage,
+      fallbackImage: true,
+    }),
     imageAlt: buildListingImageAltText(listing, { equipmentProduct }),
-    socialImage,
+    socialImage: resolvedSocialImage,
     indexable,
     sold,
   }

@@ -21,6 +21,7 @@ import {
 import { formatListingLocationDetail } from './listingLocation.js'
 import { getSellerShopPath } from './sellerShopUrls.js'
 import { isSoldListingStatus } from './listingSoldLifecycle.js'
+import { getBrandDisplayName, getBrandSlug, resolveBrandRegistryEntry } from './brandCatalogueCore.js'
 
 function parseListingDescriptionExtras(description = '') {
   const lines = (description ?? '').split('\n')
@@ -78,11 +79,13 @@ function escapeHtml(value) {
 
 function renderBreadcrumbs(items = []) {
   const parts = items.map((item, index) => {
+    const label = item.label || item.name
+    const href = item.href || item.path
     const isLast = index === items.length - 1
-    if (isLast || !item.path) {
-      return `<span>${escapeHtml(item.label)}</span>`
+    if (isLast || !href) {
+      return `<span>${escapeHtml(label)}</span>`
     }
-    return `<a href="${escapeHtml(item.path)}">${escapeHtml(item.label)}</a>`
+    return `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`
   })
   return `<nav aria-label="Breadcrumb"><p>${parts.join(' <span aria-hidden="true">/</span> ')}</p></nav>`
 }
@@ -249,7 +252,12 @@ export function buildListingSeoDocument({
 
   const sold = isSoldListingStatus(listing)
   const seo = buildListingPageSeo({ listing, equipmentProduct, now })
-  const breadcrumbSchema = buildListingBreadcrumbSchema(listing)
+  const brandName = listing?.brand || equipmentProduct?.brand || null
+  const brandEntry = resolveBrandRegistryEntry(brandName)
+  const brandSlug = brandEntry?.slug || (getListingBrandPageHref(brandName) ? getBrandSlug(brandName) : null)
+  const brandDisplayName = brandEntry?.displayName || (brandSlug ? getBrandDisplayName(brandName) : null)
+  const breadcrumbOptions = { brandSlug, brandDisplayName }
+  const breadcrumbSchema = buildListingBreadcrumbSchema(listing, breadcrumbOptions)
   const bundle = buildListingPageStructuredData({
     listing,
     equipmentProduct,
@@ -257,7 +265,7 @@ export function buildListingSeoDocument({
     sellerProfile,
     breadcrumbSchema,
   })
-  const breadcrumbs = buildListingBreadcrumbItems(listing) || []
+  const breadcrumbs = buildListingBreadcrumbItems(listing, breadcrumbOptions) || []
   const internalLinks = buildListingInternalLinks(listing, equipmentProduct)
   const imageAlt = seo.imageAlt || listing.title || 'Listing photo'
   const description = parseListingDescriptionExtras(listing?.description).description || 'No description provided.'

@@ -8,7 +8,8 @@ import '../components/Reviews.css'
 import './UserShop.css'
 import { useAuth } from '../hooks/useAuth'
 import { useRequireAuth } from '../hooks/useRequireAuth'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
+import JsonLd from '../components/JsonLd'
 import ReportTrigger from '../components/ReportTrigger'
 import { canReportUser, REPORT_TYPES } from '../lib/reports'
 import {
@@ -19,6 +20,10 @@ import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../lib/marketplaceMessageValida
 import { getMessageErrorMessage, resolveMessageThreadNavigation } from '../lib/messages'
 import { fetchPublicProfileByShopParam } from '../lib/sellerShopResolve'
 import { getSellerShopPath, isProfileUuid } from '../lib/sellerShopUrls'
+import {
+  buildSellerShopPageSeo,
+  buildSellerShopStructuredData,
+} from '../lib/sellerShopSeo'
 import {
   formatLastActiveLabel,
   formatProfileJoinDate,
@@ -56,7 +61,34 @@ function UserShopPage({ shopParam }) {
   const [messageError, setMessageError] = useState('')
   const [profileRefreshNonce, setProfileRefreshNonce] = useState(0)
 
-  usePageTitle(profile ? getProfileDisplayName(profile) : null)
+  const shopSeo = profile
+    ? buildSellerShopPageSeo(profile, {
+        listingCount: listings.length,
+        reviewSummary,
+      })
+    : null
+  const shopStructuredData = profile
+    ? buildSellerShopStructuredData(profile, {
+        reviewSummary,
+        completedSalesCount,
+      })
+    : null
+
+  usePageMeta(
+    shopSeo
+      ? {
+          title: shopSeo.titleForHook,
+          description: shopSeo.description,
+          canonicalPath: shopSeo.canonicalPath,
+          openGraph: shopSeo.openGraph,
+        }
+      : {
+          title: null,
+          description: null,
+          canonicalPath: null,
+          openGraph: null,
+        },
+  )
 
   useEffect(() => {
     function handleProfileUpdated(event) {
@@ -202,6 +234,7 @@ function UserShopPage({ shopParam }) {
 
   return (
     <section className="user-shop">
+      {shopStructuredData ? <JsonLd data={shopStructuredData} /> : null}
       <div className="user-shop__profile-card">
         <header className="user-shop__header">
           <div className="user-shop__identity">

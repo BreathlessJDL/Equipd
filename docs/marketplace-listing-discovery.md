@@ -79,16 +79,21 @@ One transition produces one notify decision (no duplicate ping from treating sol
 
 ## Current limitations
 
-- No listing HTML prerender / edge-rendered metadata yet (client-rendered SPA). Eligible sold pages render substantive client content rather than “Listing not found”; true HTTP status semantics are a separate future improvement.
-- No Google Merchant Center feed
+- Listing HTML is prerendered at build time (`scripts/prerender-seo-catalogue.mjs` → `dist/listings/{slug}/index.html`) and unknown/unreadable listing slugs return true HTTP 404 via `api/public-listing-page.js` (Stage 6).
+- No Google Merchant Center feed (deferred; not started in Stage 7)
 - No Google general Indexing API (by design)
 - Historical listings may lack Equipment Intelligence mapping until re-saved from valuation/equipment
 - IndexNow / sitemap inclusion does **not** guarantee crawl or index timing
+- Listing Product schema uses a small property set only (no GTIN/MPN/ratings); colour comes from visible `Colour:` description lines when present
 
 ## Related code
 
 - Sitemap: `scripts/generate-sitemap.mjs`, `src/lib/listingSitemap.js`
 - Listing SEO / canonical / sold robots: `src/lib/listingPageSeo.js`, `src/lib/listingSoldLifecycle.js`
+- Listing Product/Offer JSON-LD: `src/lib/listingPageStructuredData.js`
+- Listing prerender / HTTP: `src/lib/listingSeoPrerender.js`, `api/public-listing-page.js`, `src/lib/listingDiscoveryEligibility.js`
+- Social previews: `src/lib/socialPreview.js`
+- Seller shop SEO: `src/lib/sellerShopSeo.js`
 - Visibility vs readability: `listing_is_publicly_visible`, `listing_is_publicly_readable`, `listings_public_browse`
 - IndexNow: `src/lib/indexNowNotify.js`, `src/lib/indexNowCollect.js`
 - Mapping: `equipment_product_id`, `canonical_product_key` on `listings`

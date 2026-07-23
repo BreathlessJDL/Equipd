@@ -136,7 +136,8 @@ function resolveListingSchemaName(listing, equipmentProduct) {
 }
 
 function resolveListingSchemaDescription(listing, equipmentProduct) {
-  const sellerDescription = normalizeWhitespace(listing?.description)
+  const extras = parseListingDescriptionStructuredExtras(listing?.description)
+  const sellerDescription = normalizeWhitespace(extras.description || listing?.description)
   if (sellerDescription) {
     if (sellerDescription.length <= MAX_SCHEMA_DESCRIPTION_CHARS) return sellerDescription
     return `${sellerDescription.slice(0, MAX_SCHEMA_DESCRIPTION_CHARS - 1).trimEnd()}…`
@@ -173,6 +174,92 @@ function resolveListingSchemaCategory(listing, equipmentProduct) {
     || normalizeWhitespace(listing?.equipment_type)
     || null
   )
+}
+
+/**
+ * Colour / dimensions are stored as labelled lines in listing.description (visible on the page).
+ * Node-safe parse — do not import listingDetailDisplay (browser listings module).
+ */
+export function parseListingDescriptionStructuredExtras(description = '') {
+  const lines = String(description ?? '').split('\n')
+  let colour = null
+  let manufactureYear = null
+  const bodyLines = []
+
+  for (const line of lines) {
+    const colourMatch = line.match(/^Colour:\s*(.+)$/i)
+    if (colourMatch) {
+      colour = colourMatch[1].trim() || null
+      continue
+    }
+
+    const yearMatch = line.match(/^Manufacture year:\s*(\d{4})\s*$/i)
+    if (yearMatch) {
+      manufactureYear = Number(yearMatch[1])
+      continue
+    }
+
+    if (/^Dimensions \(L×W×H cm\):\s*/i.test(line)) {
+      continue
+    }
+
+    bodyLines.push(line)
+  }
+
+  return {
+    colour,
+    manufactureYear,
+    description: bodyLines.join('\n').trim() || null,
+  }
+}
+
+function resolveListingColour(listing) {
+  const direct = normalizeWhitespace(listing?.colour || listing?.color)
+  if (direct) return direct
+  return normalizeWhitespace(parseListingDescriptionStructuredExtras(listing?.description).colour)
+}
+
+function resolveListingManufactureYear(listing) {
+  const direct = Number(listing?.manufacture_year)
+  if (Number.isFinite(direct) && direct >= 1970 && direct <= new Date().getUTCFullYear() + 1) {
+    return direct
+  }
+  const fromDescription = parseListingDescriptionStructuredExtras(listing?.description).manufactureYear
+  if (
+    Number.isFinite(fromDescription)
+    && fromDescription >= 1970
+    && fromDescription <= new Date().getUTCFullYear() + 1
+  ) {
+    return fromDescription
+  }
+  return null
+}
+
+/**
+ * Small set of useful visible specs only — never dump the full listing row.
+ */
+export function buildListingAdditionalProperties(listing) {
+  const properties = []
+
+  const colour = resolveListingColour(listing)
+  if (colour) {
+    properties.push({
+      '@type': 'PropertyValue',
+      name: 'Colour',
+      value: colour,
+    })
+  }
+
+  const year = resolveListingManufactureYear(listing)
+  if (year != null) {
+    properties.push({
+      '@type': 'PropertyValue',
+      name: 'Manufacture year',
+      value: String(year),
+    })
+  }
+
+  return properties
 }
 
 export function buildListingSellerSchema(sellerProfile) {
@@ -285,6 +372,16 @@ export function buildListingProductSchema({
     product.itemCondition = itemCondition
   }
 
+  const colour = resolveListingColour(listing)
+  if (colour) {
+    product.color = colour
+  }
+
+  const additionalProperty = buildListingAdditionalProperties(listing)
+  if (additionalProperty.length) {
+    product.additionalProperty = additionalProperty
+  }
+
   const offer = buildListingOfferSchema({
     listing,
     canonicalUrl: url,
@@ -294,8 +391,8 @@ export function buildListingProductSchema({
     product.offers = offer
   }
 
-  // Intentionally omit: sku, gtin, mpn, aggregateRating, review.
-  // Catalogue valuation / RRP must never appear as offers.price.
+  // Intentionally omit: sku, gtin, mpn, aggregateRating, review, priceValidUntil,
+  // speculative shipping. Catalogue valuation / RRP must never appear as offers.price.
   return product
 }
 

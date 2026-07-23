@@ -32,8 +32,8 @@ export const SELL_GYM_EQUIPMENT_META_DESCRIPTION =
 
 export const SELL_GYM_EQUIPMENT_H1 = 'With Equipd'
 
-/** WebPage JSON-LD headline — preserved from original SEO; not the visible hero H1. */
-const SELL_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE = 'Sell Your Gym Equipment with Equipd'
+/** WebPage JSON-LD headline must match the visible hero H1. */
+const SELL_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE = SELL_GYM_EQUIPMENT_H1
 
 export const SELL_GYM_EQUIPMENT_LEAD =
   'Sell used home or commercial gym equipment across the UK. Create a listing in minutes and reach serious fitness equipment buyers. You do not need a valuation to list. If you are unsure what price to ask, you can use our free equipment valuation tool first.'

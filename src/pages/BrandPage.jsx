@@ -13,6 +13,7 @@ import {
   buildBrandPageMetaTitle,
   buildBrandPageTitle,
   fetchBrandPageData,
+  getBrandAbsoluteUrl,
   getBrandPagePath,
 } from '../lib/brandCatalogue'
 import {
@@ -103,13 +104,25 @@ export default function BrandPage() {
     title: brand
       ? buildBrandPageMetaTitle(brand.displayName)
       : notFound
-        ? 'Brand not found | Equipd'
-        : 'Brand | Equipd',
+        ? 'Brand not found'
+        : 'Brand',
     description: brand
       ? buildBrandPageMetaDescription(brand.displayName)
       : 'Explore gym equipment value guides by brand on Equipd.',
     canonicalPath: brand ? getBrandPagePath(brand.slug) : null,
     noIndex: notFound,
+    openGraph: brand
+      ? {
+          'og:title': `${buildBrandPageMetaTitle(brand.displayName)} | Equipd`,
+          'og:description': buildBrandPageMetaDescription(brand.displayName),
+          'og:url': getBrandAbsoluteUrl(brand.slug),
+          'og:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+          'twitter:card': 'summary_large_image',
+          'twitter:title': `${buildBrandPageMetaTitle(brand.displayName)} | Equipd`,
+          'twitter:description': buildBrandPageMetaDescription(brand.displayName),
+          'twitter:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+        }
+      : null,
   })
 
   const popularProducts = useMemo(

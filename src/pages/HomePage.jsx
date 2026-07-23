@@ -23,19 +23,19 @@ import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
 import { DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '../lib/pageTitles'
+import { buildSocialOpenGraph } from '../lib/socialPreview'
 import { fetchRecentReviews, getReviewErrorMessage } from '../lib/reviews'
 
 function HomePage() {
   usePageMeta({
     description: DEFAULT_PAGE_DESCRIPTION,
     canonicalPath: '/',
-    openGraph: {
-      'og:title': DEFAULT_PAGE_TITLE,
-      'og:description': DEFAULT_PAGE_DESCRIPTION,
-      'og:url': 'https://www.equipd.co.uk/',
-      'twitter:title': DEFAULT_PAGE_TITLE,
-      'twitter:description': DEFAULT_PAGE_DESCRIPTION,
-    },
+    openGraph: buildSocialOpenGraph({
+      title: DEFAULT_PAGE_TITLE,
+      description: DEFAULT_PAGE_DESCRIPTION,
+      url: 'https://www.equipd.co.uk/',
+      fallbackImage: true,
+    }),
   })
   const { user } = useAuth()
   const isLoggedIn = Boolean(user)

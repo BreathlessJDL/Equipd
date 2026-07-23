@@ -463,17 +463,20 @@ export function buildBrandIntro(brandDisplayName, { hasCuratedDescription = fals
 }
 
 export function buildBrandPageTitle(brandDisplayName) {
-  return `${brandDisplayName} Equipment Values`
+  return `Used ${brandDisplayName} Gym Equipment Values`
 }
 
+/**
+ * Hook/document title without site suffix — formatPageTitle / prerender add "| Equipd".
+ */
 export function buildBrandPageMetaTitle(brandDisplayName) {
-  return `${brandDisplayName} Equipment Values and Model Guides | Equipd`
+  return `Used ${brandDisplayName} Gym Equipment Values & Listings`
 }
 
 export function buildBrandPageMetaDescription(brandDisplayName) {
   return (
-    `Explore estimated used values, original RRPs, production years and console options `
-    + `across ${brandDisplayName} equipment models.`
+    `Explore used ${brandDisplayName} gym equipment values, model guides and current marketplace `
+    + `listings on Equipd. Compare original RRPs, production years and estimated used prices.`
   )
 }
 

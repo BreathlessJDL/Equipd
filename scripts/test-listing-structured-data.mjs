@@ -322,4 +322,18 @@ assertEqual(Number(completeProduct.offers.price) * 100, completeListing.price_pe
 
 // 20. No private seller data — covered in seller section
 
+// 21. Colour from description extras (visible on listing page)
+const colouredListing = {
+  ...completeListing,
+  description: 'Well maintained bike.\nColour: Matte Black\nDimensions (L×W×H cm): 150 × 60 × 120',
+}
+const colouredProduct = buildListingProductSchema({ listing: colouredListing })
+assertEqual(colouredProduct.color, 'Matte Black', 'color from Colour: description line')
+assert(
+  colouredProduct.additionalProperty?.some((p) => p.name === 'Colour' && p.value === 'Matte Black'),
+  'Colour additionalProperty from description',
+)
+assert(!String(colouredProduct.description || '').includes('Colour:'), 'schema description strips Colour line')
+assert(!String(colouredProduct.description || '').includes('Dimensions'), 'schema description strips Dimensions line')
+
 console.log('test-listing-structured-data: ok')

@@ -36,6 +36,8 @@ import { canBuyerConfirmOrder, isOrderBuyerConfirmed, isOrderCompleted } from '.
 import { useListingRecommendations } from '../hooks/useListingRecommendations'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { buildListingBreadcrumbSchema, buildListingBreadcrumbItems } from '../lib/breadcrumbStructuredData'
+import { getListingBrandPageHref } from '../lib/listingDiscovery'
+import { getBrandDisplayName, getBrandSlug, resolveBrandRegistryEntry } from '../lib/brandCatalogueCore'
 import { buildListingPageSeo } from '../lib/listingPageSeo'
 import { buildListingProductSchema } from '../lib/listingPageStructuredData'
 import { getListingValuationHref, resolveListingProductMapping } from '../lib/listingDiscovery'
@@ -92,19 +94,28 @@ function ListingDetailPage() {
     openGraph: listing ? listingSeo.openGraph : null,
   })
 
+  const listingBrandContext = useMemo(() => {
+    if (!listing) return { brandSlug: null, brandDisplayName: null }
+    const brandName = listing.brand || equipmentProduct?.brand || null
+    const entry = resolveBrandRegistryEntry(brandName)
+    const brandSlug = entry?.slug || (getListingBrandPageHref(brandName) ? getBrandSlug(brandName) : null)
+    const brandDisplayName = entry?.displayName || (brandSlug ? getBrandDisplayName(brandName) : null)
+    return { brandSlug, brandDisplayName }
+  }, [listing, equipmentProduct])
+
   const breadcrumbSchema = useMemo(
-    () => (listing ? buildListingBreadcrumbSchema(listing) : null),
-    [listing],
+    () => (listing ? buildListingBreadcrumbSchema(listing, listingBrandContext) : null),
+    [listing, listingBrandContext],
   )
 
   const breadcrumbItems = useMemo(() => {
     if (!listing) return []
-    const items = buildListingBreadcrumbItems(listing)
+    const items = buildListingBreadcrumbItems(listing, listingBrandContext)
     return items.map((item, index) => ({
       label: item.name,
       to: index < items.length - 1 ? item.path : undefined,
     }))
-  }, [listing])
+  }, [listing, listingBrandContext])
 
   const productSchema = useMemo(
     () => (

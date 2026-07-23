@@ -191,9 +191,9 @@ function renderFaqSection(faqs = []) {
 }
 
 export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
-  const title = 'Instant Gym Equipment Valuation | Value Your Equipment Online | Equipd'
+  const title = 'Used Gym Equipment Values by Brand | Equipd'
   const description =
-    'Value commercial and home gym equipment online. Search by brand or model to receive an instant estimated used value based on original RRP, manufacture year, depreciation models and UK market data. Browse equipment guides or sell your equipment on Equipd.'
+    'Browse Equipd equipment value guides by brand. Explore used values, original RRPs, production years and current marketplace listings across major gym equipment manufacturers.'
   const path = '/brands'
   const brandLinks = brands.map((brand) => ({
     href: brand.href || getBrandPagePath(brand.slug),
@@ -207,8 +207,8 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
     { label: 'Equipment Values' },
   ])}
   <header>
-    <h1>Instant Gym Equipment Valuation</h1>
-    <p>Search by brand or model to estimate today's used market value. You can also browse equipment by manufacturer below.</p>
+    <h1>Used Gym Equipment Values by Brand</h1>
+    <p>Browse equipment value guides by manufacturer, then open a model guide or current marketplace listings.</p>
   </header>
   <section aria-labelledby="seo-brands-list-heading">
     <h2 id="seo-brands-list-heading">Browse equipment by brand</h2>
@@ -233,8 +233,8 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
 export function buildBrandPageSeoDocument({ brand, products = [], categories = [], series = [] } = {}) {
   if (!brand?.slug) return null
 
-  const title = `${brand.displayName} Equipment Values and Model Guides | Equipd`
-  const description = `Explore estimated used values, original RRPs, production years and console options across ${brand.displayName} equipment models.`
+  const title = `Used ${brand.displayName} Gym Equipment Values & Listings | Equipd`
+  const description = `Explore used ${brand.displayName} gym equipment values, model guides and current marketplace listings on Equipd.`
   const intro = brand.intro || buildBrandIntro(brand.displayName)
   const path = getBrandPagePath(brand.slug)
   const productLinks = products.map((product) => ({

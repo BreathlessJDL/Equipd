@@ -178,10 +178,10 @@ assertEqual(seo.openGraph['twitter:image'], 'https://cdn.example.com/listings/pr
 assertEqual(seo.openGraph['twitter:card'], 'summary_large_image', 'large image card when image present')
 
 const noImageSeo = buildListingPageSeo({ listing: noImageListing })
-assertEqual(noImageSeo.socialImage, null, 'no social image when none available')
-assert(!Object.prototype.hasOwnProperty.call(noImageSeo.openGraph, 'og:image'), 'og:image omitted without image')
-assert(!Object.prototype.hasOwnProperty.call(noImageSeo.openGraph, 'twitter:image'), 'twitter:image omitted without image')
-assertEqual(noImageSeo.openGraph['twitter:card'], 'summary', 'summary card without image')
+assertEqual(noImageSeo.socialImage, 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png', 'fallback social image when none available')
+assertEqual(noImageSeo.openGraph['og:image'], 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png', 'og:image uses Equipd fallback')
+assertEqual(noImageSeo.openGraph['twitter:image'], 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png', 'twitter:image uses Equipd fallback')
+assertEqual(noImageSeo.openGraph['twitter:card'], 'summary_large_image', 'large image card with fallback')
 
 // --- Alt text ---
 assertEqual(

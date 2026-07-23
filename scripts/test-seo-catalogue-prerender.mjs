@@ -58,10 +58,10 @@ assert(
 assert(!routes.some((route) => route.path.includes('life-console')), 'excludes console-only product')
 
 const brandsDoc = buildBrandsIndexSeoDocument({ brands })
-assert(brandsDoc.title.includes('Instant Gym Equipment Valuation'), 'brands title')
+assert(brandsDoc.title.includes('Used Gym Equipment Values by Brand'), 'brands title')
 assert(brandsDoc.title.endsWith('| Equipd'), 'brands title ends with Equipd')
-assert(brandsDoc.description.includes('instant estimated used value'), 'brands meta description')
-assert(brandsDoc.bodyHtml.includes('<h1>Instant Gym Equipment Valuation</h1>'), 'brands h1')
+assert(brandsDoc.description.includes('equipment value guides by brand'), 'brands meta description')
+assert(brandsDoc.bodyHtml.includes('<h1>Used Gym Equipment Values by Brand</h1>'), 'brands h1')
 assert(brandsDoc.bodyHtml.includes('Browse equipment by brand'), 'brands browse section')
 assert(brandsDoc.canonicalPath === '/brands', 'brands canonical unchanged')
 assert(brandsDoc.bodyHtml.includes('/brands/life-fitness'), 'brands crawlable link')

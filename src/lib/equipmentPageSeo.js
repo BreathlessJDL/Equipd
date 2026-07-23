@@ -22,11 +22,11 @@ import { supportsProductConsoleOptions } from './equipmentCardio.js'
 
 export { EQUIPD_SITE_ORIGIN }
 
-export const EQUIPD_DEFAULT_OG_IMAGE_PATH = '/email/equipd-full-logo.png'
+export const EQUIPD_DEFAULT_OG_IMAGE_PATH = '/sell-gym-equipment/sell-gym-equipment-og.png'
 const APPROVED_IMAGE_STATUS = 'approved'
 const APPROVED_PRODUCT_STATUS = 'approved'
 
-const TITLE_SUFFIX = 'Value, Original RRP & Information'
+const TITLE_SUFFIX = 'Used Value & Price Guide'
 
 function normalizeWhitespace(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim()

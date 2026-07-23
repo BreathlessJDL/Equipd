@@ -173,35 +173,49 @@ export function buildLocationPageBreadcrumbSchema(location) {
 }
 
 /**
- * Marketplace listing trail. Category query URLs are not indexable landings,
- * so the hierarchy is Home → Browse → Listing.
+ * Marketplace listing trail.
+ * Prefer Home → Browse → Brand → Listing when a public brand page exists.
+ * Category query URLs are not indexable landings, so they are omitted.
  */
-export function buildListingBreadcrumbItems(listing) {
+export function buildListingBreadcrumbItems(listing, {
+  brandSlug = null,
+  brandDisplayName = null,
+} = {}) {
   const title = normalizeBreadcrumbName(listing?.title)
   if (!title) return []
-  return [
+
+  const items = [
     { name: 'Home', path: '/' },
     { name: 'Browse', path: '/browse' },
-    { name: title, path: listing?.slug ? `/listings/${String(listing.slug).trim()}` : null },
   ]
+
+  const slug = String(brandSlug ?? '').trim()
+  const brandName = normalizeBreadcrumbName(brandDisplayName)
+  if (slug && brandName) {
+    items.push({ name: brandName, path: `/brands/${slug}` })
+  }
+
+  items.push({
+    name: title,
+    path: listing?.slug ? `/listings/${String(listing.slug).trim()}` : null,
+  })
+
+  return items
 }
 
-export function buildListingBreadcrumbSchema(listing) {
+export function buildListingBreadcrumbSchema(listing, {
+  brandSlug = null,
+  brandDisplayName = null,
+} = {}) {
   const title = normalizeBreadcrumbName(listing?.title)
-  const slug = String(listing?.slug ?? '').trim()
+  const listingSlug = String(listing?.slug ?? '').trim()
   const status = String(listing?.status ?? '').trim().toLowerCase()
-  if (!title || !slug) return null
+  if (!title || !listingSlug) return null
   if (status !== 'active' && status !== 'sold') return null
 
-  const path = `/listings/${slug}`
-  return buildBreadcrumbSchema(
-    [
-      { name: 'Home', path: '/' },
-      { name: 'Browse', path: '/browse' },
-      { name: title, path },
-    ],
-    { canonicalUrl: path },
-  )
+  const path = `/listings/${listingSlug}`
+  const items = buildListingBreadcrumbItems(listing, { brandSlug, brandDisplayName })
+  return buildBreadcrumbSchema(items, { canonicalUrl: path })
 }
 
 function escapeJsonForHtmlScript(value) {

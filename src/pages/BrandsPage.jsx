@@ -24,10 +24,22 @@ export default function BrandsPage() {
   const [search, setSearch] = useState('')
 
   usePageMeta({
-    title: 'Instant Gym Equipment Valuation | Value Your Equipment Online',
+    title: 'Used Gym Equipment Values by Brand',
     description:
-      'Value commercial and home gym equipment online. Search by brand or model to receive an instant estimated used value based on original RRP, manufacture year, depreciation models and UK market data. Browse equipment guides or sell your equipment on Equipd.',
+      'Browse Equipd equipment value guides by brand. Explore used values, original RRPs, production years and current marketplace listings across major gym equipment manufacturers.',
     canonicalPath: '/brands',
+    openGraph: {
+      'og:title': 'Used Gym Equipment Values by Brand | Equipd',
+      'og:description':
+        'Browse Equipd equipment value guides by brand. Explore used values, original RRPs, production years and current marketplace listings.',
+      'og:url': 'https://www.equipd.co.uk/brands',
+      'og:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+      'twitter:card': 'summary_large_image',
+      'twitter:title': 'Used Gym Equipment Values by Brand | Equipd',
+      'twitter:description':
+        'Browse Equipd equipment value guides by brand. Explore used values, original RRPs, production years and current marketplace listings.',
+      'twitter:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+    },
   })
 
   useEffect(() => {
@@ -120,7 +132,7 @@ export default function BrandsPage() {
           idPrefix="brands-valuator"
           contained
           className="brands-page__valuator"
-          titleAs="h1"
+          titleAs="h2"
           eyebrow={null}
           title="Instant Gym Equipment Valuation"
           lede="Search by brand or model to estimate today's used market value. You can also browse equipment by manufacturer below."
@@ -129,7 +141,7 @@ export default function BrandsPage() {
         <header className="brands-page__hero">
           <div className="brands-page__hero-copy">
             <p className="brands-page__eyebrow">Equipment value guides</p>
-            <h2 className="brands-page__title">Browse equipment by brand</h2>
+            <h1 className="brands-page__title">Used Gym Equipment Values by Brand</h1>
             <p className="brands-page__lede">
               Find estimated used values, original RRPs, production years and console
               information across leading fitness manufacturers.

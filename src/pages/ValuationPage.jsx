@@ -224,6 +224,18 @@ function ValuationPage() {
     description:
       'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
     canonicalPath: '/valuation',
+    openGraph: {
+      'og:title': 'Instant Equipment Valuation | Equipd',
+      'og:description':
+        'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
+      'og:url': 'https://www.equipd.co.uk/valuation',
+      'og:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+      'twitter:card': 'summary_large_image',
+      'twitter:title': 'Instant Equipment Valuation | Equipd',
+      'twitter:description':
+        'Estimate the used market value of eligible gym equipment on Equipd, then buy or sell on the UK marketplace.',
+      'twitter:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+    },
   })
 
   // Scroll to page top after each major step change (skips first mount).

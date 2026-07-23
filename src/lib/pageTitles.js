@@ -5,7 +5,16 @@ export const DEFAULT_PAGE_TITLE = 'Buy, Sell & Value Used Gym Equipment | Equipd
 export const DEFAULT_PAGE_DESCRIPTION =
   "The UK's marketplace for used gym equipment. Buy and sell commercial and home gym equipment, browse thousands of listings and value your equipment instantly using original RRP, manufacture year and UK market data."
 
+export function stripSiteTitleSuffix(pageTitle) {
+  return String(pageTitle ?? '')
+    .trim()
+    .replace(/\s*\|\s*Equipd(?:\s+Marketplace)?\s*$/i, '')
+    .trim()
+}
+
 export function formatPageTitle(pageTitle) {
   if (!pageTitle?.trim()) return DEFAULT_PAGE_TITLE
-  return `${pageTitle.trim()} | ${SITE_NAME}`
+  const stripped = stripSiteTitleSuffix(pageTitle)
+  if (!stripped) return DEFAULT_PAGE_TITLE
+  return `${stripped} | ${SITE_NAME}`
 }

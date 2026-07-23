@@ -110,7 +110,7 @@ assertEqual(
   'Sold ProForm Tour de France CLC Exercise Bike',
   '12 sold SEO title',
 )
-assert(recentSeo.description.includes('has sold on Equipd'), '13 sold meta description')
+assert(recentSeo.description.includes('has now sold on Equipd'), '13 sold meta description')
 assert(!/for sale|buy now|make an offer/i.test(recentSeo.description), 'no active-sale wording')
 assertEqual(
   recentSeo.canonicalPath,
