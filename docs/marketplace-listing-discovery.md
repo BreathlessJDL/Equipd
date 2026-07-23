@@ -80,7 +80,7 @@ One transition produces one notify decision (no duplicate ping from treating sol
 ## Current limitations
 
 - Listing HTML is prerendered at build time (`scripts/prerender-seo-catalogue.mjs` → `dist/listings/{slug}/index.html`) and unknown/unreadable listing slugs return true HTTP 404 via `api/public-listing-page.js` (Stage 6).
-- No Google Merchant Center feed (deferred; not started in Stage 7)
+- Google Merchant Center product feed is **production-ready but submission is deferred** (Stage 8 approved). Live test endpoint: `/feeds/google-merchant.xml`. Do not submit to Merchant Center until Google policy blockers in `docs/merchant-center-stage8.md` are resolved.
 - No Google general Indexing API (by design)
 - Historical listings may lack Equipment Intelligence mapping until re-saved from valuation/equipment
 - IndexNow / sitemap inclusion does **not** guarantee crawl or index timing
@@ -94,6 +94,7 @@ One transition produces one notify decision (no duplicate ping from treating sol
 - Listing prerender / HTTP: `src/lib/listingSeoPrerender.js`, `api/public-listing-page.js`, `src/lib/listingDiscoveryEligibility.js`
 - Social previews: `src/lib/socialPreview.js`
 - Seller shop SEO: `src/lib/sellerShopSeo.js`
+- Merchant feed (paused submission): `docs/merchant-center-stage8.md`, `api/merchant-product-feed.js`, `src/lib/merchantEligibility.js`
 - Visibility vs readability: `listing_is_publicly_visible`, `listing_is_publicly_readable`, `listings_public_browse`
 - IndexNow: `src/lib/indexNowNotify.js`, `src/lib/indexNowCollect.js`
 - Mapping: `equipment_product_id`, `canonical_product_key` on `listings`

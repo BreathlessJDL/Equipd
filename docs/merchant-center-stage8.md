@@ -1,7 +1,61 @@
 # Stage 8 — Google Merchant Center readiness (Equipd)
 
-**Status:** Feed infrastructure implemented. **Do not submit to a live Merchant Center account until Stage 8 review is approved.**  
-**Do not enable Shopping ads or Google Ads campaigns.**
+**Status: Approved – Merchant feed production-ready (submission deferred).**
+
+Merchant development is **paused** until Google policy questions below are resolved.  
+Next product work should focus on business growth and Equipd Intelligence — not further Merchant implementation.
+
+---
+
+## Safe pause rules
+
+Do **not**:
+
+- create or connect a Merchant Center account
+- submit the product feed to Google
+- enable free listings in Merchant Center
+- enable Shopping ads, Performance Max, or Google Ads
+- change the Buyer Protection fee model
+- change Stage 5–8 architecture
+
+The production feed endpoint remains live for **testing and inspection only**.
+
+| Item | Value |
+|---|---|
+| Feed URL | https://www.equipd.co.uk/feeds/google-merchant.xml |
+| Readiness report | https://www.equipd.co.uk/feeds/google-merchant.xml?format=report |
+| Source | `listings_public_browse` (active only) |
+| Submission | Intentionally deferred |
+
+---
+
+## Engineering complete vs waiting on Google
+
+### Engineering complete
+
+- Strict Merchant eligibility classifier (narrower than public readability; sold never included)
+- Collection-first fulfilment gate
+- Runtime Google XML feed + readiness report
+- Stable product IDs (`listing_<uuid>`) and `external_seller_id`
+- Buyer Protection price policy coded as listing `price` + BP fee in `shipping` (GB)
+- Diagnostics CLI (`npm run report:merchant-readiness`)
+- Automated tests (`npm run test:merchant-feed`)
+- Stages 5–7 marketplace SEO / sold lifecycle / prerender / structured data preserved
+
+### Waiting on Google policy confirmation
+
+These are the **only remaining blockers** before Merchant submission:
+
+1. **Buyer Protection fee modelling** — Confirm that representing the unavoidable Buyer Protection fee in the Merchant feed as currently modelled (`price` = listing asking price; `shipping` = BP fee for GB) is acceptable.
+2. **Account architecture** — Confirm the correct Merchant Center structure for Equipd (Marketplace MCA / multi-seller sub-account + `external_seller_id`).
+3. **Collection-only participation** — Confirm that collection-available marketplace listings can participate in the intended free-listings / Merchant programme for the UK.
+4. **Future fulfilment expansion** — Review whether seller-delivery and buyer-courier listings can safely be included in a later feed without inventing shipping costs or misrepresenting buyer-arranged courier as seller shipping.
+
+Until those confirmations exist, leave Merchant paused.
+
+---
+
+## Policy context (from Stage 8 audit)
 
 Official sources used:
 - [About marketplaces](https://support.google.com/merchants/answer/6363319)
@@ -13,93 +67,58 @@ Official sources used:
 - [Product data specification](https://support.google.com/merchants/answer/7052112)
 - [Identifier exists](https://support.google.com/merchants/answer/6324478)
 
----
-
-## Policy answers (confirmed / likely / unresolved)
-
 | # | Question | Verdict |
 |---|---|---|
-| 1 | One standard MC account for marketplace listings? | **No for long-term.** Google expects a **Marketplace MCA** for multi-seller platforms. |
-| 2 | Multi-client / advanced account? | **Yes — confirmed.** Convert to advanced Marketplace MCA. |
-| 3 | Separate seller sub-accounts? | **Optional.** Prefer **one multi-seller sub-account** + `external_seller_id` (simpler). Per-seller sub-accounts only if seller-name display / per-seller return policies are required. |
-| 4 | Equipd as merchant of record in feed? | **Likely yes for checkout/MoR presentation** — payment is Equipd Stripe Checkout. Still a **marketplace** feed (third-party sellers), not “marketplace-owned inventory”. |
-| 5 | One-off used products eligible for free listings? | **Likely yes** with `condition=used`, accurate data, and UPI handling. |
-| 6 | Collection-only eligible for online free listings? | **Unresolved / high risk.** UK free listings require shipping settings. Collection-only P2P does not map cleanly to national shipping. Initial feed requires collection + BP fee in shipping attribute; confirm with Google Marketplace support before go-live. |
-| 7 | Seller-delivery accurate? | **Not initially** — no priced delivery cost in DB → excluded. |
-| 8 | Buyer-courier accurate? | **Not as seller shipping** → excluded from initial feed. |
-| 9 | Return policy for P2P used goods? | Configure account returns to match **Buyer Protection** (24h after handover/delivery), **not** a 30-day retailer returns promise. |
-| 10 | Business info on site? | Terms, privacy, refunds/returns, Buyer Protection, support (`/support`, `support@equipd.co.uk`), HTTPS — present. Registered company address may still be needed in MC business info. |
-
-### Unresolved — ask Google Merchant / Marketplace support
-1. Offer-mediated purchase (no instant buy-at-price) vs “customer can buy for submitted price”.
-2. Representing Buyer Protection as `shipping` cost for collection-available items.
-3. Whether free **online** listings are appropriate without ship-to-home.
-4. Whether Equipd should use multi-seller vs single-seller-per-sub-account given peer sellers.
+| 1 | One standard MC account for marketplace listings? | **No for long-term.** Google expects a **Marketplace MCA**. |
+| 2 | Multi-client / advanced account? | **Yes — confirmed guidance.** |
+| 3 | Separate seller sub-accounts? | Prefer **multi-seller** + `external_seller_id` (pending Google confirmation for Equipd). |
+| 4 | Equipd as merchant of record in feed? | Likely yes for checkout/MoR; still a multi-seller marketplace feed. |
+| 5 | One-off used free listings? | Likely yes with `condition=used`. |
+| 6 | Collection-only online listings? | **Unresolved** — confirm with Google before go-live. |
+| 7 | Seller-delivery accurate? | Not initially — no priced delivery in data. |
+| 8 | Buyer-courier accurate? | Not as seller shipping — excluded for now. |
+| 9 | Return policy for P2P used goods? | Match **Buyer Protection** (24h), not retailer 30-day returns. |
+| 10 | Business info on site? | Terms, privacy, refunds/BP, support present. |
 
 ---
 
-## Website compliance snapshot
+## Buyer Protection price decision (frozen)
 
-Present: HTTPS, listing price, Buyer Protection total on listing cards/detail, fulfilment options, seller identity, checkout after accepted offer + Connect, help policies, contact.
-
-Gaps / risks:
-- Primary CTA is **Make an offer**, not Buy now.
-- Offer schema / feed price = listing asking; checkout = asking (or accepted offer) + BP fee.
-- Seller Stripe Connect readiness is **not** publicly queryable for feed exclusion yet.
-- No manufacturer GTIN/MPN in catalogue.
-
----
-
-## Buyer Protection price decision
-
-**Implemented (not fee-changing):**
 - Feed `price` = listing asking price (aligned with landing primary price + Stage 7 Offer).
 - Feed `shipping` (GB) = calculated Buyer Protection fee (5%, min £5, max £250).
-- Rationale: Google requires UK shipping; merchant service fees not included in price should be bundled into shipping.
-- **`MERCHANT_PRICE_POLICY.doNotSubmitUntilReviewed = true`** — do not connect feed to MC until reviewed.
+- Fee model itself is **not** changed.
+- Submission remains deferred until Google confirms this representation.
 
 ---
 
-## Fulfilment decision table (initial)
+## Fulfilment decision table (current feed)
 
-| Listing options | Feed eligible? | Reason |
+| Listing options | Feed eligible? | Notes |
 |---|---|---|
-| Collection (alone or with others) | Yes | Truthful local collection path |
-| Seller delivery only | No | No priced shipping in data |
-| Buyer courier only | No | Not seller-provided shipping |
-| No fulfilment flags | No | Cannot represent |
+| Collection (alone or with others) | Yes | Initial safe subset |
+| Seller delivery only | No | Future review (blocker #4) |
+| Buyer courier only | No | Future review (blocker #4) |
 
 ---
 
-## Feed architecture
+## Manual Merchant Center setup (deferred)
 
-| Item | Choice |
-|---|---|
-| Format | Google RSS XML (`g:` namespace) |
-| URL | `https://www.equipd.co.uk/feeds/google-merchant.xml` |
-| Generator | Runtime Vercel API `api/merchant-product-feed.js` |
-| Source | `listings_public_browse` via anon key only |
-| Auth | Optional `MERCHANT_FEED_TOKEN` (`?token=` or header) |
-| Cache | `public, max-age=900` (~15 min staleness) |
-| Sold items | Omitted entirely (not `out_of_stock`) |
-| Sitemap | Unchanged; not used as product feed |
-| IndexNow | Feed generation does not notify IndexNow |
+When policy blockers are cleared and submission is explicitly authorised:
 
-Diagnostics: `?format=report` JSON or `npm run report:merchant-readiness`.
+1. Create Merchant Center; claim `https://www.equipd.co.uk`.
+2. Request Marketplace MCA + multi-seller conversion (per Google confirmation).
+3. UK / English / **Free listings only** — no Shopping ads / PMax / Google Ads.
+4. Scheduled fetch of the feed URL (optional `MERCHANT_FEED_TOKEN`).
+5. Configure shipping/returns to match Buyer Protection + collection reality.
+6. Start with the limited collection-eligible subset.
+
+Until then: **do not** create accounts, submit the feed, or enable programmes.
 
 ---
 
-## Manual Merchant Center setup (when authorised)
+## Related code
 
-1. Create Merchant Center with Equipd business details; website `https://www.equipd.co.uk`.
-2. Verify/claim website (HTML tag / DNS / Analytics — pick one Equipd already controls).
-3. Request **advanced account → Marketplaces** conversion; ask for **multi-seller** sub-account.
-4. Target country **United Kingdom**, language **English**.
-5. Enable **Free listings** only — do **not** link paid Shopping campaigns.
-6. Prepare feed with `external_seller_id` before conversion completes.
-7. Add scheduled fetch to feed URL (daily or every 6–12h). If `MERCHANT_FEED_TOKEN` set, append `?token=…`.
-8. Configure shipping + returns at account level to match Buyer Protection / collection reality (confirm with support).
-9. Enable Automatic item updates cautiously after first approvals.
-10. Start with the limited collection-eligible subset; expand after diagnostics are clean.
-
-**Do not** create ads, spend budget, or submit the feed until Stage 8 review signs off on unresolved policy questions.
+- Eligibility: `src/lib/merchantEligibility.js`
+- Feed build / fetch: `src/lib/merchantFeedBuild.js`
+- Endpoint: `api/merchant-product-feed.js` → `/feeds/google-merchant.xml`
+- Docs / discovery: `docs/marketplace-listing-discovery.md`
