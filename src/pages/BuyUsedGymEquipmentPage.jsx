@@ -125,15 +125,16 @@ function BuyJourneyStep({
             type="image/png"
             srcSet={imageSrcMobilePng}
           />
-          <source
-            media="(min-width: 768px)"
-            type="image/webp"
-            srcSet={imageSrc}
-          />
+          {/* Prefer full-resolution PNG on desktop so UI text stays as sharp as the supplied masters. */}
           <source
             media="(min-width: 768px)"
             type="image/png"
             srcSet={imageSrcPng || imageSrc}
+          />
+          <source
+            media="(min-width: 768px)"
+            type="image/webp"
+            srcSet={imageSrc}
           />
           <img
             src={imageSrcPng || imageSrc}

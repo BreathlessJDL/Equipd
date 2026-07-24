@@ -74,12 +74,26 @@ assert(journeyTitles[2] === 'Secure your purchase', 'step 3 title')
 assert(journeyTitles[3] === 'Collect with confidence', 'step 4 title')
 
 for (const step of BUY_JOURNEY_STEPS) {
-  assert(step.imageSrc.startsWith('/images/buy/step-'), `journey image path: ${step.title}`)
+  assert(step.imageSrc.startsWith('/images/buy/'), `journey image path: ${step.title}`)
   assert(step.imageSrc.endsWith('.webp'), `journey image uses webp: ${step.title}`)
   assert(step.imageSrcMobile?.endsWith('-800.webp'), `mobile webp present: ${step.title}`)
   assert(step.imageWidth === 1536 && step.imageHeight === 1024, `consistent 3:2 size: ${step.title}`)
   assert(step.imageAlt, `journey alt text: ${step.title}`)
 }
+
+assert(BUY_JOURNEY_STEPS[0].imageSrc.includes('/step-1.'), 'step 1 keeps original asset name')
+assert(
+  BUY_JOURNEY_STEPS[1].imageSrc.includes('/buy-journey-step-2.'),
+  'step 2 uses updated buyer asset name',
+)
+assert(
+  BUY_JOURNEY_STEPS[2].imageSrc.includes('/buy-journey-step-3.'),
+  'step 3 uses updated buyer asset name',
+)
+assert(
+  BUY_JOURNEY_STEPS[3].imageSrc.includes('/buy-journey-step-4.'),
+  'step 4 uses updated buyer asset name',
+)
 
 assert(BUY_VALUATION_STEPS.length === 4, 'valuation journey has four steps')
 assert(BUY_BENEFITS.length === 3, 'three buyer benefits')
@@ -191,16 +205,16 @@ assert(sellContent.includes('/buy-used-gym-equipment'), 'sell page cross-links t
 const journeyFiles = [
   'public/images/buy/step-1.webp',
   'public/images/buy/step-1.png',
-  'public/images/buy/step-2.webp',
-  'public/images/buy/step-2.png',
-  'public/images/buy/step-3.webp',
-  'public/images/buy/step-3.png',
-  'public/images/buy/step-4.webp',
-  'public/images/buy/step-4.png',
+  'public/images/buy/buy-journey-step-2.webp',
+  'public/images/buy/buy-journey-step-2.png',
+  'public/images/buy/buy-journey-step-3.webp',
+  'public/images/buy/buy-journey-step-3.png',
+  'public/images/buy/buy-journey-step-4.webp',
+  'public/images/buy/buy-journey-step-4.png',
   'public/images/buy/step-1-800.webp',
-  'public/images/buy/step-2-800.webp',
-  'public/images/buy/step-3-800.webp',
-  'public/images/buy/step-4-800.webp',
+  'public/images/buy/buy-journey-step-2-800.webp',
+  'public/images/buy/buy-journey-step-3-800.webp',
+  'public/images/buy/buy-journey-step-4-800.webp',
   'public/buy-used-gym-equipment/buy-used-gym-equipment-marketplace.webp',
   'public/buy-used-gym-equipment/buy-used-gym-equipment-marketplace.png',
   'public/buy-used-gym-equipment/buy-used-gym-equipment-og.png',

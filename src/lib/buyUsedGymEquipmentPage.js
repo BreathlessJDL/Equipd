@@ -94,14 +94,14 @@ export const BUY_HERO_ARTWORK = Object.freeze({
 export const BUY_JOURNEY_IMAGE_SIZES =
   '(max-width: 767px) 92vw, (max-width: 1199px) 42vw, 22vw'
 
-function buildJourneyImageSet(baseName) {
+function buildJourneyImageSet(baseName, { width = 1536, height = 1024 } = {}) {
   return {
     imageSrc: `${JOURNEY_IMAGE_DIR}/${baseName}.webp`,
     imageSrcPng: `${JOURNEY_IMAGE_DIR}/${baseName}.png`,
     imageSrcMobile: `${JOURNEY_IMAGE_DIR}/${baseName}-800.webp`,
     imageSrcMobilePng: `${JOURNEY_IMAGE_DIR}/${baseName}-800.png`,
-    imageWidth: 1536,
-    imageHeight: 1024,
+    imageWidth: width,
+    imageHeight: height,
   }
 }
 
@@ -124,7 +124,7 @@ export const BUY_JOURNEY_STEPS = Object.freeze([
     title: 'Agree a price',
     description:
       'Message the seller, ask about condition and make an offer. Agree a price that works for both of you before you pay.',
-    ...buildJourneyImageSet('step-2'),
+    ...buildJourneyImageSet('buy-journey-step-2'),
     imageAlt: 'Equipd messaging screen with a buyer offer on a used gym machine',
   },
   {
@@ -132,7 +132,7 @@ export const BUY_JOURNEY_STEPS = Object.freeze([
     title: 'Secure your purchase',
     description:
       'Pay securely through Equipd with Stripe. Your payment is held safely until you confirm handover, and checkout shows the Buyer Protection fee clearly.',
-    ...buildJourneyImageSet('step-3'),
+    ...buildJourneyImageSet('buy-journey-step-3'),
     imageAlt:
       'Equipd secure checkout with item price, Buyer Protection fee and pay securely button',
   },
@@ -141,7 +141,7 @@ export const BUY_JOURNEY_STEPS = Object.freeze([
     title: 'Collect with confidence',
     description:
       'Collect in person, arrange seller delivery or use a buyer courier. Once you confirm handover, the seller gets paid and your 24-hour Buyer Protection period begins.',
-    ...buildJourneyImageSet('step-4'),
+    ...buildJourneyImageSet('buy-journey-step-4'),
     imageAlt:
       'Buyer confirming gym equipment handover on Equipd with QR code and Buyer Protection',
   },
@@ -467,8 +467,8 @@ export function buildBuyUsedGymEquipmentSeoDocument() {
       <picture>
         <source media="(max-width: 767px)" type="image/webp" srcset="${escapeHtml(step.imageSrcMobile)}" />
         <source media="(max-width: 767px)" type="image/png" srcset="${escapeHtml(step.imageSrcMobilePng)}" />
-        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrc)}" />
         <source media="(min-width: 768px)" type="image/png" srcset="${escapeHtml(step.imageSrcPng)}" />
+        <source media="(min-width: 768px)" type="image/webp" srcset="${escapeHtml(step.imageSrc)}" />
         <img
           src="${escapeHtml(step.imageSrcPng)}"
           alt="${escapeHtml(step.imageAlt)}"
