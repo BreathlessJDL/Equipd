@@ -203,7 +203,10 @@ function HomePage() {
       {!isLoggedIn ? <HomeHero /> : null}
 
       <HomeEquipmentValuator
-        className={isLoggedIn ? 'home-valuator--signed-in' : ''}
+        className={[
+          'home-valuator--compact-mobile',
+          isLoggedIn ? 'home-valuator--signed-in' : '',
+        ].filter(Boolean).join(' ')}
       />
 
       {!isLoggedIn ? (

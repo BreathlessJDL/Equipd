@@ -24,6 +24,8 @@ function AppShell() {
   const isMarketingLandingRoutePage = isMarketingLandingRoute(location.pathname)
   const isListingDetailRoute =
     /^\/listings\/[^/]+$/.test(location.pathname) && !usesBrowseShellFooter
+  const isValuationRoute = location.pathname === '/valuation'
+    || location.pathname.startsWith('/valuation/')
 
   const registerSiteHeader = useCallback((config) => {
     setPageHeaderConfig(config)
@@ -91,7 +93,9 @@ function AppShell() {
           isBrandsRoute ? ' app-shell__main--brands' : ''
         }${isMarketingLandingRoutePage ? ' app-shell__main--sell' : ''}${
           isListingDetailRoute ? ' app-shell__main--listing-detail' : ''
-        }${hideSiteFooter ? ' app-shell__main--messages' : ''}`}
+        }${isValuationRoute ? ' app-shell__main--valuation' : ''}${
+          hideSiteFooter ? ' app-shell__main--messages' : ''
+        }`}
       >
         <Outlet context={outletContext} />
       </main>

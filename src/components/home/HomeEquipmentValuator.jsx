@@ -170,6 +170,20 @@ function SearchIcon() {
   )
 }
 
+function SubmitArrowIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" fill="none">
+      <path
+        d="M4 10h11.5M11.25 5.75 15.5 10l-4.25 4.25"
+        stroke="currentColor"
+        strokeWidth="1.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function ShowcaseVisual({ chart, imageUrl }) {
   const gradientId = useId().replace(/:/g, '')
   if (!chart) return null
@@ -277,8 +291,9 @@ export default function HomeEquipmentValuator({
   idPrefix = 'home-valuator',
   eyebrow = DEFAULT_EYEBROW,
   title = DEFAULT_TITLE,
-  titleMobile = undefined,
+  titleMobile = 'Value your equipment',
   lede = DEFAULT_LEDE,
+  ledeMobile = 'Instant market valuations',
   titleAs = 'h2',
   contained = false,
   className = '',
@@ -287,6 +302,8 @@ export default function HomeEquipmentValuator({
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [useCompactPlaceholder, setUseCompactPlaceholder] = useState(false)
+  const isCompactMobileVariant = className.split(/\s+/).includes('home-valuator--compact-mobile')
 
   useEffect(() => {
     let idleId = null
@@ -312,11 +329,32 @@ export default function HomeEquipmentValuator({
     }
   }, [])
 
+  useEffect(() => {
+    if (!isCompactMobileVariant || typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      setUseCompactPlaceholder(false)
+      return undefined
+    }
+
+    const media = window.matchMedia('(max-width: 767px)')
+    const sync = () => setUseCompactPlaceholder(media.matches)
+    sync()
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync)
+      return () => media.removeEventListener('change', sync)
+    }
+
+    media.addListener(sync)
+    return () => media.removeListener(sync)
+  }, [isCompactMobileVariant])
+
   const titleId = `${idPrefix}-title`
   const inputId = `${idPrefix}-search`
   const TitleTag = titleAs === 'h1' ? 'h1' : 'h2'
-  const resolvedTitleMobile = titleMobile === undefined ? null : titleMobile
+  const resolvedTitleMobile = titleMobile == null ? null : titleMobile
+  const resolvedLedeMobile = ledeMobile == null ? null : ledeMobile
   const usesResponsiveTitle = Boolean(resolvedTitleMobile)
+  const usesResponsiveLede = Boolean(resolvedLedeMobile && lede)
 
   function goToValuator({ product = selectedProduct, queryText = query } = {}) {
     if (typeof document !== 'undefined') {
@@ -348,29 +386,51 @@ export default function HomeEquipmentValuator({
     <div className="home-valuator__card">
       <div className="home-valuator__main">
         <div className="home-valuator__copy">
-          {eyebrow ? (
-            <p className="home-valuator__eyebrow">
-              <span className="home-valuator__eyebrow-icon">
-                <ValuatorTrendIcon />
-              </span>
-              <span>{eyebrow}</span>
-            </p>
-          ) : null}
-          <TitleTag id={titleId} className="home-valuator__title">
-            {usesResponsiveTitle ? (
-              <>
-                <span className="home-valuator__title-text home-valuator__title-text--desktop">
-                  {title}
-                </span>
-                <span className="home-valuator__title-text home-valuator__title-text--mobile">
-                  {resolvedTitleMobile}
-                </span>
-              </>
-            ) : (
-              title
-            )}
-          </TitleTag>
-          {lede ? <p className="home-valuator__lede">{lede}</p> : null}
+          <div className="home-valuator__heading-row">
+            <span className="home-valuator__heading-icon" aria-hidden="true">
+              <ValuatorTrendIcon />
+            </span>
+            <div className="home-valuator__heading-copy">
+              {eyebrow ? (
+                <p className="home-valuator__eyebrow">
+                  <span className="home-valuator__eyebrow-icon">
+                    <ValuatorTrendIcon />
+                  </span>
+                  <span>{eyebrow}</span>
+                </p>
+              ) : null}
+              <TitleTag id={titleId} className="home-valuator__title">
+                {usesResponsiveTitle ? (
+                  <>
+                    <span className="home-valuator__title-text home-valuator__title-text--desktop">
+                      {title}
+                    </span>
+                    <span className="home-valuator__title-text home-valuator__title-text--mobile">
+                      {resolvedTitleMobile}
+                    </span>
+                  </>
+                ) : (
+                  title
+                )}
+              </TitleTag>
+              {lede ? (
+                <p className="home-valuator__lede">
+                  {usesResponsiveLede ? (
+                    <>
+                      <span className="home-valuator__lede-text home-valuator__lede-text--desktop">
+                        {lede}
+                      </span>
+                      <span className="home-valuator__lede-text home-valuator__lede-text--mobile">
+                        {resolvedLedeMobile}
+                      </span>
+                    </>
+                  ) : (
+                    lede
+                  )}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         <form className="home-valuator__form" onSubmit={handleSubmit}>
@@ -388,7 +448,11 @@ export default function HomeEquipmentValuator({
                 onChange={setQuery}
                 selectedProduct={selectedProduct}
                 onSelectedProductChange={setSelectedProduct}
-                placeholder="Search by brand, model or product..."
+                placeholder={
+                  useCompactPlaceholder
+                    ? 'Search brand or model...'
+                    : 'Search by brand, model or product...'
+                }
                 inputClassName="home-valuator__input"
                 resultLimit={10}
                 debounceMs={250}
@@ -403,8 +467,13 @@ export default function HomeEquipmentValuator({
                 }}
               />
             </div>
-            <button type="submit" className="home-valuator__submit">
-              Value equipment
+            <button type="submit" className="home-valuator__submit" aria-label="Value equipment">
+              <span className="home-valuator__submit-label home-valuator__submit-label--desktop">
+                Value equipment
+              </span>
+              <span className="home-valuator__submit-label home-valuator__submit-label--mobile" aria-hidden="true">
+                <SubmitArrowIcon />
+              </span>
             </button>
           </div>
         </form>

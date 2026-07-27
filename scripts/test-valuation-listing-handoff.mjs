@@ -348,12 +348,16 @@ assert(mergedPrefill.brand === 'Technogym', 'merge prefill fills empty brand')
 const valuationPageCss = readFileSync(new URL('../src/pages/ValuationPage.css', import.meta.url), 'utf8')
 assert(valuationPageCss.includes('.valuation-page__search-shell'), 'valuation search shell class exists')
 assert(
-  /\.valuation-page__search-shell[\s\S]*max-width:\s*40rem/s.test(valuationPageCss),
-  'valuation search shell keeps fixed max width',
+  /\.valuation-page__search-shell[\s\S]*max-width:\s*none/s.test(valuationPageCss),
+  'valuation search shell uses full workspace width',
 )
 assert(
-  !valuationPageCss.includes('.valuation-page--wide'),
-  'valuation page no longer widens when search results appear',
+  /--valuation-max:\s*86rem/.test(valuationPageCss),
+  'valuation page uses a wide ~1280–1400px content rail',
+)
+assert(
+  valuationPageCss.includes('.valuation-page__workspace'),
+  'valuation page uses two-column workspace layout',
 )
 
 assert(resolveCategorySlugForEquipmentType('Treadmill') === 'treadmill', 'treadmill maps to treadmill category')

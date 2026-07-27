@@ -32,7 +32,12 @@ const valuatorRender = homePage.match(/<HomeEquipmentValuator[\s\S]*?\/>/)
 assert.ok(valuatorRender, 'valuator self-closes as a single shared instance')
 assert.match(
   valuatorRender[0],
-  /className=\{isLoggedIn \? 'home-valuator--signed-in' : ''\}/,
+  /home-valuator--compact-mobile/,
+  'homepage uses compact mobile valuator class',
+)
+assert.match(
+  valuatorRender[0],
+  /home-valuator--signed-in/,
   'signed-in homepage uses compact class via props',
 )
 assert.doesNotMatch(
@@ -66,11 +71,12 @@ assert.match(valuator, /useState\(''\)/, 'instance-local query state')
 assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
 assert.match(
   valuator,
-  /Search over 1,000 fitness products and get an estimated current used value in just a few simple steps\./,
+  /Instant market valuations based on thousands of listings/,
   'shared default lede is not commercial-only',
 )
 assert.doesNotMatch(valuator, /commercial fitness products/, 'no commercial-only valuator lede')
 assert.match(valuatorCss, /\.home-valuator--signed-in/, 'signed-in compact spacing class exists')
+assert.match(homePage, /home-valuator--compact-mobile/, 'homepage uses compact mobile valuator layout')
 
 const hero = read('src/components/home/HomeHero.jsx')
 assert.doesNotMatch(hero, /home-hero__copy/, 'homepage does not render duplicate marketplace intro block')

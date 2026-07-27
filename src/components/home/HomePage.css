@@ -736,6 +736,38 @@
   padding-top: var(--space-md);
 }
 
+/* Logged-out mobile: surface listings before the valuator utility. */
+@media (max-width: 767px) {
+  .home-page:not(.home-page--feed) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .home-page:not(.home-page--feed) .home-hero {
+    order: 1;
+  }
+
+  .home-page:not(.home-page--feed) .home-recent {
+    order: 2;
+  }
+
+  .home-page:not(.home-page--feed) .home-valuator {
+    order: 3;
+  }
+
+  .home-page:not(.home-page--feed) .home-browse {
+    order: 4;
+  }
+
+  .home-page:not(.home-page--feed) .home-discovery {
+    order: 5;
+  }
+
+  .home-page:not(.home-page--feed) .home-reviews {
+    order: 6;
+  }
+}
+
 @media (max-width: 768px) {
   .home-page--feed {
     display: flex;

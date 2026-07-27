@@ -1,0 +1,141 @@
+.valuation-stepper {
+  --valuation-stepper-marker: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.valuation-stepper__step {
+  display: grid;
+  grid-template-rows: var(--valuation-stepper-marker) auto;
+  justify-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  color: color-mix(in srgb, var(--color-navy) 55%, var(--color-muted));
+}
+
+.valuation-stepper__track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.35rem;
+  width: 100%;
+  height: var(--valuation-stepper-marker);
+}
+
+.valuation-stepper__connector,
+.valuation-stepper__connector-spacer {
+  display: block;
+  height: 2px;
+  width: 100%;
+  border-radius: 999px;
+}
+
+.valuation-stepper__connector {
+  background: color-mix(in srgb, var(--color-border) 88%, #fff);
+  transition: background-color 180ms ease;
+}
+
+.valuation-stepper__connector-spacer {
+  background: transparent;
+}
+
+.valuation-stepper__connector--active {
+  background: color-mix(in srgb, var(--color-orange) 62%, var(--color-border));
+}
+
+.valuation-stepper__marker {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--valuation-stepper-marker);
+  height: var(--valuation-stepper-marker);
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--color-navy) 20%, var(--color-border));
+  background: #fff;
+  color: color-mix(in srgb, var(--color-navy) 68%, var(--color-muted));
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 3px var(--color-bg);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.valuation-stepper__number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.valuation-stepper__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+  transition: color 180ms ease;
+}
+
+.valuation-stepper__step--current {
+  color: var(--color-navy);
+}
+
+.valuation-stepper__step--current .valuation-stepper__marker {
+  border-color: var(--color-orange);
+  background: var(--color-orange);
+  color: #fff;
+  box-shadow:
+    0 0 0 3px var(--color-bg),
+    0 8px 18px color-mix(in srgb, var(--color-orange) 28%, transparent);
+  transform: scale(1.04);
+}
+
+.valuation-stepper__step--complete {
+  color: var(--color-navy);
+}
+
+.valuation-stepper__step--complete .valuation-stepper__marker {
+  border-color: color-mix(in srgb, var(--color-orange) 58%, var(--color-border));
+  background: color-mix(in srgb, var(--color-orange) 12%, #fff);
+  color: var(--color-orange);
+  box-shadow: 0 0 0 3px var(--color-bg);
+}
+
+.valuation-stepper__step--upcoming .valuation-stepper__label {
+  color: color-mix(in srgb, var(--color-navy) 48%, var(--color-muted));
+}
+
+@media (max-width: 560px) {
+  .valuation-stepper {
+    --valuation-stepper-marker: 1.75rem;
+    width: 100%;
+  }
+
+  .valuation-stepper__step {
+    gap: 0.4rem;
+  }
+
+  .valuation-stepper__label {
+    font-size: 0.75rem;
+  }
+
+  .valuation-stepper__marker {
+    font-size: 0.75rem;
+  }
+
+  .valuation-stepper__track {
+    column-gap: 0.25rem;
+  }
+}

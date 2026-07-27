@@ -33,12 +33,12 @@ assert.match(brandsPage, /<HomeEquipmentValuator[\s\S]*idPrefix=["']brands-valua
 assert.match(brandsPage, /contained/, 'brands uses contained layout inside page shell')
 assert.match(
   brandsPage,
-  /Find the value of your gym equipment/,
+  /Instant Gym Equipment Valuation/,
   'brands uses Equipment Values copy for heading',
 )
 assert.match(
   brandsPage,
-  /Explore gym equipment by brand/,
+  /Used Gym Equipment Values by Brand/,
   'brand directory heading remains',
 )
 assert.match(
@@ -50,7 +50,7 @@ assert.match(
 // Placement: breadcrumb → valuator → explore-by-brand hero
 const breadcrumbIdx = brandsPage.indexOf('<PageBreadcrumbs')
 const valuatorIdx = brandsPage.indexOf('<HomeEquipmentValuator')
-const heroTitleIdx = brandsPage.indexOf('Explore gym equipment by brand')
+const heroTitleIdx = brandsPage.indexOf('className="brands-page__title"')
 assert.ok(breadcrumbIdx > -1 && valuatorIdx > breadcrumbIdx, 'valuator after breadcrumb')
 assert.ok(heroTitleIdx > valuatorIdx, 'brand explore section after valuator')
 
@@ -64,18 +64,20 @@ assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
 assert.doesNotMatch(valuator, /module-level selectedProduct|let selectedProduct/, 'no module shared selection')
 
 assert.match(valuatorCss, /\.home-valuator--contained/, 'contained layout CSS present')
+assert.match(valuatorCss, /\.home-valuator--compact-mobile/, 'homepage compact mobile modifier present')
 assert.match(
   valuatorCss,
-  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator__form[\s\S]*minmax\(0,\s*1fr\)\s+auto/,
-  'mobile valuator keeps input + CTA on one row',
+  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator--compact-mobile[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto/,
+  'compact mobile valuator keeps input + CTA on one row',
 )
 assert.match(
   valuatorCss,
-  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator__submit-label--mobile[\s\S]*display:\s*inline/,
-  'mobile valuator uses compact CTA label',
+  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator--compact-mobile[\s\S]*\.home-valuator__submit-label--mobile[\s\S]*display:\s*inline-flex/,
+  'compact mobile valuator uses icon CTA label',
 )
 assert.match(valuator, /home-valuator__title-text--mobile/, 'responsive title spans present')
-assert.match(valuator, /Value it/, 'mobile CTA label present')
+assert.match(valuator, /Value your equipment/, 'mobile title present')
+assert.match(valuator, /home-valuator__submit-label--mobile/, 'mobile CTA label present')
 assert.doesNotMatch(valuatorCss, /brand-logo--bg-dark/, 'valuator CSS unrelated to logo plates')
 
 // Ensure there is only one valuator implementation module referenced.

@@ -76,6 +76,18 @@
   display: none;
 }
 
+.home-valuator__lede-text--mobile {
+  display: none;
+}
+
+.home-valuator__heading-icon {
+  display: none;
+}
+
+.home-valuator__submit-label--mobile {
+  display: none;
+}
+
 .home-valuator__lede {
   margin: 0;
   max-width: 32rem;
@@ -470,6 +482,14 @@
     display: inline;
   }
 
+  .home-valuator__lede-text--desktop {
+    display: none;
+  }
+
+  .home-valuator__lede-text--mobile {
+    display: inline;
+  }
+
   .home-valuator__lede {
     font-size: 0.875rem;
     line-height: 1.5;
@@ -546,12 +566,159 @@
     font-size: 0.975rem;
   }
 
+  .home-valuator__submit-label--desktop {
+    display: inline;
+  }
+
+  .home-valuator__submit-label--mobile {
+    display: none;
+  }
+
   .home-valuator__input {
     min-height: 2.55rem;
     height: 2.55rem;
     padding: 0.55rem 0.15rem 0.55rem 0;
     /* ≥16px prevents iOS Safari focus zoom */
     font-size: 1rem;
+  }
+
+  /* Homepage compact Option 3 utility bar */
+  .home-valuator--compact-mobile {
+    padding: 0.45rem 0 0.55rem;
+  }
+
+  .home-valuator--compact-mobile.home-valuator--signed-in {
+    padding: 0.4rem 0 0.5rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__card {
+    gap: 0.65rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 6px 18px rgba(15, 33, 55, 0.05);
+  }
+
+  .home-valuator--compact-mobile .home-valuator__main {
+    gap: 0.65rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__heading-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: center;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__heading-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--color-orange) 12%, #fff);
+    color: var(--color-orange);
+    flex: 0 0 auto;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__heading-icon svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__heading-copy {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 2.15rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__eyebrow {
+    display: none;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__title {
+    font-size: 1.05rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__lede {
+    display: none;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.45rem;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__search-field {
+    min-height: 2.75rem;
+    padding: 0.1rem 0.7rem 0.1rem 2.25rem;
+    border-radius: 0.8rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__search-icon {
+    left: 0.7rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__input {
+    min-height: 2.55rem;
+    height: 2.55rem;
+    padding: 0.45rem 0.1rem 0.45rem 0;
+    font-size: 1rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__input::placeholder {
+    font-size: 0.875rem; /* 14px — ~2px smaller than entered text */
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: color-mix(in srgb, var(--color-muted) 92%, #fff);
+    opacity: 1;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__input::-webkit-input-placeholder {
+    font-size: 0.875rem;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: color-mix(in srgb, var(--color-muted) 92%, #fff);
+    opacity: 1;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__input::-moz-placeholder {
+    font-size: 0.875rem;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: color-mix(in srgb, var(--color-muted) 92%, #fff);
+    opacity: 1;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__submit {
+    width: clamp(2.75rem, 22vw, 3.35rem);
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border-radius: 0.8rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__submit-label--desktop {
+    display: none;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__submit-label--mobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -562,5 +729,18 @@
 
   .home-valuator__input {
     font-size: 1rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__card {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__title {
+    font-size: 1rem;
+  }
+
+  .home-valuator--compact-mobile .home-valuator__submit {
+    min-width: 2.5rem;
+    width: 2.5rem;
   }
 }

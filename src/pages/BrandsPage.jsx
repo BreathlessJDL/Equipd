@@ -135,7 +135,9 @@ export default function BrandsPage() {
           titleAs="h2"
           eyebrow={null}
           title="Instant Gym Equipment Valuation"
+          titleMobile={null}
           lede="Search by brand or model to estimate today's used market value. You can also browse equipment by manufacturer below."
+          ledeMobile={null}
         />
 
         <header className="brands-page__hero">
