@@ -15,7 +15,6 @@ import '../components/browse/LocationPage.css'
 import { useBrowseFilters } from '../hooks/useBrowseFilters'
 import { useBrowseListings } from '../hooks/useBrowseListings'
 import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
-import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
@@ -23,6 +22,7 @@ import { buildLocationPageBreadcrumbSchema } from '../lib/breadcrumbStructuredDa
 import { fetchCategories } from '../lib/listings'
 import {
   buildLocationPageMeta,
+  getLocationHubSearch,
   getLocationPage,
   LOCATION_AREA_PARAM,
   parseLocationAreaParam,
@@ -48,6 +48,8 @@ function LocationListingsPage({ locationSlug }) {
     [region, selectedArea],
   )
 
+  const hubSearch = useMemo(() => (region ? getLocationHubSearch(region) : null), [region])
+
   const pageMeta = useMemo(
     () => (region ? buildLocationPageMeta(region, selectedArea) : null),
     [region, selectedArea],
@@ -65,29 +67,33 @@ function LocationListingsPage({ locationSlug }) {
     [region],
   )
 
-  const profileLocation = useProfileBrowseLocation()
-
-  const profileCoordinates = useMemo(
-    () =>
-      profileLocation.hasCoordinates
-        ? { latitude: profileLocation.latitude, longitude: profileLocation.longitude }
-        : null,
-    [profileLocation.hasCoordinates, profileLocation.latitude, profileLocation.longitude],
-  )
-
+  // Location hubs use configured city-centre coordinates for the 40-mile radius.
+  // Do not let the signed-in profile location override hub search geometry.
   const browse = useBrowseFilters(searchParams, setSearchParams, {
     categories,
     categoriesReady,
     locationAreas: locationView?.filterAreas ?? [],
-    profileCoordinates,
+    hubSearch,
+    profileCoordinates: null,
   })
 
   const { requestBrowseScroll } = useBrowseScrollAfterFilterChange(searchParams.toString())
 
-  const { listings, loading, error } = useBrowseListings(browse.queryOptions, {
+  const {
+    listings,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+  } = useBrowseListings(browse.queryOptions, {
     sort: browse.queryOptions.sort,
     search: browse.queryOptions.search,
     hasLocationSearch: browse.hasLocationForSort,
+    paginate: true,
+    // Local hubs are radius-scoped; fetch a larger first page so the hero
+    // count badge and grid reflect the full eligible set in typical markets.
+    pageSize: 100,
   })
 
   useEffect(() => {
@@ -236,6 +242,9 @@ function LocationListingsPage({ locationSlug }) {
                   locationView={locationView}
                   listings={listings}
                   loading={loading}
+                  loadingMore={loadingMore}
+                  hasMore={hasMore}
+                  onLoadMore={loadMore}
                   error={error}
                   hasFilters={browse.hasFilters}
                   emptyMessage={`No active listings in ${locationView.name} yet.`}

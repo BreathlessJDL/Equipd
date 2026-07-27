@@ -2,135 +2,156 @@ import { EQUIPD_SITE_ORIGIN } from './brandCatalogueCore.js'
 import { BUYER_PROTECTION_HELP_PATH } from './trustMessaging.js'
 import { buildLocationPageBreadcrumbSchema } from './breadcrumbStructuredData.js'
 
+/**
+ * Local marketplace hubs.
+ *
+ * centre.latitude / centre.longitude are approximate city-centre coordinates
+ * (standard geographic town centres; used for the 40-mile eligible listing radius).
+ * Do not fall back to text-only matching when a centre is missing — fix the config.
+ */
+export const LOCATION_HUB_RADIUS_MILES = 40
+/** Exact metre equivalent of 40 miles for documentation / future PostGIS use. */
+export const LOCATION_HUB_RADIUS_METRES = 64373.76
+
 export const LOCATION_PAGES = {
   leeds: {
     slug: 'leeds',
     name: 'Leeds',
     regionLabel: 'West Yorkshire',
+    centre: { latitude: 53.8008, longitude: -1.5491 },
     heading: 'Used gym equipment in Leeds',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers across Leeds and West Yorkshire.',
+      'Browse second-hand commercial and home gym equipment from sellers across Leeds and West Yorkshire.',
     intro:
       'Browse second-hand gym kit from sellers across Leeds and nearby West Yorkshire towns. Pick up locally and save on delivery.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Leeds and West Yorkshire. Search local listings, make offers and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Leeds and within 40 miles. Search local listings, make offers and buy with confidence on Equipd.',
     areas: ['Leeds', 'Wakefield', 'Bradford', 'Huddersfield', 'York', 'Harrogate'],
   },
   manchester: {
     slug: 'manchester',
     name: 'Manchester',
     regionLabel: 'Greater Manchester',
+    centre: { latitude: 53.4808, longitude: -2.2426 },
     heading: 'Used gym equipment in Manchester',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Manchester and across Greater Manchester.',
+      'Browse second-hand commercial and home gym equipment from sellers across Manchester and Greater Manchester.',
     intro:
       'Find pre-owned weights, racks, and cardio gear from sellers in Greater Manchester and surrounding towns.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Manchester and Greater Manchester. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Manchester and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Manchester', 'Salford', 'Bolton', 'Stockport', 'Oldham', 'Rochdale'],
   },
   birmingham: {
     slug: 'birmingham',
     name: 'Birmingham',
     regionLabel: 'the West Midlands',
+    centre: { latitude: 52.4862, longitude: -1.8904 },
     heading: 'Used gym equipment in Birmingham',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Birmingham and across the West Midlands.',
+      'Browse second-hand commercial and home gym equipment from sellers across Birmingham and the West Midlands.',
     intro:
       'Shop used gym equipment listed by sellers across Birmingham and the West Midlands commuter belt.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Birmingham and the West Midlands. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Birmingham and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Birmingham', 'Wolverhampton', 'Coventry', 'Solihull', 'Walsall', 'Dudley'],
   },
   london: {
     slug: 'london',
     name: 'London',
     regionLabel: 'nearby towns',
+    centre: { latitude: 51.5074, longitude: -0.1278 },
     heading: 'Used gym equipment in London',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in London and nearby towns.',
+      'Browse second-hand commercial and home gym equipment from sellers in London and within 40 miles.',
     intro:
       'Discover used home and commercial gym equipment from sellers across London and nearby towns.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in London and nearby towns. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in London and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['London', 'Croydon', 'Wembley', 'Stratford', 'Watford', 'Romford'],
   },
   sheffield: {
     slug: 'sheffield',
     name: 'Sheffield',
     regionLabel: 'South Yorkshire',
+    centre: { latitude: 53.3811, longitude: -1.4701 },
     heading: 'Used gym equipment in Sheffield',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Sheffield and across South Yorkshire.',
+      'Browse second-hand commercial and home gym equipment from sellers across Sheffield and South Yorkshire.',
     intro:
       'Browse second-hand gym kit from sellers across Sheffield and South Yorkshire.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Sheffield and South Yorkshire. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Sheffield and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Sheffield', 'Rotherham', 'Barnsley', 'Doncaster', 'Chesterfield'],
   },
   bristol: {
     slug: 'bristol',
     name: 'Bristol',
     regionLabel: 'the South West',
+    centre: { latitude: 51.4545, longitude: -2.5879 },
     heading: 'Used gym equipment in Bristol',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Bristol and across the South West.',
+      'Browse second-hand commercial and home gym equipment from sellers in Bristol and within 40 miles.',
     intro:
       'Find pre-owned weights, racks, and cardio gear from sellers in Bristol and the South West.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Bristol and the South West. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Bristol and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Bristol', 'Bath', 'Weston-super-Mare', 'Gloucester', 'Swindon'],
   },
   liverpool: {
     slug: 'liverpool',
     name: 'Liverpool',
     regionLabel: 'Merseyside',
+    centre: { latitude: 53.4084, longitude: -2.9916 },
     heading: 'Used gym equipment in Liverpool',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Liverpool and across Merseyside.',
+      'Browse second-hand commercial and home gym equipment from sellers across Liverpool and Merseyside.',
     intro:
       'Shop used gym equipment listed by sellers across Liverpool and Merseyside.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Liverpool and Merseyside. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Liverpool and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Liverpool', 'Wirral', 'St Helens', 'Southport', 'Warrington'],
   },
   newcastle: {
     slug: 'newcastle',
     name: 'Newcastle',
     regionLabel: 'the North East',
+    centre: { latitude: 54.9783, longitude: -1.6178 },
     heading: 'Used gym equipment in Newcastle',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Newcastle and across the North East.',
+      'Browse second-hand commercial and home gym equipment from sellers in Newcastle and within 40 miles.',
     intro:
       'Discover used gym equipment from sellers across Newcastle and the North East.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Newcastle and the North East. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Newcastle and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Newcastle', 'Gateshead', 'Sunderland', 'Durham', 'Middlesbrough'],
   },
   glasgow: {
     slug: 'glasgow',
     name: 'Glasgow',
     regionLabel: 'central Scotland',
+    centre: { latitude: 55.8642, longitude: -4.2518 },
     heading: 'Used gym equipment in Glasgow',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Glasgow and across central Scotland.',
+      'Browse second-hand commercial and home gym equipment from sellers in Glasgow and within 40 miles.',
     intro:
       'Browse second-hand gym kit from sellers across Glasgow and central Scotland.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Glasgow and central Scotland. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Glasgow and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Glasgow', 'Paisley', 'East Kilbride', 'Hamilton', 'Stirling'],
   },
   cardiff: {
     slug: 'cardiff',
     name: 'Cardiff',
     regionLabel: 'South Wales',
+    centre: { latitude: 51.4816, longitude: -3.1791 },
     heading: 'Used gym equipment in Cardiff',
     heroIntro:
-      'Browse second-hand commercial and home gym equipment from local sellers in Cardiff and across South Wales.',
+      'Browse second-hand commercial and home gym equipment from sellers across Cardiff and South Wales.',
     intro:
       'Find pre-owned gym equipment from sellers across Cardiff and South Wales.',
     metaDescription:
-      'Browse used commercial and home gym equipment for sale in Cardiff and South Wales. Search local listings and buy with confidence on Equipd.',
+      'Browse used commercial and home gym equipment for sale in Cardiff and within 40 miles. Search local listings and buy with confidence on Equipd.',
     areas: ['Cardiff', 'Newport', 'Swansea', 'Bridgend', 'Barry'],
   },
 }
@@ -154,6 +175,35 @@ export const LOCATION_BUYING_GUIDE_ITEMS = Object.freeze([
 
 export function getLocationPage(slug) {
   return LOCATION_PAGES[slug] ?? null
+}
+
+/**
+ * Hub search centre + 40-mile radius for eligible local listings.
+ * Throws if centre coordinates are missing (do not silently fall back to text matching).
+ */
+export function getLocationHubSearch(region) {
+  if (!region) return null
+  const latitude = Number(region.centre?.latitude)
+  const longitude = Number(region.centre?.longitude)
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error(
+      `[locations] Missing centre coordinates for local hub "${region.slug || region.name}". Add centre.latitude / centre.longitude to LOCATION_PAGES.`,
+    )
+  }
+  return {
+    latitude,
+    longitude,
+    radiusMiles: LOCATION_HUB_RADIUS_MILES,
+  }
+}
+
+/**
+ * Areas used for optional text narrowing within the hub radius.
+ * Default hub view is radius-only (empty array).
+ */
+export function getLocationHubQueryAreas(region, selectedArea = null) {
+  if (!region) return []
+  return selectedArea ? [selectedArea] : []
 }
 
 export const LOCATION_AREA_PARAM = 'area'
@@ -228,20 +278,21 @@ function fillCityCopy(template, cityName) {
  * Resolved view model for a location page, optionally narrowed to one nearby area.
  */
 export function resolveLocationView(region, selectedArea = null) {
-  const filterAreas = selectedArea ? [selectedArea] : region.areas
   const displayName = selectedArea ?? region.name
-  const areaScopeText = selectedArea ? selectedArea : formatLocationAreas(region.areas)
   const nearbyAreas = getLocationNearbyAreas(region)
   const regionLabel = region.regionLabel || 'nearby towns'
+  const hubSearch = getLocationHubSearch(region)
 
   const heroIntro = selectedArea
-    ? `Browse second-hand commercial and home gym equipment from local sellers in ${selectedArea} and the wider ${region.name} area.`
+    ? `Browse second-hand commercial and home gym equipment from sellers in ${selectedArea} within 40 miles of ${region.name}.`
     : region.heroIntro
 
   return {
     slug: region.slug,
     regionName: region.name,
     regionLabel,
+    centre: hubSearch,
+    hubRadiusMiles: LOCATION_HUB_RADIUS_MILES,
     name: displayName,
     heading: selectedArea ? `Used gym equipment in ${selectedArea}` : region.heading,
     headingPrefix: 'Used gym equipment in ',
@@ -251,9 +302,10 @@ export function resolveLocationView(region, selectedArea = null) {
     metaDescription: region.metaDescription,
     areas: region.areas,
     nearbyAreas,
-    filterAreas,
+    /** Radius query areas — empty on hub view; single town when ?area= is set. */
+    filterAreas: getLocationHubQueryAreas(region, selectedArea),
     selectedArea,
-    areaScopeText,
+    areaScopeText: selectedArea ? selectedArea : `${region.name} and within 40 miles`,
     browseCtaLabel: `Browse ${displayName} listings`,
     guideHeading: `Buying gym equipment around ${displayName}`,
     nearbyHeading: `Explore gym equipment near ${region.name}`,
@@ -265,7 +317,7 @@ export function resolveLocationView(region, selectedArea = null) {
       `Browse pre-owned treadmills, spin bikes, rowers, weights, racks and commercial gym kit from sellers ${
         selectedArea
           ? `in ${selectedArea}`
-          : `across ${areaScopeText}`
+          : `in ${region.name} and within 40 miles`
       } — with collection, seller delivery, or buyer-arranged courier options.`,
     sellerNearbyText:
       region.areas.length > 1 ? formatLocationAreas(region.areas.slice(1)) : region.name,

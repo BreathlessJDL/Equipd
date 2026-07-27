@@ -56,6 +56,7 @@ export function useBrowseFilters(
     locationAreas = [],
     categoriesReady = true,
     profileCoordinates = null,
+    hubSearch = null,
   } = {},
 ) {
   const searchParamsKey = searchParams.toString()
@@ -433,8 +434,8 @@ export function useBrowseFilters(
   )
 
   const queryOptions = useMemo(
-    () => buildBrowseQueryOptions(urlDraft, { locationAreas, profileCoordinates }),
-    [urlDraft, locationAreas, profileCoordinates],
+    () => buildBrowseQueryOptions(urlDraft, { locationAreas, profileCoordinates, hubSearch }),
+    [urlDraft, locationAreas, profileCoordinates, hubSearch],
   )
 
   const activeChips = useMemo(
@@ -442,10 +443,10 @@ export function useBrowseFilters(
     [urlFilters, categories],
   )
 
-  const hasLocationForSort = useMemo(
-    () => hasBrowseLocationForSort(urlDraft, profileCoordinates),
-    [urlDraft, profileCoordinates],
-  )
+  const hasLocationForSort = useMemo(() => {
+    if (hubSearch?.latitude != null && hubSearch?.longitude != null) return true
+    return hasBrowseLocationForSort(urlDraft, profileCoordinates)
+  }, [hubSearch, urlDraft, profileCoordinates])
 
   const hasBrowseLocation = hasLocationForSort
   const sortNotice =

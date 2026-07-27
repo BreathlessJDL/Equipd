@@ -13,26 +13,31 @@
   display: grid;
   /* Gallery ~68–70%+; purchase panel fixed ~360–380px */
   grid-template-columns: minmax(0, 1fr) clamp(22.5rem, 24vw, 23.75rem);
+  grid-template-areas:
+    'media summary'
+    'details summary';
   column-gap: clamp(1rem, 1.6vw, 1.5rem);
-  row-gap: 0;
+  row-gap: 1.35rem;
   align-items: start;
   margin-bottom: 0;
 }
 
-.listing-detail__primary {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  /* ~20–24px between image note and description card */
-  gap: 1.35rem;
-}
-
 .listing-detail__media {
+  grid-area: media;
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
   width: 100%;
   min-width: 0;
+}
+
+.listing-detail__primary {
+  grid-area: details;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* ~20–24px between description and Equipd Intelligence */
+  gap: 1.35rem;
 }
 
 .listing-detail__image-note {
@@ -235,6 +240,7 @@
 
 /* Purchase panel — one continuous card */
 .listing-summary {
+  grid-area: summary;
   position: sticky;
   top: 1.25rem;
   align-self: start;
@@ -1004,24 +1010,20 @@
     gap: 1.15rem;
   }
 
-  /* Flatten left column so mobile order can be gallery → panel → description */
+  /* DOM order is already gallery → summary → description → intelligence */
   .listing-detail__primary {
-    display: contents;
-  }
-
-  .listing-detail__media {
-    order: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
   }
 
   .listing-summary {
-    order: 2;
     position: static;
     padding: 1.15rem;
     border-radius: 1rem;
   }
 
   .listing-detail__seller-description {
-    order: 3;
     padding: 1.1rem 1.15rem;
     border-radius: 1rem;
   }

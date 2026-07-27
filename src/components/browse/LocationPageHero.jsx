@@ -44,11 +44,13 @@ function LocationPageHero({ locationView, listingCount, loading, listingsAnchorI
             <Link to="/valuation" className="location-page__btn location-page__btn--secondary">
               Get a free valuation
             </Link>
-            <span className="location-page__count-badge">{countLabel}</span>
           </div>
         </div>
 
-        <LocationHeroMarketplacePreview cityName={locationView.regionName} />
+        <LocationHeroMarketplacePreview
+          cityName={locationView.name}
+          listingCountLabel={countLabel}
+        />
       </div>
     </section>
   )

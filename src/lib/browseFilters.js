@@ -177,16 +177,33 @@ export function applyBrowseFiltersToSearchParams(
   return searchParams
 }
 
-export function buildBrowseQueryOptions(filters, { locationAreas = [], profileCoordinates = null } = {}) {
+export function buildBrowseQueryOptions(
+  filters,
+  { locationAreas = [], profileCoordinates = null, hubSearch = null } = {},
+) {
   const minPricePence = parseBrowsePriceToPence(filters.minPrice)
   const maxPricePence = parseBrowsePriceToPence(filters.maxPrice)
-  const radiusMiles =
+  let radiusMiles =
     filters.radiusMilesValue ?? parseBrowseRadiusMiles(filters.radiusMiles)
   const categoryIds = normalizeStringArray(filters.categoryIds, filters.categoryId)
   const brands = normalizeStringArray(filters.brands, filters.brand)
   const conditions = normalizeStringArray(filters.conditions, filters.condition)
 
-  const buyerCoordinates = resolveBrowseBuyerCoordinates(filters, profileCoordinates)
+  let buyerCoordinates = resolveBrowseBuyerCoordinates(filters, profileCoordinates)
+
+  if (hubSearch?.latitude != null && hubSearch?.longitude != null) {
+    const hub = normalizeBuyerCoordinates({
+      latitude: hubSearch.latitude,
+      longitude: hubSearch.longitude,
+    })
+    if (hub) {
+      buyerCoordinates = hub
+      const hubRadius = Number(hubSearch.radiusMiles)
+      if (Number.isFinite(hubRadius) && hubRadius > 0) {
+        radiusMiles = hubRadius
+      }
+    }
+  }
 
   return {
     search: filters.search?.trim() ?? '',

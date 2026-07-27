@@ -16,6 +16,9 @@ function LocationListingsResults({
   locationView,
   listings,
   loading,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore,
   error,
   hasFilters,
   emptyMessage,
@@ -86,8 +89,8 @@ function LocationListingsResults({
       <header className="location-page__results-header">
         <h2 className="location-page__results-title">
           {listings.length === 1
-            ? `1 listing in ${locationView.name}`
-            : `${listings.length} listings in ${locationView.name}`}
+            ? `1 listing in and around ${locationView.name}`
+            : `${listings.length} listings in and around ${locationView.name}`}
         </h2>
       </header>
       <div
@@ -99,6 +102,24 @@ function LocationListingsResults({
           <ListingCard key={listing.id} listing={listing} variant="home" />
         ))}
       </div>
+      {hasMore || loadingMore ? (
+        <div className="listing-browse__load-more">
+          {error ? (
+            <p className="location-page__message location-page__message--error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className="listing-browse__button listing-browse__button--secondary listing-browse__load-more-button"
+            onClick={onLoadMore}
+            disabled={loadingMore || !hasMore}
+            aria-busy={loadingMore}
+          >
+            {loadingMore ? 'Loading more…' : 'Load more'}
+          </button>
+        </div>
+      ) : null}
     </LocationResultsShell>
   )
 }

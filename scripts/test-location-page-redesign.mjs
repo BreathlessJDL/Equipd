@@ -20,12 +20,23 @@ async function inspectLocation(page, slug) {
       heroHasListingCards: Boolean(hero?.querySelector('.listing-card')),
       heroHasNearbyPills: Boolean(hero?.querySelector('.location-page__nearby-pill, .location-page__area-pill')),
       heroHasPreview: Boolean(document.querySelector('.location-page__preview')),
-      previewCity: document.querySelector('.location-page__preview-location-label')?.textContent?.trim() ?? null,
-      previewHasPrices: /£|\d{2,}/.test(document.querySelector('.location-page__preview')?.textContent || ''),
+      previewCity: document.querySelector('.location-page__preview-card-city')?.textContent?.trim() ?? null,
+      previewHasPrices: /£/.test(document.querySelector('.location-page__preview')?.textContent || ''),
+      previewHasEquipmentIcons: Boolean(
+        document.querySelector(
+          '.location-page__preview-equipment, .location-page__preview-browser, .location-page__preview-chip',
+        ),
+      ),
+      previewPinCount: document.querySelectorAll('.location-page__preview-pin, .location-page__preview-art .location-page__preview-pin').length,
+      previewAriaHidden:
+        document.querySelector('.location-page__preview')?.getAttribute('aria-hidden') === 'true',
       eyebrow: document.querySelector('.location-page__eyebrow')?.textContent?.trim() ?? null,
+      heroIntro: document.querySelector('.location-page__lead')?.textContent?.trim() ?? null,
       h1: document.getElementById('location-page-title')?.textContent?.trim() ?? null,
       h1Count: document.querySelectorAll('h1').length,
       countBadge: document.querySelector('.location-page__count-badge')?.textContent?.trim() ?? null,
+      previewCount: document.querySelector('.location-page__preview-card-count')?.textContent?.trim() ?? null,
+      resultsTitle: document.querySelector('.location-page__results-title')?.textContent?.trim() ?? null,
       primaryCta: document.querySelector('.location-page__btn--primary')?.textContent?.trim() ?? null,
       secondaryCtaHref: document.querySelector('.location-page__btn--secondary')?.getAttribute('href') ?? null,
       hasNearbySection: Boolean(nearby),
@@ -69,10 +80,16 @@ const ok = (state) =>
   state.heroHasPreview &&
   state.previewCity === 'Leeds' &&
   !state.previewHasPrices &&
+  !state.previewHasEquipmentIcons &&
+  state.previewPinCount === 1 &&
+  state.previewAriaHidden === true &&
   state.eyebrow === 'Gym equipment near you' &&
+  Boolean(state.heroIntro?.includes('West Yorkshire') || state.heroIntro?.includes('40 miles')) &&
   state.h1 === 'Used gym equipment in Leeds' &&
   state.h1Count === 1 &&
-  Boolean(state.countBadge?.includes('listing')) &&
+  state.countBadge == null &&
+  Boolean(state.previewCount?.includes('listing')) &&
+  Boolean(state.resultsTitle?.includes('in and around Leeds')) &&
   state.primaryCta === 'Browse Leeds listings' &&
   state.secondaryCtaHref === '/valuation' &&
   state.hasNearbySection &&
@@ -89,7 +106,7 @@ const ok = (state) =>
   state.sidebarOrder[1]?.includes('location-page__sidebar') &&
   state.title.includes('Leeds') &&
   state.canonical?.includes('/listings/leeds') &&
-  Boolean(state.description) &&
+  Boolean(state.description?.includes('40 miles')) &&
   state.robots?.includes('index') &&
   !state.overflow
 

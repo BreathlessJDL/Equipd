@@ -5,7 +5,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { chromium } from 'playwright'
+import { chromium } from 'playwright-core'
 
 const base = (process.env.PREVIEW_URL || 'http://127.0.0.1:5173').replace(/\/$/, '')
 const outDir = join(process.cwd(), 'reports', 'location-page-redesign')
@@ -25,7 +25,7 @@ async function dismissCookies(page) {
   }
 }
 
-const browser = await chromium.launch()
+const browser = await chromium.launch({ channel: 'msedge' })
 const results = []
 
 for (const vp of viewports) {
@@ -43,11 +43,16 @@ for (const vp of viewports) {
       h1: document.getElementById('location-page-title')?.textContent?.trim() || '',
       heroHeight: hero ? Math.round(hero.getBoundingClientRect().height) : 0,
       hasPreview: Boolean(document.querySelector('.location-page__preview')),
-      previewCity: document.querySelector('.location-page__preview-location-label')?.textContent?.trim() || '',
+      previewCity: document.querySelector('.location-page__preview-card-city')?.textContent?.trim() || '',
       previewAriaHidden:
         document.querySelector('.location-page__preview')?.getAttribute('aria-hidden') === 'true',
       previewHasRealListingCopy: /£|Technogym|Concept|Send offer/i.test(
         document.querySelector('.location-page__preview')?.textContent || '',
+      ),
+      previewHasLegacyBrowser: Boolean(
+        document.querySelector(
+          '.location-page__preview-browser, .location-page__preview-chip, .location-page__preview-equipment',
+        ),
       ),
       listingsBelowHero: Boolean(
         hero && main && main.getBoundingClientRect().top >= hero.getBoundingClientRect().bottom - 2,
@@ -58,6 +63,8 @@ for (const vp of viewports) {
         return nearby.getBoundingClientRect().top >= main.getBoundingClientRect().top
       })(),
       countBadge: document.querySelector('.location-page__count-badge')?.textContent?.trim() || '',
+      previewCount: document.querySelector('.location-page__preview-card-count')?.textContent?.trim() || '',
+      resultsTitle: document.querySelector('.location-page__results-title')?.textContent?.trim() || '',
       canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
       filtersPresent: Boolean(document.querySelector('.location-page__toolbar')),
     }
@@ -81,8 +88,13 @@ for (const row of results) {
   if (row.previewCity !== 'Leeds') throw new Error(`${row.viewport}: preview city not dynamic`)
   if (!row.previewAriaHidden) throw new Error(`${row.viewport}: preview should be aria-hidden`)
   if (row.previewHasRealListingCopy) throw new Error(`${row.viewport}: preview has real listing copy`)
+  if (row.previewHasLegacyBrowser) throw new Error(`${row.viewport}: legacy browser preview still present`)
   if (!row.nearbyAfterListings) throw new Error(`${row.viewport}: nearby not after listings`)
-  if (!row.countBadge.includes('listing')) throw new Error(`${row.viewport}: missing count badge`)
+  if (row.countBadge) throw new Error(`${row.viewport}: hero count badge should be removed`)
+  if (!row.previewCount.includes('listing')) throw new Error(`${row.viewport}: floating card count missing`)
+  if (!row.resultsTitle.includes('in and around Leeds')) {
+    throw new Error(`${row.viewport}: results title should say in and around`)
+  }
   if (!row.canonical.includes('/listings/leeds')) throw new Error(`${row.viewport}: canonical`)
   if (!row.filtersPresent) throw new Error(`${row.viewport}: filters missing`)
   if (row.viewport === 'desktop-1440' && (row.heroHeight < 280 || row.heroHeight > 420)) {

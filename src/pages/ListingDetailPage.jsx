@@ -520,57 +520,49 @@ function ListingDetailPage() {
       <BreadcrumbSchema schema={breadcrumbSchema} />
       <PageBreadcrumbs items={breadcrumbItems} className="listing-detail__breadcrumbs" />
       <div className="listing-detail__hero">
-        <div className="listing-detail__primary">
-          <div className="listing-detail__media">
-            <ListingImageGallery
-              images={listing.listing_images ?? []}
-              title={listingSeo.imageAlt || listing.title}
-              imageAlt={listingSeo.imageAlt || listing.title}
-              savedCountOverlay={
-                isSoldListing ? null : <ListingSavedCountOverlay count={savedCount} />
-              }
-              saveButton={
-                !isSoldListing && !isOwner && listing.status === 'active' ? (
-                  <ListingSaveButton
-                    listing={listing}
-                    className="listing-save-button--detail"
-                    onSavedChange={handleSavedChange}
-                  />
-                ) : null
-              }
-            />
-            {(listing.listing_images?.length ?? 0) > 0 ? (
-              <p className="listing-detail__image-note" role="note">
-                <svg
-                  className="listing-detail__image-note-icon"
-                  viewBox="0 0 16 16"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.25" />
-                  <path
-                    d="M8 7.25v4M8 5.25h.01"
-                    stroke="currentColor"
-                    strokeWidth="1.35"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span>
-                  {isSoldListing
-                    ? 'Photos shown are of the item that was sold on Equipd.'
-                    : 'Photos shown are of the actual item being sold by the seller.'}
-                </span>
-              </p>
-            ) : null}
-          </div>
-
-          <ListingSellerDescription listing={listing} />
-          <ListingEquipmentIntelligence
-            listing={listing}
-            equipmentProduct={equipmentProduct}
+        <div className="listing-detail__media">
+          <ListingImageGallery
+            images={listing.listing_images ?? []}
+            title={listingSeo.imageAlt || listing.title}
+            imageAlt={listingSeo.imageAlt || listing.title}
+            savedCountOverlay={
+              isSoldListing ? null : <ListingSavedCountOverlay count={savedCount} />
+            }
+            saveButton={
+              !isSoldListing && !isOwner && listing.status === 'active' ? (
+                <ListingSaveButton
+                  listing={listing}
+                  className="listing-save-button--detail"
+                  onSavedChange={handleSavedChange}
+                />
+              ) : null
+            }
           />
+          {(listing.listing_images?.length ?? 0) > 0 ? (
+            <p className="listing-detail__image-note" role="note">
+              <svg
+                className="listing-detail__image-note-icon"
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.25" />
+                <path
+                  d="M8 7.25v4M8 5.25h.01"
+                  stroke="currentColor"
+                  strokeWidth="1.35"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span>
+                {isSoldListing
+                  ? 'Photos shown are of the item that was sold on Equipd.'
+                  : 'Photos shown are of the actual item being sold by the seller.'}
+              </span>
+            </p>
+          ) : null}
         </div>
 
         <ListingItemSummary
@@ -603,6 +595,14 @@ function ListingDetailPage() {
             ) : null
           }
         />
+
+        <div className="listing-detail__primary">
+          <ListingSellerDescription listing={listing} />
+          <ListingEquipmentIntelligence
+            listing={listing}
+            equipmentProduct={equipmentProduct}
+          />
+        </div>
       </div>
 
       {!isOwner && buyerConfirmableOffer?.order?.id ? (
