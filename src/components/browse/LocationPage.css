@@ -152,6 +152,43 @@
   margin-top: 0.35rem;
 }
 
+/* Compact location/count badge — mobile/tablet only (desktop uses floating preview card) */
+.location-page__mobile-badge {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-orange) 22%, var(--color-border));
+  background: color-mix(in srgb, var(--location-warm) 88%, #ffe8d9);
+  color: var(--color-navy);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+@supports not (font-weight: 650) {
+  .location-page__mobile-badge {
+    font-weight: 600;
+  }
+}
+
+.location-page__mobile-badge-pin {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px 999px 999px 0;
+  background: var(--color-orange);
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+}
+
+.location-page__mobile-badge-text {
+  min-width: 0;
+}
+
 /* Decorative location motif (pin + route + floating card) */
 
 .location-page__preview {
@@ -831,72 +868,84 @@
   color: var(--color-orange);
 }
 
+/* Compact single-column hero below the desktop two-column split (900px) */
 @media (max-width: 899px) {
   .location-page__hero {
-    padding-top: 2rem;
-    padding-bottom: 1.35rem;
-  }
-
-  .location-page__preview {
-    justify-self: center;
-    width: min(100%, 15.5rem);
-    min-height: 12.5rem;
-  }
-}
-
-@media (max-width: 767px) {
-  .location-page__hero {
-    padding: 1.6rem max(var(--space-md), env(safe-area-inset-right, 0px))
-      0.85rem max(var(--space-md), env(safe-area-inset-left, 0px));
+    padding:
+      1.5rem max(var(--space-md), env(safe-area-inset-right, 0px))
+      1.5rem max(var(--space-md), env(safe-area-inset-left, 0px));
     max-height: none;
+    min-height: 0;
   }
 
   .location-page__hero-rail {
-    gap: 0.7rem;
+    display: block;
+    gap: 0;
+  }
+
+  /* Hide decorative pin / route / floating card — replaced by inline badge */
+  .location-page__preview {
+    display: none;
   }
 
   .location-page__hero-copy {
-    gap: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
     max-width: none;
+    width: 100%;
+  }
+
+  .location-page__eyebrow {
+    margin: 0 0 0.55rem;
+    font-size: clamp(1.15rem, 4.2vw, 1.4rem);
   }
 
   .location-page__title {
-    font-size: clamp(1.55rem, 7vw, 1.85rem);
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.45rem, 6.2vw, 1.8rem);
+    line-height: 1.15;
   }
 
   .location-page__lead {
-    font-size: 0.95rem;
+    margin: 0 0 0.95rem;
+    max-width: none;
+    font-size: 0.9375rem;
     line-height: 1.5;
+  }
+
+  .location-page__mobile-badge {
+    display: inline-flex;
+    margin: 0 0 1.1rem;
   }
 
   .location-page__hero-actions {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.55rem;
+    gap: 0.625rem;
+    margin-top: 0;
+    width: 100%;
   }
 
   .location-page__btn {
     width: 100%;
     justify-content: center;
+    min-height: 2.75rem;
+    box-shadow: none;
   }
 
-  .location-page__btn {
-    min-height: 2.65rem;
+  .location-page__btn--primary {
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--color-orange) 18%, transparent);
   }
 
-  .location-page__preview {
-    width: min(100%, 13.5rem);
-    min-height: 11rem;
-    margin-bottom: 0;
-  }
-
-  .location-page__preview-card {
-    min-width: 8.25rem;
-    padding: 0.55rem 0.7rem;
+  .location-page__btn--secondary {
+    box-shadow: none;
   }
 
   .location-page__shell {
     width: 100%;
+    padding-top: 0.35rem;
     padding-inline: max(var(--space-md), env(safe-area-inset-left, 0px))
       max(var(--space-md), env(safe-area-inset-right, 0px));
   }
@@ -904,14 +953,16 @@
   .location-page__toolbar {
     width: 100%;
     max-width: none;
-    margin-bottom: 0.45rem;
-    padding: 0.2rem 0 0.45rem;
+    margin-bottom: 0.4rem;
+    padding: 0.1rem 0 0.35rem;
   }
 
   .location-page__results-header {
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.5rem;
   }
+}
 
+@media (max-width: 767px) {
   .location-page__nearby-list {
     flex-wrap: nowrap;
     overflow-x: auto;

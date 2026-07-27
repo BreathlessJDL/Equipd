@@ -33,6 +33,13 @@ function LocationPageHero({ locationView, listingCount, loading, listingsAnchorI
           </h1>
           <p className="location-page__lead">{locationView.heroIntro}</p>
 
+          <p className="location-page__mobile-badge">
+            <span className="location-page__mobile-badge-pin" aria-hidden="true" />
+            <span className="location-page__mobile-badge-text">
+              {locationView.name} · {countLabel}
+            </span>
+          </p>
+
           <div className="location-page__hero-actions">
             <a
               href={LISTINGS_ANCHOR}

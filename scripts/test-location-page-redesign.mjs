@@ -12,6 +12,10 @@ async function inspectLocation(page, slug) {
     const layout = document.querySelector('.location-page__layout')
     const main = document.querySelector('.location-page__main')
     const sidebar = document.querySelector('.location-page__sidebar')
+    const preview = document.querySelector('.location-page__preview')
+    const badge = document.querySelector('.location-page__mobile-badge')
+    const previewStyle = preview ? getComputedStyle(preview) : null
+    const badgeStyle = badge ? getComputedStyle(badge) : null
     const heroBottom = hero ? hero.getBoundingClientRect().bottom : 0
     const listingsTop = main ? main.getBoundingClientRect().top : 0
     return {
@@ -19,7 +23,8 @@ async function inspectLocation(page, slug) {
       hasHero: Boolean(hero),
       heroHasListingCards: Boolean(hero?.querySelector('.listing-card')),
       heroHasNearbyPills: Boolean(hero?.querySelector('.location-page__nearby-pill, .location-page__area-pill')),
-      heroHasPreview: Boolean(document.querySelector('.location-page__preview')),
+      heroHasPreview: Boolean(preview),
+      previewVisible: Boolean(preview && previewStyle?.display !== 'none'),
       previewCity: document.querySelector('.location-page__preview-card-city')?.textContent?.trim() ?? null,
       previewHasPrices: /£/.test(document.querySelector('.location-page__preview')?.textContent || ''),
       previewHasEquipmentIcons: Boolean(
@@ -34,7 +39,8 @@ async function inspectLocation(page, slug) {
       heroIntro: document.querySelector('.location-page__lead')?.textContent?.trim() ?? null,
       h1: document.getElementById('location-page-title')?.textContent?.trim() ?? null,
       h1Count: document.querySelectorAll('h1').length,
-      countBadge: document.querySelector('.location-page__count-badge')?.textContent?.trim() ?? null,
+      mobileBadge: badge?.textContent?.replace(/\s+/g, ' ').trim() ?? null,
+      mobileBadgeVisible: Boolean(badge && badgeStyle?.display !== 'none'),
       previewCount: document.querySelector('.location-page__preview-card-count')?.textContent?.trim() ?? null,
       resultsTitle: document.querySelector('.location-page__results-title')?.textContent?.trim() ?? null,
       primaryCta: document.querySelector('.location-page__btn--primary')?.textContent?.trim() ?? null,
@@ -49,6 +55,7 @@ async function inspectLocation(page, slug) {
       hasSellerSection: Boolean(document.querySelector('.location-page__seller')),
       listingCards: document.querySelectorAll('.listing-card').length,
       listingsId: main?.id ?? null,
+      heroHeight: hero ? Math.round(hero.getBoundingClientRect().height) : 0,
       heroListingsGap: Math.round(listingsTop - heroBottom),
       sidebarOrder: [...(layout?.children ?? [])].map((el) => el.className),
       title: document.title,
@@ -72,7 +79,7 @@ await browser.close()
 
 console.log(JSON.stringify({ desktopLeeds, mobileLeeds }, null, 2))
 
-const ok = (state) =>
+const sharedOk = (state) =>
   !state.hasMap &&
   state.hasHero &&
   !state.heroHasListingCards &&
@@ -87,7 +94,6 @@ const ok = (state) =>
   Boolean(state.heroIntro?.includes('West Yorkshire') || state.heroIntro?.includes('40 miles')) &&
   state.h1 === 'Used gym equipment in Leeds' &&
   state.h1Count === 1 &&
-  state.countBadge == null &&
   Boolean(state.previewCount?.includes('listing')) &&
   Boolean(state.resultsTitle?.includes('in and around Leeds')) &&
   state.primaryCta === 'Browse Leeds listings' &&
@@ -110,8 +116,21 @@ const ok = (state) =>
   state.robots?.includes('index') &&
   !state.overflow
 
-if (!ok(desktopLeeds) || !ok(mobileLeeds)) {
-  console.error('FAIL: location page redesign checks')
+const desktopOk =
+  sharedOk(desktopLeeds) &&
+  desktopLeeds.previewVisible === true &&
+  desktopLeeds.mobileBadgeVisible === false
+
+const mobileOk =
+  sharedOk(mobileLeeds) &&
+  mobileLeeds.previewVisible === false &&
+  mobileLeeds.mobileBadgeVisible === true &&
+  Boolean(mobileLeeds.mobileBadge?.includes('Leeds')) &&
+  Boolean(mobileLeeds.mobileBadge?.includes('listing')) &&
+  mobileLeeds.heroHeight < 520
+
+if (!desktopOk || !mobileOk) {
+  console.error('FAIL: location page redesign checks', { desktopOk, mobileOk })
   process.exitCode = 1
 } else {
   console.log('PASS: location page redesign structure')
