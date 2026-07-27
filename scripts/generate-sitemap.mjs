@@ -24,6 +24,7 @@ import {
   shouldSplitSitemap,
   summarizeSitemapEntries,
 } from '../src/lib/listingSitemap.js'
+import { LOCATION_SLUGS, buildLocationPagePath } from '../src/lib/locations.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 function xmlEscape(value) {
@@ -179,6 +180,10 @@ async function main() {
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/help`))
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/sell-gym-equipment`))
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/buy-used-gym-equipment`))
+
+  for (const slug of LOCATION_SLUGS) {
+    entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}${buildLocationPagePath(slug)}`))
+  }
 
   for (const route of catalogueRoutes) {
     if (route.type === 'brands-index') {

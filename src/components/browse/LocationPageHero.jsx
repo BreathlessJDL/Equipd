@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
-import { getAreaNavigationHref, isAreaPillActive } from '../../lib/locations'
+import LocationHeroMarketplacePreview from './LocationHeroMarketplacePreview'
 
-function LocationPageHero({ locationView, listingCount, loading }) {
+const LISTINGS_ANCHOR = '#location-listings'
+
+function LocationPageHero({ locationView, listingCount, loading, listingsAnchorId = 'location-listings' }) {
   const countLabel =
     loading && listingCount === 0
       ? 'Loading local listings…'
@@ -9,64 +11,44 @@ function LocationPageHero({ locationView, listingCount, loading }) {
         ? '1 listing available'
         : `${listingCount} listings available`
 
-  const scopeCopy = locationView.selectedArea
-    ? `from sellers in ${locationView.selectedArea}`
-    : `from sellers across ${locationView.areaScopeText}`
-
-  const seoTail = ` Browse pre-owned treadmills, spin bikes, rowers, weights, racks and commercial gym kit ${scopeCopy} — with collection, seller delivery, or buyer-arranged courier options.`
+  const handleBrowseClick = (event) => {
+    event.preventDefault()
+    const target = document.getElementById(listingsAnchorId)
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    window.location.hash = LISTINGS_ANCHOR
+  }
 
   return (
     <section id="location-page-hero" className="location-page__hero" aria-labelledby="location-page-title">
       <div className="location-page__hero-glow" aria-hidden="true" />
-      <div className="location-page__hero-inner">
-        <p className="location-page__eyebrow">Local marketplace</p>
-        <h1 id="location-page-title" className="location-page__title">
-          {locationView.heading}
-        </h1>
-        <p className="location-page__subtitle location-page__subtitle--short">
-          {locationView.intro}
-        </p>
-        <p className="location-page__subtitle location-page__subtitle--seo">
-          {locationView.intro}
-          {seoTail}
-        </p>
+      <div className="location-page__hero-rail">
+        <div className="location-page__hero-copy">
+          <p className="location-page__eyebrow">Gym equipment near you</p>
+          <h1 id="location-page-title" className="location-page__title">
+            {locationView.headingPrefix}
+            <span className="location-page__title-accent">{locationView.headingAccent}</span>
+          </h1>
+          <p className="location-page__lead">{locationView.heroIntro}</p>
 
-        <div className="location-page__hero-meta">
-          <span className="location-page__count-badge">{countLabel}</span>
+          <div className="location-page__hero-actions">
+            <a
+              href={LISTINGS_ANCHOR}
+              className="location-page__btn location-page__btn--primary"
+              onClick={handleBrowseClick}
+            >
+              {locationView.browseCtaLabel}
+            </a>
+            <Link to="/valuation" className="location-page__btn location-page__btn--secondary">
+              Get a free valuation
+            </Link>
+            <span className="location-page__count-badge">{countLabel}</span>
+          </div>
         </div>
 
-        <div className="location-page__areas">
-          <p className="location-page__areas-label">Nearby areas</p>
-          <ul className="location-page__area-pills">
-            {locationView.areas.map((area) => {
-              const href = getAreaNavigationHref(area, locationView.slug)
-              const isActive = isAreaPillActive(area, locationView)
-              const isRegionPrimary =
-                area.toLowerCase() === locationView.regionName.toLowerCase()
-              const pillClassName = [
-                'location-page__area-pill',
-                isRegionPrimary && !locationView.selectedArea
-                  ? 'location-page__area-pill--primary'
-                  : '',
-                isActive ? 'location-page__area-pill--current' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')
-
-              return (
-                <li key={area}>
-                  <Link
-                    to={href}
-                    className={pillClassName}
-                    aria-current={isActive ? 'true' : undefined}
-                  >
-                    {area}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
+        <LocationHeroMarketplacePreview cityName={locationView.regionName} />
       </div>
     </section>
   )

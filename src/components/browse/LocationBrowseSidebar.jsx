@@ -1,52 +1,32 @@
-function LocationTrustIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M20 6 9.5 16.5 4 11"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-const LOCATION_TRUST_BENEFITS = [
-  'Inspect before collection',
-  'Secure Stripe checkout',
-  'Buyer Protection included',
-  'QR handover confirmation',
-]
+import { Link } from 'react-router-dom'
+import { BUYER_PROTECTION_HELP_PATH } from '../../lib/trustMessaging'
 
 function LocationBrowseSidebar({ locationView }) {
-  const scopeCopy = locationView.selectedArea
-    ? `${locationView.selectedArea} and nearby ${locationView.regionName} towns`
-    : `${locationView.regionName} and nearby towns`
-
   return (
     <aside
       className="location-page__sidebar"
-      aria-label={`Buying gym equipment near ${locationView.name}`}
+      aria-labelledby="location-guide-heading"
     >
       <div className="location-page__sidebar-card">
-        <h2 className="location-page__sidebar-title">
-          Buying used gym equipment near {locationView.name}
+        <h2 id="location-guide-heading" className="location-page__sidebar-title">
+          {locationView.guideHeading}
         </h2>
-        <p className="location-page__sidebar-lead">
-          Equipd connects you with local sellers across {scopeCopy}. Many listings offer
-          collection, seller delivery within their radius, or buyer-arranged courier once payment
-          is complete.
-        </p>
-        <ul className="location-page__trust-list">
-          {LOCATION_TRUST_BENEFITS.map((benefit) => (
-            <li key={benefit}>
-              <LocationTrustIcon />
-              <span>{benefit}</span>
+        <ol className="location-page__guide-list">
+          {(locationView.guideItems ?? []).map((item, index) => (
+            <li key={item.title} className="location-page__guide-item">
+              <span className="location-page__guide-mark" aria-hidden="true">
+                {index + 1}
+              </span>
+              <div className="location-page__guide-copy">
+                <h3 className="location-page__guide-item-title">{item.title}</h3>
+                <p className="location-page__guide-item-body">{item.body}</p>
+              </div>
             </li>
           ))}
-        </ul>
+        </ol>
+        <Link to={BUYER_PROTECTION_HELP_PATH} className="location-page__guide-link">
+          Learn more about Buyer Protection
+        </Link>
       </div>
     </aside>
   )

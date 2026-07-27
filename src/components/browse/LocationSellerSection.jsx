@@ -8,6 +8,12 @@ function LocationSellerSection({ locationView }) {
   return (
     <section className="location-page__seller" aria-labelledby="location-seller-title">
       <div className="location-page__seller-card">
+        <h2 id="location-about-title" className="location-page__seller-kicker">
+          Buying used gym equipment in {locationView.name}
+        </h2>
+        <p className="location-page__seller-seo">{locationView.seoBody}</p>
+        <p className="location-page__seller-seo">{locationView.intro}</p>
+
         <h2 id="location-seller-title" className="location-page__seller-title">
           Selling gym equipment in {locationView.name}?
         </h2>

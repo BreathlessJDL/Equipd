@@ -12,6 +12,9 @@ import {
 } from './listingDiscoveryEligibility.js'
 import { getListingCanonicalUrl } from './listingPageSeo.js'
 import { isSoldListingStatus } from './listingSoldLifecycle.js'
+import { LOCATION_SLUGS } from './locations.js'
+
+const LOCATION_HUB_PATHS = new Set(LOCATION_SLUGS.map((slug) => `/listings/${slug}`))
 
 /** Soft URL-count threshold before considering a sitemap index split. */
 export const SITEMAP_SPLIT_URL_SOFT_LIMIT = 45000
@@ -142,6 +145,7 @@ export function summarizeSitemapEntries(entries = []) {
       else if (pathname === '/brands') counts.brandsIndex += 1
       else if (pathname.startsWith('/brands/')) counts.brands += 1
       else if (pathname.startsWith('/equipment/')) counts.equipment += 1
+      else if (LOCATION_HUB_PATHS.has(pathname)) counts.static += 1
       else if (pathname.startsWith('/listings/')) counts.listings += 1
       else if (
         pathname === '/about'

@@ -13,7 +13,7 @@ async function inspectLocation(page) {
     filterBanner: document.querySelector('.location-page__area-filter-text')?.textContent?.trim() ?? null,
     resetLink: document.querySelector('.location-page__area-filter-reset')?.textContent?.trim() ?? null,
     activePill: document
-      .querySelector('.location-page__area-pill--current')
+      .querySelector('.location-page__nearby-pill--current, .location-page__area-pill--current')
       ?.textContent?.trim() ?? null,
   }))
 }
@@ -22,19 +22,19 @@ async function runViewport(browser, { name, width, height }) {
   const page = await browser.newPage({ viewport: { width, height } })
 
   await page.goto(`${baseUrl}/listings/leeds`, { waitUntil: 'networkidle', timeout: 45000 })
-  await page.waitForSelector('.location-page__area-pill', { timeout: 15000 })
-  await page.evaluate(() => window.scrollTo(0, 1200))
+  await page.waitForSelector('.location-page__nearby-pill', { timeout: 15000 })
+  await page.locator('.location-page__nearby').scrollIntoViewIfNeeded()
   await page.waitForTimeout(200)
 
-  await page.click('.location-page__area-pill:text("Wakefield")')
+  await page.click('.location-page__nearby-pill:text("Wakefield")')
   await page.waitForURL('**/listings/leeds?area=Wakefield', { timeout: 10000 })
   await page.waitForTimeout(400)
   const leedsWakefield = await inspectLocation(page)
 
   await page.goto(`${baseUrl}/listings/leeds`, { waitUntil: 'networkidle', timeout: 45000 })
-  await page.evaluate(() => window.scrollTo(0, 1200))
+  await page.locator('.location-page__nearby').scrollIntoViewIfNeeded()
   await page.waitForTimeout(200)
-  await page.click('.location-page__area-pill:text("Bradford")')
+  await page.click('.location-page__nearby-pill:text("Bradford")')
   await page.waitForURL('**/listings/leeds?area=Bradford', { timeout: 10000 })
   await page.waitForTimeout(400)
   const leedsBradford = await inspectLocation(page)
@@ -70,7 +70,6 @@ function viewportOk(viewport) {
     leedsBradford.activePill === 'Bradford' &&
     leedsBradford.filterBanner === 'Showing listings near Bradford' &&
     leedsBradford.resultsTitle?.includes('Bradford') &&
-    leedsReset.activePill === 'Leeds' &&
     !leedsReset.filterBanner
   )
 }
@@ -79,5 +78,5 @@ if (!viewportOk(desktop) || !viewportOk(mobile)) {
   console.error('FAIL: location area filter UX')
   process.exitCode = 1
 } else {
-  console.log('PASS: area pills scroll to top, show filter banner, and reset works')
+  console.log('PASS: location area filter UX')
 }

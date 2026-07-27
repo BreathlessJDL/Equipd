@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
 import LocationBrowseSidebar from '../components/browse/LocationBrowseSidebar'
 import LocationListingsResults from '../components/browse/LocationListingsResults'
+import LocationNearbySection from '../components/browse/LocationNearbySection'
 import LocationPageHero from '../components/browse/LocationPageHero'
 import LocationSellerSection from '../components/browse/LocationSellerSection'
 import MarketplaceBrowseShell from '../components/browse/MarketplaceBrowseShell'
@@ -16,11 +17,12 @@ import { useBrowseListings } from '../hooks/useBrowseListings'
 import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { buildLocationPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { fetchCategories } from '../lib/listings'
 import {
+  buildLocationPageMeta,
   getLocationPage,
   LOCATION_AREA_PARAM,
   parseLocationAreaParam,
@@ -46,9 +48,17 @@ function LocationListingsPage({ locationSlug }) {
     [region, selectedArea],
   )
 
-  usePageTitle(
-    locationView?.name ? `${locationView.name} Gym Equipment` : region?.name ? `${region.name} Gym Equipment` : null,
+  const pageMeta = useMemo(
+    () => (region ? buildLocationPageMeta(region, selectedArea) : null),
+    [region, selectedArea],
   )
+
+  usePageMeta({
+    title: pageMeta?.title,
+    description: pageMeta?.description,
+    canonicalPath: pageMeta?.canonicalPath,
+    robotsContent: pageMeta?.robotsContent,
+  })
 
   const breadcrumbSchema = useMemo(
     () => (region ? buildLocationPageBreadcrumbSchema(region) : null),
@@ -181,43 +191,45 @@ function LocationListingsPage({ locationSlug }) {
 
         <div className="location-page__shell">
           <div className="location-page__layout">
-            <div className="location-page__main">
-              <ListingBrowseFilters
-                idPrefix={`location-${region.slug}`}
-                categories={categories}
-                categoryId={browse.categoryId}
-                categoryIds={browse.categoryIds}
-                onCategoryChange={browse.setCategoryId}
-                onToggleCategoryId={browse.toggleCategoryId}
-                onClearCategories={browse.clearCategories}
-                condition={browse.condition}
-                conditions={browse.conditions}
-                onConditionChange={browse.setCondition}
-                onToggleCondition={browse.toggleCondition}
-                onClearConditions={browse.clearConditions}
-                brand={browse.brand}
-                brands={browse.brands}
-                onBrandChange={browse.setBrand}
-                onToggleBrand={browse.toggleBrand}
-                onClearBrands={browse.clearBrands}
-                sort={browse.sort}
-                onSortChange={browse.handleSortChange}
-                minPrice={browse.minPrice}
-                onMinPriceChange={browse.setMinPrice}
-                maxPrice={browse.maxPrice}
-                onMaxPriceChange={browse.setMaxPrice}
-                panelFilterCount={browse.panelFilterCount}
-                sortNotice={browse.sortNotice}
-                onApply={requestBrowseScroll}
-                onReset={handleResetFilters}
-              />
+            <div className="location-page__main" id="location-listings">
+              <div className="location-page__toolbar">
+                <ListingBrowseFilters
+                  idPrefix={`location-${region.slug}`}
+                  categories={categories}
+                  categoryId={browse.categoryId}
+                  categoryIds={browse.categoryIds}
+                  onCategoryChange={browse.setCategoryId}
+                  onToggleCategoryId={browse.toggleCategoryId}
+                  onClearCategories={browse.clearCategories}
+                  condition={browse.condition}
+                  conditions={browse.conditions}
+                  onConditionChange={browse.setCondition}
+                  onToggleCondition={browse.toggleCondition}
+                  onClearConditions={browse.clearConditions}
+                  brand={browse.brand}
+                  brands={browse.brands}
+                  onBrandChange={browse.setBrand}
+                  onToggleBrand={browse.toggleBrand}
+                  onClearBrands={browse.clearBrands}
+                  sort={browse.sort}
+                  onSortChange={browse.handleSortChange}
+                  minPrice={browse.minPrice}
+                  onMinPriceChange={browse.setMinPrice}
+                  maxPrice={browse.maxPrice}
+                  onMaxPriceChange={browse.setMaxPrice}
+                  panelFilterCount={browse.panelFilterCount}
+                  sortNotice={browse.sortNotice}
+                  onApply={requestBrowseScroll}
+                  onReset={handleResetFilters}
+                />
 
-              <BrowseActiveFilterChips
-                chips={browse.activeChips}
-                onRemove={handleRemoveFilterChip}
-                onReset={handleResetFilters}
-                showReset
-              />
+                <BrowseActiveFilterChips
+                  chips={browse.activeChips}
+                  onRemove={handleRemoveFilterChip}
+                  onReset={handleResetFilters}
+                  showReset
+                />
+              </div>
 
               <div ref={resultsRef}>
                 <LocationListingsResults
@@ -234,6 +246,7 @@ function LocationListingsPage({ locationSlug }) {
             <LocationBrowseSidebar locationView={locationView} />
           </div>
 
+          <LocationNearbySection locationView={locationView} />
           <LocationSellerSection locationView={locationView} />
         </div>
       </div>

@@ -86,8 +86,8 @@ function LocationListingsResults({
       <header className="location-page__results-header">
         <h2 className="location-page__results-title">
           {listings.length === 1
-            ? `1 listing near ${locationView.name}`
-            : `${listings.length} listings near ${locationView.name}`}
+            ? `1 listing in ${locationView.name}`
+            : `${listings.length} listings in ${locationView.name}`}
         </h2>
       </header>
       <div
