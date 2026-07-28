@@ -226,6 +226,7 @@ function WantedRequestModal({ open, draft, onClose }) {
       const next = { ...prev }
       delete next.manualBrand
       delete next.manualModelName
+      delete next.equipment
       return next
     })
   }
@@ -242,8 +243,53 @@ function WantedRequestModal({ open, draft, onClose }) {
       imageUrl,
       productName: getEquipmentProductDisplayName(nextProduct),
     })
+
+    // Catalogue validity depends on a selected product identifier, not typed text.
+    if (!summary?.productId && !summary?.canonicalProductKey) {
+      setProduct(null)
+      setErrors((prev) => ({
+        ...prev,
+        equipment: 'Select equipment from the catalogue, or enter it manually.',
+      }))
+      return
+    }
+
     setProduct(summary)
-    setEquipmentQuery(summary?.productName || '')
+    setEquipmentQuery(summary.productName || '')
+    setErrors((prev) => {
+      if (!prev.equipment && !prev.manualBrand && !prev.manualModelName) return prev
+      const next = { ...prev }
+      delete next.equipment
+      delete next.manualBrand
+      delete next.manualModelName
+      return next
+    })
+  }
+
+  function handleEquipmentQueryChange(nextValue) {
+    const next = String(nextValue ?? '')
+    setEquipmentQuery(next)
+
+    // Keep selection when autocomplete writes back the selected display name after pick.
+    // Clear selection only when the typed text no longer matches the selected product.
+    setProduct((current) => {
+      if (!current) return current
+      const selectedName = String(current.productName || '').trim()
+      if (next.trim() === selectedName) return current
+      return null
+    })
+    setSelectedCatalogProduct((current) => {
+      if (!current) return current
+      const selectedName = getEquipmentProductDisplayName(current).trim()
+      if (next.trim() === selectedName) return current
+      return null
+    })
+  }
+
+  function clearCatalogueSelection() {
+    setSelectedCatalogProduct(null)
+    setProduct(null)
+    setEquipmentQuery('')
     setErrors((prev) => {
       if (!prev.equipment) return prev
       const next = { ...prev }
@@ -474,32 +520,29 @@ function WantedRequestModal({ open, draft, onClose }) {
                     <label className="wanted-request-modal__label" htmlFor={fieldIds.equipment}>
                       Equipment
                     </label>
+                    <CanonicalEquipmentAutocomplete
+                      id={fieldIds.equipment}
+                      value={equipmentQuery}
+                      onChange={handleEquipmentQueryChange}
+                      selectedProduct={selectedCatalogProduct}
+                      onSelectedProductChange={handleCatalogProductChange}
+                      placeholder={
+                        draft?.brand ? `Search ${draft.brand} models…` : 'Search brand or model…'
+                      }
+                      inputClassName="wanted-request-modal__input"
+                      showImages
+                    />
                     {product ? (
-                      <input
-                        id={fieldIds.equipment}
-                        className="wanted-request-modal__input"
-                        value={product.productName}
-                        readOnly
-                        data-wanted-initial-focus
-                      />
-                    ) : (
-                      <CanonicalEquipmentAutocomplete
-                        id={fieldIds.equipment}
-                        value={equipmentQuery}
-                        onChange={(next) => {
-                          setEquipmentQuery(next)
-                          setSelectedCatalogProduct(null)
-                          setProduct(null)
-                        }}
-                        selectedProduct={selectedCatalogProduct}
-                        onSelectedProductChange={handleCatalogProductChange}
-                        placeholder={
-                          draft?.brand ? `Search ${draft.brand} models…` : 'Search brand or model…'
-                        }
-                        inputClassName="wanted-request-modal__input"
-                        showImages
-                      />
-                    )}
+                      <div className="wanted-request-modal__selection-actions">
+                        <button
+                          type="button"
+                          className="wanted-request-modal__mode-link"
+                          onClick={clearCatalogueSelection}
+                        >
+                          Clear selection
+                        </button>
+                      </div>
+                    ) : null}
                     {errors.equipment ? (
                       <p className="wanted-request-modal__error" role="alert">
                         {errors.equipment}

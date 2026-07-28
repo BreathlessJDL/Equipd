@@ -93,6 +93,11 @@ export function parseWantedRequestBudget(raw) {
   return { value: amount, error: null }
 }
 
+export function isWantedRequestCatalogueSelectionValid(product) {
+  if (!product || typeof product !== 'object') return false
+  return Boolean(product.productId || product.canonicalProductKey)
+}
+
 /**
  * @param {WantedRequestFormValues} values
  * @param {{ requireEmail?: boolean, source?: string }} [options]
@@ -109,7 +114,7 @@ export function validateWantedRequestForm(values, options = {}) {
   const errors = {}
 
   if (entryMode === WANTED_REQUEST_ENTRY_MODES.CATALOGUE) {
-    if (!values.product?.productId && !values.product?.canonicalProductKey) {
+    if (!isWantedRequestCatalogueSelectionValid(values.product)) {
       errors.equipment = 'Select equipment from the catalogue, or enter it manually.'
     }
   } else {

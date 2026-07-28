@@ -20,6 +20,10 @@ import {
   formatWantedRequestRadius,
   sanitizeWantedRequestPlainText,
 } from '../supabase/functions/_shared/wantedRequestEmail.js'
+import {
+  buildSendGridPayload,
+  enrichDynamicData,
+} from '../supabase/functions/_shared/transactionalEmailCore.js'
 
 assert.equal(EMAIL_TEMPLATE_KEYS.equipment_request, 'SENDGRID_TEMPLATE_EQUIPMENT_REQUEST')
 assert.deepEqual(EMAIL_TEMPLATE_REQUIRED_FIELDS.equipment_request, [
@@ -121,6 +125,24 @@ assert.equal(support.cta_url, '')
 assert.equal(support.secondary_text, '')
 assert.equal(support.secondary_url, '')
 
+const enrichedBuyer = enrichDynamicData(buyer, () => '')
+const mailPayload = buildSendGridPayload({
+  recipients: ['buyer@example.com'],
+  templateId: 'd-test-template',
+  dynamicTemplateData: enrichedBuyer,
+  from: { email: 'notifications@equipd.co.uk', name: 'Equipd' },
+  replyTo: { email: 'support@equipd.co.uk' },
+})
+assert.equal(mailPayload.subject, "We've received your wanted equipment request")
+assert.equal(
+  mailPayload.personalizations[0].subject,
+  "We've received your wanted equipment request",
+)
+assert.equal(
+  mailPayload.personalizations[0].dynamic_template_data.subject,
+  "We've received your wanted equipment request",
+)
+
 assert.equal(
   buildEquipmentRequestIdempotencyKey('buyer', 'abc'),
   'equipment_request:buyer:abc',
@@ -149,6 +171,8 @@ const modalSource = readFileSync(
   'utf8',
 )
 assert.match(modalSource, /createWantedRequest/)
+assert.match(modalSource, /handleEquipmentQueryChange/)
+assert.doesNotMatch(modalSource, /setProduct\(null\)\s*\n\s*setSelectedCatalogProduct\(null\)\s*\n\s*\}\)/)
 assert.doesNotMatch(modalSource, /UI-only stage/)
 
 const clientLib = readFileSync(join(process.cwd(), 'src/lib/wantedRequests.js'), 'utf8')

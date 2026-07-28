@@ -235,6 +235,10 @@
   color: #b42318;
 }
 
+.wanted-request-modal__selection-actions {
+  margin-top: 0.35rem;
+}
+
 .wanted-request-modal__mode-link,
 .wanted-request-modal__suggest {
   display: inline-flex;
