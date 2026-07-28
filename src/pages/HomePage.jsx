@@ -8,6 +8,7 @@ import HomeEquipmentValuator from '../components/home/HomeEquipmentValuator'
 import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
 import HomeRecentListings from '../components/home/HomeRecentListings'
 import HomeReviewsSection from '../components/home/HomeReviewsSection'
+import HomepageWantedRequestFloatingTrigger from '../components/wanted/HomepageWantedRequestFloatingTrigger'
 import '../components/home/HomePage.css'
 import '../components/ListingBrowse.css'
 import '../components/browse/BrowseActiveFilterChips.css'
@@ -202,13 +203,6 @@ function HomePage() {
     <div className={`home-page${isLoggedIn ? ' home-page--feed' : ''}`}>
       {!isLoggedIn ? <HomeHero /> : null}
 
-      <HomeEquipmentValuator
-        className={[
-          'home-valuator--compact-mobile',
-          isLoggedIn ? 'home-valuator--signed-in' : '',
-        ].filter(Boolean).join(' ')}
-      />
-
       {!isLoggedIn ? (
         <HomeRecentListings
           listings={recentListings}
@@ -216,6 +210,13 @@ function HomePage() {
           error={recentError}
         />
       ) : null}
+
+      <HomeEquipmentValuator
+        className={[
+          'home-valuator--compact-mobile',
+          isLoggedIn ? 'home-valuator--signed-in' : '',
+        ].filter(Boolean).join(' ')}
+      />
 
       <section id="browse" className={`home-browse${isLoggedIn ? ' home-browse--feed' : ''}`}>
         <div className="home-section__inner">
@@ -279,6 +280,10 @@ function HomePage() {
               emptyFilteredMessage={BROWSE_FILTER_EMPTY_MESSAGE}
               variant="home"
               showSectionHeader={false}
+              searchTerm={browse.search}
+              brand={browse.brands?.[0] || browse.brand || ''}
+              locationLabel={browse.locationSearch || ''}
+              onClearFilters={browse.resetFilters}
             />
           </div>
         </div>
@@ -293,6 +298,8 @@ function HomePage() {
           error={reviewsError}
         />
       ) : null}
+
+      <HomepageWantedRequestFloatingTrigger />
     </div>
   )
 }

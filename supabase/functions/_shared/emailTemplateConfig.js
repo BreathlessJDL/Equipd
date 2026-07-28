@@ -31,6 +31,7 @@ export const EMAIL_TEMPLATE_KEYS = {
   welcome: 'SENDGRID_TEMPLATE_WELCOME',
   email_changed: 'SENDGRID_TEMPLATE_EMAIL_CHANGED',
   password_changed: 'SENDGRID_TEMPLATE_PASSWORD_CHANGED',
+  equipment_request: 'SENDGRID_TEMPLATE_EQUIPMENT_REQUEST',
 }
 
 /** Required dynamic_template_data fields per template (expand as templates are built). */
@@ -184,6 +185,15 @@ export const EMAIL_TEMPLATE_CONTENT_FIELDS = {
   welcome: ['recipient_first_name'],
   email_changed: ['recipient_first_name', 'new_email'],
   password_changed: ['recipient_first_name'],
+  equipment_request: [
+    'first_name',
+    'equipment_name',
+    'location',
+    'radius',
+    'maximum_budget',
+    'condition_preference',
+    'notes',
+  ],
 }
 
 export const EMAIL_TEMPLATE_REQUIRED_FIELDS = {
@@ -212,6 +222,10 @@ export const EMAIL_TEMPLATE_REQUIRED_FIELDS = {
   welcome: LAYOUT_REQUIRED_FIELDS,
   email_changed: LAYOUT_REQUIRED_FIELDS,
   password_changed: LAYOUT_REQUIRED_FIELDS,
+  // Equipment-request template uses specialized fields (not layout body).
+  // subject is required for the SendGrid personalization subject line.
+  // cta_text/cta_url may be empty for the internal support copy.
+  equipment_request: ['subject', 'preheader', 'title'],
 }
 
 export function listEmailTemplateKeys() {

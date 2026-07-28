@@ -78,8 +78,24 @@ Each template key maps to an environment variable holding the SendGrid template 
 | `refund_completed` | `SENDGRID_TEMPLATE_REFUND_COMPLETED` |
 | `case_closed` | `SENDGRID_TEMPLATE_CASE_CLOSED` |
 | `payout_released` | `SENDGRID_TEMPLATE_PAYOUT_RELEASED` |
+| `equipment_request` | `SENDGRID_TEMPLATE_EQUIPMENT_REQUEST` |
 
 Config source: `supabase/functions/_shared/emailTemplateConfig.js` (re-exported from `emails/templateConfig.js`).
+
+### Wanted equipment request emails
+
+`create-wanted-request` sends **two** messages with the same dynamic template (`equipment_request` / `SENDGRID_TEMPLATE_EQUIPMENT_REQUEST`):
+
+1. Buyer confirmation (no `buyer_email` field)
+2. Equipd support notification to `support@equipd.co.uk` (includes `buyer_email`)
+
+Set the template secret on the Edge Function environment (never `VITE_*`):
+
+```bash
+supabase secrets set SENDGRID_TEMPLATE_EQUIPMENT_REQUEST=d-xxxxxxxx
+```
+
+Also ensure existing SendGrid sender secrets are present (`SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, `SENDGRID_FROM_NAME`, `SENDGRID_REPLY_TO_EMAIL`).
 
 ### Supabase Edge Functions
 

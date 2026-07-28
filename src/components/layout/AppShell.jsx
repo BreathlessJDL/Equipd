@@ -7,6 +7,7 @@ import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
 import SiteStructuredData from '../seo/SiteStructuredData'
 import GlobalSiteHeader from './GlobalSiteHeader'
 import SiteFooter from './SiteFooter'
+import { WantedRequestProvider } from '../wanted/WantedRequestContext'
 import './AppShell.css'
 
 function AppShell() {
@@ -82,26 +83,28 @@ function AppShell() {
   )
 
   return (
-    <div className="app-shell app-shell--home">
-      <SiteStructuredData />
-      <GlobalSiteHeader {...headerConfig} />
+    <WantedRequestProvider>
+      <div className="app-shell app-shell--home">
+        <SiteStructuredData />
+        <GlobalSiteHeader {...headerConfig} />
 
-      <main
-        className={`app-shell__main${
-          usesBrowseShellFooter || isMarketingLandingRoutePage ? ' app-shell__main--home' : ''
-        }${isEquipmentProductRoute ? ' app-shell__main--equipment' : ''}${
-          isBrandsRoute ? ' app-shell__main--brands' : ''
-        }${isMarketingLandingRoutePage ? ' app-shell__main--sell' : ''}${
-          isListingDetailRoute ? ' app-shell__main--listing-detail' : ''
-        }${isValuationRoute ? ' app-shell__main--valuation' : ''}${
-          hideSiteFooter ? ' app-shell__main--messages' : ''
-        }`}
-      >
-        <Outlet context={outletContext} />
-      </main>
+        <main
+          className={`app-shell__main${
+            usesBrowseShellFooter || isMarketingLandingRoutePage ? ' app-shell__main--home' : ''
+          }${isEquipmentProductRoute ? ' app-shell__main--equipment' : ''}${
+            isBrandsRoute ? ' app-shell__main--brands' : ''
+          }${isMarketingLandingRoutePage ? ' app-shell__main--sell' : ''}${
+            isListingDetailRoute ? ' app-shell__main--listing-detail' : ''
+          }${isValuationRoute ? ' app-shell__main--valuation' : ''}${
+            hideSiteFooter ? ' app-shell__main--messages' : ''
+          }`}
+        >
+          <Outlet context={outletContext} />
+        </main>
 
-      <SiteFooter />
-    </div>
+        <SiteFooter />
+      </div>
+    </WantedRequestProvider>
   )
 }
 

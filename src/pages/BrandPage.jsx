@@ -4,6 +4,7 @@ import BrandLogo from '../components/BrandLogo'
 import EquipmentValueGuideCard from '../components/EquipmentValueGuideCard'
 import JsonLd from '../components/JsonLd'
 import ListingCard from '../components/ListingCard'
+import { BrandWantedRequestCard } from '../components/wanted/WantedRequestSurfaces'
 import PageBreadcrumbs from '../components/PageBreadcrumbs'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
@@ -466,8 +467,23 @@ export default function BrandPage() {
                 ))}
               </div>
             </div>
+            <div className="brand-page__wanted-wrap">
+              <BrandWantedRequestCard brandName={brand.displayName} />
+            </div>
           </section>
-        ) : null}
+        ) : (
+          <section
+            className="brand-page__section brand-page__section--marketplace"
+            aria-labelledby="brand-wanted-title"
+          >
+            <h2 id="brand-wanted-title" className="visually-hidden">
+              Request {brand.displayName} equipment
+            </h2>
+            <div className="brand-page__wanted-wrap">
+              <BrandWantedRequestCard brandName={brand.displayName} />
+            </div>
+          </section>
+        )}
 
         <section className="brand-page__section brand-page__section--about" aria-labelledby="brand-about-title">
           <div className="brand-page__about-grid">

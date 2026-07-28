@@ -1,4 +1,9 @@
 import ListingCard from './ListingCard'
+import {
+  WantedRequestEmptyState,
+  WantedRequestLowStockBanner,
+} from './wanted/WantedRequestSurfaces'
+import { isWantedRequestLowStockCount } from '../lib/wantedRequestConstants'
 
 function ListingBrowseResults({
   loading,
@@ -13,6 +18,11 @@ function ListingBrowseResults({
   variant = 'home',
   sectionTitle = 'Available equipment',
   showSectionHeader = true,
+  searchTerm = '',
+  brand = '',
+  locationLabel = '',
+  onClearFilters = null,
+  showWantedRequestCtas = true,
 }) {
   if (loading && listings.length === 0) {
     return (
@@ -29,12 +39,30 @@ function ListingBrowseResults({
   }
 
   if (listings.length === 0) {
+    if (showWantedRequestCtas) {
+      return (
+        <WantedRequestEmptyState
+          hasFilters={hasFilters}
+          onClearFilters={onClearFilters}
+          searchTerm={searchTerm}
+          brand={brand}
+          location={locationLabel}
+        />
+      )
+    }
+
     return (
       <p className="listing-browse__message listing-browse__message--empty">
         {hasFilters ? emptyFilteredMessage : emptyMessage}
       </p>
     )
   }
+
+  const showLowStockBanner =
+    showWantedRequestCtas &&
+    !loading &&
+    !hasMore &&
+    isWantedRequestLowStockCount(listings.length)
 
   const loadMoreFooter =
     hasMore || loadingMore ? (
@@ -56,6 +84,14 @@ function ListingBrowseResults({
       </div>
     ) : null
 
+  const lowStockBanner = showLowStockBanner ? (
+    <WantedRequestLowStockBanner
+      searchTerm={searchTerm}
+      brand={brand}
+      location={locationLabel}
+    />
+  ) : null
+
   if (variant !== 'row') {
     return (
       <div className="listing-browse__results">
@@ -69,6 +105,7 @@ function ListingBrowseResults({
             <ListingCard key={listing.id} listing={listing} variant="home" />
           ))}
         </div>
+        {lowStockBanner}
         {loadMoreFooter}
       </div>
     )
@@ -86,6 +123,7 @@ function ListingBrowseResults({
           <ListingCard key={listing.id} listing={listing} variant="row" />
         ))}
       </div>
+      {lowStockBanner}
       {loadMoreFooter}
     </div>
   )

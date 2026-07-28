@@ -18,6 +18,7 @@ import {
   filterHubPurchasesInProgressOffers,
   groupListingsByTab,
 } from '../components/hub/HubSectionContent'
+import WantedRequestsHubSection from '../components/wanted/WantedRequestsHubSection'
 import '../components/Hub.css'
 import '../components/ListingBrowse.css'
 import { useHubScrollRestoration, scrollHubToTop } from '../hooks/useHubScrollRestoration'
@@ -924,6 +925,8 @@ function HubPage() {
             savedError={savedError}
           />
         )
+      case 'wanted':
+        return <WantedRequestsHubSection />
       case 'reviews':
         return (
           <HubReviewsSection

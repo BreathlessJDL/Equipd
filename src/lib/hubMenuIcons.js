@@ -7,6 +7,7 @@ export const HUB_MENU_ICON_FILES = {
   offers: 'my offers icon menu.png',
   orders: 'orders icon menu.png',
   saved: 'saved icon menu.png',
+  wanted: 'saved icon menu.png',
   reviews: 'reviews icon menu.png',
   settings: 'settings icon menu.png',
 }

@@ -263,7 +263,8 @@ create index listing_images_listing_sort_idx
 
 create table public.wanted_requests (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles (id) on delete cascade,
+  user_id uuid references public.profiles (id) on delete cascade,
+  contact_email text,
   title text not null,
   description text,
   category_id uuid references public.categories (id) on delete set null,
@@ -303,6 +304,14 @@ create index wanted_requests_user_status_idx
 
 create index wanted_requests_status_created_at_idx
   on public.wanted_requests (status, created_at desc);
+
+create index wanted_requests_contact_email_created_idx
+  on public.wanted_requests (contact_email, created_at desc)
+  where contact_email is not null;
+
+create unique index wanted_requests_criteria_client_request_id_uidx
+  on public.wanted_requests ((criteria ->> 'clientRequestId'))
+  where (criteria ? 'clientRequestId');
 
 create trigger wanted_requests_set_updated_at
   before update on public.wanted_requests

@@ -46,6 +46,10 @@ const MOBILE_MARKETPLACE_NAV = [
     title: 'Saved listings',
   },
   {
+    section: 'wanted',
+    title: 'My Wanted Equipment',
+  },
+  {
     section: 'reviews',
     title: 'Reviews',
   },

@@ -580,14 +580,15 @@
   .equipment-model-page__media { order: 1; }
   .equipment-model-page__identity { order: 2; }
   .equipment-model-page__valuation { order: 3; }
-  .equipment-model-page__consoles { order: 4; }
-  .equipment-model-page__overview { order: 5; }
-  .equipment-model-page__generated-about { order: 6; }
-  .equipment-model-page__graph { order: 7; }
-  .equipment-model-page__generated-faq { order: 8; }
-  .equipment-model-page__related { order: 9; }
-  .equipment-model-page__explore { order: 9; }
-  .equipment-model-page__disclaimer { order: 10; }
+  .equipment-model-page__marketplace { order: 4; }
+  .equipment-model-page__consoles { order: 5; }
+  .equipment-model-page__overview { order: 6; }
+  .equipment-model-page__generated-about { order: 7; }
+  .equipment-model-page__graph { order: 8; }
+  .equipment-model-page__generated-faq { order: 9; }
+  .equipment-model-page__related { order: 10; }
+  .equipment-model-page__explore { order: 10; }
+  .equipment-model-page__disclaimer { order: 11; }
 
   .equipment-model-page__image,
   .equipment-model-page__image-placeholder {

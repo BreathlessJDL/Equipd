@@ -542,6 +542,10 @@
   -webkit-line-clamp: 2;
 }
 
+.brand-page__wanted-wrap {
+  margin-top: 1.15rem;
+}
+
 /* ── About + FAQ ────────────────────────────────────────── */
 
 .brand-page__about-grid {

@@ -6,6 +6,7 @@ export const HUB_SECTIONS = {
   offers: { id: 'offers', label: 'My offers' },
   orders: { id: 'orders', label: 'Orders' },
   saved: { id: 'saved', label: 'Saved listings' },
+  wanted: { id: 'wanted', label: 'My Wanted Equipment' },
   reviews: { id: 'reviews', label: 'Reviews' },
   settings: { id: 'settings', label: 'Settings', href: '/settings' },
 }
@@ -18,6 +19,7 @@ export const HUB_SECTION_LEADS = {
   offers: 'Offers you have made as a buyer. Respond to incoming offers in Selling.',
   orders: 'Purchases and sales — track in progress and completed orders.',
   saved: 'Equipment you have saved for later.',
+  wanted: 'Equipment you’ve asked to be notified about when it becomes available.',
   reviews: 'Feedback from completed transactions.',
 }
 

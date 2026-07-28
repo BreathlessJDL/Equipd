@@ -79,6 +79,7 @@ function App() {
           <Route element={<AppShell />}>
             <Route index element={<HomePage />} />
             <Route path="browse" element={<BrowsePage />} />
+            <Route path="wanted" element={<Navigate to="/hub?section=wanted" replace />} />
             <Route path="brands" element={<BrandsPage />} />
             <Route path="brands/:brandSlug" element={<BrandPage />} />
             <Route

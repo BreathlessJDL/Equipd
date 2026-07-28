@@ -178,6 +178,10 @@ function BrowsePage() {
               emptyMessage="No active listings yet. Check back soon or list your own equipment."
               emptyFilteredMessage={BROWSE_FILTER_EMPTY_MESSAGE}
               variant="home"
+              searchTerm={browse.search}
+              brand={browse.brands?.[0] || browse.brand || ''}
+              locationLabel={browse.locationSearch || ''}
+              onClearFilters={browse.resetFilters}
             />
           </div>
 

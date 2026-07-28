@@ -29,6 +29,14 @@ import EquipmentConsoleVariantCards from '../components/equipment/EquipmentConso
 import RelatedEquipmentCard from '../components/equipment/RelatedEquipmentCard'
 import ListingCard from '../components/ListingCard'
 import {
+  WantedRequestCard,
+  WantedRequestSecondaryCta,
+} from '../components/wanted/WantedRequestSurfaces'
+import { toWantedRequestProductSummary } from '../lib/wantedRequestTypes'
+import {
+  isWantedRequestLowStockCount,
+} from '../lib/wantedRequestConstants'
+import {
   EquipmentProductAboutSection,
   EquipmentProductFaqSection,
 } from '../components/equipment/EquipmentProductContentSections'
@@ -166,6 +174,7 @@ function EquipmentModelPage() {
   const [pageContent, setPageContent] = useState(null)
   const [relatedEntries, setRelatedEntries] = useState([])
   const [marketplaceListings, setMarketplaceListings] = useState([])
+  const [marketplaceListingsReady, setMarketplaceListingsReady] = useState(false)
   const [actualManufactureYear, setActualManufactureYear] = useState('')
   const [consoleName, setConsoleName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -369,15 +378,18 @@ function EquipmentModelPage() {
   useEffect(() => {
     if (!product) {
       setMarketplaceListings([])
+      setMarketplaceListingsReady(false)
       return undefined
     }
 
     let active = true
+    setMarketplaceListingsReady(false)
 
     async function loadMarketplaceListings() {
       const { data } = await fetchActiveListingsForMappedEquipmentProduct(product, { limit: 8 })
       if (!active) return
       setMarketplaceListings(data ?? [])
+      setMarketplaceListingsReady(true)
     }
 
     loadMarketplaceListings()
@@ -662,9 +674,33 @@ function EquipmentModelPage() {
                 </li>
               ))}
             </ul>
+            {isWantedRequestLowStockCount(marketplaceListings.length) ? (
+              <WantedRequestSecondaryCta
+                product={toWantedRequestProductSummary(product, {
+                  imageUrl: productImageUrl,
+                  productName: displayName,
+                })}
+              />
+            ) : null}
             <p className="equipment-model-page__marketplace-browse">
               <Link to="/browse">Browse all marketplace listings</Link>
             </p>
+          </section>
+        ) : marketplaceListingsReady ? (
+          <section
+            className="equipment-model-page__marketplace"
+            aria-labelledby="equipment-wanted-title"
+          >
+            <h2 id="equipment-wanted-title" className="visually-hidden">
+              Request this equipment
+            </h2>
+            <WantedRequestCard
+              productName={displayName}
+              product={toWantedRequestProductSummary(product, {
+                imageUrl: productImageUrl,
+                productName: displayName,
+              })}
+            />
           </section>
         ) : null}
 
