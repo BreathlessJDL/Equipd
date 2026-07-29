@@ -1,6 +1,10 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import CanonicalEquipmentAutocomplete from '../CanonicalEquipmentAutocomplete'
 import { useAuth } from '../../hooks/useAuth'
+import { useGooglePlacesAutocomplete } from '../../hooks/useGooglePlacesAutocomplete'
+import {
+  mapGooglePlaceToListingLocation,
+} from '../../lib/listingLocation'
 import {
   WANTED_REQUEST_CONDITION_OPTIONS,
   WANTED_REQUEST_DEFAULT_CONDITION,
@@ -25,6 +29,7 @@ import {
 } from '../../lib/wantedRequestTypes'
 import { WantedBellIcon } from './WantedRequestIcons'
 import '../auth/AuthModal.css'
+import '../shared/googlePlacesPac.css'
 import './WantedRequestModal.css'
 
 function getFocusableElements(root) {
@@ -102,6 +107,88 @@ function buildInitialState(draft, userEmail) {
   }
 }
 
+function WantedLocationInput({ id, value, onLocationChange, onPlaceSelected, className }) {
+  const createAutocomplete = useCallback(
+    (google, input) =>
+      new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'gb' },
+        fields: ['address_components', 'geometry', 'formatted_address', 'name'],
+        types: ['geocode'],
+      }),
+    [],
+  )
+
+  const handlePlaceChanged = useCallback(
+    (place, { input, setLoadError, hideDropdown }) => {
+      if (!place?.geometry?.location) {
+        setLoadError('Select a location from the suggestions.')
+        return
+      }
+
+      const mapped = mapGooglePlaceToListingLocation(place)
+      if (input) {
+        input.value = mapped.displayLabel
+      }
+      onLocationChange(mapped.displayLabel)
+      onPlaceSelected(mapped)
+      hideDropdown()
+      setLoadError('')
+    },
+    [onLocationChange, onPlaceSelected],
+  )
+
+  const {
+    inputRef,
+    loadError,
+    placesStatus,
+    handleInputFocus,
+    handleInputBlur,
+    syncInputValue,
+    handleInputChange,
+  } = useGooglePlacesAutocomplete({
+    createAutocomplete,
+    onPlaceChanged: handlePlaceChanged,
+  })
+
+  useEffect(() => {
+    syncInputValue(value)
+  }, [value, syncInputValue])
+
+  function handleChange(event) {
+    handleInputChange(event, (nextValue) => {
+      onLocationChange(nextValue)
+      onPlaceSelected(null)
+    })
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        id={id}
+        className={className}
+        type="text"
+        autoComplete="off"
+        defaultValue={value ?? ''}
+        onChange={handleChange}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
+        placeholder="e.g. London, SW1 or nationwide"
+      />
+      {placesStatus === 'unconfigured' ? (
+        <p className="wanted-request-modal__hint">
+          Location suggestions are unavailable.
+        </p>
+      ) : null}
+      {placesStatus === 'failed' && loadError ? (
+        <p className="wanted-request-modal__error" role="alert">
+          {loadError}
+        </p>
+      ) : null}
+    </>
+  )
+}
+
 function WantedRequestModal({ open, draft, onClose }) {
   const { user } = useAuth()
   const titleId = useId()
@@ -116,6 +203,8 @@ function WantedRequestModal({ open, draft, onClose }) {
   const [manualModelName, setManualModelName] = useState(initial.manualModelName)
   const [manualEquipmentType, setManualEquipmentType] = useState(initial.manualEquipmentType)
   const [location, setLocation] = useState(initial.location)
+  const locationPlaceRef = useRef(null)
+  const setLocationPlace = useCallback((place) => { locationPlaceRef.current = place }, [])
   const [radius, setRadius] = useState(initial.radius)
   const [maximumBudget, setMaximumBudget] = useState(initial.maximumBudget)
   const [conditionPreference, setConditionPreference] = useState(initial.conditionPreference)
@@ -414,7 +503,7 @@ function WantedRequestModal({ open, draft, onClose }) {
         ) : (
           <>
             <h2 id={titleId} className="wanted-request-modal__title">
-              {isManual ? 'Request equipment' : 'Request this equipment'}
+              Request equipment
             </h2>
             {isManual ? (
               <p className="wanted-request-modal__lead">
@@ -585,13 +674,12 @@ function WantedRequestModal({ open, draft, onClose }) {
                 <label className="wanted-request-modal__label" htmlFor={fieldIds.location}>
                   Location
                 </label>
-                <input
+                <WantedLocationInput
                   id={fieldIds.location}
                   className="wanted-request-modal__input"
                   value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                  placeholder="e.g. London, SW1 or nationwide"
-                  autoComplete="address-level2"
+                  onLocationChange={setLocation}
+                  onPlaceSelected={setLocationPlace}
                 />
               </div>
 
