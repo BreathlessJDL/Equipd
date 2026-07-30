@@ -39,6 +39,15 @@ import HelpArticlePage from './pages/HelpArticlePage'
 import PriceGuidePage from './pages/PriceGuidePage'
 import SellRedirectPage from './pages/SellRedirectPage'
 import BuyUsedGymEquipmentPage from './pages/BuyUsedGymEquipmentPage'
+import CommercialGymEquipmentPage from './pages/CommercialGymEquipmentPage'
+import CommercialCardioEquipmentPage from './pages/CommercialCardioEquipmentPage'
+import CommercialStrengthEquipmentPage from './pages/CommercialStrengthEquipmentPage'
+import HomeGymEquipmentPage from './pages/HomeGymEquipmentPage'
+import HomeCardioEquipmentPage from './pages/HomeCardioEquipmentPage'
+import HomeStrengthEquipmentPage from './pages/HomeStrengthEquipmentPage'
+import RefurbishedCommercialGymEquipmentPage from './pages/RefurbishedCommercialGymEquipmentPage'
+import RefurbishedHomeGymEquipmentPage from './pages/RefurbishedHomeGymEquipmentPage'
+import { EquipmentLandingPageById } from './pages/EquipmentLandingPage'
 import SellGymEquipmentPage from './pages/SellGymEquipmentPage'
 import ValuationPage from './pages/ValuationPage'
 import SupportFlowPage from './pages/SupportFlowPage'
@@ -62,6 +71,7 @@ import ShopRoutePage from './pages/ShopRoutePage'
 import SavedListingsPage from './pages/SavedListingsPage'
 import SignupPage from './pages/SignupPage'
 import { LOCATION_SLUGS } from './lib/locations'
+import { EQUIPMENT_LANDING_DEFS_VALIDATED } from './lib/equipmentLandingDefs.js'
 import { BUYER_PROTECTION_HELP_PATH } from './lib/trustMessaging'
 import './styles/global.css'
 
@@ -93,6 +103,27 @@ function App() {
             <Route path="valuation" element={<ValuationPage />} />
             <Route path="sell-gym-equipment" element={<SellGymEquipmentPage />} />
             <Route path="buy-used-gym-equipment" element={<BuyUsedGymEquipmentPage />} />
+            <Route path="commercial-gym-equipment" element={<CommercialGymEquipmentPage />} />
+            <Route path="commercial-cardio-equipment" element={<CommercialCardioEquipmentPage />} />
+            <Route path="commercial-strength-equipment" element={<CommercialStrengthEquipmentPage />} />
+            <Route path="home-gym-equipment" element={<HomeGymEquipmentPage />} />
+            <Route path="home-cardio-equipment" element={<HomeCardioEquipmentPage />} />
+            <Route path="home-strength-equipment" element={<HomeStrengthEquipmentPage />} />
+            <Route
+              path="refurbished-commercial-gym-equipment"
+              element={<RefurbishedCommercialGymEquipmentPage />}
+            />
+            <Route
+              path="refurbished-home-gym-equipment"
+              element={<RefurbishedHomeGymEquipmentPage />}
+            />
+            {EQUIPMENT_LANDING_DEFS_VALIDATED.map((def) => (
+              <Route
+                key={def.id}
+                path={def.path.replace(/^\//, '')}
+                element={<EquipmentLandingPageById id={def.id} />}
+              />
+            ))}
             <Route path="sell" element={<SellRedirectPage />} />
             <Route path="help" element={<HelpCentrePage />} />
             <Route path="help/:slug" element={<HelpArticlePage />} />

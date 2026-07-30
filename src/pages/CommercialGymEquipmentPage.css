@@ -1,0 +1,526 @@
+/* Commercial gym equipment landing — extends buy-page design language */
+
+/* -------------------------------------------------------------------------- */
+/* Hero — shared centred MarketingLandingHero banner                          */
+/* -------------------------------------------------------------------------- */
+
+.commercial-page__hero.buy-page__hero,
+.commercial-page .buy-page__hero.commercial-page__hero {
+  padding: 0;
+  background: #fff;
+  overflow: visible;
+}
+
+/* Full-bleed banner edge-to-edge with the viewport */
+.commercial-page__hero .buy-page__visual-rail {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.commercial-page__hero .marketing-landing-hero {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  .commercial-page__hero.buy-page__hero,
+  .commercial-page .buy-page__hero.commercial-page__hero {
+    padding: 0;
+    background: #fff;
+  }
+
+  .commercial-page__hero .buy-page__visual-rail {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .commercial-page__hero.buy-page__hero,
+  .commercial-page .buy-page__hero.commercial-page__hero {
+    padding-block: 0;
+  }
+
+  .commercial-page__hero .buy-page__visual-rail {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Listings (under hero) + category navigation                                */
+/* -------------------------------------------------------------------------- */
+
+/* Listings sit under the warm hero — soft tint continues the field */
+.commercial-page__listings-section {
+  padding: var(--buy-space-xl) 0;
+  background: color-mix(in srgb, var(--color-bg) 70%, #fff);
+}
+
+/* Browse by type follows listings as secondary navigation on white */
+.commercial-page__categories-section {
+  padding: var(--buy-space-xl) 0;
+  background: #fff;
+}
+
+.commercial-page__categories-section .buy-page__intro,
+.commercial-page__brands-section .buy-page__intro,
+.commercial-page__explore-section .buy-page__intro {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: min(42rem, 100%);
+  text-align: left;
+}
+
+.commercial-page__categories-section .buy-page__handwritten-note,
+.commercial-page__brands-section .buy-page__handwritten-note,
+.commercial-page__explore-section .buy-page__handwritten-note {
+  margin-bottom: 0.45rem;
+}
+
+.commercial-page__categories-section .buy-page__h2,
+.commercial-page__brands-section .buy-page__h2,
+.commercial-page__explore-section .buy-page__h2 {
+  text-align: left;
+}
+
+.commercial-page__categories-section .buy-page__intro-lead,
+.commercial-page__brands-section .buy-page__intro-lead,
+.commercial-page__explore-section .buy-page__intro-lead {
+  text-align: left;
+}
+
+.commercial-page__category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .commercial-page__category-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.commercial-page__category-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 100%;
+  padding: 1.15rem 1.1rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-radius: var(--buy-radius-lg, 1.25rem);
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgb(15 33 55 / 4%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.commercial-page__category-card:hover {
+  border-color: color-mix(in srgb, var(--color-orange) 35%, var(--color-border));
+  box-shadow: 0 14px 32px rgb(15 33 55 / 8%);
+  transform: translateY(-2px);
+}
+
+.commercial-page__category-card:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+.commercial-page__category-label {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  line-height: 1.25;
+}
+
+.commercial-page__category-copy {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--buy-muted, color-mix(in srgb, var(--color-navy) 58%, #6b7280));
+}
+
+.commercial-page__category-cta {
+  margin-top: auto;
+  padding-top: 0.55rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--color-orange);
+}
+
+@supports not (font-weight: 650) {
+  .commercial-page__category-cta {
+    font-weight: 600;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Latest listings — lighter cards, left-aligned with section header          */
+/* -------------------------------------------------------------------------- */
+
+.commercial-page__listings-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.15rem;
+}
+
+.commercial-page__listings-header .buy-page__intro {
+  margin: 0;
+  max-width: min(40rem, 100%);
+  text-align: left;
+}
+
+.commercial-page__listings-header .buy-page__handwritten-note {
+  display: inline-block;
+  margin: 0 0 0.45rem;
+}
+
+.commercial-page__listings-header .buy-page__h2 {
+  margin: 0 0 0.55rem;
+  text-align: left;
+}
+
+.commercial-page__listings-header .buy-page__intro-lead {
+  margin: 0;
+  text-align: left;
+}
+
+.commercial-page__listing-grid {
+  --listing-card-image-ratio: 3 / 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+@media (min-width: 720px) {
+  .commercial-page__listing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .commercial-page__listing-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+}
+
+.commercial-page__listing-grid .listing-card {
+  --listing-card-radius: 0.7rem;
+  box-shadow: 0 1px 2px rgb(15 33 55 / 4%);
+}
+
+.commercial-page__listing-grid .listing-card__body {
+  gap: 0.18rem;
+  padding: 0.4rem 0.5rem 0.48rem;
+}
+
+.commercial-page__listing-grid .listing-card__title {
+  font-size: 0.8125rem;
+  min-height: calc(1.3em * 2);
+  max-height: calc(1.3em * 2);
+}
+
+.commercial-page__listing-grid .listing-card__price-stack.buyer-protection-price--compact
+  .buyer-protection-price__item--primary {
+  font-size: 0.9rem;
+}
+
+.commercial-page__listing-grid .listing-card__meta,
+.commercial-page__listing-grid .listing-card__location,
+.commercial-page__listing-grid .listing-card__availability {
+  font-size: 0.6875rem;
+}
+
+.commercial-page__listing-grid .listing-card__badge {
+  top: 0.45rem;
+  left: 0.45rem;
+  padding: 0.12rem 0.38rem;
+  font-size: 0.6rem;
+}
+
+.commercial-page__listings-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.95rem;
+}
+
+.commercial-page__listings-empty {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  border-radius: var(--buy-radius, 0.875rem);
+  background: #fff;
+  border: 1px dashed var(--color-border);
+  color: var(--buy-muted, #6b7280);
+  text-align: center;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Brands — premium logo tiles (~20–25% larger than prior compact pass)       */
+/* -------------------------------------------------------------------------- */
+
+.commercial-page__brands-section {
+  padding: var(--buy-space-xl) 0;
+  background: #fff;
+}
+
+.commercial-page__brand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.05rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .commercial-page__brand-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.2rem;
+  }
+}
+
+.commercial-page__brand-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 0;
+  padding: 1.35rem 1.25rem 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 1.1rem;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 6px 18px rgb(15 33 55 / 4%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.commercial-page__brand-card:hover {
+  border-color: color-mix(in srgb, var(--color-orange) 32%, var(--color-border));
+  box-shadow: 0 12px 28px rgb(15 33 55 / 7%);
+  transform: translateY(-1px);
+}
+
+.commercial-page__brand-card:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+.commercial-page__brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 6.45rem;
+  min-height: 6.45rem;
+  max-height: 6.45rem;
+  padding: 0.55rem 0.75rem;
+  overflow: hidden;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--color-bg) 55%, #fff);
+}
+
+.commercial-page__brand-logo .brand-logo,
+.commercial-page__brand-logo .brand-logo--hero {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.commercial-page__brand-logo .brand-logo__image {
+  width: auto;
+  height: auto;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain;
+  object-position: center;
+  /* Registry scales are for larger brand hubs — keep logos fully visible here */
+  transform: scale(1);
+  transform-origin: center center;
+}
+
+.commercial-page__brand-name {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  text-align: center;
+  line-height: 1.25;
+}
+
+.commercial-page__brand-count {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--buy-muted, #6b7280);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Page rhythm — brands → benefits → valuation (snapshot removed)             */
+/* -------------------------------------------------------------------------- */
+
+.commercial-page .buy-page__benefits-section {
+  padding: var(--buy-space-xl) 0;
+  /* Soft field after white brand grid — replaces former snapshot wash */
+  background: color-mix(in srgb, var(--color-bg) 65%, #fff);
+}
+
+.commercial-page .buy-page__optional {
+  padding: var(--buy-space-xl) 0;
+  background: #fff;
+}
+
+.commercial-page .buy-page__seo {
+  padding: var(--buy-space-xl) 0;
+  background: #fff;
+}
+
+.commercial-page .buy-page__mid-cta {
+  margin: 0;
+  padding: var(--buy-space-xl) 0;
+  background: color-mix(in srgb, var(--color-bg) 55%, #fff);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Guide sections                                                             */
+/* -------------------------------------------------------------------------- */
+
+.commercial-page__guide-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.65rem;
+  margin-top: 1.5rem;
+}
+
+.commercial-page__guide-block {
+  margin: 0;
+  padding: 0;
+}
+
+.commercial-page__guide-block-title {
+  margin: 0 0 0.55rem;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+}
+
+.commercial-page__guide-block p {
+  margin: 0 0 0.7rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--buy-muted, color-mix(in srgb, var(--color-navy) 62%, #6b7280));
+}
+
+.commercial-page__guide-block p:last-child {
+  margin-bottom: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Explore more                                                               */
+/* -------------------------------------------------------------------------- */
+
+.commercial-page__explore-section {
+  padding: var(--buy-space-xl) 0 var(--buy-space-2xl);
+  background: color-mix(in srgb, var(--color-bg) 72%, #fff);
+}
+
+.commercial-page__explore-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .commercial-page__explore-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .commercial-page__explore-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.commercial-page__explore-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: var(--buy-radius, 0.875rem);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.commercial-page__explore-card:hover {
+  border-color: color-mix(in srgb, var(--color-orange) 40%, var(--color-border));
+  box-shadow: 0 10px 24px rgb(15 33 55 / 6%);
+}
+
+.commercial-page__explore-card:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+.commercial-page__explore-label {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.commercial-page__explore-copy {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--buy-muted, #6b7280);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commercial-page__category-card,
+  .commercial-page__brand-card,
+  .commercial-page__explore-card {
+    transition: none;
+  }
+
+  .commercial-page__category-card:hover,
+  .commercial-page__brand-card:hover {
+    transform: none;
+  }
+}

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import EquipdLogo from '../EquipdLogo'
 import ProtectedLink from '../auth/ProtectedLink'
 import { useCookieConsent } from '../../hooks/useCookieConsent'
+import { getBrandPagePath } from '../../lib/brandCatalogueCore'
 import { BUYER_PROTECTION_HELP_PATH } from '../../lib/trustMessaging'
 import {
   COOKIE_POLICY_PATH,
@@ -15,10 +16,11 @@ const FOOTER_COLUMNS = [
     title: 'Buy',
     links: [
       { label: 'Buy Used Gym Equipment', to: '/buy-used-gym-equipment' },
+      { label: 'Home Gym Equipment', to: '/home-gym-equipment' },
+      { label: 'Commercial Gym Equipment', to: '/commercial-gym-equipment' },
       { label: 'Browse Listings', to: '/browse' },
       { label: 'Equipment Values', to: '/brands' },
       { label: 'Instant Valuation', to: '/valuation' },
-      { label: 'How Buying Works', to: '/help/how-buying-works' },
       { label: 'Buyer Protection', to: BUYER_PROTECTION_HELP_PATH },
       { label: 'Collection & Delivery', to: '/help/collection-orders' },
     ],
@@ -34,18 +36,33 @@ const FOOTER_COLUMNS = [
     ],
   },
   {
-    title: 'Support',
+    title: 'Categories',
     links: [
-      { label: 'Help Centre', to: '/help' },
-      { label: 'Contact Support', to: '/support' },
-      { label: 'Refunds & Returns', to: '/help/refunds-and-returns' },
-      { label: 'Report a Problem', to: '/support' },
+      { label: 'Home Cardio Equipment', to: '/home-cardio-equipment' },
+      { label: 'Home Strength Equipment', to: '/home-strength-equipment' },
+      { label: 'Commercial Cardio Equipment', to: '/commercial-cardio-equipment' },
+      { label: 'Commercial Strength Equipment', to: '/commercial-strength-equipment' },
+      { label: 'Refurbished Gym Equipment', to: '/refurbished-commercial-gym-equipment' },
+    ],
+  },
+  {
+    title: 'Brands',
+    links: [
+      { label: 'Technogym', to: getBrandPagePath('technogym') },
+      { label: 'Life Fitness', to: getBrandPagePath('life-fitness') },
+      { label: 'Matrix', to: getBrandPagePath('matrix-fitness') },
+      { label: 'Precor', to: getBrandPagePath('precor') },
+      { label: 'Concept2', to: getBrandPagePath('concept2') },
+      { label: 'View All Brands', to: '/brands' },
     ],
   },
   {
     title: 'Company',
     links: [
       { label: 'About Equipd', to: '/about' },
+      { label: 'Help Centre', to: '/help' },
+      { label: 'Contact Support', to: '/support' },
+      { label: 'Refunds & Returns', to: '/help/refunds-and-returns' },
     ],
   },
 ]
@@ -66,7 +83,7 @@ function SiteFooter() {
             </p>
           </div>
 
-          <div className="site-footer__columns">
+          <nav className="site-footer__columns" aria-label="Footer">
             {FOOTER_COLUMNS.map((column) => (
               <div key={column.title} className="site-footer__column">
                 <h3 className="site-footer__heading">{column.title}</h3>
@@ -83,7 +100,7 @@ function SiteFooter() {
                 </ul>
               </div>
             ))}
-          </div>
+          </nav>
         </div>
       </div>
 

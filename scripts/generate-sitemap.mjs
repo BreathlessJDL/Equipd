@@ -25,6 +25,7 @@ import {
   summarizeSitemapEntries,
 } from '../src/lib/listingSitemap.js'
 import { LOCATION_SLUGS, buildLocationPagePath } from '../src/lib/locations.js'
+import { EQUIPMENT_LANDING_PATHS } from '../src/lib/equipmentLandingDefs.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 function xmlEscape(value) {
@@ -180,6 +181,17 @@ async function main() {
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/help`))
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/sell-gym-equipment`))
   entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/buy-used-gym-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/commercial-gym-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/commercial-cardio-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/commercial-strength-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/home-gym-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/home-cardio-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/home-strength-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/refurbished-commercial-gym-equipment`))
+  entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}/refurbished-home-gym-equipment`))
+  for (const path of EQUIPMENT_LANDING_PATHS) {
+    entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}${path}`))
+  }
 
   for (const slug of LOCATION_SLUGS) {
     entries.push(urlEntry(`${EQUIPD_SITE_ORIGIN}${buildLocationPagePath(slug)}`))

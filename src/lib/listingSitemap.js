@@ -13,6 +13,7 @@ import {
 import { getListingCanonicalUrl } from './listingPageSeo.js'
 import { isSoldListingStatus } from './listingSoldLifecycle.js'
 import { LOCATION_SLUGS } from './locations.js'
+import { EQUIPMENT_LANDING_PATH_SET } from './equipmentLandingDefs.js'
 
 const LOCATION_HUB_PATHS = new Set(LOCATION_SLUGS.map((slug) => `/listings/${slug}`))
 
@@ -152,6 +153,15 @@ export function summarizeSitemapEntries(entries = []) {
         || pathname === '/help'
         || pathname === '/sell-gym-equipment'
         || pathname === '/buy-used-gym-equipment'
+        || pathname === '/commercial-gym-equipment'
+        || pathname === '/commercial-cardio-equipment'
+        || pathname === '/commercial-strength-equipment'
+        || pathname === '/home-gym-equipment'
+        || pathname === '/home-cardio-equipment'
+        || pathname === '/home-strength-equipment'
+        || pathname === '/refurbished-commercial-gym-equipment'
+        || pathname === '/refurbished-home-gym-equipment'
+        || EQUIPMENT_LANDING_PATH_SET.has(pathname)
       ) {
         counts.static += 1
       } else {

@@ -1,0 +1,245 @@
+/* Shared centred SEO landing hero — cream/peach banner, typography only */
+
+.marketing-landing-hero {
+  --mlh-hand: var(--buy-hand, 'Caveat', 'Segoe Script', 'Comic Sans MS', cursive);
+  --mlh-cream: #fffdfb;
+  --mlh-peach: color-mix(in srgb, var(--color-orange) 14%, #fff7f1);
+  --mlh-peach-soft: color-mix(in srgb, var(--color-orange) 8%, #fffaf6);
+  width: 100%;
+  border-radius: clamp(1.15rem, 2.2vw, 1.65rem);
+  background:
+    linear-gradient(
+      165deg,
+      var(--mlh-cream) 0%,
+      var(--mlh-peach-soft) 48%,
+      var(--mlh-peach) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 75%),
+    0 14px 36px rgb(15 33 55 / 5%);
+  overflow: hidden;
+}
+
+.marketing-landing-hero__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 58rem;
+  margin-inline: auto;
+  padding: clamp(1.4rem, 2.9vw, 2.25rem) clamp(1.15rem, 3.5vw, 2.5rem);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.marketing-landing-hero__eyebrow {
+  display: inline-block;
+  margin: 0 0 0.45rem;
+  font-family: var(--mlh-hand);
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--color-orange);
+  transform: rotate(-2deg);
+}
+
+.marketing-landing-hero__eyebrow::after {
+  content: '';
+  display: block;
+  width: 2.75rem;
+  height: 0.18rem;
+  margin: 0.18rem auto 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-orange) 72%, #fff);
+  opacity: 0.85;
+  transform: rotate(-3deg);
+}
+
+.marketing-landing-hero__title {
+  margin: 0 0 0.525rem;
+  max-width: 56rem;
+  font-size: clamp(2.15rem, 4.2vw, 3.35rem);
+  font-weight: 750;
+  line-height: 1.05;
+  letter-spacing: -0.036em;
+  color: var(--color-navy);
+  text-wrap: balance;
+}
+
+@supports not (font-weight: 750) {
+  .marketing-landing-hero__title {
+    font-weight: 700;
+  }
+}
+
+.marketing-landing-hero__lead {
+  margin: 0 0 0.75rem;
+  max-width: 48rem;
+  font-size: clamp(1.02rem, 1.35vw, 1.125rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--color-navy) 72%, #6b7280);
+  text-wrap: pretty;
+}
+
+.marketing-landing-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0 0 0.825rem;
+}
+
+.marketing-landing-hero__actions .buy-page__btn {
+  min-height: 3rem;
+}
+
+.marketing-landing-hero__actions .buy-page__btn--primary {
+  min-width: 11.5rem;
+}
+
+.marketing-landing-hero__search {
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 0 0.75rem;
+}
+
+.marketing-landing-hero__search-label {
+  display: block;
+  margin: 0 0 0.24rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--color-navy);
+}
+
+@supports not (font-weight: 650) {
+  .marketing-landing-hero__search-label {
+    font-weight: 600;
+  }
+}
+
+.marketing-landing-hero__search-field {
+  position: relative;
+  width: 100%;
+}
+
+.marketing-landing-hero__search-icon {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 0.95rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--color-orange);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.marketing-landing-hero__search-field .canonical-autocomplete {
+  width: 100%;
+}
+
+.marketing-landing-hero__search-field .canonical-autocomplete__input,
+.marketing-landing-hero__search-input {
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.75rem 1rem 0.75rem 2.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-radius: 0.7rem;
+  background: #fff;
+  font: inherit;
+  font-size: 0.98rem;
+  color: var(--color-navy);
+  text-align: left;
+  box-shadow: 0 1px 2px rgb(15 33 55 / 4%);
+  box-sizing: border-box;
+}
+
+.marketing-landing-hero__search-field .canonical-autocomplete__input:focus,
+.marketing-landing-hero__search-input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 45%, transparent);
+  outline-offset: 1px;
+  border-color: color-mix(in srgb, var(--color-orange) 40%, var(--color-border));
+}
+
+.marketing-landing-hero__trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem 1.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: color-mix(in srgb, var(--color-navy) 68%, #6b7280);
+}
+
+@supports not (font-weight: 550) {
+  .marketing-landing-hero__trust {
+    font-weight: 500;
+  }
+}
+
+.marketing-landing-hero__trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.marketing-landing-hero__trust li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3 8.5 6.5 12 13 4' stroke='%23e8622a' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+@media (max-width: 639px) {
+  .marketing-landing-hero__inner {
+    padding-block: 1.25rem;
+  }
+
+  .marketing-landing-hero__title {
+    font-size: clamp(1.95rem, 8.5vw, 2.45rem);
+  }
+
+  .marketing-landing-hero__lead {
+    margin-bottom: 0.65rem;
+    font-size: 1.02rem;
+  }
+
+  .marketing-landing-hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 22rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .marketing-landing-hero__actions .buy-page__btn,
+  .marketing-landing-hero__actions .buy-page__btn--primary {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .marketing-landing-hero__search {
+    max-width: none;
+  }
+
+  .marketing-landing-hero__trust {
+    gap: 0.45rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .marketing-landing-hero__title {
+    font-size: clamp(2.55rem, 3.6vw, 3.35rem);
+  }
+
+  .marketing-landing-hero__lead {
+    max-width: 46rem;
+  }
+}

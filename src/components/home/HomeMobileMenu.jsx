@@ -149,6 +149,60 @@ function LoggedOutMobileMenu({ onClose, onHomeBrandClick }) {
         </li>
         <li>
           <Link
+            to="/home-gym-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Home Gym Equipment</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/home-cardio-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Home Cardio</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/home-strength-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Home Strength</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/commercial-gym-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Commercial Equipment</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/commercial-cardio-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Commercial Cardio</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/commercial-strength-equipment"
+            className="home-mobile-menu__row home-mobile-menu__row--account"
+            onClick={onClose}
+          >
+            <span className="home-mobile-menu__row-label">Commercial Strength</span>
+          </Link>
+        </li>
+        <li>
+          <Link
             to="/sell-gym-equipment"
             className="home-mobile-menu__row home-mobile-menu__row--account"
             onClick={onClose}

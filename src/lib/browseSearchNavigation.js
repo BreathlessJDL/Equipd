@@ -4,7 +4,12 @@ export function isBrowseRoute(pathname) {
   return pathname === '/browse'
 }
 
-export function buildBrowseNavPath({ search = '', categorySlug = '', rating = '' } = {}) {
+export function buildBrowseNavPath({
+  search = '',
+  categorySlug = '',
+  categorySlugs = [],
+  rating = '',
+} = {}) {
   const params = new URLSearchParams()
   const trimmedSearch = search.trim()
 
@@ -12,8 +17,16 @@ export function buildBrowseNavPath({ search = '', categorySlug = '', rating = ''
     params.set('search', trimmedSearch)
   }
 
-  if (categorySlug) {
-    params.set('category', categorySlug)
+  const slugs =
+    Array.isArray(categorySlugs) && categorySlugs.length > 0
+      ? categorySlugs
+      : categorySlug
+        ? [categorySlug]
+        : []
+
+  for (const slug of slugs) {
+    const trimmed = String(slug || '').trim()
+    if (trimmed) params.append('category', trimmed)
   }
 
   if (rating) {

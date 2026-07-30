@@ -38,6 +38,15 @@ import {
 } from '../src/lib/listingPrerenderData.js'
 import { buildSellGymEquipmentSeoDocument } from '../src/lib/sellGymEquipmentPage.js'
 import { buildBuyUsedGymEquipmentSeoDocument } from '../src/lib/buyUsedGymEquipmentPage.js'
+import { buildCommercialGymEquipmentSeoDocument } from '../src/lib/commercialGymEquipmentPage.js'
+import { buildCommercialCardioEquipmentSeoDocument } from '../src/lib/commercialCardioEquipmentPage.js'
+import { buildCommercialStrengthEquipmentSeoDocument } from '../src/lib/commercialStrengthEquipmentPage.js'
+import { buildHomeGymEquipmentSeoDocument } from '../src/lib/homeGymEquipmentPage.js'
+import { buildHomeCardioEquipmentSeoDocument } from '../src/lib/homeCardioEquipmentPage.js'
+import { buildHomeStrengthEquipmentSeoDocument } from '../src/lib/homeStrengthEquipmentPage.js'
+import { buildRefurbishedCommercialGymEquipmentSeoDocument } from '../src/lib/refurbishedCommercialGymEquipmentPage.js'
+import { buildRefurbishedHomeGymEquipmentSeoDocument } from '../src/lib/refurbishedHomeGymEquipmentPage.js'
+import { buildAllEquipmentLandingSeoDocuments } from '../src/lib/equipmentLandingPages.js'
 import { buildAllLocationPageSeoDocuments } from '../src/lib/locations.js'
 import { buildValuationSeoDocument } from '../src/lib/valuationPageSeo.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
@@ -365,6 +374,15 @@ async function main() {
   const staticMarketingPages = [
     buildSellGymEquipmentSeoDocument(),
     buildBuyUsedGymEquipmentSeoDocument(),
+    buildCommercialGymEquipmentSeoDocument(),
+    buildCommercialCardioEquipmentSeoDocument(),
+    buildCommercialStrengthEquipmentSeoDocument(),
+    buildHomeGymEquipmentSeoDocument(),
+    buildHomeCardioEquipmentSeoDocument(),
+    buildHomeStrengthEquipmentSeoDocument(),
+    buildRefurbishedCommercialGymEquipmentSeoDocument(),
+    buildRefurbishedHomeGymEquipmentSeoDocument(),
+    ...buildAllEquipmentLandingSeoDocuments(),
     buildValuationSeoDocument(),
     ...buildAllLocationPageSeoDocuments(),
   ]

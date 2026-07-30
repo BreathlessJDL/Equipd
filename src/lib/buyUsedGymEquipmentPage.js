@@ -45,7 +45,7 @@ export const BUY_USED_GYM_EQUIPMENT_PAGE_TITLE =
 export const BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION =
   'Browse used commercial and home gym equipment for sale across the UK. Search thousands of listings, make offers, pay securely and buy with confidence through Equipd.'
 
-export const BUY_USED_GYM_EQUIPMENT_H1 = 'With Equipd'
+export const BUY_USED_GYM_EQUIPMENT_H1 = 'Buy Used Gym Equipment'
 
 /** WebPage JSON-LD headline must match the visible hero H1. */
 const BUY_USED_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE = BUY_USED_GYM_EQUIPMENT_H1
@@ -232,6 +232,16 @@ export const BUY_GUIDE_PARAGRAPHS = Object.freeze([
 ])
 
 export const BUY_GUIDE_LINKS = Object.freeze([
+  {
+    before: 'Looking for facility-grade kit? Explore ',
+    link: { to: '/commercial-gym-equipment', label: 'commercial gym equipment' },
+    after: '.',
+  },
+  {
+    before: 'Building a home setup? Browse ',
+    link: { to: '/home-gym-equipment', label: 'home gym equipment' },
+    after: '.',
+  },
   {
     before: 'Browse live ',
     link: { to: BROWSE_PATH, label: 'used gym equipment listings' },
