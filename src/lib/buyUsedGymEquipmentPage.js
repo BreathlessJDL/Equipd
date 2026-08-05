@@ -508,7 +508,7 @@ export function buildBuyUsedGymEquipmentSeoDocument() {
   <nav aria-label="Breadcrumb"><p><a href="/">Home</a> <span aria-hidden="true">/</span> Buy Used Gym Equipment</p></nav>
   <header>
     <p>${escapeHtml(BUY_USED_GYM_EQUIPMENT_EYEBROW)}</p>
-    <h1>${escapeHtml(BUY_USED_GYM_EQUIPMENT_H1)}</h1>
+    <h1><span class="visually-hidden">${escapeHtml(BUY_USED_GYM_EQUIPMENT_H1)}</span><span aria-hidden="true">${escapeHtml(BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY)}</span></h1>
     <p>${escapeHtml(BUY_USED_GYM_EQUIPMENT_LEAD)}</p>
     <p><a href="${BROWSE_PATH}">Browse Equipment</a> · <a href="${VALUATION_PATH}">Get a Free Valuation</a></p>
     <ul>${BUY_HERO_TRUST_ITEMS.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
