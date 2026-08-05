@@ -12,10 +12,9 @@ import './MessageThreadHeader.css'
 function MessageThreadHeader({ conversation, userId, onBack, reportProps = null }) {
   const participantName = getConversationOtherPartyName(conversation, userId)
   const participantProfile = getConversationOtherPartyAvatarProfile(conversation, userId)
-  const listingTitle = conversation?.listing?.title?.trim() || ''
   const listingImageUrl = getConversationListingImageUrl(conversation)
-  const primaryTitle = participantName || listingTitle || 'Conversation'
-  const secondaryTitle = participantName && listingTitle ? listingTitle : ''
+  // Header label is always the other participant — never the listing title.
+  const primaryTitle = participantName || 'Conversation'
   const menuId = useId()
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -59,15 +58,7 @@ function MessageThreadHeader({ conversation, userId, onBack, reportProps = null 
           <span aria-hidden="true">←</span>
         </button>
 
-        {listingImageUrl ? (
-          <div className="message-thread-header__thumb" aria-hidden="true">
-            <img
-              className="message-thread-header__thumb-image"
-              src={listingImageUrl}
-              alt=""
-            />
-          </div>
-        ) : participantProfile ? (
+        {participantProfile ? (
           participantProfile.id ? (
             <ProfileAvatarLink
               profile={participantProfile}
@@ -81,13 +72,18 @@ function MessageThreadHeader({ conversation, userId, onBack, reportProps = null 
               className="message-thread-header__avatar"
             />
           )
+        ) : listingImageUrl ? (
+          <div className="message-thread-header__thumb" aria-hidden="true">
+            <img
+              className="message-thread-header__thumb-image"
+              src={listingImageUrl}
+              alt=""
+            />
+          </div>
         ) : null}
 
         <div className="message-thread-header__info">
           <h2 className="message-thread-header__participant">{primaryTitle}</h2>
-          {secondaryTitle ? (
-            <p className="message-thread-header__listing">{secondaryTitle}</p>
-          ) : null}
         </div>
 
         {reportProps ? (

@@ -47,7 +47,10 @@ export const BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION =
 
 export const BUY_USED_GYM_EQUIPMENT_H1 = 'Buy Used Gym Equipment'
 
-/** WebPage JSON-LD headline must match the visible hero H1. */
+/** Visible hero H1 display copy — SEO H1 remains BUY_USED_GYM_EQUIPMENT_H1. */
+export const BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY = 'on Equipd'
+
+/** WebPage JSON-LD headline targets the SEO keyword, not the decorative hero display. */
 const BUY_USED_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE = BUY_USED_GYM_EQUIPMENT_H1
 
 export const BUY_USED_GYM_EQUIPMENT_EYEBROW = 'Buy with confidence'

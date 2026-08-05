@@ -28,6 +28,7 @@ import {
   BUY_MID_CTA_LEAD,
   BUY_USED_GYM_EQUIPMENT_EYEBROW,
   BUY_USED_GYM_EQUIPMENT_H1,
+  BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY,
   BUY_USED_GYM_EQUIPMENT_LEAD,
   BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION,
   BUY_USED_GYM_EQUIPMENT_META_TITLE,
@@ -273,7 +274,8 @@ export default function BuyUsedGymEquipmentPage() {
                 {BUY_USED_GYM_EQUIPMENT_EYEBROW}
               </span>
               <h1 id="buy-page-title" className="buy-page__h1">
-                {BUY_USED_GYM_EQUIPMENT_H1}
+                <span className="visually-hidden">{BUY_USED_GYM_EQUIPMENT_H1}</span>
+                <span aria-hidden="true">{BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY}</span>
               </h1>
               <p className="buy-page__lead">{BUY_USED_GYM_EQUIPMENT_LEAD}</p>
               <div className="buy-page__actions">
