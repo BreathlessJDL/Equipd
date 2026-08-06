@@ -4,10 +4,9 @@ import { buildListingSeoDocument } from '../src/lib/listingSeoPrerender.js'
 import {
   fetchApprovedEquipmentProductsForListings,
   fetchPublicReadableListingBySlug,
-  fetchPublicReadableListings,
   fetchPublicSellerProfilesForListings,
 } from '../src/lib/listingPrerenderData.js'
-import { buildStandaloneSeoHtml } from '../src/lib/standaloneSeoHtml.js'
+import { renderSeoDocumentHtml } from '../src/lib/spaShellHtml.js'
 
 function getAnonSupabaseEnv() {
   const env = globalThis.process?.env ?? {}
@@ -19,8 +18,12 @@ function getAnonSupabaseEnv() {
   return { url, key }
 }
 
-function buildNotFoundHtml(slug) {
-  return buildStandaloneSeoHtml({
+function requestHeaders(req) {
+  return req?.headers || {}
+}
+
+function buildNotFoundDocument(slug) {
+  return {
     path: `/listings/${slug}`,
     title: 'Listing Not Found | Equipd',
     description: 'This listing could not be found on Equipd.',
@@ -38,14 +41,43 @@ function buildNotFoundHtml(slug) {
     },
     bodyHtml: `<article class="seo-prerender"><h1>Listing not found</h1><p>This listing could not be found on Equipd.</p><p><a href="/browse">Back to browse</a></p></article>`,
     jsonLd: [],
+  }
+}
+
+function buildUnavailableDocument(slug) {
+  return {
+    path: `/listings/${slug}`,
+    title: 'Listing Unavailable | Equipd',
+    description: 'Equipd could not load this listing right now.',
+    canonicalPath: `/listings/${slug}`,
+    robots: 'noindex, follow',
+    openGraph: {},
+    bodyHtml:
+      '<article class="seo-prerender"><h1>Listing unavailable</h1><p>Equipd could not load this listing right now.</p></article>',
+    jsonLd: [],
+  }
+}
+
+async function sendSeoHtml(res, status, document, req) {
+  const rendered = await renderSeoDocumentHtml(document, {
+    headers: requestHeaders(req),
+    allowStandaloneFallback: true,
   })
+
+  res.status(status).setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
+  if (rendered.mode === 'standalone_fallback') {
+    res.setHeader('X-Equipd-Listing-Html', 'standalone-fallback')
+  } else {
+    res.setHeader('X-Equipd-Listing-Html', 'spa-shell')
+  }
+  res.send(rendered.html)
 }
 
 export default async function handler(req, res) {
   const slug = String(req.query.slug ?? '').trim()
   if (!slug) {
-    res.status(404).setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.send(buildNotFoundHtml(''))
+    await sendSeoHtml(res, 404, buildNotFoundDocument(''), req)
     return
   }
 
@@ -58,16 +90,15 @@ export default async function handler(req, res) {
 
     const listing = await fetchPublicReadableListingBySlug(supabase, slug, { supabaseUrl: url })
     if (!listing) {
-      res.status(404).setHeader('Content-Type', 'text/html; charset=utf-8')
-      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
-      res.send(buildNotFoundHtml(slug))
+      await sendSeoHtml(res, 404, buildNotFoundDocument(slug), req)
       return
     }
 
-    const [products, profiles, activeListings] = await Promise.all([
+    // Runtime path: avoid fetching the entire active catalogue just for SEO similar links.
+    // React ListingDetailPage loads recommendations client-side after mount.
+    const [products, profiles] = await Promise.all([
       fetchApprovedEquipmentProductsForListings(supabase, [listing]),
       fetchPublicSellerProfilesForListings(supabase, [listing]),
-      fetchPublicReadableListings(supabase, { supabaseUrl: url, statuses: ['active'] }),
     ])
 
     const product = products.byListingId.get(listing.id) || null
@@ -75,23 +106,11 @@ export default async function handler(req, res) {
       listing,
       equipmentProduct: product,
       sellerProfile: profiles.get(listing.seller_id) || null,
-      activeListings,
+      activeListings: [],
     })
 
-    res.status(200).setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
-    res.send(buildStandaloneSeoHtml(document))
+    await sendSeoHtml(res, 200, document, req)
   } catch {
-    res.status(500).setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.send(buildStandaloneSeoHtml({
-      path: `/listings/${slug}`,
-      title: 'Listing Unavailable | Equipd',
-      description: 'Equipd could not load this listing right now.',
-      canonicalPath: `/listings/${slug}`,
-      robots: 'noindex, follow',
-      openGraph: {},
-      bodyHtml: '<article class="seo-prerender"><h1>Listing unavailable</h1><p>Equipd could not load this listing right now.</p></article>',
-      jsonLd: [],
-    }))
+    await sendSeoHtml(res, 500, buildUnavailableDocument(slug), req)
   }
 }

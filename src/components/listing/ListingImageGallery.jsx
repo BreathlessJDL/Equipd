@@ -143,6 +143,8 @@ function ListingImageGallery({
                       : thumbAltBase
                   }
                   className="listing-gallery__thumb-image"
+                  loading="lazy"
+                  decoding="async"
                   draggable={false}
                 />
               </button>
@@ -164,6 +166,9 @@ function ListingImageGallery({
                 src={currentImage.url}
                 alt={mainAlt}
                 className="listing-gallery__main-image"
+                loading={safeIndex === 0 ? 'eager' : 'lazy'}
+                fetchPriority={safeIndex === 0 ? 'high' : 'auto'}
+                decoding="async"
                 draggable={false}
               />
               {hasMultiple ? (

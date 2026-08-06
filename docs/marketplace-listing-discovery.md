@@ -79,7 +79,7 @@ One transition produces one notify decision (no duplicate ping from treating sol
 
 ## Current limitations
 
-- Listing HTML is prerendered at build time (`scripts/prerender-seo-catalogue.mjs` → `dist/listings/{slug}/index.html`) and unknown/unreadable listing slugs return true HTTP 404 via `api/public-listing-page.js` (Stage 6).
+- Listing HTML is prerendered at build time (`scripts/prerender-seo-catalogue.mjs` → `dist/listings/{slug}/index.html`). Listings missing from that build (for example newly published after deploy) are served by `api/public-listing-page.js`, which injects the same SEO document into the Vite SPA `index.html` shell so React can boot. Unknown/unreadable listing slugs still return HTTP 404 with the SPA shell when possible.
 - Google Merchant Center product feed is **production-ready but submission is deferred** (Stage 8 approved). Live test endpoint: `/feeds/google-merchant.xml`. Do not submit to Merchant Center until Google policy blockers in `docs/merchant-center-stage8.md` are resolved.
 - No Google general Indexing API (by design)
 - Historical listings may lack Equipment Intelligence mapping until re-saved from valuation/equipment
@@ -91,7 +91,7 @@ One transition produces one notify decision (no duplicate ping from treating sol
 - Sitemap: `scripts/generate-sitemap.mjs`, `src/lib/listingSitemap.js`
 - Listing SEO / canonical / sold robots: `src/lib/listingPageSeo.js`, `src/lib/listingSoldLifecycle.js`
 - Listing Product/Offer JSON-LD: `src/lib/listingPageStructuredData.js`
-- Listing prerender / HTTP: `src/lib/listingSeoPrerender.js`, `api/public-listing-page.js`, `src/lib/listingDiscoveryEligibility.js`
+- Listing prerender / HTTP: `src/lib/listingSeoPrerender.js`, `api/public-listing-page.js`, `src/lib/spaShellHtml.js`, `src/lib/listingDiscoveryEligibility.js`
 - Social previews: `src/lib/socialPreview.js`
 - Seller shop SEO: `src/lib/sellerShopSeo.js`
 - Merchant feed (paused submission): `docs/merchant-center-stage8.md`, `api/merchant-product-feed.js`, `src/lib/merchantEligibility.js`
