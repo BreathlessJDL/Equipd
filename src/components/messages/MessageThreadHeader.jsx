@@ -14,7 +14,7 @@ function MessageThreadHeader({ conversation, userId, onBack, reportProps = null 
   const participantProfile = getConversationOtherPartyAvatarProfile(conversation, userId)
   const listingImageUrl = getConversationListingImageUrl(conversation)
   // Header label is always the other participant — never the listing title.
-  const primaryTitle = participantName || 'Conversation'
+  const primaryTitle = participantName || 'Unknown user'
   const menuId = useId()
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)

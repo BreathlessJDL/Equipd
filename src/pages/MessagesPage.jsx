@@ -453,7 +453,13 @@ function MessagesPage() {
       return { conversation: null, conversationId: null, error }
     }
 
-    const normalized = normalizeConversationDetail(data)
+    const normalized = normalizeConversationDetail({
+      ...selectedConversation,
+      ...data,
+      buyer: data.buyer ?? selectedConversation.buyer,
+      seller: data.seller ?? selectedConversation.seller,
+      listing: data.listing ?? selectedConversation.listing,
+    })
     setSelectedConversation(normalized)
 
     return {

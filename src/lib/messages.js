@@ -3,9 +3,28 @@ import { validateMarketplaceMessageWithContext, logBlockedMarketplaceMessage } f
 import { enrichListingWithImages } from './listingImages'
 import { paymentFields } from './payments'
 import { enrichOfferWithOrder, fetchOrdersByOfferIds } from './orders'
-import { buildAvatarProfile, getProfileDisplayName } from './profiles'
+import {
+  buildAvatarProfile,
+  fetchPublicProfilesByIds,
+  getProfileDisplayName,
+} from './profiles'
+import {
+  getConversationOtherPartyId,
+  getConversationOtherPartyName,
+  getConversationOtherPartyProfile,
+  getConversationParticipantLabel,
+  getConversationViewerRoleLabel,
+  sameParticipantId,
+} from './conversationParticipants'
 import { formatNotificationRelativeTime } from './notificationPresentation'
 import { normalizeMessageAttachments } from './messageAttachments'
+
+export {
+  getConversationOtherPartyId,
+  getConversationOtherPartyName,
+  getConversationOtherPartyProfile,
+  getConversationViewerRoleLabel,
+}
 
 const messageFields = `
   id,
@@ -103,27 +122,52 @@ const conversationListFields = `
   updated_at,
   ${conversationListingSelect.trim()},
   read_state:conversation_reads(unread_count, last_read_at),
-  buyer:profiles!buyer_id(id, display_name, username, avatar_url),
-  seller:profiles!seller_id(id, display_name, username, avatar_url),
   messages(body, message_type, sender_id, created_at, attachments:message_attachments(id))
 `
 
 const conversationDetailFields = `
-  ${conversationFields.trim()},
-  buyer:profiles!buyer_id(id, display_name, username, avatar_url),
-  seller:profiles!seller_id(id, display_name, username, avatar_url)
+  ${conversationFields.trim()}
 `
+
+/** profiles SELECT is owner/admin-only; public participant data comes from profiles_public. */
+async function withParticipantPublicProfiles(conversationOrList) {
+  const isArray = Array.isArray(conversationOrList)
+  const list = (isArray ? conversationOrList : [conversationOrList]).filter(Boolean)
+
+  if (!list.length) {
+    return conversationOrList
+  }
+
+  const ids = []
+  for (const conversation of list) {
+    if (conversation.buyer_id) ids.push(conversation.buyer_id)
+    if (conversation.seller_id) ids.push(conversation.seller_id)
+  }
+
+  const profilesById = await fetchPublicProfilesByIds(ids)
+
+  const resolveProfile = (id) => {
+    if (id == null) return null
+    return profilesById.get(id) ?? profilesById.get(String(id)) ?? null
+  }
+
+  const enriched = list.map((conversation) => {
+    const buyer = resolveProfile(conversation.buyer_id)
+    const seller = resolveProfile(conversation.seller_id)
+
+    return {
+      ...conversation,
+      buyer: buyer ?? conversation.buyer ?? null,
+      seller: seller ?? conversation.seller ?? null,
+    }
+  })
+
+  return isArray ? enriched : enriched[0]
+}
 
 export function getMessageErrorMessage(error) {
   if (!error) return 'Something went wrong. Please try again.'
   return error.message || 'Something went wrong. Please try again.'
-}
-
-export function getConversationOtherPartyId(conversation, userId) {
-  if (!conversation || !userId) return null
-  if (conversation.buyer_id === userId) return conversation.seller_id
-  if (conversation.seller_id === userId) return conversation.buyer_id
-  return null
 }
 
 export function getConversationReadState(conversation) {
@@ -309,46 +353,19 @@ export function normalizeConversationDetail(conversation) {
   }
 }
 
-export function getConversationOtherPartyName(conversation, userId) {
-  const otherParty = getConversationOtherPartyProfile(conversation, userId)
-  return otherParty ? getProfileDisplayName(otherParty) : ''
-}
-
-export function getConversationViewerRoleLabel(conversation, userId) {
-  if (!conversation || !userId) return ''
-
-  if (conversation.buyer_id === userId) {
-    return "You're the buyer"
-  }
-
-  if (conversation.seller_id === userId) {
-    return "You're the seller"
-  }
-
-  return ''
-}
-
 export function getConversationListingImageUrl(conversation) {
   const listing = conversation?.listing ?? getConversationListing(conversation)
   return listing?.primary_image_url ?? null
 }
 
-export function getConversationOtherPartyProfile(conversation, userId) {
-  if (!conversation || !userId) return null
-
-  if (conversation.buyer_id === userId) {
-    return normalizeEmbeddedRow(conversation.seller)
-  }
-
-  if (conversation.seller_id === userId) {
-    return normalizeEmbeddedRow(conversation.buyer)
-  }
-
-  return null
-}
-
 export function getConversationOtherPartyAvatarProfile(conversation, userId) {
-  return buildAvatarProfile(getConversationOtherPartyProfile(conversation, userId))
+  const otherParty = getConversationOtherPartyProfile(conversation, userId)
+  if (otherParty) return buildAvatarProfile(otherParty)
+
+  const otherPartyId = getConversationOtherPartyId(conversation, userId)
+  if (!otherPartyId) return null
+
+  return buildAvatarProfile({ id: otherPartyId, display_name: 'Unknown user' })
 }
 
 export function getConversationParticipantLine(conversation, userId) {
@@ -356,15 +373,15 @@ export function getConversationParticipantLine(conversation, userId) {
 
   if (!otherParty) return ''
 
-  const name = getProfileDisplayName(otherParty)
+  const name = getConversationParticipantLabel(otherParty) || getProfileDisplayName(otherParty)
 
   if (!name) return ''
 
-  if (conversation.buyer_id === userId) {
+  if (sameParticipantId(conversation.buyer_id, userId)) {
     return `Seller · ${name}`
   }
 
-  if (conversation.seller_id === userId) {
+  if (sameParticipantId(conversation.seller_id, userId)) {
     return `Buyer · ${name}`
   }
 
@@ -519,7 +536,14 @@ export async function findConversationForListing({ listingId, buyerId }) {
     return { data: null, error }
   }
 
-  return { data: data ?? null, error: null }
+  if (!data) {
+    return { data: null, error: null }
+  }
+
+  const normalized = normalizeConversationDetail(data)
+  const withProfiles = await withParticipantPublicProfiles(normalized)
+
+  return { data: withProfiles, error: null }
 }
 
 export async function ensureConversationForListing({ listingId, buyerId, sellerId }) {
@@ -571,7 +595,14 @@ export async function ensureConversationForListing({ listingId, buyerId, sellerI
     .select(conversationFields)
     .single()
 
-  return { data, error }
+  if (error || !data) {
+    return { data, error }
+  }
+
+  const normalized = normalizeConversationDetail(data)
+  const withProfiles = await withParticipantPublicProfiles(normalized)
+
+  return { data: withProfiles, error: null }
 }
 
 export async function startConversationForListing(args) {
@@ -704,9 +735,16 @@ export async function fetchMyConversations(userId) {
     .order('created_at', { foreignTable: 'messages', ascending: false })
     .limit(1, { foreignTable: 'messages' })
 
+  if (error) {
+    return { data: null, error }
+  }
+
+  const normalized = (data ?? []).map(normalizeConversationForList).filter(conversationHasInboxData)
+  const withProfiles = await withParticipantPublicProfiles(normalized)
+
   return {
-    data: (data ?? []).map(normalizeConversationForList).filter(conversationHasInboxData),
-    error,
+    data: withProfiles,
+    error: null,
   }
 }
 
@@ -725,8 +763,11 @@ export async function fetchConversationById(conversationId) {
     return { data, error }
   }
 
+  const normalized = normalizeConversationDetail(data)
+  const withProfiles = await withParticipantPublicProfiles(normalized)
+
   return {
-    data: normalizeConversationDetail(data),
+    data: withProfiles,
     error: null,
   }
 }
