@@ -1,0 +1,47 @@
+.listing-card-skeleton .listing-card__image--placeholder {
+  color: transparent;
+}
+
+.listing-card-skeleton__bar {
+  display: block;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--color-border) 55%, var(--color-surface));
+}
+
+.listing-card-skeleton__bar--pill {
+  width: 4.5rem;
+  height: 1.125rem;
+  border-radius: 999px;
+}
+
+.listing-card-skeleton__bar--title {
+  width: 85%;
+  height: 1.05rem;
+}
+
+.listing-card-skeleton__bar--price {
+  width: 55%;
+  height: 1.5rem;
+}
+
+.listing-card-skeleton__bar--meta {
+  width: 70%;
+  height: 0.95rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .listing-card-skeleton__bar,
+  .listing-card-skeleton .listing-card__image--placeholder {
+    animation: listing-card-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes listing-card-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

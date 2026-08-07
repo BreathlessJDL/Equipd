@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CanonicalEquipmentAutocomplete from '../CanonicalEquipmentAutocomplete'
+import DeferredEquipmentAutocomplete from '../DeferredEquipmentAutocomplete'
 import {
   buildEquipmentDepreciationGraphData,
   formatValuationMoney,
@@ -10,10 +10,6 @@ import {
 import { buildEquipmentProductImagePublicUrl } from '../../lib/equipmentProductImages'
 import { supabase } from '../../lib/supabase'
 import { buildValuationHref } from '../../lib/valuationNavigation'
-import {
-  prefetchProductConsoleOptions,
-  prefetchValuationSearchIndex,
-} from '../../lib/valuationCatalogCache'
 import './HomeEquipmentValuator.css'
 
 const DEFAULT_EYEBROW = 'Equipment valuator'
@@ -306,30 +302,6 @@ export default function HomeEquipmentValuator({
   const isCompactMobileVariant = className.split(/\s+/).includes('home-valuator--compact-mobile')
 
   useEffect(() => {
-    let idleId = null
-    let timeoutId = null
-
-    function startPrefetch() {
-      prefetchValuationSearchIndex()
-    }
-
-    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
-      idleId = window.requestIdleCallback(startPrefetch, { timeout: 1800 })
-    } else {
-      timeoutId = window.setTimeout(startPrefetch, 700)
-    }
-
-    return () => {
-      if (idleId != null && typeof window.cancelIdleCallback === 'function') {
-        window.cancelIdleCallback(idleId)
-      }
-      if (timeoutId != null) {
-        window.clearTimeout(timeoutId)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
     if (!isCompactMobileVariant || typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       setUseCompactPlaceholder(false)
       return undefined
@@ -361,7 +333,9 @@ export default function HomeEquipmentValuator({
       document.activeElement?.blur?.()
     }
     if (product?.id) {
-      prefetchProductConsoleOptions(product.id)
+      void import('../../lib/valuationCatalogCache').then((module) => {
+        module.prefetchProductConsoleOptions(product.id)
+      })
     }
     const productKey = product?.canonical_product_key || null
     navigate(buildValuationHref({
@@ -442,7 +416,7 @@ export default function HomeEquipmentValuator({
               <span className="home-valuator__search-icon" aria-hidden="true">
                 <SearchIcon />
               </span>
-              <CanonicalEquipmentAutocomplete
+              <DeferredEquipmentAutocomplete
                 id={inputId}
                 value={query}
                 onChange={setQuery}

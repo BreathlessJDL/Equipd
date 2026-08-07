@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
@@ -7,7 +7,6 @@ import HomeHero from '../components/home/HomeHero'
 import HomeEquipmentValuator from '../components/home/HomeEquipmentValuator'
 import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
 import HomeRecentListings from '../components/home/HomeRecentListings'
-import HomeReviewsSection from '../components/home/HomeReviewsSection'
 import HomepageWantedRequestFloatingTrigger from '../components/wanted/HomepageWantedRequestFloatingTrigger'
 import '../components/home/HomePage.css'
 import '../components/ListingBrowse.css'
@@ -16,6 +15,7 @@ import { useBrowseFilters } from '../hooks/useBrowseFilters'
 import { useBrowseListings } from '../hooks/useBrowseListings'
 import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
 import { useHomeRecentListings } from '../hooks/useHomeRecentListings'
+import { useNearViewport } from '../hooks/useNearViewport'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { useAuth } from '../hooks/useAuth'
@@ -25,7 +25,9 @@ import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
 import { DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '../lib/pageTitles'
 import { buildSocialOpenGraph } from '../lib/socialPreview'
-import { fetchRecentReviews, getReviewErrorMessage } from '../lib/reviews'
+
+// Bottom-of-page section: keep its carousel out of the initial download.
+const HomeReviewsSection = lazy(() => import('../components/home/HomeReviewsSection'))
 
 function HomePage() {
   usePageMeta({
@@ -46,6 +48,8 @@ function HomePage() {
   const [recentReviews, setRecentReviews] = useState([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [reviewsError, setReviewsError] = useState('')
+  const [reviewsRef, reviewsNearViewport] = useNearViewport()
+  const [browseRef, browseNearViewport] = useNearViewport({ rootMargin: '600px' })
 
   const profileLocation = useProfileBrowseLocation()
 
@@ -69,6 +73,12 @@ function HomePage() {
   const { requestBrowseScroll, cancelBrowseScrollRequest } =
     useBrowseScrollAfterFilterChange(searchParams.toString())
 
+  // Logged-out visitors see the hero, recent listings and valuator first, so the
+  // 24-card browse query can wait until they scroll toward it. Deep links that
+  // already carry filters, and the signed-in feed, still load straight away.
+  const browseEnabled =
+    isLoggedIn || browseNearViewport || searchParams.toString().length > 0
+
   const {
     listings: recentListings,
     loading: recentLoading,
@@ -87,6 +97,7 @@ function HomePage() {
     search: browse.queryOptions.search,
     hasLocationSearch: browse.hasLocationForSort,
     paginate: true,
+    enabled: browseEnabled,
   })
 
   useEffect(() => {
@@ -117,9 +128,12 @@ function HomePage() {
       return undefined
     }
 
+    if (!reviewsNearViewport) return undefined
+
     let active = true
 
     async function loadReviews() {
+      const { fetchRecentReviews, getReviewErrorMessage } = await import('../lib/reviews')
       const { data, error: reviewsResultError } = await fetchRecentReviews({
         limit: 12,
         includeOrderListing: true,
@@ -142,7 +156,7 @@ function HomePage() {
     return () => {
       active = false
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, reviewsNearViewport])
 
   const handleSearchSubmit = useCallback(() => {
     navigate(buildBrowseSearchPath(browse.search))
@@ -218,7 +232,11 @@ function HomePage() {
         ].filter(Boolean).join(' ')}
       />
 
-      <section id="browse" className={`home-browse${isLoggedIn ? ' home-browse--feed' : ''}`}>
+      <section
+        id="browse"
+        ref={browseRef}
+        className={`home-browse${isLoggedIn ? ' home-browse--feed' : ''}`}
+      >
         <div className="home-section__inner">
           {!isLoggedIn ? (
             <header className="home-browse__header">
@@ -269,7 +287,7 @@ function HomePage() {
 
           <div id="browse-results">
             <ListingBrowseResults
-              loading={loading}
+              loading={loading || !browseEnabled}
               loadingMore={loadingMore}
               hasMore={hasMore}
               onLoadMore={loadMore}
@@ -292,11 +310,17 @@ function HomePage() {
       <HomeDiscoverySection />
 
       {!isLoggedIn ? (
-        <HomeReviewsSection
-          reviews={recentReviews}
-          loading={reviewsLoading}
-          error={reviewsError}
-        />
+        <div ref={reviewsRef} className="home-reviews-slot">
+          {reviewsNearViewport ? (
+            <Suspense fallback={null}>
+              <HomeReviewsSection
+                reviews={recentReviews}
+                loading={reviewsLoading}
+                error={reviewsError}
+              />
+            </Suspense>
+          ) : null}
+        </div>
       ) : null}
 
       <HomepageWantedRequestFloatingTrigger />

@@ -33,7 +33,13 @@ node_modules
 /debug-screenshots/
 /reports/
 /data/
-/public/design-reference/
+# Directory contents (not the directory itself) so real assets can be excepted.
+/public/design-reference/*
+# ...except the homepage hero variants, which the site actually serves.
+!/public/design-reference/New main hero banner main.avif
+!/public/design-reference/New main hero banner main.webp
+!/public/design-reference/second-hero-banner-mobile.avif
+!/public/design-reference/second-hero-banner-mobile.webp
 *-type-audit.csv
 canonical-audit-*.json
 equipment-product-image-audit.csv

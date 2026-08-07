@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import ListingCard from '../ListingCard'
-import { EmptyState, ErrorState, LoadingState } from '../ui/UiState'
+import HomeRecentListingsSkeleton from './HomeRecentListingsSkeleton'
+import { EmptyState, ErrorState } from '../ui/UiState'
+
+/** Widest grid shows four across; the rest can lazy-load. */
+const ABOVE_FOLD_CARD_COUNT = 4
 
 function HomeRecentListings({ listings, loading, error }) {
   return (
@@ -17,9 +21,7 @@ function HomeRecentListings({ listings, loading, error }) {
           </Link>
         </div>
 
-        {loading && listings.length === 0 ? (
-          <LoadingState compact>Loading recent listings…</LoadingState>
-        ) : null}
+        {loading && listings.length === 0 ? <HomeRecentListingsSkeleton /> : null}
 
         {!loading && error && listings.length === 0 ? (
           <ErrorState compact>{error}</ErrorState>
@@ -33,8 +35,14 @@ function HomeRecentListings({ listings, loading, error }) {
 
         {listings.length > 0 ? (
           <div className="home-listing-grid">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} variant="home" showNewBadge />
+            {listings.map((listing, index) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                variant="home"
+                showNewBadge
+                imagePriority={index < ABOVE_FOLD_CARD_COUNT}
+              />
             ))}
           </div>
         ) : null}

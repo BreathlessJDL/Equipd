@@ -190,6 +190,14 @@
   display: block;
   width: 100%;
   height: auto;
+  /* Matches the desktop banner so the hero holds its space before decode. */
+  aspect-ratio: 1846 / 399;
+}
+
+@media (max-width: 768px) {
+  .home-hero__image {
+    aspect-ratio: 1248 / 848;
+  }
 }
 
 .home-hero__error {
@@ -215,6 +223,15 @@
 .home-reviews,
 .home-browse {
   padding-block: var(--home-section-space);
+}
+
+/* Holds space for the lazily mounted reviews section so the footer stays put. */
+.home-reviews-slot {
+  min-height: 18rem;
+}
+
+.home-reviews-slot:has(.home-reviews) {
+  min-height: 0;
 }
 
 .home-reviews {
@@ -763,7 +780,8 @@
     order: 5;
   }
 
-  .home-page:not(.home-page--feed) .home-reviews {
+  .home-page:not(.home-page--feed) .home-reviews,
+  .home-page:not(.home-page--feed) .home-reviews-slot {
     order: 6;
   }
 }

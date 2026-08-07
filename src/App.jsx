@@ -1,5 +1,6 @@
+import { lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import AuthModal from './components/auth/AuthModal'
+import AuthModalMount from './components/auth/AuthModalMount'
 import OAuthSessionHandler from './components/auth/OAuthSessionHandler'
 import CookieConsentShell from './components/cookies/CookieConsentShell'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -11,69 +12,76 @@ import { AuthProvider } from './hooks/useAuth'
 import { AuthModalProvider } from './hooks/useAuthModal'
 import { StripeConnectOnboardingProvider } from './hooks/useStripeConnectOnboarding'
 import { CookieConsentProvider } from './hooks/useCookieConsent'
-import AdminCasesPage from './pages/AdminCasesPage'
-import AdminIntelligencePage from './pages/AdminIntelligencePage'
-import AdminIntelligenceImportPage from './pages/AdminIntelligenceImportPage'
-import AdminIntelligenceBatchSyncPage from './pages/AdminIntelligenceBatchSyncPage'
-import AdminIntelligenceMarketSyncPage from './pages/AdminIntelligenceMarketSyncPage'
-import AdminIntelligenceEvidencePage from './pages/AdminIntelligenceEvidencePage'
-import AdminIntelligenceCoreProductsPage from './pages/AdminIntelligenceCoreProductsPage'
-import AdminIntelligenceProductsPage from './pages/AdminIntelligenceProductsPage'
-import AdminIntelligenceProductContentPage from './pages/AdminIntelligenceProductContentPage'
-import AdminEquipmentCatalogueNeedsAttentionPage from './pages/AdminEquipmentCatalogueNeedsAttentionPage'
-import AdminEquipmentCatalogueAddProductPage from './pages/AdminEquipmentCatalogueAddProductPage'
-import AdminEquipmentCatalogueImportsPage from './pages/AdminEquipmentCatalogueImportsPage'
-import AdminEquipmentCatalogueConsolesPage from './pages/AdminEquipmentCatalogueConsolesPage'
-import AdminOrdersPage from './pages/AdminOrdersPage'
-import AdminPriceGuideImportPage from './pages/AdminPriceGuideImportPage'
-import AdminSupportPage from './pages/AdminSupportPage'
-import AddListingPage from './pages/AddListingPage'
-import BrowsePage from './pages/BrowsePage'
-import BrandsPage from './pages/BrandsPage'
-import BrandPage from './pages/BrandPage'
-import EditListingPage from './pages/EditListingPage'
-import AboutPage from './pages/AboutPage'
-import EquipmentModelPage from './pages/EquipmentModelPage'
-import HelpCentrePage from './pages/HelpCentrePage'
-import HelpArticlePage from './pages/HelpArticlePage'
-import PriceGuidePage from './pages/PriceGuidePage'
-import SellRedirectPage from './pages/SellRedirectPage'
-import BuyUsedGymEquipmentPage from './pages/BuyUsedGymEquipmentPage'
-import CommercialGymEquipmentPage from './pages/CommercialGymEquipmentPage'
-import CommercialCardioEquipmentPage from './pages/CommercialCardioEquipmentPage'
-import CommercialStrengthEquipmentPage from './pages/CommercialStrengthEquipmentPage'
-import HomeGymEquipmentPage from './pages/HomeGymEquipmentPage'
-import HomeCardioEquipmentPage from './pages/HomeCardioEquipmentPage'
-import HomeStrengthEquipmentPage from './pages/HomeStrengthEquipmentPage'
-import RefurbishedCommercialGymEquipmentPage from './pages/RefurbishedCommercialGymEquipmentPage'
-import RefurbishedHomeGymEquipmentPage from './pages/RefurbishedHomeGymEquipmentPage'
-import { EquipmentLandingPageById } from './pages/EquipmentLandingPage'
-import SellGymEquipmentPage from './pages/SellGymEquipmentPage'
-import ValuationPage from './pages/ValuationPage'
-import SupportFlowPage from './pages/SupportFlowPage'
 import HomePage from './pages/HomePage'
-import ListingDetailPage from './pages/ListingDetailPage'
-import HubPage from './pages/HubPage'
-import HubErrorBoundary from './components/hub/HubErrorBoundary'
-import CollectOrderPage from './pages/CollectOrderPage'
-import OrderDetailPage from './pages/OrderDetailPage'
-import LocationListingsPage from './pages/LocationListingsPage'
-import LoginPage from './pages/LoginPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import AuthCallbackPage from './pages/AuthCallbackPage'
-import MessagesPage from './pages/MessagesPage'
-import MyListingsPage from './pages/MyListingsPage'
-import NotificationsPage from './pages/NotificationsPage'
-import ProfilePage from './pages/ProfilePage'
-import SettingsPage from './pages/SettingsPage'
-import ShopRoutePage from './pages/ShopRoutePage'
-import SavedListingsPage from './pages/SavedListingsPage'
-import SignupPage from './pages/SignupPage'
 import { LOCATION_SLUGS } from './lib/locations'
 import { EQUIPMENT_LANDING_DEFS_VALIDATED } from './lib/equipmentLandingDefs.js'
 import { BUYER_PROTECTION_HELP_PATH } from './lib/trustMessaging'
 import './styles/global.css'
+
+// Everything except the homepage is split out of the initial bundle. AppShell
+// renders these behind a Suspense boundary so the header/footer stay put.
+const AdminCasesPage = lazy(() => import('./pages/AdminCasesPage'))
+const AdminIntelligencePage = lazy(() => import('./pages/AdminIntelligencePage'))
+const AdminIntelligenceImportPage = lazy(() => import('./pages/AdminIntelligenceImportPage'))
+const AdminIntelligenceBatchSyncPage = lazy(() => import('./pages/AdminIntelligenceBatchSyncPage'))
+const AdminIntelligenceMarketSyncPage = lazy(() => import('./pages/AdminIntelligenceMarketSyncPage'))
+const AdminIntelligenceEvidencePage = lazy(() => import('./pages/AdminIntelligenceEvidencePage'))
+const AdminIntelligenceCoreProductsPage = lazy(() => import('./pages/AdminIntelligenceCoreProductsPage'))
+const AdminIntelligenceProductsPage = lazy(() => import('./pages/AdminIntelligenceProductsPage'))
+const AdminIntelligenceProductContentPage = lazy(() => import('./pages/AdminIntelligenceProductContentPage'))
+const AdminEquipmentCatalogueNeedsAttentionPage = lazy(() => import('./pages/AdminEquipmentCatalogueNeedsAttentionPage'))
+const AdminEquipmentCatalogueAddProductPage = lazy(() => import('./pages/AdminEquipmentCatalogueAddProductPage'))
+const AdminEquipmentCatalogueImportsPage = lazy(() => import('./pages/AdminEquipmentCatalogueImportsPage'))
+const AdminEquipmentCatalogueConsolesPage = lazy(() => import('./pages/AdminEquipmentCatalogueConsolesPage'))
+const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'))
+const AdminPriceGuideImportPage = lazy(() => import('./pages/AdminPriceGuideImportPage'))
+const AdminSupportPage = lazy(() => import('./pages/AdminSupportPage'))
+const AddListingPage = lazy(() => import('./pages/AddListingPage'))
+const BrowsePage = lazy(() => import('./pages/BrowsePage'))
+const BrandsPage = lazy(() => import('./pages/BrandsPage'))
+const BrandPage = lazy(() => import('./pages/BrandPage'))
+const EditListingPage = lazy(() => import('./pages/EditListingPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const EquipmentModelPage = lazy(() => import('./pages/EquipmentModelPage'))
+const HelpCentrePage = lazy(() => import('./pages/HelpCentrePage'))
+const HelpArticlePage = lazy(() => import('./pages/HelpArticlePage'))
+const PriceGuidePage = lazy(() => import('./pages/PriceGuidePage'))
+const SellRedirectPage = lazy(() => import('./pages/SellRedirectPage'))
+const BuyUsedGymEquipmentPage = lazy(() => import('./pages/BuyUsedGymEquipmentPage'))
+const CommercialGymEquipmentPage = lazy(() => import('./pages/CommercialGymEquipmentPage'))
+const CommercialCardioEquipmentPage = lazy(() => import('./pages/CommercialCardioEquipmentPage'))
+const CommercialStrengthEquipmentPage = lazy(() => import('./pages/CommercialStrengthEquipmentPage'))
+const HomeGymEquipmentPage = lazy(() => import('./pages/HomeGymEquipmentPage'))
+const HomeCardioEquipmentPage = lazy(() => import('./pages/HomeCardioEquipmentPage'))
+const HomeStrengthEquipmentPage = lazy(() => import('./pages/HomeStrengthEquipmentPage'))
+const RefurbishedCommercialGymEquipmentPage = lazy(() => import('./pages/RefurbishedCommercialGymEquipmentPage'))
+const RefurbishedHomeGymEquipmentPage = lazy(() => import('./pages/RefurbishedHomeGymEquipmentPage'))
+const EquipmentLandingPageById = lazy(() =>
+  import('./pages/EquipmentLandingPage').then((module) => ({
+    default: module.EquipmentLandingPageById,
+  })),
+)
+const SellGymEquipmentPage = lazy(() => import('./pages/SellGymEquipmentPage'))
+const ValuationPage = lazy(() => import('./pages/ValuationPage'))
+const SupportFlowPage = lazy(() => import('./pages/SupportFlowPage'))
+const ListingDetailPage = lazy(() => import('./pages/ListingDetailPage'))
+const HubPage = lazy(() => import('./pages/HubPage'))
+const HubErrorBoundary = lazy(() => import('./components/hub/HubErrorBoundary'))
+const CollectOrderPage = lazy(() => import('./pages/CollectOrderPage'))
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'))
+const LocationListingsPage = lazy(() => import('./pages/LocationListingsPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
+const MessagesPage = lazy(() => import('./pages/MessagesPage'))
+const MyListingsPage = lazy(() => import('./pages/MyListingsPage'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const ShopRoutePage = lazy(() => import('./pages/ShopRoutePage'))
+const SavedListingsPage = lazy(() => import('./pages/SavedListingsPage'))
+const SignupPage = lazy(() => import('./pages/SignupPage'))
 
 function App() {
   return (
@@ -382,7 +390,7 @@ function App() {
             <Route path="listings/:slug" element={<ListingDetailPage />} />
           </Route>
             </Routes>
-            <AuthModal />
+            <AuthModalMount />
             <CookieConsentShell />
             </StripeConnectOnboardingProvider>
           </AuthModalProvider>

@@ -17,6 +17,24 @@
       type="font/woff2"
       crossorigin
     />
+    <!-- Homepage LCP banner. Client-rendered, so start it before the JS boots.
+         AVIF only: browsers without support simply skip these and fall back. -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      href="/design-reference/New%20main%20hero%20banner%20main.avif"
+      media="(min-width: 769px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      href="/design-reference/second-hero-banner-mobile.avif"
+      media="(max-width: 768px)"
+      fetchpriority="high"
+    />
     <title>Buy, Sell &amp; Value Used Gym Equipment | Equipd Marketplace</title>
     <meta
       name="description"

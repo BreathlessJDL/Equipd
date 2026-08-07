@@ -10,6 +10,11 @@ import { getDisplayableAvailableQuantity } from '../lib/listingAvailability'
 import { formatListingLocationCard } from '../lib/listingLocation'
 import { formatListingDistanceLabel } from '../lib/listingDistance'
 import { getListingPrimaryImageUrl } from '../lib/listingImages'
+import {
+  LISTING_CARD_IMAGE_WIDTHS,
+  LISTING_ROW_IMAGE_WIDTHS,
+  buildListingImageSources,
+} from '../lib/listingImageTransforms'
 import { buildListingImageAltText } from '../lib/listingPageSeo'
 import ListingSaveButton from './ListingSaveButton'
 import './ListingCard.css'
@@ -39,15 +44,42 @@ function getConditionTone(value) {
   return CONDITION_TONE_BY_VALUE[value] || 'neutral'
 }
 
-function ListingCardImage({ listing }) {
+const GRID_IMAGE_SIZES = '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 300px'
+const ROW_IMAGE_SIZES = '120px'
+
+function ListingCardImage({ listing, priority = false, variant = 'grid' }) {
   const imageUrl = getListingPrimaryImageUrl(listing)
   const imageAlt = buildListingImageAltText(listing)
 
-  if (imageUrl) {
-    return <img src={imageUrl} alt={imageAlt} className="listing-card__image" />
+  if (!imageUrl) {
+    return <div className="listing-card__image listing-card__image--placeholder">No photo</div>
   }
 
-  return <div className="listing-card__image listing-card__image--placeholder">No photo</div>
+  const isRow = variant === 'row'
+  const { src, srcSet } = buildListingImageSources(imageUrl, {
+    widths: isRow ? LISTING_ROW_IMAGE_WIDTHS : LISTING_CARD_IMAGE_WIDTHS,
+  })
+
+  return (
+    <img
+      src={src}
+      srcSet={srcSet}
+      sizes={srcSet ? (isRow ? ROW_IMAGE_SIZES : GRID_IMAGE_SIZES) : undefined}
+      alt={imageAlt}
+      className="listing-card__image"
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : 'auto'}
+      decoding="async"
+      onError={(event) => {
+        // If the transform endpoint is unavailable, show the original upload.
+        const image = event.currentTarget
+        if (image.src === imageUrl) return
+        image.srcset = ''
+        image.sizes = ''
+        image.src = imageUrl
+      }}
+    />
+  )
 }
 
 function ListingCardAvailability({ listing, className }) {
@@ -77,7 +109,7 @@ function ConditionPill({ condition }) {
   )
 }
 
-function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null, onSavedChange }) {
+function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null, onSavedChange, imagePriority = false }) {
   const showBadge = showNewBadge && isRecentListing(listing)
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
@@ -87,7 +119,7 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
     <article className="listing-card listing-card--grid">
       <div className="listing-card__media">
         <Link to={listingHref} className="listing-card__image-link" tabIndex={-1}>
-          <ListingCardImage listing={listing} />
+          <ListingCardImage listing={listing} priority={imagePriority} />
         </Link>
         {showBadge ? <span className="listing-card__badge">New</span> : null}
         <ListingSaveButton listing={listing} onSavedChange={onSavedChange} />
@@ -150,7 +182,7 @@ function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, pr
   )
 }
 
-function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onSavedChange }) {
+function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onSavedChange, imagePriority = false }) {
   const hasCollection = listing.collection_available !== false
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
@@ -160,7 +192,7 @@ function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onS
     <article className="listing-row">
       <div className="listing-row__media">
         <Link to={listingHref} className="listing-row__image-link" tabIndex={-1}>
-          <ListingCardImage listing={listing} />
+          <ListingCardImage listing={listing} priority={imagePriority} variant="row" />
         </Link>
         <ListingSaveButton listing={listing} onSavedChange={onSavedChange} />
       </div>
@@ -238,6 +270,7 @@ function ListingCard({
   showNewBadge = false,
   primaryLinkTo = null,
   onSavedChange,
+  imagePriority = false,
 }) {
   if (variant === 'row') {
     return (
@@ -246,6 +279,7 @@ function ListingCard({
         showStatus={showStatus}
         primaryLinkTo={primaryLinkTo}
         onSavedChange={onSavedChange}
+        imagePriority={imagePriority}
       />
     )
   }
@@ -257,6 +291,7 @@ function ListingCard({
       showNewBadge={showNewBadge}
       primaryLinkTo={primaryLinkTo}
       onSavedChange={onSavedChange}
+      imagePriority={imagePriority}
     />
   )
 }

@@ -419,11 +419,12 @@ function withPrimaryListingImageOnly(query) {
     .limit(1, { foreignTable: 'listing_images' })
 }
 
-export async function fetchCategories() {
-  if (!supabase) {
-    return { data: null, error: new Error('Supabase is not configured.') }
-  }
+// Categories are stable reference data requested by the shell and several pages
+// on the same load; cache the result so it costs one request per session.
+let cachedCategories = null
+let categoriesInflight = null
 
+async function fetchCategoriesNetwork() {
   const { data, error } = await supabase
     .from('categories')
     .select('id, name, slug, sort_order')
@@ -440,6 +441,31 @@ export async function fetchCategories() {
     .sort((left, right) => (order.get(left.slug) ?? 0) - (order.get(right.slug) ?? 0))
 
   return { data: filtered, error: null }
+}
+
+export async function fetchCategories() {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  if (cachedCategories) {
+    return { data: cachedCategories, error: null }
+  }
+
+  if (!categoriesInflight) {
+    categoriesInflight = fetchCategoriesNetwork()
+      .then((result) => {
+        if (!result.error) {
+          cachedCategories = result.data
+        }
+        return result
+      })
+      .finally(() => {
+        categoriesInflight = null
+      })
+  }
+
+  return categoriesInflight
 }
 
 export async function createListing(sellerId, fields) {

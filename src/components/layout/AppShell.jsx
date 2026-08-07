@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCategories } from '../../lib/listings'
 import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
@@ -7,6 +7,7 @@ import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
 import SiteStructuredData from '../seo/SiteStructuredData'
 import GlobalSiteHeader from './GlobalSiteHeader'
 import SiteFooter from './SiteFooter'
+import RouteFallback from '../routing/RouteFallback'
 import { WantedRequestProvider } from '../wanted/WantedRequestContext'
 import './AppShell.css'
 
@@ -99,7 +100,9 @@ function AppShell() {
             hideSiteFooter ? ' app-shell__main--messages' : ''
           }`}
         >
-          <Outlet context={outletContext} />
+          <Suspense fallback={<RouteFallback />}>
+            <Outlet context={outletContext} />
+          </Suspense>
         </main>
 
         <SiteFooter />

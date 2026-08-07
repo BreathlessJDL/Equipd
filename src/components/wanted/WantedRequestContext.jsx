@@ -1,8 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import WantedRequestModal from './WantedRequestModal'
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react'
 import { WantedRequestContext } from './wantedRequestContextValue'
 import { WANTED_REQUEST_SOURCES } from '../../lib/wantedRequestConstants'
 import { trackWantedRequestCtaClicked, trackWantedRequestModalOpened } from '../../lib/wantedRequestAnalytics'
+
+// The modal pulls in Google Places and the request form; keep it out of the
+// initial bundle until someone actually opens it.
+const WantedRequestModal = lazy(() => import('./WantedRequestModal'))
 
 export function WantedRequestProvider({ children }) {
   const [open, setOpen] = useState(false)
@@ -73,12 +76,14 @@ export function WantedRequestProvider({ children }) {
     <WantedRequestContext.Provider value={value}>
       {children}
       {open ? (
-        <WantedRequestModal
-          key={sessionKey}
-          open={open}
-          draft={draft}
-          onClose={closeWantedRequest}
-        />
+        <Suspense fallback={null}>
+          <WantedRequestModal
+            key={sessionKey}
+            open={open}
+            draft={draft}
+            onClose={closeWantedRequest}
+          />
+        </Suspense>
       ) : null}
     </WantedRequestContext.Provider>
   )

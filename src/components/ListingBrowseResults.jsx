@@ -5,6 +5,9 @@ import {
 } from './wanted/WantedRequestSurfaces'
 import { isWantedRequestLowStockCount } from '../lib/wantedRequestConstants'
 
+/** Widest grid shows four across; the rest can lazy-load. */
+const ABOVE_FOLD_CARD_COUNT = 4
+
 function ListingBrowseResults({
   loading,
   loadingMore = false,
@@ -101,8 +104,13 @@ function ListingBrowseResults({
           </header>
         ) : null}
         <div className="listing-browse__grid">
-          {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} variant="home" />
+          {listings.map((listing, index) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="home"
+              imagePriority={index < ABOVE_FOLD_CARD_COUNT}
+            />
           ))}
         </div>
         {lowStockBanner}

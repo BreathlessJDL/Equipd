@@ -58,7 +58,12 @@ assert.match(valuator, /idPrefix = 'home-valuator'/, 'default idPrefix preserves
 assert.match(valuator, /const inputId = `\$\{idPrefix\}-search`/, 'input ids derive from idPrefix')
 assert.match(valuator, /const titleId = `\$\{idPrefix\}-title`/, 'title ids derive from idPrefix')
 assert.match(valuator, /buildValuationHref/, 'shared routing helper')
-assert.match(valuator, /CanonicalEquipmentAutocomplete/, 'shared autocomplete')
+assert.match(valuator, /DeferredEquipmentAutocomplete/, 'shared autocomplete (deferred wrapper)')
+assert.match(
+  read('src/components/DeferredEquipmentAutocomplete.jsx'),
+  /import\('\.\/CanonicalEquipmentAutocomplete'\)/,
+  'deferred wrapper loads the shared canonical autocomplete',
+)
 assert.match(valuator, /useState\(''\)/, 'instance-local query state')
 assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
 assert.doesNotMatch(valuator, /module-level selectedProduct|let selectedProduct/, 'no module shared selection')

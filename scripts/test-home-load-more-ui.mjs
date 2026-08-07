@@ -2,6 +2,7 @@
 import { chromium } from 'playwright-core'
 
 const baseUrl = process.argv[2] ?? 'http://localhost:5173'
+const PAGE_SIZE = 24
 const browser = await chromium.launch({ headless: true, channel: 'msedge' })
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 
@@ -12,8 +13,10 @@ async function recentSectionState() {
     const section = document.querySelector('.home-recent')
     if (!section) return { exists: false }
 
-    const cards = section.querySelectorAll('.listing-card')
-    const placeholders = section.querySelectorAll('.listing-card__image--placeholder')
+    const cards = section.querySelectorAll('.listing-card:not(.listing-card-skeleton)')
+    const placeholders = section.querySelectorAll(
+      '.listing-card:not(.listing-card-skeleton) .listing-card__image--placeholder',
+    )
     const imgs = section.querySelectorAll('img.listing-card__image')
     const button = section.querySelector('.listing-browse__load-more-button')
 
@@ -63,30 +66,40 @@ async function categoryScrollState() {
   })
 }
 
-await page.waitForSelector('.home-recent .listing-card', { timeout: 15000 })
+await page.waitForSelector('.home-recent .listing-card:not(.listing-card-skeleton)', { timeout: 15000 })
 
 const recent1 = await recentSectionState()
+
+// The browse grid loads as it approaches the viewport, so scroll to it first.
+await page.evaluate(() => {
+  document.querySelector('.home-browse')?.scrollIntoView({ block: 'start' })
+})
+await page.waitForSelector('.home-browse .listing-card', { timeout: 15000 })
+
 const browse1 = await browseSectionState()
 
-if (browse1.hasButton) {
+// The catalogue grows over time, so wait for the grid to settle after each
+// click rather than for a fixed total.
+async function loadNextBrowsePage(previousCount) {
   await page.click('.home-browse .listing-browse__load-more-button')
   await page.waitForFunction(
-    () => document.querySelectorAll('.home-browse .listing-card').length >= 48,
-    null,
+    (count) => {
+      const section = document.querySelector('.home-browse')
+      if (!section) return false
+      const grew = section.querySelectorAll('.listing-card').length > count
+      const exhausted = !section.querySelector('.listing-browse__load-more-button')
+      return grew || exhausted
+    },
+    previousCount,
     { timeout: 15000 },
   )
 }
+
+if (browse1.hasButton) await loadNextBrowsePage(browse1.cards)
 
 const browse2 = await browseSectionState()
 
-if (browse2.hasButton) {
-  await page.click('.home-browse .listing-browse__load-more-button')
-  await page.waitForFunction(
-    () => document.querySelectorAll('.home-browse .listing-card').length >= 54,
-    null,
-    { timeout: 15000 },
-  )
-}
+if (browse2.hasButton) await loadNextBrowsePage(browse2.cards)
 
 const browse3 = await browseSectionState()
 
@@ -128,6 +141,7 @@ await mobilePage.close()
 const result = {
   recent1,
   browse1,
+  browse2,
   browse3,
   desktopCategoryScroll,
   mobileCategoryScroll,
@@ -143,15 +157,21 @@ const recentOk =
   recent1.placeholders === 0 &&
   !recent1.hasButton
 
+// A page still offering "Load more" must be exactly full; the final page is a
+// partial one with the button gone. Asserting the shape rather than a fixed
+// total keeps this stable as listings are added.
+function browsePageOk(state, pageNumber, previous) {
+  if (!state.exists) return false
+  if (state.imgs !== state.cards || state.placeholders !== 0) return false
+  if (state.hasButton) return state.cards === PAGE_SIZE * pageNumber
+  if (!previous) return state.cards < PAGE_SIZE
+  return state.cards > previous.cards && state.cards < PAGE_SIZE * pageNumber
+}
+
 const browseOk =
-  browse1.exists &&
-  browse1.cards === 24 &&
-  browse1.imgs === 24 &&
-  browse1.placeholders === 0 &&
-  browse3.cards === 54 &&
-  browse3.imgs === 54 &&
-  browse3.placeholders === 0 &&
-  !browse3.hasButton
+  browsePageOk(browse1, 1, null) &&
+  browsePageOk(browse2, 2, browse1) &&
+  browsePageOk(browse3, 3, browse2)
 
 const categoryScrollOk =
   desktopCategoryScroll.filtersTop !== null &&
@@ -164,6 +184,6 @@ const categoryScrollOk =
 if (!recentOk || !browseOk || !categoryScrollOk) process.exitCode = 1
 else {
   console.log(
-    'PASS: Home recent has no load more (10 cards); browse load more works; category nav scrolls to filters',
+    `PASS: Home recent has no load more (10 cards); browse load more paginates ${browse1.cards} -> ${browse2.cards} -> ${browse3.cards}; category nav scrolls to filters`,
   )
 }

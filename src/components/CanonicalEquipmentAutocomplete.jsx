@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   getEquipmentProductDisplayName,
   resolveValuationSearchMatches,
@@ -55,6 +55,9 @@ export default function CanonicalEquipmentAutocomplete({
   inputClassName = '',
   showImages = true,
   disabled = false,
+  // Set when this component replaces a lightweight placeholder input the user
+  // has already interacted with, so the dropdown behaves as if just focused.
+  openOnMount = false,
 }) {
   const generatedId = useId()
   const inputId = id || `canonical-autocomplete-${generatedId}`
@@ -62,7 +65,7 @@ export default function CanonicalEquipmentAutocomplete({
   const statusId = `${inputId}-status`
 
   const rootRef = useRef(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(openOnMount)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [catalog, setCatalog] = useState([])
   const [catalogLoading, setCatalogLoading] = useState(false)
@@ -88,28 +91,35 @@ export default function CanonicalEquipmentAutocomplete({
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [])
 
-  async function ensureCatalog() {
+  const ensureCatalog = useCallback(async () => {
     if (catalogFetched && !catalogError) return
 
     // Synchronous session/memory hit — avoid flashing a loading state.
     const warm = getValuationSearchIndexLoadState()
-    if (warm.ready) {
-      const result = await getValuationSearchIndex()
-      setCatalog(result.products ?? [])
-      setCatalogError(result.error || null)
-      setCatalogFetched(true)
-      setCatalogLoading(false)
-      return
+    if (!warm.ready) {
+      setCatalogLoading(true)
+      setCatalogError(null)
     }
 
-    setCatalogLoading(true)
-    setCatalogError(null)
     const result = await getValuationSearchIndex()
     setCatalog(result.products ?? [])
     setCatalogError(result.error || null)
     setCatalogFetched(true)
     setCatalogLoading(false)
-  }
+  }, [catalogFetched, catalogError])
+
+  useEffect(() => {
+    if (!openOnMount) return undefined
+
+    // Scheduled rather than called inline so the loading flag is not set
+    // synchronously during the effect. Mount-only: mirrors the focus handler.
+    const timeoutId = window.setTimeout(() => {
+      void ensureCatalog()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const searchState = useMemo(() => {
     const trimmed = String(debouncedQuery || '').trim()
