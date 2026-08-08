@@ -67,6 +67,7 @@
     "email:patch-sendgrid-subjects": "node scripts/sendgrid-patch-template-subjects.mjs --phase5",
     "email:verify-logo": "node scripts/verify-email-logo-url.mjs",
     "test:marketplace-email": "node scripts/test-marketplace-email.mjs",
+    "test:equipment-item-saved-email": "node scripts/test-equipment-item-saved-email.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:ebay-sold-price": "node scripts/test-ebay-sold-price.mjs",

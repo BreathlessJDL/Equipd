@@ -15,6 +15,9 @@ import {
   composeCourierDispatchedDynamicData,
   composeDeliveryConfirmedDynamicData,
   composeMarketplaceEmailSubject,
+  composeEquipmentItemSavedDynamicData,
+  composeMessageReceivedDynamicData,
+  formatListingSaveCountText,
   composeNewOrderReceivedDynamicData,
   composeOfferAcceptedDynamicData,
   composeCounterOfferAcceptedSellerDynamicData,
@@ -24,9 +27,15 @@ import {
   getMarketplaceUserName,
   normalizeMarketplaceEmailPayload,
   reserveEmailLog,
+  resolveMessageEmailRecipient,
 } from '../supabase/functions/_shared/marketplaceEmailCore.js'
 import { buildSendGridPayload } from '../supabase/functions/_shared/transactionalEmailCore.js'
 import { getTemplateEnvVarName } from '../supabase/functions/_shared/emailTemplateConfig.js'
+import {
+  escapeHtml,
+  formatMessagePreview,
+  maskEmail,
+} from '../supabase/functions/_shared/emailFormatting.js'
 import {
   buildFulfilmentTestDynamicData,
   FULFILMENT_EMAIL_TEMPLATE_KEYS,
@@ -98,6 +107,232 @@ assert(
 assert(
   getTemplateEnvVarName('counter_offer_received') === 'SENDGRID_TEMPLATE_COUNTER_OFFER_RECEIVED',
   'counter_offer_received maps to SENDGRID_TEMPLATE_COUNTER_OFFER_RECEIVED',
+)
+assert(
+  getTemplateEnvVarName('message_received') === 'SENDGRID_TEMPLATE_MESSAGE_RECEIVED',
+  'message_received maps to SENDGRID_TEMPLATE_MESSAGE_RECEIVED',
+)
+assert(
+  getTemplateEnvVarName('equipment_item_saved') === 'SENDGRID_TEMPLATE_EQUIPMENT_ITEM_SAVED',
+  'equipment_item_saved maps to SENDGRID_TEMPLATE_EQUIPMENT_ITEM_SAVED',
+)
+assert(
+  formatListingSaveCountText(1) === '1 person has saved this item',
+  'save count singular copy',
+)
+assert(
+  formatListingSaveCountText(2) === '2 people have saved this item',
+  'save count plural copy',
+)
+assert(
+  getTemplateEnvVarName('welcome') === 'SENDGRID_TEMPLATE_WELCOME',
+  'welcome template mapping remains unchanged',
+)
+
+assert(
+  resolveMessageEmailRecipient(
+    { buyer_id: 'buyer-1', seller_id: 'seller-1' },
+    'buyer-1',
+  ) === 'seller-1',
+  'buyer message notifies seller',
+)
+assert(
+  resolveMessageEmailRecipient(
+    { buyer_id: 'buyer-1', seller_id: 'seller-1' },
+    'seller-1',
+  ) === 'buyer-1',
+  'seller message notifies buyer',
+)
+assert(
+  resolveMessageEmailRecipient(
+    { buyer_id: 'buyer-1', seller_id: 'seller-1' },
+    'buyer-1',
+  ) !== 'buyer-1',
+  'sender never receives their own message notification',
+)
+assert(
+  resolveMessageEmailRecipient({ buyer_id: 'buyer-1', seller_id: 'seller-1' }, 'stranger') === null,
+  'unknown sender does not resolve a recipient',
+)
+
+assert(
+  buildMarketplaceEmailIdempotencyKey('message_received', {
+    messageId: 'msg-1',
+    recipientUserId: 'seller-1',
+  }) === 'message_received:msg-1:seller-1',
+  'message_received idempotency key includes message and recipient',
+)
+assert(
+  buildMarketplaceEmailIdempotencyKey('message_received', {
+    messageId: 'msg-2',
+    recipientUserId: 'seller-1',
+  }) === 'message_received:msg-2:seller-1',
+  'later messages in same conversation get distinct idempotency keys',
+)
+assert(
+  buildMarketplaceEmailIdempotencyKey('message_received', {
+    messageId: 'msg-1',
+    recipientUserId: 'seller-1',
+  }) !==
+    buildMarketplaceEmailIdempotencyKey('message_received', {
+      messageId: 'msg-1',
+      recipientUserId: 'buyer-1',
+    }),
+  'same message different recipients get distinct keys',
+)
+
+assert(
+  formatMessagePreview('Hello <script>alert(1)</script> world') ===
+    'Hello &lt;script&gt;alert(1)&lt;/script&gt; world',
+  'message preview escapes HTML',
+)
+assert(
+  formatMessagePreview('a'.repeat(300)).length < 300,
+  'message preview truncates long text',
+)
+assert(
+  formatMessagePreview('   ') === 'Sent you a photo or attachment' ||
+    formatMessagePreview('   ').includes('photo'),
+  'empty message preview uses attachment fallback',
+)
+assert(escapeHtml('<b>') === '&lt;b&gt;', 'escapeHtml escapes angle brackets')
+assert(maskEmail('james@equipd.co.uk') === 'ja***@equipd.co.uk', 'maskEmail masks local part')
+
+const messageReceivedData = composeMessageReceivedDynamicData({
+  baseUrl,
+  message: {
+    id: 'msg-1',
+    conversation_id: 'conv-1',
+    body: 'Is this still available? <b>urgent</b>',
+  },
+  conversation: { id: 'conv-1', listing_id: 'list-1' },
+  listing: { title: 'Rogue Ohio Bar' },
+  senderProfile: buyerProfileWithUsername,
+  recipientProfile: sellerProfileWithUsername,
+})
+
+assert(
+  messageReceivedData.subject === 'New message about Rogue Ohio Bar on Equipd',
+  'message_received subject includes listing title',
+)
+assert(
+  messageReceivedData.cta_url === 'https://equipd.co.uk/messages/conv-1',
+  'message_received CTA points at conversation thread',
+)
+assert(
+  messageReceivedData.recipient_first_name === 'sarahlifts',
+  'message_received recipient uses recipient username',
+)
+assert(
+  messageReceivedData.sender_name === 'jamesgym',
+  'message_received sender uses sender username',
+)
+assert(
+  messageReceivedData.message_preview.includes('&lt;b&gt;'),
+  'message_received preview is escaped in dynamic data',
+)
+assert(
+  !messageReceivedData.body.includes('<b>urgent</b>'),
+  'message_received body does not inject raw HTML from message',
+)
+assert(
+  messageReceivedData.body.includes('jamesgym'),
+  'message_received body includes sender username',
+)
+assert(
+  composeMarketplaceEmailSubject('message_received', 'Bench Press') ===
+    'New message about Bench Press on Equipd',
+  'composeMarketplaceEmailSubject message_received',
+)
+assert(
+  composeMarketplaceEmailSubject('message_received', 'a listing') ===
+    'You have a new message on Equipd',
+  'composeMarketplaceEmailSubject message_received fallback without listing',
+)
+assert(
+  composeMarketplaceEmailSubject('message_received', '') ===
+    'You have a new message on Equipd',
+  'composeMarketplaceEmailSubject message_received empty listing fallback',
+)
+
+const messageSendGridPayload = buildSendGridPayload({
+  recipients: ['seller@example.com'],
+  templateId: 'd-message-test',
+  dynamicTemplateData: messageReceivedData,
+  from: { email: 'notifications@equipd.co.uk', name: 'Equipd' },
+})
+assert(
+  messageSendGridPayload.subject === messageReceivedData.subject,
+  'message_received buildSendGridPayload top-level subject',
+)
+assert(
+  messageSendGridPayload.personalizations[0].dynamic_template_data.subject ===
+    messageReceivedData.subject,
+  'message_received buildSendGridPayload dynamic_template_data subject',
+)
+
+const listingSavedData = composeEquipmentItemSavedDynamicData({
+  baseUrl,
+  listing: {
+    id: 'list-saved-1',
+    slug: 'life-fitness-e5-cross-trainer',
+    title: 'Life Fitness E5 Cross-Trainer',
+  },
+  sellerProfile: sellerProfileWithUsername,
+  saveCount: 2,
+})
+assert(
+  listingSavedData.subject === 'Someone saved your Life Fitness E5 Cross-Trainer',
+  'equipment_item_saved subject includes listing title',
+)
+assert(
+  listingSavedData.first_name === 'sarahlifts',
+  'equipment_item_saved first_name uses seller username',
+)
+assert(
+  listingSavedData.save_count_text === '2 people have saved this item',
+  'equipment_item_saved plural save count',
+)
+assert(
+  listingSavedData.cta_url === 'https://equipd.co.uk/listings/life-fitness-e5-cross-trainer',
+  'equipment_item_saved CTA is the public listing URL',
+)
+assert(
+  !JSON.stringify(listingSavedData).includes('jamesgym'),
+  'equipment_item_saved template data omits saver identity',
+)
+assert(
+  composeMarketplaceEmailSubject('equipment_item_saved', 'Life Fitness E5 Cross-Trainer') ===
+    'Someone saved your Life Fitness E5 Cross-Trainer',
+  'composeMarketplaceEmailSubject equipment_item_saved',
+)
+assert(
+  buildMarketplaceEmailIdempotencyKey('equipment_item_saved', {
+    listingId: 'list-1',
+    saverUserId: 'saver-1',
+  }) === 'equipment_item_saved:list-1:saver-1',
+  'equipment_item_saved idempotency key is listing + saver',
+)
+
+const listingSavedSendGrid = buildSendGridPayload({
+  recipients: ['seller@example.com'],
+  templateId: 'd-listing-saved-test',
+  dynamicTemplateData: listingSavedData,
+  from: { email: 'notifications@equipd.co.uk', name: 'Equipd' },
+})
+assert(
+  listingSavedSendGrid.subject === listingSavedData.subject,
+  'equipment_item_saved SendGrid personalization subject is programmatic',
+)
+
+assert(
+  normalizeMarketplaceEmailPayload({ message_id: 'msg-9', conversation_id: 'conv-9' }).messageId ===
+    'msg-9',
+  'payload works with message_id',
+)
+assert(
+  normalizeMarketplaceEmailPayload({ messageId: 'msg-9' }).messageId === 'msg-9',
+  'payload works with messageId',
 )
 
 function isActiveCounterOffer(offer) {
@@ -866,6 +1101,48 @@ async function runAsyncTests() {
   })
   assert(retry.action === 'send', 'failed email log reservation retries send')
   assert(retry.retry === true, 'failed email log reservation marks retry')
+
+  const messageFirst = await reserveEmailLog(mockAdmin, {
+    template_key: 'message_received',
+    idempotency_key: 'message_received:msg-1:seller-1',
+    status: 'pending',
+  })
+  assert(messageFirst.action === 'send', 'first message_received email log reservation sends')
+
+  const messageSecondSame = await reserveEmailLog(mockAdmin, {
+    template_key: 'message_received',
+    idempotency_key: 'message_received:msg-1:seller-1',
+    status: 'pending',
+  })
+  assert(
+    messageSecondSame.action === 'skip',
+    'retry of same message_received key does not duplicate',
+  )
+
+  const messageOther = await reserveEmailLog(mockAdmin, {
+    template_key: 'message_received',
+    idempotency_key: 'message_received:msg-2:seller-1',
+    status: 'pending',
+  })
+  assert(
+    messageOther.action === 'send',
+    'later message in same conversation remains eligible',
+  )
+
+  logs.set('message_received:msg-failed:buyer-1', {
+    id: 'log-message-failed',
+    idempotency_key: 'message_received:msg-failed:buyer-1',
+    status: 'failed',
+    template_key: 'message_received',
+  })
+
+  const messageRetry = await reserveEmailLog(mockAdmin, {
+    template_key: 'message_received',
+    idempotency_key: 'message_received:msg-failed:buyer-1',
+    status: 'pending',
+  })
+  assert(messageRetry.action === 'send', 'failed message_received email remains retryable')
+  assert(messageRetry.retry === true, 'failed message_received reservation marks retry')
 }
 
 await runAsyncTests()

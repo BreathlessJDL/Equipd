@@ -30,6 +30,53 @@ export function appUrl(baseUrl, path) {
 }
 
 /**
+ * Escape user-authored text before embedding in email HTML bodies.
+ * @param {unknown} value
+ */
+export function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/**
+ * Plain-text message preview for emails: collapse whitespace, truncate, escape HTML.
+ * @param {unknown} body
+ * @param {{ maxLength?: number, emptyFallback?: string }} [options]
+ */
+export function formatMessagePreview(body, options = {}) {
+  const maxLength = options.maxLength ?? 280
+  const emptyFallback = options.emptyFallback ?? 'Sent you a photo or attachment'
+  const text = String(body ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!text) {
+    return escapeHtml(emptyFallback)
+  }
+
+  const truncated = text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text
+  return escapeHtml(truncated)
+}
+
+/**
+ * Mask an email for structured logs (keeps domain, truncates local part).
+ * @param {unknown} email
+ */
+export function maskEmail(email) {
+  const value = String(email ?? '').trim()
+  const at = value.indexOf('@')
+  if (at <= 0) return '[redacted]'
+  const local = value.slice(0, at)
+  const domain = value.slice(at + 1)
+  const visible = local.slice(0, Math.min(2, local.length))
+  return `${visible}***@${domain}`
+}
+
+/**
  * @param {Record<string, string>} rows label → value
  */
 export function detailRowsHtml(rows) {

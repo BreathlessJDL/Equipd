@@ -161,35 +161,31 @@ export function buildSendGridPayload({
   dynamicTemplateData,
   from,
   replyTo,
+  fallbackSubject = 'Equipd notification',
 }) {
-  const hasSubjectField =
-    dynamicTemplateData.subject !== undefined && dynamicTemplateData.subject !== null
-  const subject = hasSubjectField ? normalizeEmailSubject(dynamicTemplateData.subject) : ''
-  const normalizedDynamicTemplateData = hasSubjectField
-    ? { ...dynamicTemplateData, subject }
-    : dynamicTemplateData
+  const rawSubject =
+    dynamicTemplateData?.subject !== undefined && dynamicTemplateData?.subject !== null
+      ? normalizeEmailSubject(dynamicTemplateData.subject)
+      : ''
+  const subject = rawSubject || normalizeEmailSubject(fallbackSubject) || 'Equipd notification'
+  const normalizedDynamicTemplateData = {
+    ...dynamicTemplateData,
+    subject,
+  }
 
   const personalization = {
     to: recipients.map((email) => ({ email })),
     dynamic_template_data: normalizedDynamicTemplateData,
+    subject,
   }
 
-  if (subject) {
-    personalization.subject = subject
-  }
-
-  const payload = {
+  return {
     personalizations: [personalization],
     from,
     reply_to: replyTo,
     template_id: templateId,
+    subject,
   }
-
-  if (subject) {
-    payload.subject = subject
-  }
-
-  return payload
 }
 
 export function summarizeSendGridPayloadSubjects(payload) {

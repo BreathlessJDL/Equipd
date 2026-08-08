@@ -8,6 +8,8 @@ import { collectionConfirmedTemplate } from './collectionConfirmed.js'
 import { courierDispatchedTemplate } from './courierDispatched.js'
 import { deliveryConfirmedTemplate } from './deliveryConfirmed.js'
 import { buyerProtectionStartedTemplate } from './buyerProtectionStarted.js'
+import { messageReceivedTemplate } from './messageReceived.js'
+import { equipmentItemSavedTemplate } from './equipmentItemSaved.js'
 import { disputeOpenedTemplate } from './disputeOpened.js'
 import { evidenceRequestedTemplate } from './evidenceRequested.js'
 import { returnAuthorisedTemplate } from './returnAuthorised.js'
@@ -36,6 +38,8 @@ export const PHASE2_EMAIL_TEMPLATES = [
   courierDispatchedTemplate,
   deliveryConfirmedTemplate,
   buyerProtectionStartedTemplate,
+  messageReceivedTemplate,
+  equipmentItemSavedTemplate,
 ]
 
 /** Phase 5: cases, reviews, payouts, and account emails. */
@@ -97,6 +101,7 @@ export function buildPhase2SendGridPlainText(templateKey) {
 
 export {
   offerReceivedTemplate,
+  counterOfferReceivedTemplate,
   offerAcceptedTemplate,
   paymentSuccessfulTemplate,
   newOrderReceivedTemplate,
@@ -105,6 +110,8 @@ export {
   courierDispatchedTemplate,
   deliveryConfirmedTemplate,
   buyerProtectionStartedTemplate,
+  messageReceivedTemplate,
+  equipmentItemSavedTemplate,
   disputeOpenedTemplate,
   evidenceRequestedTemplate,
   returnAuthorisedTemplate,

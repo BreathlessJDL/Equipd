@@ -78,9 +78,42 @@ Each template key maps to an environment variable holding the SendGrid template 
 | `refund_completed` | `SENDGRID_TEMPLATE_REFUND_COMPLETED` |
 | `case_closed` | `SENDGRID_TEMPLATE_CASE_CLOSED` |
 | `payout_released` | `SENDGRID_TEMPLATE_PAYOUT_RELEASED` |
+| `welcome` | `SENDGRID_TEMPLATE_WELCOME` |
+| `message_received` | `SENDGRID_TEMPLATE_MESSAGE_RECEIVED` |
+| `equipment_item_saved` | `SENDGRID_TEMPLATE_EQUIPMENT_ITEM_SAVED` |
 | `equipment_request` | `SENDGRID_TEMPLATE_EQUIPMENT_REQUEST` |
 
 Config source: `supabase/functions/_shared/emailTemplateConfig.js` (re-exported from `emails/templateConfig.js`).
+
+### New message emails
+
+`message_received` is triggered by an `AFTER INSERT` trigger on `public.messages` (text messages only). It uses the shared Equipd layout fields (`subject`, `preheader`, `title`, `body`, `cta_text`, `cta_url`) plus `sender_name`, `listing_title`, and `message_preview`.
+
+Create a SendGrid dynamic template that matches the existing layout (clone `counter_offer_received` / `welcome` if needed), set the active version subject to `{{subject}}`, and store the template ID in Supabase:
+
+```bash
+supabase secrets set SENDGRID_TEMPLATE_MESSAGE_RECEIVED=d-xxxxxxxx
+```
+
+Idempotency key format: `message_received:{message_id}:{recipient_user_id}`.
+
+### Equipment item saved emails
+
+`equipment_item_saved` is triggered by an `AFTER INSERT` trigger on `public.saved_listings`. The recipient is the listing seller. The saver identity is never included in template data.
+
+Subject is set programmatically:
+
+`Someone saved your {listing title}`
+
+Idempotency key format: `equipment_item_saved:{listing_id}:{saver_user_id}`. This survives save/unsave/save so the same relationship cannot spam the seller.
+
+Create the SendGrid dynamic template, set the active version subject to `{{subject}}`, and store the template ID in **Supabase Edge Function secrets** (not Vercel, not `VITE_*`):
+
+```bash
+supabase secrets set SENDGRID_TEMPLATE_EQUIPMENT_ITEM_SAVED=d-xxxxxxxx
+```
+
+Also keep the value in `.env.local` for local tests. Apply migration `20260808210000_equipment_item_saved_email.sql`.
 
 ### Wanted equipment request emails
 

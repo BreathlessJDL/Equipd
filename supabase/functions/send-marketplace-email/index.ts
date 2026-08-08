@@ -117,6 +117,15 @@ Deno.serve(async (req) => {
       return errorResponse('reviewId is required for review_received', 400)
     }
 
+    if (body.eventKey === 'equipment_item_saved') {
+      if (!payload.listingId) {
+        return errorResponse('listingId is required for equipment_item_saved', 400)
+      }
+      if (!payload.saverUserId) {
+        return errorResponse('saverUserId is required for equipment_item_saved', 400)
+      }
+    }
+
     if (
       (body.eventKey === 'review_available' ||
         body.eventKey === 'payout_released' ||

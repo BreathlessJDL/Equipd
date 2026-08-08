@@ -1,6 +1,13 @@
-import { appUrl, detailRowsHtml, normalizeEmailSubject } from './emailFormatting.js'
-import { enrichDynamicData, isDryRunMode, sendTransactionalEmail } from './transactionalEmailCore.js'
-import { isEmailTemplateKey } from './emailTemplateConfig.js'
+import {
+  appUrl,
+  detailRowsHtml,
+  escapeHtml,
+  formatMessagePreview,
+  maskEmail,
+  normalizeEmailSubject,
+} from './emailFormatting.js'
+import { isDryRunMode, sendTransactionalEmail } from './transactionalEmailCore.js'
+import { isEmailTemplateKey, getTemplateEnvVarName } from './emailTemplateConfig.js'
 import {
   PHASE5_ACCOUNT_EMAIL_EVENT_KEYS,
   PHASE5_CASE_EMAIL_EVENT_KEYS,
@@ -84,6 +91,8 @@ export const MARKETPLACE_EMAIL_EVENT_KEYS = [
   'welcome',
   'email_changed',
   'password_changed',
+  'message_received',
+  'equipment_item_saved',
 ]
 
 const FULFILMENT_ORDER_EVENT_KEYS = new Set([
@@ -133,6 +142,12 @@ export function normalizeMarketplaceEmailPayload(payload = {}) {
     newEmail: readPayloadId(payload, 'newEmail', 'new_email'),
     collectionDate: readPayloadId(payload, 'collectionDate', 'collection_date'),
     changedAt: readPayloadId(payload, 'changedAt', 'changed_at'),
+    messageId: readPayloadId(payload, 'messageId', 'message_id'),
+    conversationId: readPayloadId(payload, 'conversationId', 'conversation_id'),
+    senderId: readPayloadId(payload, 'senderId', 'sender_id'),
+    recipientUserId: readPayloadId(payload, 'recipientUserId', 'recipient_user_id'),
+    saverUserId: readPayloadId(payload, 'saverUserId', 'saver_user_id'),
+    savedListingId: readPayloadId(payload, 'savedListingId', 'saved_listing_id'),
   }
 }
 
@@ -181,9 +196,37 @@ export function buildMarketplaceEmailIdempotencyKey(eventKey, parts) {
       return `delivery_confirmed:${parts.orderId}:${parts.recipientUserId}`
     case 'buyer_protection_started':
       return `buyer_protection_started:${parts.orderId}:${parts.buyerId}`
+    case 'message_received':
+      return `message_received:${parts.messageId}:${parts.recipientUserId}`
+    case 'equipment_item_saved':
+      return `equipment_item_saved:${parts.listingId}:${parts.saverUserId}`
     default:
       return buildPhase5IdempotencyKey(eventKey, parts)
   }
+}
+
+/**
+ * Resolve the other conversation participant for a message email.
+ * Never returns the sender.
+ * @param {{ buyer_id?: string, seller_id?: string } | null | undefined} conversation
+ * @param {string | null | undefined} senderId
+ * @returns {string | null}
+ */
+export function resolveMessageEmailRecipient(conversation, senderId) {
+  if (!conversation || !senderId) return null
+
+  const buyerId = conversation.buyer_id
+  const sellerId = conversation.seller_id
+
+  if (senderId === buyerId && sellerId && sellerId !== senderId) {
+    return sellerId
+  }
+
+  if (senderId === sellerId && buyerId && buyerId !== senderId) {
+    return buyerId
+  }
+
+  return null
 }
 
 export function formatOrderReference(orderId) {
@@ -314,9 +357,116 @@ export function composeMarketplaceEmailSubject(eventKey, listingTitle, { recipie
       return `Delivery confirmed for ${itemTitle}`
     case 'buyer_protection_started':
       return `Buyer Protection started for ${itemTitle}`
+    case 'message_received': {
+      const listing = listingTitle?.trim()
+      if (listing && listing !== 'a listing' && listing !== 'your listing') {
+        return normalizeEmailSubject(`New message about ${listing} on Equipd`)
+      }
+      return normalizeEmailSubject('You have a new message on Equipd')
+    }
+    case 'equipment_item_saved': {
+      const listing = listingTitle?.trim() || 'listing'
+      return normalizeEmailSubject(`Someone saved your ${listing}`)
+    }
     default:
       return composePhase5EmailSubject(eventKey, listingTitle, { recipientRole, orderType })
   }
+}
+
+export function composeMessageReceivedDynamicData({
+  baseUrl,
+  message,
+  conversation,
+  listing,
+  senderProfile,
+  recipientProfile,
+}) {
+  const listingTitle = listing?.title?.trim() || 'a listing'
+  const subject = composeMarketplaceEmailSubject('message_received', listingTitle)
+  const senderName = getMarketplaceUserName(senderProfile, { fallback: 'Someone' })
+  const recipientFirstName = getMarketplaceRecipientName(recipientProfile, { fallback: 'there' })
+  const messagePreview = formatMessagePreview(message?.body)
+  const conversationId = conversation?.id || message?.conversation_id
+  const conversationPath = conversationId ? `/messages/${conversationId}` : '/messages'
+  const safeSenderName = escapeHtml(senderName)
+  const safeListingTitle = escapeHtml(listingTitle)
+  const safeRecipientFirstName = escapeHtml(recipientFirstName)
+
+  const body = `
+    <p>Hi ${safeRecipientFirstName},</p>
+    <p><strong>${safeSenderName}</strong> sent you a message about <strong>${safeListingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      From: safeSenderName,
+      Listing: safeListingTitle,
+      Message: messagePreview,
+    })}
+    <p>Reply in Messages to continue the conversation.</p>
+  `.trim()
+
+  return layoutFields(baseUrl, {
+    subject,
+    preheader: `${senderName} messaged you about ${listingTitle}.`,
+    title: 'New message',
+    subtitle: 'Someone replied on Equipd.',
+    body,
+    cta_text: 'View message',
+    cta_url: appUrl(baseUrl, conversationPath),
+    recipient_first_name: recipientFirstName,
+    sender_name: senderName,
+    listing_title: listingTitle,
+    message_preview: messagePreview,
+    conversation_id: conversationId ?? '',
+    message_id: message?.id ?? '',
+  })
+}
+
+export function formatListingSaveCountText(count) {
+  const n = Math.max(0, Number(count) || 0)
+  if (n === 1) return '1 person has saved this item'
+  return `${n} people have saved this item`
+}
+
+export function composeEquipmentItemSavedDynamicData({
+  baseUrl,
+  listing,
+  sellerProfile,
+  saveCount,
+}) {
+  const listingTitle = listing?.title?.trim() || 'listing'
+  const firstName = getMarketplaceRecipientName(sellerProfile, { fallback: 'there' })
+  const saveCountText = formatListingSaveCountText(saveCount)
+  const listingPath = listing?.slug
+    ? `/listings/${listing.slug}`
+    : listing?.id
+      ? `/listings/${listing.id}`
+      : '/hub?section=selling'
+  const subject = composeMarketplaceEmailSubject('equipment_item_saved', listingTitle)
+  const safeFirstName = escapeHtml(firstName)
+  const safeListingTitle = escapeHtml(listingTitle)
+  const safeSaveCountText = escapeHtml(saveCountText)
+
+  const body = `
+    <p>Hi ${safeFirstName},</p>
+    <p>Someone has saved your listing <strong>${safeListingTitle}</strong>.</p>
+    ${detailRowsHtml({
+      Listing: safeListingTitle,
+      Interest: safeSaveCountText,
+    })}
+    <p>Your equipment is getting noticed on Equipd.</p>
+  `.trim()
+
+  return layoutFields(baseUrl, {
+    subject,
+    preheader: `Someone has saved your ${listingTitle} on Equipd.`,
+    title: 'Someone saved your listing',
+    subtitle: 'Your equipment is getting noticed on Equipd.',
+    body,
+    cta_text: 'View your listing',
+    cta_url: appUrl(baseUrl, listingPath),
+    first_name: firstName,
+    listing_title: listingTitle,
+    save_count_text: saveCountText,
+  })
 }
 
 export function composeOfferReceivedDynamicData({ baseUrl, offer, listing, buyerProfile, sellerProfile }) {
@@ -961,6 +1111,43 @@ async function loadOfferContext(admin, offerId) {
   }
 }
 
+async function loadMessageContext(admin, messageId) {
+  const { data: message, error } = await admin
+    .from('messages')
+    .select('id, conversation_id, sender_id, body, message_type')
+    .eq('id', messageId)
+    .maybeSingle()
+
+  if (error || !message) {
+    return { ok: false, error: error?.message || 'Message not found' }
+  }
+
+  const { data: conversation, error: conversationError } = await admin
+    .from('conversations')
+    .select('id, listing_id, buyer_id, seller_id')
+    .eq('id', message.conversation_id)
+    .maybeSingle()
+
+  if (conversationError || !conversation) {
+    return { ok: false, error: conversationError?.message || 'Conversation not found' }
+  }
+
+  const [{ data: listing }, participants] = await Promise.all([
+    conversation.listing_id
+      ? admin.from('listings').select('id, title').eq('id', conversation.listing_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    loadMarketplaceParticipants(admin, [conversation.buyer_id, conversation.seller_id, message.sender_id]),
+  ])
+
+  return {
+    ok: true,
+    message,
+    conversation,
+    listing,
+    participants,
+  }
+}
+
 async function loadOrderContext(admin, orderId) {
   const { data: order, error } = await admin
     .from('orders')
@@ -1128,6 +1315,128 @@ export async function composeMarketplaceEmailDynamicData(eventKey, payload, getE
   const baseUrl = getEnv('APP_BASE_URL')?.trim() || getEnv('EQUIPD_APP_URL')?.trim() || 'https://equipd.co.uk'
   const normalizedPayload = normalizeMarketplaceEmailPayload(payload)
   const admin = normalizedPayload.admin
+
+  if (eventKey === 'message_received') {
+    const messageId = normalizedPayload.messageId
+    if (!messageId) {
+      return { ok: false, error: 'messageId is required for message_received' }
+    }
+
+    const context = await loadMessageContext(admin, messageId)
+    if (!context.ok) return context
+
+    const { message, conversation, listing, participants } = context
+
+    if (message.message_type && message.message_type !== 'text') {
+      return { ok: false, skip: true, reason: 'non_text_message' }
+    }
+
+    if (!message.sender_id) {
+      return { ok: false, skip: true, reason: 'system_message_no_sender' }
+    }
+
+    const recipientUserId = resolveMessageEmailRecipient(conversation, message.sender_id)
+    if (!recipientUserId) {
+      return { ok: false, skip: true, reason: 'recipient_unresolved' }
+    }
+
+    if (
+      normalizedPayload.recipientUserId &&
+      normalizedPayload.recipientUserId !== recipientUserId
+    ) {
+      return { ok: false, skip: true, reason: 'recipient_mismatch' }
+    }
+
+    if (recipientUserId === message.sender_id) {
+      return { ok: false, skip: true, reason: 'sender_is_recipient' }
+    }
+
+    return {
+      ok: true,
+      templateKey: eventKey,
+      recipientUserId,
+      relatedListingId: listing?.id ?? conversation.listing_id,
+      idempotencyParts: { messageId: message.id, recipientUserId },
+      dynamicData: composeMessageReceivedDynamicData({
+        baseUrl,
+        message,
+        conversation,
+        listing,
+        senderProfile: participants[message.sender_id],
+        recipientProfile: participants[recipientUserId],
+      }),
+    }
+  }
+
+  if (eventKey === 'equipment_item_saved') {
+    const listingId = normalizedPayload.listingId
+    const saverUserId = normalizedPayload.saverUserId
+    if (!listingId) {
+      return { ok: false, error: 'listingId is required for equipment_item_saved' }
+    }
+    if (!saverUserId) {
+      return { ok: false, error: 'saverUserId is required for equipment_item_saved' }
+    }
+
+    const { data: listing, error: listingError } = await admin
+      .from('listings')
+      .select('id, slug, title, seller_id')
+      .eq('id', listingId)
+      .maybeSingle()
+
+    if (listingError) {
+      return { ok: false, error: listingError.message || 'Failed to load listing' }
+    }
+    if (!listing) {
+      return { ok: false, skip: true, reason: 'listing_not_found' }
+    }
+    if (!listing.seller_id) {
+      return { ok: false, skip: true, reason: 'seller_unresolved' }
+    }
+    if (listing.seller_id === saverUserId) {
+      return { ok: false, skip: true, reason: 'self_save' }
+    }
+
+    const { data: savedRow, error: savedError } = await admin
+      .from('saved_listings')
+      .select('id')
+      .eq('listing_id', listingId)
+      .eq('user_id', saverUserId)
+      .maybeSingle()
+
+    if (savedError) {
+      return { ok: false, error: savedError.message || 'Failed to verify saved listing' }
+    }
+    if (!savedRow) {
+      return { ok: false, skip: true, reason: 'favourite_removed' }
+    }
+
+    const { count, error: countError } = await admin
+      .from('saved_listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('listing_id', listingId)
+
+    if (countError) {
+      return { ok: false, error: countError.message || 'Failed to count listing saves' }
+    }
+
+    const saveCount = Number.isFinite(count) ? Math.max(0, count) : 0
+    const participants = await loadMarketplaceParticipants(admin, [listing.seller_id])
+
+    return {
+      ok: true,
+      templateKey: eventKey,
+      recipientUserId: listing.seller_id,
+      relatedListingId: listing.id,
+      idempotencyParts: { listingId: listing.id, saverUserId },
+      dynamicData: composeEquipmentItemSavedDynamicData({
+        baseUrl,
+        listing,
+        sellerProfile: participants[listing.seller_id],
+        saveCount,
+      }),
+    }
+  }
 
   if (eventKey === 'offer_received' || eventKey === 'offer_accepted' || eventKey === 'counter_offer_received') {
     const context = await loadOfferContext(admin, normalizedPayload.offerId)
@@ -1868,7 +2177,15 @@ export async function sendMarketplaceEmail(eventKey, payload, deps) {
     }
 
     if (reservation.action === 'skip') {
-      log('sendMarketplaceEmail duplicate skipped', `${idempotencyKey} (${reservation.reason})`)
+      log(
+        'sendMarketplaceEmail duplicate skipped',
+        JSON.stringify({
+          eventKey,
+          idempotencyKey,
+          reason: reservation.reason,
+          recipientUserId: composed.recipientUserId,
+        }),
+      )
       return { ok: true, skipped: true, reason: reservation.reason, idempotencyKey }
     }
 
@@ -1883,7 +2200,16 @@ export async function sendMarketplaceEmail(eventKey, payload, deps) {
         error_message: emailError || 'Recipient email missing',
         failed_at: new Date().toISOString(),
       })
-      log('sendMarketplaceEmail skipped: missing recipient email', `${eventKey} user=${composed.recipientUserId}`)
+      log(
+        'sendMarketplaceEmail skipped: missing recipient email',
+        JSON.stringify({
+          eventKey,
+          idempotencyKey,
+          recipientUserId: composed.recipientUserId,
+          templateEnvVar: getTemplateEnvVarName(composed.templateKey),
+          templateConfigured: Boolean(getEnv(getTemplateEnvVarName(composed.templateKey) || '')?.trim()),
+        }),
+      )
       return { ok: true, skipped: true, reason: 'missing_recipient_email', idempotencyKey }
     }
 
@@ -1891,15 +2217,37 @@ export async function sendMarketplaceEmail(eventKey, payload, deps) {
       recipient_email: recipientEmail,
     })
 
+    log(
+      'sendMarketplaceEmail attempt',
+      JSON.stringify({
+        eventKey,
+        idempotencyKey,
+        recipientUserId: composed.recipientUserId,
+        recipient: maskEmail(recipientEmail),
+        templateKey: composed.templateKey,
+        relatedListingId: composed.relatedListingId ?? null,
+        relatedOfferId: composed.relatedOfferId ?? null,
+        relatedOrderId: composed.relatedOrderId ?? null,
+      }),
+    )
+
     if (isDryRunMode(getEnv)) {
-      const enriched = enrichDynamicData(composed.dynamicData, getEnv)
       await finalizeEmailLog(admin, reservation.logId, {
         status: 'skipped',
         error_message: 'Dry-run mode (SendGrid not configured or EMAIL_DRY_RUN enabled)',
         failed_at: null,
         sent_at: null,
       })
-      log('sendMarketplaceEmail dry-run', JSON.stringify({ eventKey, to: recipientEmail, dynamicData: enriched }, null, 2))
+      log(
+        'sendMarketplaceEmail dry-run',
+        JSON.stringify({
+          eventKey,
+          idempotencyKey,
+          recipient: maskEmail(recipientEmail),
+          templateKey: composed.templateKey,
+          templateConfigured: Boolean(getEnv(getTemplateEnvVarName(composed.templateKey) || '')?.trim()),
+        }),
+      )
       return { ok: true, dryRun: true, idempotencyKey, to: recipientEmail }
     }
 
@@ -1915,7 +2263,16 @@ export async function sendMarketplaceEmail(eventKey, payload, deps) {
         error_message: sendResult.error || 'SendGrid send failed',
         failed_at: new Date().toISOString(),
       })
-      log('sendMarketplaceEmail send failed', sendResult.error)
+      log(
+        'sendMarketplaceEmail send failed',
+        JSON.stringify({
+          eventKey,
+          idempotencyKey,
+          recipient: maskEmail(recipientEmail),
+          error: sendResult.error || 'SendGrid send failed',
+          providerStatus: sendResult.status ?? null,
+        }),
+      )
       return { ok: false, error: sendResult.error, idempotencyKey }
     }
 
@@ -1934,6 +2291,17 @@ export async function sendMarketplaceEmail(eventKey, payload, deps) {
       error_message: null,
       failed_at: null,
     })
+
+    log(
+      'sendMarketplaceEmail sent',
+      JSON.stringify({
+        eventKey,
+        idempotencyKey,
+        recipient: maskEmail(recipientEmail),
+        providerMessageId: sendResult.messageId ?? null,
+        status: 'sent',
+      }),
+    )
 
     return {
       ok: true,
