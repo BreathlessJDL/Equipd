@@ -565,6 +565,8 @@ function ListingDetailPage() {
           ) : null}
         </div>
 
+        <ListingSellerDescription listing={listing} />
+
         <ListingItemSummary
           listing={listing}
           equipmentProduct={equipmentProduct}
@@ -596,13 +598,10 @@ function ListingDetailPage() {
           }
         />
 
-        <div className="listing-detail__primary">
-          <ListingSellerDescription listing={listing} />
-          <ListingEquipmentIntelligence
-            listing={listing}
-            equipmentProduct={equipmentProduct}
-          />
-        </div>
+        <ListingEquipmentIntelligence
+          listing={listing}
+          equipmentProduct={equipmentProduct}
+        />
       </div>
 
       {!isOwner && buyerConfirmableOffer?.order?.id ? (

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
- * Regression: Equipd Intelligence must never appear above seller listing content.
+ * Regression: listing-detail column order.
  *
  * Covers:
- * - DOM source structure (gallery → summary → description → intelligence)
+ * - DOM source structure (gallery → description → summary → intelligence)
+ * - Desktop: description sits in the left column under the gallery, not below the sidebar
+ * - Mobile: natural order gallery → description → summary → intelligence
  * - Mobile CSS no longer uses display:contents + incomplete order
- * - Live mobile/desktop order for matched and unmatched listings
+ * - Equipd Intelligence never appears above seller listing title/price
  * - Panel rendered at most once
  *
  *   node scripts/test-listing-intelligence-order.mjs [baseUrl]
@@ -31,22 +33,22 @@ const intelligenceSrc = read('src/components/listing/ListingEquipmentIntelligenc
 const intelligenceUsages = pageSrc.match(/<ListingEquipmentIntelligence\b/g) ?? []
 assert.equal(intelligenceUsages.length, 1, 'ListingEquipmentIntelligence must render once in JSX')
 
-// DOM order in source: media → summary → primary(description + intelligence)
+// DOM order: media → description → summary → intelligence (mobile-natural; desktop via grid areas)
+const heroIdx = pageSrc.indexOf('className="listing-detail__hero"')
 const mediaIdx = pageSrc.indexOf('className="listing-detail__media"')
 const summaryIdx = pageSrc.indexOf('<ListingItemSummary')
-const primaryIdx = pageSrc.indexOf('className="listing-detail__primary"')
 const descriptionIdx = pageSrc.indexOf('<ListingSellerDescription')
 const intelligenceIdx = pageSrc.indexOf('<ListingEquipmentIntelligence')
-assert.ok(mediaIdx > 0 && summaryIdx > mediaIdx, 'media before summary in JSX')
-assert.ok(primaryIdx > summaryIdx, 'primary (details) after summary in JSX')
-assert.ok(descriptionIdx > primaryIdx, 'seller description inside primary after summary')
-assert.ok(intelligenceIdx > descriptionIdx, 'intelligence after seller description in JSX')
-
+assert.ok(heroIdx > 0 && mediaIdx > heroIdx, 'media inside hero')
+assert.ok(descriptionIdx > mediaIdx, 'seller description after gallery block')
+assert.ok(summaryIdx > descriptionIdx, 'summary after seller description in JSX')
+assert.ok(intelligenceIdx > summaryIdx, 'intelligence after summary in JSX')
 assert.match(
   detailCss,
-  /grid-template-areas:\s*[\s\S]*'media summary'[\s\S]*'details summary'/,
-  'desktop grid areas keep summary beside media/details',
+  /grid-template-areas:\s*[\s\S]*'media summary'[\s\S]*'description summary'/,
+  'desktop grid keeps description in the left column beside the sidebar',
 )
+assert.doesNotMatch(pageSrc, /listing-detail__primary/, 'description is not parked in a below-grid wrapper')
 
 const mobileBlock = detailCss.match(/@media \(max-width:\s*767px\)\s*\{[\s\S]*?(?=@media|$)/)?.[0] ?? ''
 assert.ok(mobileBlock.length > 0, 'mobile breakpoint present')
@@ -85,19 +87,45 @@ async function measureOrder(page, slug) {
     const panels = [...document.querySelectorAll('.listing-equipment-intelligence')]
     const panel = panels[0] ?? null
 
-    const top = (el) => (el ? Math.round(el.getBoundingClientRect().top + window.scrollY) : null)
+    const box = (el) => {
+      if (!el) return null
+      const rect = el.getBoundingClientRect()
+      return {
+        top: Math.round(rect.top + window.scrollY),
+        bottom: Math.round(rect.bottom + window.scrollY),
+        left: Math.round(rect.left),
+        width: Math.round(rect.width),
+      }
+    }
 
     return {
       title: title?.textContent?.trim() || '',
       panelCount: panels.length,
       hasPanel: Boolean(panel),
+      viewportWidth: window.innerWidth,
+      descriptionInHero: Boolean(document.querySelector('.listing-detail__hero .listing-detail__seller-description')),
+      descriptionInMedia: Boolean(document.querySelector('.listing-detail__media .listing-detail__seller-description')),
+      descriptionText: description?.textContent?.replace(/\s+/g, ' ').trim() || '',
+      boxes: {
+        media: box(media),
+        summary: box(summary),
+        title: box(title),
+        price: box(price),
+        description: box(description),
+        intelligence: box(panel),
+      },
       tops: {
-        media: top(media),
-        summary: top(summary),
-        title: top(title),
-        price: top(price),
-        description: top(description),
-        intelligence: top(panel),
+        media: box(media)?.top ?? null,
+        summary: box(summary)?.top ?? null,
+        title: box(title)?.top ?? null,
+        price: box(price)?.top ?? null,
+        description: box(description)?.top ?? null,
+        intelligence: box(panel)?.top ?? null,
+      },
+      bottoms: {
+        media: box(media)?.bottom ?? null,
+        summary: box(summary)?.bottom ?? null,
+        hero: box(document.querySelector('.listing-detail__hero'))?.bottom ?? null,
       },
       heroChildren: [...(document.querySelector('.listing-detail__hero')?.children ?? [])].map(
         (el) => el.className,
@@ -116,11 +144,40 @@ async function measureOrder(page, slug) {
 }
 
 function assertSellerBeforeIntelligence(state, label) {
-  const { tops } = state
+  const { tops, bottoms, boxes } = state
+  const desktop = state.viewportWidth >= 768
   assert.ok(tops.media != null, `${label}: gallery present`)
   assert.ok(tops.summary != null, `${label}: summary present`)
   assert.ok(tops.title != null, `${label}: title present`)
   assert.ok(tops.price != null, `${label}: price/actions present`)
+  assert.ok(tops.description != null, `${label}: seller description present in HTML`)
+  assert.equal(state.descriptionInHero, true, `${label}: description stays in the listing hero`)
+  assert.equal(state.descriptionInMedia, false, `${label}: description is a left-column sibling of the gallery`)
+  assert.ok(state.descriptionText.includes("Seller's description"), `${label}: description heading crawlable`)
+  assert.ok(tops.description >= bottoms.media - 2, `${label}: description follows the gallery/notice`)
+  assert.ok(
+    tops.description <= bottoms.media + 48,
+    `${label}: description follows the gallery with normal section spacing (${tops.description - bottoms.media}px)`,
+  )
+
+  if (desktop) {
+    assert.ok(
+      Math.abs(boxes.description.left - boxes.media.left) <= 2,
+      `${label}: description aligns with gallery left edge`,
+    )
+    assert.ok(
+      Math.abs(boxes.description.width - boxes.media.width) <= 2,
+      `${label}: description matches gallery column width`,
+    )
+    if (bottoms.summary > bottoms.media + 80) {
+      assert.ok(
+        tops.description < bottoms.summary - 40,
+        `${label}: description does not wait for the sidebar to finish`,
+      )
+    }
+  } else {
+    assert.ok(tops.description < tops.summary, `${label}: mobile description comes before listing summary`)
+  }
 
   if (!state.hasPanel) return
 
