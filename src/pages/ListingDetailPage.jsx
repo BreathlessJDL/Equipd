@@ -565,8 +565,6 @@ function ListingDetailPage() {
           ) : null}
         </div>
 
-        <ListingSellerDescription listing={listing} />
-
         <ListingItemSummary
           listing={listing}
           equipmentProduct={equipmentProduct}
@@ -597,6 +595,13 @@ function ListingDetailPage() {
             ) : null
           }
         />
+
+        {/*
+          DOM order is mobile-natural: gallery → summary → description → intelligence.
+          Desktop placement is controlled by grid-template-areas so description stays
+          in the left column beneath the gallery without duplicating the component.
+        */}
+        <ListingSellerDescription listing={listing} />
 
         <ListingEquipmentIntelligence
           listing={listing}

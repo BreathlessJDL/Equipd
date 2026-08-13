@@ -3,11 +3,12 @@
  * Regression: listing-detail column order.
  *
  * Covers:
- * - DOM source structure (gallery → description → summary → intelligence)
+ * - DOM source structure (gallery → summary → description → intelligence)
  * - Desktop: description sits in the left column under the gallery, not below the sidebar
- * - Mobile: natural order gallery → description → summary → intelligence
- * - Mobile CSS no longer uses display:contents + incomplete order
+ * - Mobile: natural order gallery → summary → description → intelligence
+ * - Mobile CSS no longer uses display:contents / CSS order hacks
  * - Equipd Intelligence never appears above seller listing title/price
+ * - Seller description rendered at most once
  * - Panel rendered at most once
  *
  *   node scripts/test-listing-intelligence-order.mjs [baseUrl]
@@ -29,23 +30,25 @@ const pageSrc = read('src/pages/ListingDetailPage.jsx')
 const detailCss = read('src/components/ListingDetail.css')
 const intelligenceSrc = read('src/components/listing/ListingEquipmentIntelligence.jsx')
 
-// Source-of-truth: one intelligence component usage on the detail page.
+// Source-of-truth: one intelligence / description component usage on the detail page.
 const intelligenceUsages = pageSrc.match(/<ListingEquipmentIntelligence\b/g) ?? []
 assert.equal(intelligenceUsages.length, 1, 'ListingEquipmentIntelligence must render once in JSX')
+const descriptionUsages = pageSrc.match(/<ListingSellerDescription\b/g) ?? []
+assert.equal(descriptionUsages.length, 1, 'ListingSellerDescription must render once in JSX')
 
-// DOM order: media → description → summary → intelligence (mobile-natural; desktop via grid areas)
+// DOM order: media → summary → description → intelligence (mobile-natural; desktop via grid areas)
 const heroIdx = pageSrc.indexOf('className="listing-detail__hero"')
 const mediaIdx = pageSrc.indexOf('className="listing-detail__media"')
 const summaryIdx = pageSrc.indexOf('<ListingItemSummary')
 const descriptionIdx = pageSrc.indexOf('<ListingSellerDescription')
 const intelligenceIdx = pageSrc.indexOf('<ListingEquipmentIntelligence')
 assert.ok(heroIdx > 0 && mediaIdx > heroIdx, 'media inside hero')
-assert.ok(descriptionIdx > mediaIdx, 'seller description after gallery block')
-assert.ok(summaryIdx > descriptionIdx, 'summary after seller description in JSX')
-assert.ok(intelligenceIdx > summaryIdx, 'intelligence after summary in JSX')
+assert.ok(summaryIdx > mediaIdx, 'summary after gallery block in JSX')
+assert.ok(descriptionIdx > summaryIdx, 'seller description after summary in JSX')
+assert.ok(intelligenceIdx > descriptionIdx, 'intelligence after seller description in JSX')
 assert.match(
   detailCss,
-  /grid-template-areas:\s*[\s\S]*'media summary'[\s\S]*'description summary'/,
+  /grid-template-areas:\s*[\s\S]*'media summary'[\s\S]*'description summary'[\s\S]*'intelligence summary'/,
   'desktop grid keeps description in the left column beside the sidebar',
 )
 assert.doesNotMatch(pageSrc, /listing-detail__primary/, 'description is not parked in a below-grid wrapper')
@@ -154,13 +157,18 @@ function assertSellerBeforeIntelligence(state, label) {
   assert.equal(state.descriptionInHero, true, `${label}: description stays in the listing hero`)
   assert.equal(state.descriptionInMedia, false, `${label}: description is a left-column sibling of the gallery`)
   assert.ok(state.descriptionText.includes("Seller's description"), `${label}: description heading crawlable`)
-  assert.ok(tops.description >= bottoms.media - 2, `${label}: description follows the gallery/notice`)
-  assert.ok(
-    tops.description <= bottoms.media + 48,
-    `${label}: description follows the gallery with normal section spacing (${tops.description - bottoms.media}px)`,
+  assert.equal(
+    documentDescriptionCount(state),
+    1,
+    `${label}: seller description rendered once`,
   )
 
   if (desktop) {
+    assert.ok(tops.description >= bottoms.media - 2, `${label}: description follows the gallery/notice`)
+    assert.ok(
+      tops.description <= bottoms.media + 48,
+      `${label}: description follows the gallery with normal section spacing (${tops.description - bottoms.media}px)`,
+    )
     assert.ok(
       Math.abs(boxes.description.left - boxes.media.left) <= 2,
       `${label}: description aligns with gallery left edge`,
@@ -176,7 +184,15 @@ function assertSellerBeforeIntelligence(state, label) {
       )
     }
   } else {
-    assert.ok(tops.description < tops.summary, `${label}: mobile description comes before listing summary`)
+    assert.ok(tops.summary > tops.media, `${label}: mobile summary follows the gallery`)
+    assert.ok(
+      tops.description >= bottoms.summary - 2,
+      `${label}: mobile description follows the complete listing summary/sidebar`,
+    )
+    assert.ok(
+      tops.description > tops.summary,
+      `${label}: mobile description comes after listing summary`,
+    )
   }
 
   if (!state.hasPanel) return
@@ -190,6 +206,12 @@ function assertSellerBeforeIntelligence(state, label) {
     assert.ok(tops.description < tops.intelligence, `${label}: description before intelligence`)
   }
   assert.equal(state.aboutHeading, 'About this equipment', `${label}: heading preserved`)
+}
+
+function documentDescriptionCount(state) {
+  return (state.heroChildren || []).filter((className) =>
+    String(className).includes('listing-detail__seller-description'),
+  ).length
 }
 
 const MATCHED_ACTIVE = 'precor-experience-precor-trm835-f31f072c'

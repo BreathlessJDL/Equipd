@@ -1003,7 +1003,7 @@
     gap: 1.15rem;
   }
 
-  /* DOM order is gallery → description → summary → intelligence */
+  /* DOM order is gallery → summary → description → intelligence */
   .listing-summary {
     position: static;
     padding: 1.15rem;
