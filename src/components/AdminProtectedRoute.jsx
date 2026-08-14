@@ -1,13 +1,14 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthModal } from '../hooks/useAuthModal'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { getAuthRedirectPath, navigateAwayFromProtectedRoute } from '../lib/authReturnNavigation'
 import { LoadingState } from './ui/UiState'
+import AdminHubNav from './admin/AdminHubNav'
 import '../components/PageStub.css'
 
-function AdminProtectedRoute({ children }) {
+function AdminProtectedRoute() {
   const { user, loading: authLoading } = useAuth()
   const { isAdmin, loading: adminLoading } = useIsAdmin()
   const { openLoginModal } = useAuthModal()
@@ -59,7 +60,12 @@ function AdminProtectedRoute({ children }) {
     )
   }
 
-  return children
+  return (
+    <>
+      <AdminHubNav />
+      <Outlet />
+    </>
+  )
 }
 
 export default AdminProtectedRoute

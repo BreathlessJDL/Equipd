@@ -23,3 +23,46 @@
   word-break: break-word;
 }
 
+.admin-hub-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-hub-tool {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-bg) 80%, #fff);
+  text-decoration: none;
+  color: inherit;
+}
+
+.admin-hub-tool:hover {
+  border-color: color-mix(in srgb, var(--color-orange) 45%, var(--color-border));
+  box-shadow: 0 8px 20px rgba(15, 33, 55, 0.05);
+}
+
+.admin-hub-tool__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+}
+
+.admin-hub-tool__description {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.admin-hub-tool__cta {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+

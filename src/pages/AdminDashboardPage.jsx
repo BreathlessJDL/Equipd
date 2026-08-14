@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { fetchAdminUserStatistics } from '../lib/admin'
+import { ADMIN_HUB_TOOLS } from '../lib/adminNav'
 import {
   formatAdminJoinedAt,
   formatAdminSignupName,
@@ -19,7 +20,7 @@ const USER_STAT_CARDS = [
 ]
 
 function AdminDashboardPage() {
-  usePageTitle('Admin Dashboard')
+  usePageTitle('Equipd Admin')
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -51,18 +52,13 @@ function AdminDashboardPage() {
   return (
     <section className="admin-intelligence admin-dashboard">
       <header className="admin-intelligence__header">
-        <p className="admin-intelligence__back">
-          <Link to="/hub">← Back to Hub</Link>
-        </p>
-        <h1 className="admin-intelligence__title">Dashboard</h1>
-        <p className="admin-intelligence__lead">
-          A quick view of Equipd user growth from existing account data.
-        </p>
+        <h1 className="admin-intelligence__title">Equipd Admin</h1>
+        <p className="admin-intelligence__lead">Manage the Equipd marketplace.</p>
       </header>
 
       <section className="admin-intelligence__panel" aria-labelledby="admin-user-stats-heading">
         <h2 id="admin-user-stats-heading" className="admin-intelligence__panel-title">
-          Users
+          User statistics
         </h2>
 
         {loading ? <LoadingState compact>Loading user statistics…</LoadingState> : null}
@@ -108,6 +104,21 @@ function AdminDashboardPage() {
             </div>
           </>
         ) : null}
+      </section>
+
+      <section className="admin-intelligence__panel" aria-labelledby="admin-tools-heading">
+        <h2 id="admin-tools-heading" className="admin-intelligence__panel-title">
+          Admin tools
+        </h2>
+        <div className="admin-hub-tools">
+          {ADMIN_HUB_TOOLS.map((tool) => (
+            <Link key={tool.to} to={tool.to} className="admin-hub-tool">
+              <span className="admin-hub-tool__label">{tool.label}</span>
+              <p className="admin-hub-tool__description">{tool.description}</p>
+              <span className="admin-hub-tool__cta">{tool.cta} →</span>
+            </Link>
+          ))}
+        </div>
       </section>
     </section>
   )

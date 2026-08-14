@@ -24,12 +24,7 @@ const loggedInPublicNavLinks = [
 ]
 
 const adminNavLinks = [
-  { to: '/admin', label: 'Dashboard', end: true },
-  { to: '/admin/cases', label: 'Cases' },
-  { to: '/admin/support', label: 'Support' },
-  { to: '/admin/orders', label: 'Orders' },
-  { to: '/admin/intelligence/products', label: 'Equipment Catalogue' },
-  { to: '/admin/price-guide/import', label: 'Price Guide' },
+  { to: '/admin', label: 'Admin' },
 ]
 
 function AppNav({

@@ -229,150 +229,27 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="admin"
-              element={
-                <AdminProtectedRoute>
-                  <AdminDashboardPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/cases"
-              element={
-                <AdminProtectedRoute>
-                  <AdminCasesPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/support"
-              element={
-                <AdminProtectedRoute>
-                  <AdminSupportPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/orders"
-              element={
-                <AdminProtectedRoute>
-                  <AdminOrdersPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/price-guide/import"
-              element={
-                <AdminProtectedRoute>
-                  <AdminPriceGuideImportPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence"
-              element={
-                <AdminProtectedRoute>
-                  <Navigate to="/admin/intelligence/products" replace />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/source-rows"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligencePage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/import"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceImportPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/imports"
-              element={
-                <AdminProtectedRoute>
-                  <AdminEquipmentCatalogueImportsPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/needs-attention"
-              element={
-                <AdminProtectedRoute>
-                  <AdminEquipmentCatalogueNeedsAttentionPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/consoles"
-              element={
-                <AdminProtectedRoute>
-                  <AdminEquipmentCatalogueConsolesPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/add-product"
-              element={
-                <AdminProtectedRoute>
-                  <AdminEquipmentCatalogueAddProductPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/market-sync"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceMarketSyncPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/batch-sync"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceBatchSyncPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/products"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceProductsPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/product-content"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceProductContentPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/core-products"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceCoreProductsPage />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/intelligence/original-prices-lifecycle"
-              element={
-                <AdminProtectedRoute>
-                  <AdminIntelligenceEvidencePage />
-                </AdminProtectedRoute>
-              }
-            />
+            <Route path="admin" element={<AdminProtectedRoute />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="catalogue" element={<Navigate to="/admin/intelligence/products" replace />} />
+              <Route path="cases" element={<AdminCasesPage />} />
+              <Route path="support" element={<AdminSupportPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="price-guide/import" element={<AdminPriceGuideImportPage />} />
+              <Route path="intelligence" element={<Navigate to="/admin/intelligence/products" replace />} />
+              <Route path="intelligence/source-rows" element={<AdminIntelligencePage />} />
+              <Route path="intelligence/import" element={<AdminIntelligenceImportPage />} />
+              <Route path="intelligence/imports" element={<AdminEquipmentCatalogueImportsPage />} />
+              <Route path="intelligence/needs-attention" element={<AdminEquipmentCatalogueNeedsAttentionPage />} />
+              <Route path="intelligence/consoles" element={<AdminEquipmentCatalogueConsolesPage />} />
+              <Route path="intelligence/add-product" element={<AdminEquipmentCatalogueAddProductPage />} />
+              <Route path="intelligence/market-sync" element={<AdminIntelligenceMarketSyncPage />} />
+              <Route path="intelligence/batch-sync" element={<AdminIntelligenceBatchSyncPage />} />
+              <Route path="intelligence/products" element={<AdminIntelligenceProductsPage />} />
+              <Route path="intelligence/product-content" element={<AdminIntelligenceProductContentPage />} />
+              <Route path="intelligence/core-products" element={<AdminIntelligenceCoreProductsPage />} />
+              <Route path="intelligence/original-prices-lifecycle" element={<AdminIntelligenceEvidencePage />} />
+            </Route>
             <Route
               path="listings/new"
               element={
