@@ -24,6 +24,7 @@ const loggedInPublicNavLinks = [
 ]
 
 const adminNavLinks = [
+  { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/cases', label: 'Cases' },
   { to: '/admin/support', label: 'Support' },
   { to: '/admin/orders', label: 'Orders' },
@@ -181,10 +182,11 @@ function AppNav({
       ) : null}
 
       {!loading && user && isAdmin && !isHome
-        ? adminNavLinks.map(({ to, label }) => (
+        ? adminNavLinks.map(({ to, label, end }) => (
             <NavLink
               key={to}
               to={to}
+              end={Boolean(end)}
               className={({ isActive }) => linkClass(isActive)}
               onClick={onNavigate}
             >

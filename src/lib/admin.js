@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { parseAdminUserStatistics } from './adminUserStatistics'
 import { enrichOrderDetail, formatOrderFulfilmentStatus, formatOrderTimestamp, formatPayoutStatus } from './orders'
 import { formatPaymentStatus } from './payments'
 import { formatPricePence } from './listings'
@@ -86,6 +87,16 @@ export function formatAdminUserLabel(userId, displayName) {
   if (displayName?.trim()) return displayName.trim()
   if (!userId) return 'Unknown user'
   return `${userId.slice(0, 8)}…`
+}
+
+export async function fetchAdminUserStatistics() {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') }
+  }
+
+  const { data, error } = await supabase.rpc('admin_user_statistics')
+  if (error) return { data: null, error }
+  return { data: parseAdminUserStatistics(data), error: null }
 }
 
 export async function fetchAdminSupportRequests(statusFilter = 'all') {
