@@ -34,6 +34,8 @@ const AdminEquipmentCatalogueAddProductPage = lazy(() => import('./pages/AdminEq
 const AdminEquipmentCatalogueImportsPage = lazy(() => import('./pages/AdminEquipmentCatalogueImportsPage'))
 const AdminEquipmentCatalogueConsolesPage = lazy(() => import('./pages/AdminEquipmentCatalogueConsolesPage'))
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
+const AdminMessagesPage = lazy(() => import('./pages/AdminMessagesPage'))
+const AdminConversationPage = lazy(() => import('./pages/AdminConversationPage'))
 const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'))
 const AdminPriceGuideImportPage = lazy(() => import('./pages/AdminPriceGuideImportPage'))
 const AdminSupportPage = lazy(() => import('./pages/AdminSupportPage'))
@@ -235,6 +237,8 @@ function App() {
               <Route path="cases" element={<AdminCasesPage />} />
               <Route path="support" element={<AdminSupportPage />} />
               <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="messages" element={<AdminMessagesPage />} />
+              <Route path="messages/:conversationId" element={<AdminConversationPage />} />
               <Route path="price-guide/import" element={<AdminPriceGuideImportPage />} />
               <Route path="intelligence" element={<Navigate to="/admin/intelligence/products" replace />} />
               <Route path="intelligence/source-rows" element={<AdminIntelligencePage />} />

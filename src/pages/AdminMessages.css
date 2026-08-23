@@ -1,0 +1,206 @@
+.admin-messages {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.admin-messages__notice {
+  margin: 0.35rem 0 0;
+  max-width: 42rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.admin-messages__toolbar {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+}
+
+@media (min-width: 720px) {
+  .admin-messages__toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+.admin-messages__search {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.admin-messages__search input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-navy);
+  font: inherit;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.admin-messages__count,
+.admin-messages__back {
+  margin: 0 0 0.85rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.admin-messages__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-messages__row {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-bg) 80%, #fff);
+  text-decoration: none;
+  color: inherit;
+}
+
+.admin-messages__row:hover {
+  border-color: color-mix(in srgb, var(--color-orange) 45%, var(--color-border));
+}
+
+.admin-messages__listing-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-border) 55%, #fff);
+}
+
+.admin-messages__listing-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-messages__row-top,
+.admin-messages__people,
+.admin-messages__people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+  align-items: center;
+}
+
+.admin-messages__row-top time {
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.admin-messages__listing {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.admin-messages__person,
+.admin-messages__person,
+.admin-messages__person {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.admin-messages__role {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.admin-messages__name,
+.admin-messages__preview {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.admin-messages__preview {
+  margin: 0.45rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.admin-messages__more {
+  margin: 1rem 0 0;
+}
+
+.admin-messages__more-button {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: var(--color-surface);
+  color: var(--color-navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-messages__meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.1rem;
+}
+
+.admin-messages__card {
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-bg) 80%, #fff);
+}
+
+.admin-messages__card-label {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.admin-messages__card-person,
+.admin-messages__listing-block {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.admin-messages__unavailable {
+  margin: 0.25rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .admin-messages__row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-messages__row-top time {
+    margin-left: 0;
+  }
+}

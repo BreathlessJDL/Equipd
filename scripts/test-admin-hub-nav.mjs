@@ -13,7 +13,7 @@ const navSrc = readFileSync(join(root, 'src/components/AppNav.jsx'), 'utf8')
 assert.equal(ADMIN_HUB_NAV[0].to, '/admin')
 assert.deepEqual(
   ADMIN_HUB_NAV.map((item) => item.label),
-  ['Dashboard', 'Cases', 'Support', 'Orders', 'Catalogue', 'Price Guide'],
+  ['Dashboard', 'Cases', 'Support', 'Orders', 'Messages', 'Catalogue', 'Price Guide'],
 )
 
 for (const item of ADMIN_HUB_NAV) {
@@ -46,13 +46,17 @@ assert.doesNotMatch(navSrc, /label: 'Cases'/)
 assert.equal(isAdminHubNavActive('/admin', ADMIN_HUB_NAV[0]), true)
 assert.equal(isAdminHubNavActive('/admin/cases', ADMIN_HUB_NAV[0]), false)
 assert.equal(isAdminHubNavActive('/admin/cases', ADMIN_HUB_NAV[1]), true)
-assert.equal(isAdminHubNavActive('/admin/intelligence/products', ADMIN_HUB_NAV[4]), true)
-assert.equal(isAdminHubNavActive('/admin/intelligence/consoles', ADMIN_HUB_NAV[4]), true)
-assert.equal(isAdminHubNavActive('/admin/catalogue', ADMIN_HUB_NAV[4]), true)
-assert.equal(isAdminHubNavActive('/admin/price-guide/import', ADMIN_HUB_NAV[5]), true)
-assert.equal(isAdminHubNavActive('/admin/cases', ADMIN_HUB_NAV[4]), false)
+assert.equal(isAdminHubNavActive('/admin/messages', ADMIN_HUB_NAV[4]), true)
+assert.equal(isAdminHubNavActive('/admin/messages/abc', ADMIN_HUB_NAV[4]), true)
+assert.equal(isAdminHubNavActive('/admin/intelligence/products', ADMIN_HUB_NAV[5]), true)
+assert.equal(isAdminHubNavActive('/admin/intelligence/consoles', ADMIN_HUB_NAV[5]), true)
+assert.equal(isAdminHubNavActive('/admin/catalogue', ADMIN_HUB_NAV[5]), true)
+assert.equal(isAdminHubNavActive('/admin/price-guide/import', ADMIN_HUB_NAV[6]), true)
+assert.equal(isAdminHubNavActive('/admin/cases', ADMIN_HUB_NAV[5]), false)
 
-assert.equal(ADMIN_HUB_TOOLS.length, 5)
+assert.equal(ADMIN_HUB_TOOLS.length, 6)
+assert.equal(ADMIN_HUB_TOOLS[3].label, 'Messages')
+assert.equal(ADMIN_HUB_TOOLS[3].to, '/admin/messages')
 for (const tool of ADMIN_HUB_TOOLS) {
   assert.ok(tool.to && tool.label && tool.description && tool.cta)
 }

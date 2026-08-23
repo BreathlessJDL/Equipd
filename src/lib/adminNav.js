@@ -3,6 +3,7 @@ export const ADMIN_HUB_NAV = [
   { to: '/admin/cases', label: 'Cases' },
   { to: '/admin/support', label: 'Support' },
   { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/messages', label: 'Messages', match: 'messages' },
   { to: '/admin/intelligence/products', label: 'Catalogue', match: 'catalogue' },
   { to: '/admin/price-guide/import', label: 'Price Guide', match: 'price-guide' },
 ]
@@ -27,6 +28,12 @@ export const ADMIN_HUB_TOOLS = [
     cta: 'View orders',
   },
   {
+    to: '/admin/messages',
+    label: 'Messages',
+    description: 'Review marketplace conversations for support, disputes and safety.',
+    cta: 'View messages',
+  },
+  {
     to: '/admin/intelligence/products',
     label: 'Catalogue',
     description: 'Manage equipment catalogue data.',
@@ -43,6 +50,9 @@ export const ADMIN_HUB_TOOLS = [
 export function isAdminHubNavActive(pathname, item) {
   const path = String(pathname || '')
   if (!item?.to) return false
+  if (item.match === 'messages') {
+    return path === '/admin/messages' || path.startsWith('/admin/messages/')
+  }
   if (item.match === 'catalogue') {
     return path.startsWith('/admin/intelligence') || path.startsWith('/admin/catalogue')
   }

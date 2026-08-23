@@ -2865,7 +2865,7 @@ export const HELP_ARTICLES = [
     slug: 'privacy-policy',
     title: 'Privacy Policy',
     category: 'policies',
-    updatedAt: '2026-06-01',
+    updatedAt: '2026-08-23',
     excerpt:
       'How Equipd collects, uses, stores, and protects your personal information, including account data, payments, messaging, and Buyer Protection.',
     content: [
@@ -3098,6 +3098,14 @@ export const HELP_ARTICLES = [
           'Enforcing marketplace rules',
           'Customer support',
         ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Authorised Equipd personnel may access marketplace conversations where reasonably necessary for customer support, dispute resolution, fraud prevention, marketplace safety, enforcement of these terms, and legal obligations.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Access is restricted to authorised personnel and may be logged for security and accountability purposes.',
       },
       {
         type: 'paragraph',
