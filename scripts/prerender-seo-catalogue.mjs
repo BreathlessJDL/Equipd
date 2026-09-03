@@ -300,6 +300,7 @@ async function main() {
               listingCountsByKey[
                 directory.brands.find((brand) => brand.slug === route.brandSlug)?.key
               ] || 0,
+              { listings: activeListings },
             ),
           )
         }

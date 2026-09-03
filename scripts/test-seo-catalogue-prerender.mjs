@@ -86,11 +86,13 @@ const brandDoc = buildBrandPageSeoDocument({
   categories: [{ label: 'Treadmill', count: 1 }],
 })
 assert(brandDoc.canonicalPath === '/brands/life-fitness', 'brand canonical')
-assert(brandDoc.bodyHtml.includes('Life Fitness Equipment Values'), 'brand identity')
+assert(brandDoc.bodyHtml.includes('Used Life Fitness Gym Equipment Values'), 'brand identity')
 assert(brandDoc.bodyHtml.includes('life-fitness-integrity-treadmill'), 'brand product link')
 assert(brandDoc.bodyHtml.includes('value guide'), 'value guide anchor')
 assert(brandDoc.title.includes('Equipment Values'), 'brand meta title')
 assert(brandDoc.bodyHtml.includes('Common questions'), 'brand faq section')
+assert(brandDoc.bodyHtml.includes('seo-brand-listings-heading'), 'marketplace section in prerender')
+assert(brandDoc.bodyHtml.includes('Used Life Fitness equipment for sale'), 'marketplace heading when inventory count present')
 assert(
   brandDoc.jsonLd.some((entry) => entry['@type'] === 'FAQPage'),
   'brand faq json-ld',

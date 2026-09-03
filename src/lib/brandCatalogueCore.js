@@ -8,6 +8,7 @@ import {
   buildCanonicalProductDisplayNameFromProduct,
   cleanCanonicalProductDisplayName,
 } from './canonicalProductDisplayName.js'
+import { getBrandBuyerSeoConfig } from './brandBuyerSeo.js'
 
 /** Preferred production canonical origin for SEO, sitemap, and absolute public URLs. */
 export const EQUIPD_SITE_ORIGIN = 'https://www.equipd.co.uk'
@@ -454,26 +455,38 @@ export function getBrowseBrandFilterHref(brand) {
 
 export const BRAND_CARD_DESCRIPTION = 'Used equipment values and product information'
 
-export function buildBrandIntro(brandDisplayName, { hasCuratedDescription = false, curated = null } = {}) {
+export function buildBrandIntro(brandDisplayName, {
+  hasCuratedDescription = false,
+  curated = null,
+  slug = null,
+} = {}) {
   if (hasCuratedDescription && curated) return curated
+  const buyer = getBrandBuyerSeoConfig(slug)
+  if (buyer?.lede) return buyer.lede
   return (
     `Explore estimated used values, original RRPs, production years and console `
     + `compatibility across ${brandDisplayName} equipment models.`
   )
 }
 
-export function buildBrandPageTitle(brandDisplayName) {
+export function buildBrandPageTitle(brandDisplayName, { slug = null } = {}) {
+  const buyer = getBrandBuyerSeoConfig(slug)
+  if (buyer?.h1) return buyer.h1
   return `Used ${brandDisplayName} Gym Equipment Values`
 }
 
 /**
  * Hook/document title without site suffix — formatPageTitle / prerender add "| Equipd".
  */
-export function buildBrandPageMetaTitle(brandDisplayName) {
+export function buildBrandPageMetaTitle(brandDisplayName, { slug = null } = {}) {
+  const buyer = getBrandBuyerSeoConfig(slug)
+  if (buyer?.metaTitle) return buyer.metaTitle
   return `Used ${brandDisplayName} Gym Equipment Values & Listings`
 }
 
-export function buildBrandPageMetaDescription(brandDisplayName) {
+export function buildBrandPageMetaDescription(brandDisplayName, { slug = null } = {}) {
+  const buyer = getBrandBuyerSeoConfig(slug)
+  if (buyer?.metaDescription) return buyer.metaDescription
   return (
     `Explore used ${brandDisplayName} gym equipment values, model guides and current marketplace `
     + `listings on Equipd. Compare original RRPs, production years and estimated used prices.`
@@ -645,12 +658,13 @@ export function buildBrandCollectionJsonLd(brands = []) {
 
 export function buildBrandPageJsonLd(brand, products = []) {
   if (!brand) return null
+  const buyer = getBrandBuyerSeoConfig(brand.slug)
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: `${brand.displayName} Equipment Values`,
+    name: buyer?.collectionPageName || `${brand.displayName} Equipment Values`,
     url: brand.absoluteUrl,
-    description: brand.intro,
+    description: brand.intro || buyer?.lede || undefined,
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: products.length,

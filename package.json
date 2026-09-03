@@ -88,6 +88,7 @@
     "test:equipment-research-price-selection": "node scripts/test-equipment-research-price-selection.mjs",
     "test:brand-catalogue-core": "node scripts/test-brand-catalogue-core.mjs",
     "test:brand-page-curated": "node scripts/test-brand-page-curated.mjs",
+    "test:brand-buyer-seo": "node scripts/test-brand-buyer-seo.mjs",
     "test:brand-logo-assets": "node scripts/test-brand-logo-assets.mjs",
     "test:equipment-console-images": "node scripts/test-equipment-console-images.mjs",
     "audit:public-console-images": "node scripts/audit-public-console-images.mjs",

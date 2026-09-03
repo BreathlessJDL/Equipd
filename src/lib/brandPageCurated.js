@@ -4,6 +4,7 @@
  */
 
 import { buildFaqPageSchema } from './faqPageStructuredData.js'
+import { getBrandBuyerSeoConfig } from './brandBuyerSeo.js'
 
 const POPULAR_LIMIT = 6
 const FEATURED_SERIES_LIMIT = 5
@@ -168,8 +169,17 @@ export function buildBrandPageStats({
 /**
  * Brand FAQs aligned with Equipd valuation + marketplace behaviour.
  * Same array must drive visible accordion and FAQPage JSON-LD.
+ * Buyer-intent brands may supply brand-specific FAQs via brandBuyerSeo.
  */
-export function buildBrandFaqItems(brandDisplayName) {
+export function buildBrandFaqItems(brandDisplayName, { slug = null } = {}) {
+  const buyer = getBrandBuyerSeoConfig(slug)
+  if (buyer?.faqItems?.length) {
+    return buyer.faqItems.map((item) => ({
+      question: item.question,
+      answer: item.answer,
+    }))
+  }
+
   const brand = String(brandDisplayName || '').trim() || 'this brand'
   return [
     {

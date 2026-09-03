@@ -9,6 +9,9 @@ import {
   buildBrandCollectionJsonLd,
   buildBrandIntro,
   buildBrandPageJsonLd,
+  buildBrandPageMetaDescription,
+  buildBrandPageMetaTitle,
+  buildBrandPageTitle,
   getBrandAbsoluteUrl,
   getBrandDisplayName,
   getBrandPagePath,
@@ -18,6 +21,12 @@ import {
   resolveBrandRegistryEntry,
   slugifyBrandName,
 } from './brandCatalogueCore.js'
+import {
+  getBrandBuyerSeoConfig,
+  isBuyerIntentBrand,
+  mapBrandListingsForSeo,
+  selectConfiguredBrandModels,
+} from './brandBuyerSeo.js'
 import {
   buildEquipmentCanonicalPath,
   buildEquipmentInternalLinks,
@@ -237,23 +246,86 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
   }
 }
 
-export function buildBrandPageSeoDocument({ brand, products = [], categories = [], series = [] } = {}) {
+export function buildBrandPageSeoDocument({
+  brand,
+  products = [],
+  categories = [],
+  series = [],
+  listings = [],
+} = {}) {
   if (!brand?.slug) return null
 
-  const title = `Used ${brand.displayName} Gym Equipment Values & Listings | Equipd`
-  const description = `Explore used ${brand.displayName} gym equipment values, model guides and current marketplace listings on Equipd.`
-  const intro = brand.intro || buildBrandIntro(brand.displayName)
+  const buyer = getBrandBuyerSeoConfig(brand.slug)
+  const buyerIntent = isBuyerIntentBrand(brand.slug)
+  const title = `${buildBrandPageMetaTitle(brand.displayName, { slug: brand.slug })} | Equipd`
+  const description = buildBrandPageMetaDescription(brand.displayName, { slug: brand.slug })
+  const h1 = buildBrandPageTitle(brand.displayName, { slug: brand.slug })
+  const intro = brand.intro || buildBrandIntro(brand.displayName, { slug: brand.slug })
   const path = getBrandPagePath(brand.slug)
   const productLinks = products.map((product) => ({
     href: product.href || buildEquipmentProductPagePath(product.canonicalProductKey || product.canonical_product_key),
     label: `${product.displayName || product.canonical_product_name} value guide`,
   })).filter((link) => link.href && link.label)
 
-  // Keep FAQPage JSON-LD synchronised with the visible brand FAQ copy.
-  const faqItems = buildBrandFaqItemsForSeo(brand.displayName)
+  const faqItems = buildBrandFaqItemsForSeo(brand.displayName, { slug: brand.slug })
   const faqSchema = buildFaqPageSchemaNode(faqItems, {
     canonicalUrl: brand.absoluteUrl || getBrandAbsoluteUrl(brand.slug),
   })
+
+  const listingSummaries = mapBrandListingsForSeo(listings)
+  const hasListings = listingSummaries.length > 0 || Number(brand.listingCount) > 0
+  const marketplaceHeading = hasListings
+    ? (buyer?.marketplaceHeading || `Used ${brand.displayName} equipment for sale`)
+    : (buyer?.marketplaceHeadingEmpty || `Looking for used ${brand.displayName} equipment?`)
+  const marketplaceLede = hasListings
+    ? (buyer?.marketplaceLede || `Live ${brand.displayName} listings from Equipd marketplace sellers.`)
+    : (buyer?.marketplaceLedeEmpty || (
+      `There are no matching ${brand.displayName} listings right now. Browse related equipment `
+      + 'or check back as new marketplace stock is listed.'
+    ))
+
+  const listingBits = `
+  <section aria-labelledby="seo-brand-listings-heading">
+    <h2 id="seo-brand-listings-heading">${escapeHtml(marketplaceHeading)}</h2>
+    <p>${escapeHtml(marketplaceLede)}</p>
+    ${listingSummaries.length
+      ? `<ul>${listingSummaries.map((listing) => (
+        `<li><a href="${escapeHtml(listing.href)}">${escapeHtml(listing.title)}</a></li>`
+      )).join('')}</ul>`
+      : ''}
+    <p>
+      <a href="${escapeHtml(brand.browseListingsHref || `/browse?brand=${encodeURIComponent(brand.displayName)}`)}">View current ${escapeHtml(brand.displayName)} marketplace listings</a>
+    </p>
+  </section>`
+
+  const configuredModels = selectConfiguredBrandModels(buyer, products)
+  const modelBits = configuredModels.length
+    ? `<section aria-labelledby="seo-brand-models-heading">
+    <h2 id="seo-brand-models-heading">${escapeHtml(buyer.modelsHeading || `${brand.displayName} models`)}</h2>
+    ${buyer.modelsLede ? `<p>${escapeHtml(buyer.modelsLede)}</p>` : ''}
+    <ul>${configuredModels.map(({ product, blurb }) => {
+      const href = product.href || buildEquipmentProductPagePath(product.canonicalProductKey || product.canonical_product_key)
+      const name = product.displayName || product.canonical_product_name
+      return `<li><a href="${escapeHtml(href)}">${escapeHtml(name)}</a>${blurb ? ` — ${escapeHtml(blurb)}` : ''}</li>`
+    }).join('')}</ul>
+  </section>`
+    : ''
+
+  const buyingGuideBits = buyer?.buyingGuide
+    ? `<section aria-labelledby="seo-brand-buying-heading">
+    <h2 id="seo-brand-buying-heading">${escapeHtml(buyer.buyingGuide.title)}</h2>
+    ${buyer.buyingGuide.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+  </section>`
+    : ''
+
+  const categoryLinkBits = buyer?.categoryLinks?.length
+    ? `<section aria-labelledby="seo-brand-related-heading">
+    <h2 id="seo-brand-related-heading">Related equipment on Equipd</h2>
+    <ul>${buyer.categoryLinks.map((link) => (
+      `<li><a href="${escapeHtml(link.to)}">${escapeHtml(link.label)}</a></li>`
+    )).join('')}</ul>
+  </section>`
+    : ''
 
   const categoryBits = categories.length
     ? `<section aria-labelledby="seo-brand-categories-heading">
@@ -276,6 +348,39 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
   </section>`
     : ''
 
+  const valuesHeading = buyerIntent
+    ? `${brand.displayName} equipment values`
+    : `Explore ${brand.displayName} equipment values`
+
+  const valuesBits = `
+  <section aria-labelledby="seo-brand-products-heading">
+    <h2 id="seo-brand-products-heading">${escapeHtml(valuesHeading)}</h2>
+    ${renderLinkList(productLinks, { labelledBy: 'seo-brand-products-heading' })}
+  </section>`
+
+  const aboutBits = buyer?.about
+    ? `<section aria-labelledby="seo-brand-about-heading">
+    <h2 id="seo-brand-about-heading">${escapeHtml(buyer.about.title)}</h2>
+    ${buyer.about.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+  </section>`
+    : ''
+
+  const bodyCore = buyerIntent
+    ? `${listingBits}
+  ${modelBits}
+  ${buyingGuideBits}
+  ${categoryLinkBits}
+  ${seriesBits}
+  ${categoryBits}
+  ${valuesBits}
+  ${aboutBits}
+  ${renderFaqSection(faqItems)}`
+    : `${seriesBits}
+  ${categoryBits}
+  ${valuesBits}
+  ${listingBits}
+  ${renderFaqSection(faqItems)}`
+
   const body = `
 <article class="seo-prerender" ${SEO_PRERENDER_MARKER}="brand" data-brand-slug="${escapeHtml(brand.slug)}">
   ${renderBreadcrumbs([
@@ -284,17 +389,11 @@ export function buildBrandPageSeoDocument({ brand, products = [], categories = [
     { label: brand.displayName },
   ])}
   <header>
-    <h1>${escapeHtml(brand.displayName)} Equipment Values</h1>
+    <h1>${escapeHtml(h1)}</h1>
     <p>${escapeHtml(intro)}</p>
     <p>${escapeHtml(brand.productCount)} equipment models covered${brand.listingCount ? ` · ${escapeHtml(brand.listingCount)} current marketplace listings` : ''}</p>
   </header>
-  ${seriesBits}
-  ${categoryBits}
-  <section aria-labelledby="seo-brand-products-heading">
-    <h2 id="seo-brand-products-heading">Explore ${escapeHtml(brand.displayName)} equipment values</h2>
-    ${renderLinkList(productLinks, { labelledBy: 'seo-brand-products-heading' })}
-  </section>
-  ${renderFaqSection(faqItems)}
+  ${bodyCore}
   <p>
     <a href="${escapeHtml(brand.browseListingsHref || `/browse?brand=${encodeURIComponent(brand.displayName)}`)}">View current ${escapeHtml(brand.displayName)} marketplace listings</a>
     · <a href="/valuation">Value your equipment</a>
@@ -494,7 +593,9 @@ export function mapProductForBrandSeo(product) {
   }
 }
 
-export function buildBrandPayloadFromProducts(brandSlug, products = [], listingCount = 0) {
+export function buildBrandPayloadFromProducts(brandSlug, products = [], listingCount = 0, {
+  listings = [],
+} = {}) {
   const slug = slugifyBrandName(brandSlug)
   const registry = resolveBrandRegistryEntry(slug)
   const matched = products.filter((product) => {
@@ -515,7 +616,7 @@ export function buildBrandPayloadFromProducts(brandSlug, products = [], listingC
     href: getBrandPagePath(slug),
     absoluteUrl: getBrandAbsoluteUrl(slug),
     shortDescription: registry?.shortDescription || null,
-    intro: buildBrandIntro(displayName),
+    intro: buildBrandIntro(displayName, { slug }),
     productCount: matched.length,
     listingCount,
     browseListingsHref: `/browse?brand=${encodeURIComponent(displayName)}`,
@@ -532,6 +633,12 @@ export function buildBrandPayloadFromProducts(brandSlug, products = [], listingC
     }
   }
 
+  const brandListings = listings.filter((listing) => {
+    if (!listing?.brand) return false
+    if (brandsMatch(displayName, listing.brand)) return true
+    return getBrandSlug(listing.brand) === slug
+  })
+
   return {
     brand,
     products: matched.map(mapProductForBrandSeo)
@@ -542,5 +649,6 @@ export function buildBrandPayloadFromProducts(brandSlug, products = [], listingC
     series: [...seriesMap.entries()]
       .map(([name, productCount]) => ({ name, productCount }))
       .sort((left, right) => right.productCount - left.productCount || left.name.localeCompare(right.name)),
+    listings: brandListings,
   }
 }

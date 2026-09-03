@@ -230,7 +230,7 @@ export async function fetchBrandPageData(brandSlug, {
     logoMaxWidth: registry?.logoMaxWidth || null,
     logoMaxHeight: registry?.logoMaxHeight || null,
     logoScale: registry?.logoScale ?? 1,
-    intro: buildBrandIntro(displayName),
+    intro: buildBrandIntro(displayName, { slug }),
     productCount: matchedProducts.length,
     listingCount,
     browseListingsHref: getBrowseBrandFilterHref(displayName),
