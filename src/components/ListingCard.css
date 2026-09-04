@@ -1,5 +1,17 @@
 /* Marketplace listing card — image-led seller-to-buyer marketplace style */
 
+/* Shared marketplace grid — fixed card width, no stretch-to-fill */
+.listing-card-grid,
+.home-listing-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, var(--listing-card-width-min)), var(--listing-card-width))
+  );
+  gap: var(--listing-card-grid-gap);
+  justify-content: start;
+}
+
 .listing-card {
   --listing-card-radius: 0.9rem;
   display: flex;

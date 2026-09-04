@@ -4,14 +4,21 @@
  * Default brand pages remain valuation-led. Brands listed here opt into
  * marketplace-first presentation without forking BrandPage.jsx.
  *
- * Only Concept2 is enabled in Phase 1A. Add Wattbike / Cybex / Life Fitness /
- * Hammer Strength later by extending BRAND_BUYER_SEO — do not scatter
- * slug conditionals through the page component.
+ * Phase 1A: Concept2 (benchmark — keep stable SEO; design template refined separately).
+ * Phase 1B: Wattbike, Cybex, Life Fitness, Hammer Strength — same shared BrandPage template.
  */
 
 import { LANDING_PATHS } from './landingPagePaths.js'
+import { PHASE1B_BRAND_BUYER_SEO } from './brandBuyerSeoPhase1b.js'
 
 /** @typedef {'buyer' | 'valuation'} BrandPageIntent */
+
+/**
+ * @typedef {object} BrandBuyerModelGroup
+ * @property {string} id
+ * @property {string} title
+ * @property {string[]} keys
+ */
 
 /**
  * @typedef {object} BrandBuyerSeoConfig
@@ -21,6 +28,10 @@ import { LANDING_PATHS } from './landingPagePaths.js'
  * @property {string} metaTitle  Document title without "| Equipd"
  * @property {string} metaDescription
  * @property {string} lede
+ * @property {{ label: string }} [heroCta]  Buyer hero primary link (brand browse)
+ * @property {{ label: string }} [heroSecondaryCta]  Buyer hero secondary link (values/catalogue)
+ * @property {string} [searchPlaceholder]
+ * @property {string} [heroContextBody]  Right-column contextual copy under stats
  * @property {string} marketplaceHeading
  * @property {string} marketplaceHeadingEmpty
  * @property {string} marketplaceLede
@@ -28,8 +39,11 @@ import { LANDING_PATHS } from './landingPagePaths.js'
  * @property {string} [modelsHeading]
  * @property {string} [modelsLede]
  * @property {string[]} [featuredModelKeys]
+ * @property {BrandBuyerModelGroup[]} [modelGroups]
  * @property {Record<string, string>} [modelBlurbs]
- * @property {{ title: string, paragraphs: string[] }} [buyingGuide]
+ * @property {{ title: string, paragraphs?: string[], checkpoints?: { title: string, body: string }[] }} [buyingGuide]
+ * @property {string} [valuesHeading]
+ * @property {string} [valuesLede]
  * @property {{ title: string, paragraphs: string[] }} [about]
  * @property {{ to: string, label: string }[]} [categoryLinks]
  * @property {{ question: string, answer: string }[]} [faqItems]
@@ -49,9 +63,17 @@ export const BRAND_BUYER_SEO = Object.freeze({
       + 'BikeErg and SkiErg. Check live UK marketplace listings and model value guides.'
     ),
     lede: (
-      'Find used Concept2 equipment on Equipd — browse live marketplace listings, '
-      + 'compare RowErg, BikeErg and SkiErg models, and check estimated used values '
-      + 'before you buy.'
+      'Find used Concept2 equipment from UK sellers and research the models before you buy.'
+    ),
+    heroCta: Object.freeze({
+      label: 'Browse Concept2 for sale',
+    }),
+    heroSecondaryCta: Object.freeze({
+      label: 'Explore Concept2 values',
+    }),
+    searchPlaceholder: 'Search Concept2 equipment and models...',
+    heroContextBody: (
+      'Compare models, research values and buy with confidence from UK sellers on Equipd.'
     ),
     marketplaceHeading: 'Used Concept2 equipment for sale',
     marketplaceHeadingEmpty: 'Looking for used Concept2 equipment?',
@@ -60,10 +82,10 @@ export const BRAND_BUYER_SEO = Object.freeze({
       'There are no matching Concept2 listings right now. Browse related equipment '
       + 'or request what you need — new Concept2 stock appears on Equipd as sellers list it.'
     ),
-    modelsHeading: 'Concept2 models on Equipd',
+    modelsHeading: 'Explore Concept2 equipment',
     modelsLede: (
-      'Equipd’s Concept2 catalogue covers the machines buyers look for most: '
-      + 'RowErg Model C, D and E, Dynamic RowErg, BikeErg and SkiErg.'
+      'Research Concept2 models before you buy — compare RowErg Model C, D and E, '
+      + 'Dynamic RowErg, BikeErg and SkiErg, then open a model guide for specs and values.'
     ),
     featuredModelKeys: Object.freeze([
       'concept2-rowers-rowerg-model-d',
@@ -75,20 +97,20 @@ export const BRAND_BUYER_SEO = Object.freeze({
     ]),
     modelBlurbs: Object.freeze({
       'concept2-rowers-rowerg-model-d': (
-        'The widely used Concept2 RowErg Model D — the model most UK buyers mean '
-        + 'when they search for a used Concept2 rower.'
+        'The widely used Concept2 RowErg Model D — the reference air rower for '
+        + 'homes, clubs and commercial floors.'
       ),
       'concept2-rowers-rowerg-model-e': (
-        'RowErg Model E sits higher than the Model D, which some buyers prefer for '
-        + 'easier mounting and facility floors.'
+        'RowErg Model E sits higher off the floor with a front-facing monitor arm '
+        + 'favoured in some club and rehab settings.'
       ),
       'concept2-rowers-rowerg-model-c': (
-        'Earlier RowErg Model C machines still appear on the used market and share '
-        + 'the familiar Concept2 rowing feel.'
+        'An earlier RowErg generation still widely searched by buyers looking for '
+        + 'used Concept2 rowers.'
       ),
       'concept2-rowers-dynamic-rowerg': (
-        'Dynamic RowErg uses a moving footplate design for a different rowing feel '
-        + 'compared with the standard RowErg.'
+        'Dynamic RowErg uses a floating frame feel that differs from the classic '
+        + 'stationary rail models.'
       ),
       'concept2-exercise-bike-bikeerg': (
         'BikeErg brings Concept2’s air-resistance training approach to an upright bike.'
@@ -100,6 +122,45 @@ export const BRAND_BUYER_SEO = Object.freeze({
     }),
     buyingGuide: Object.freeze({
       title: 'What to check when buying used Concept2 equipment',
+      checkpoints: Object.freeze([
+        Object.freeze({
+          title: 'Condition & wear',
+          body: (
+            'Inspect overall condition carefully: frame finish, footplates or pedals, '
+            + 'handle/grip wear and any corrosion around fasteners. Ask how the machine '
+            + 'was used — home, studio or commercial floors often show different wear patterns.'
+          ),
+        }),
+        Object.freeze({
+          title: 'RowErg mechanical checks',
+          body: (
+            'On RowErg machines, check the rail and seat rollers for smooth travel, the '
+            + 'chain or drive for dryness or stretch, and that the handle returns cleanly.'
+          ),
+        }),
+        Object.freeze({
+          title: 'Monitor / electronics',
+          body: (
+            'Confirm the Performance Monitor powers on, records strokes and responds to '
+            + 'buttons. Under load, check that metrics update normally before you pay.'
+          ),
+        }),
+        Object.freeze({
+          title: 'BikeErg / SkiErg checks',
+          body: (
+            'On BikeErg and SkiErg, test resistance through the range, listen for unusual '
+            + 'noise from the flywheel, and confirm the monitor behaves normally under load.'
+          ),
+        }),
+        Object.freeze({
+          title: 'Collection, transport & parts',
+          body: (
+            'Concept2 machines are widely supported in the UK, which helps with common wear '
+            + 'parts, but always confirm what is included (monitor, power supply, feet, tools) '
+            + 'and agree collection or delivery before you pay through Equipd.'
+          ),
+        }),
+      ]),
       paragraphs: Object.freeze([
         (
           'Inspect overall condition carefully: frame finish, footplates or pedals, '
@@ -122,6 +183,12 @@ export const BRAND_BUYER_SEO = Object.freeze({
         ),
       ]),
     }),
+    valuesHeading: 'Research Concept2 equipment values',
+    valuesLede: (
+      'Open a model value guide to research original RRP, production information and '
+      + 'estimated used values in context — live asking prices on marketplace listings above '
+      + 'may differ from guide ranges.'
+    ),
     about: Object.freeze({
       title: 'About used Concept2 equipment on Equipd',
       paragraphs: Object.freeze([
@@ -187,6 +254,7 @@ export const BRAND_BUYER_SEO = Object.freeze({
     ]),
     collectionPageName: 'Used Concept2 Equipment for Sale',
   }),
+  ...PHASE1B_BRAND_BUYER_SEO,
 })
 
 /**
@@ -208,12 +276,26 @@ export function isBuyerIntentBrand(slug) {
 }
 
 /**
+ * Flatten featured keys from either featuredModelKeys or modelGroups.
+ * @param {BrandBuyerSeoConfig | null | undefined} config
+ * @returns {string[]}
+ */
+export function getConfiguredBrandModelKeys(config) {
+  if (!config) return []
+  if (config.modelGroups?.length) {
+    return config.modelGroups.flatMap((group) => group.keys || [])
+  }
+  return [...(config.featuredModelKeys || [])]
+}
+
+/**
  * Resolve products for the buyer "models" section in configured order.
  * @param {BrandBuyerSeoConfig | null | undefined} config
  * @param {Array<{ canonicalProductKey?: string, canonical_product_key?: string, href?: string, displayName?: string }>} products
  */
 export function selectConfiguredBrandModels(config, products = []) {
-  if (!config?.featuredModelKeys?.length) return []
+  const keys = getConfiguredBrandModelKeys(config)
+  if (!keys.length) return []
   const byKey = new Map(
     products
       .map((product) => {
@@ -222,7 +304,7 @@ export function selectConfiguredBrandModels(config, products = []) {
       })
       .filter(Boolean),
   )
-  return config.featuredModelKeys
+  return keys
     .map((key) => {
       const product = byKey.get(key)
       if (!product) return null
@@ -232,6 +314,50 @@ export function selectConfiguredBrandModels(config, products = []) {
       }
     })
     .filter(Boolean)
+}
+
+/**
+ * Grouped model discovery for large catalogues (future Phase 1B brands).
+ * Small catalogues return a single untitled group.
+ * @param {BrandBuyerSeoConfig | null | undefined} config
+ * @param {Array<object>} products
+ */
+export function selectConfiguredBrandModelGroups(config, products = []) {
+  if (!config) return []
+  const byKey = new Map(
+    products
+      .map((product) => {
+        const key = product.canonicalProductKey || product.canonical_product_key
+        return key ? [String(key), product] : null
+      })
+      .filter(Boolean),
+  )
+
+  function mapKeys(keys) {
+    return (keys || [])
+      .map((key) => {
+        const product = byKey.get(key)
+        if (!product) return null
+        return {
+          product,
+          blurb: config.modelBlurbs?.[key] || null,
+        }
+      })
+      .filter(Boolean)
+  }
+
+  if (config.modelGroups?.length) {
+    return config.modelGroups
+      .map((group) => ({
+        id: group.id,
+        title: group.title,
+        items: mapKeys(group.keys),
+      }))
+      .filter((group) => group.items.length > 0)
+  }
+
+  const items = mapKeys(config.featuredModelKeys)
+  return items.length ? [{ id: 'all', title: null, items }] : []
 }
 
 /**

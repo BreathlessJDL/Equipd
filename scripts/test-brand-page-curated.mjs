@@ -104,6 +104,27 @@ assert(stats.every((stat) => stat.value > 0), 'stats omit zero counts')
 assert(!stats.some((stat) => stat.key === 'listings'), 'zero listings omitted')
 assert(stats.some((stat) => stat.key === 'models'), 'models included')
 
+const marketplaceStats = buildBrandPageStats({
+  productCount: 6,
+  listingCount: 3,
+  categories: [{ name: 'Rower' }, { name: 'Bike' }, { name: 'Ski' }],
+  series: [{ name: 'RowErg' }],
+  variant: 'marketplace',
+})
+assert(marketplaceStats[0]?.key === 'listings', 'marketplace stats lead with listings')
+assert(marketplaceStats[0]?.label === 'currently for sale', 'marketplace listing label')
+assert(marketplaceStats.some((stat) => stat.label === 'models covered'), 'marketplace models label')
+assert(marketplaceStats.some((stat) => stat.label === 'equipment types'), 'marketplace types label')
+assert(!marketplaceStats.some((stat) => stat.key === 'series'), 'marketplace stats omit series')
+
+const zeroListingMarketplace = buildBrandPageStats({
+  productCount: 6,
+  listingCount: 0,
+  categories: [{ name: 'Rower' }],
+  variant: 'marketplace',
+})
+assert(zeroListingMarketplace[0]?.value === 0, 'marketplace shows zero listings')
+
 const faqs = buildBrandFaqItems('Life Fitness')
 assert(faqs.length >= 4, 'brand faqs present')
 assert(faqs.every((item) => item.question && item.answer), 'faq shape')

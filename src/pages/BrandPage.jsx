@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo'
+import BrandModelCard from '../components/BrandModelCard'
+import BrandValueResearchCard from '../components/BrandValueResearchCard'
 import EquipmentValueGuideCard from '../components/EquipmentValueGuideCard'
 import JsonLd from '../components/JsonLd'
 import ListingCard from '../components/ListingCard'
@@ -20,7 +22,7 @@ import {
 import {
   getBrandBuyerSeoConfig,
   isBuyerIntentBrand,
-  selectConfiguredBrandModels,
+  selectConfiguredBrandModelGroups,
 } from '../lib/brandBuyerSeo'
 import {
   buildBrandFaqItems,
@@ -64,27 +66,39 @@ function BrandMarketplaceSection({
 
   return (
     <section
-      className="brand-page__section brand-page__section--marketplace"
+      className={`brand-page__section brand-page__section--marketplace${hasListings ? '' : ' brand-page__section--marketplace-empty'}`}
       aria-labelledby={headingId}
     >
-      <div className={`brand-page__marketplace-panel${hasListings ? '' : ' brand-page__marketplace-panel--empty'}`}>
-        <div className="brand-page__marketplace-intro">
+      <div className="brand-page__section-head">
+        <div className="brand-page__section-head-copy">
           <h2 id={headingId} className="brand-page__section-title">
             {heading}
           </h2>
           <p className="brand-page__section-lede">{lede}</p>
-          <Link to={brand.browseListingsHref} className="brand-page__section-link">
-            {hasListings ? 'View all listings →' : `Browse ${brand.displayName} listings →`}
-          </Link>
         </div>
-        {hasListings ? (
-          <div className="brand-page__listings">
-            {listings.slice(0, 6).map((listing) => (
-              <ListingCard key={listing.id} listing={listing} variant="home" />
-            ))}
-          </div>
-        ) : null}
+        <Link to={brand.browseListingsHref} className="brand-page__section-link">
+          {hasListings ? 'View all listings →' : `Browse ${brand.displayName} →`}
+        </Link>
       </div>
+      {hasListings ? (
+        <div className="brand-page__listings listing-card-grid">
+          {listings.slice(0, 6).map((listing, index) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="home"
+              imagePriority={index < 4}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="brand-page__marketplace-empty">
+          <p className="brand-page__marketplace-empty-actions">
+            Request the equipment you need, or browse related {brand.displayName} results while new
+            listings arrive.
+          </p>
+        </div>
+      )}
       <div className="brand-page__wanted-wrap">
         <BrandWantedRequestCard brandName={brand.displayName} />
       </div>
@@ -187,10 +201,15 @@ export default function BrandPage() {
     () => selectPopularBrandProducts(allProducts, { listings }),
     [allProducts, listings],
   )
-  const configuredModels = useMemo(
-    () => selectConfiguredBrandModels(buyerConfig, allProducts),
+  const configuredModelGroups = useMemo(
+    () => selectConfiguredBrandModelGroups(buyerConfig, allProducts),
     [buyerConfig, allProducts],
   )
+  const valueResearchProducts = useMemo(() => {
+    if (!buyerIntent) return []
+    const configured = configuredModelGroups.flatMap((group) => group.items.map((item) => item.product))
+    return configured.length ? configured : selectPopularBrandProducts(allProducts, { listings })
+  }, [buyerIntent, configuredModelGroups, allProducts, listings])
   const featuredSeries = useMemo(
     () => selectFeaturedBrandSeries(series),
     [series],
@@ -216,8 +235,9 @@ export default function BrandPage() {
       listingCount: brand?.listingCount,
       categories,
       series,
+      variant: buyerIntent ? 'marketplace' : 'default',
     }),
-    [brand?.productCount, brand?.listingCount, categories, series],
+    [brand?.productCount, brand?.listingCount, categories, series, buyerIntent],
   )
   const faqItems = useMemo(
     () => (brand ? buildBrandFaqItems(brand.displayName, { slug: brand.slug }) : []),
@@ -381,13 +401,11 @@ export default function BrandPage() {
     </section>
   ) : null
 
-  const popularSection = popularProducts.length ? (
+  const popularSection = popularProducts.length && !buyerIntent ? (
     <section className="brand-page__section" aria-labelledby="brand-popular-title">
       <div className="brand-page__section-head">
         <h2 id="brand-popular-title" className="brand-page__section-title">
-          {buyerIntent
-            ? `${brand.displayName} equipment values`
-            : `Popular ${brand.displayName} equipment`}
+          {`Popular ${brand.displayName} equipment`}
         </h2>
         <Link
           to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
@@ -400,11 +418,6 @@ export default function BrandPage() {
           View all models →
         </Link>
       </div>
-      {buyerIntent ? (
-        <p className="brand-page__section-lede">
-          Estimated used values and model guides for {brand.displayName} equipment.
-        </p>
-      ) : null}
       <div className="brand-page__value-grid">
         {popularProducts.map((product, index) => (
           <EquipmentValueGuideCard
@@ -417,12 +430,20 @@ export default function BrandPage() {
     </section>
   ) : null
 
-  const modelsSection = buyerIntent && configuredModels.length ? (
-    <section className="brand-page__section" aria-labelledby="brand-models-title">
+  const valuesResearchSection = buyerIntent && valueResearchProducts.length ? (
+    <section className="brand-page__section" aria-labelledby="brand-popular-title">
       <div className="brand-page__section-head">
-        <h2 id="brand-models-title" className="brand-page__section-title">
-          {buyerConfig.modelsHeading || `${brand.displayName} models`}
-        </h2>
+        <div className="brand-page__section-head-copy">
+          <h2 id="brand-popular-title" className="brand-page__section-title">
+            {buyerConfig?.valuesHeading || `Research ${brand.displayName} equipment values`}
+          </h2>
+          <p className="brand-page__section-lede">
+            {buyerConfig?.valuesLede || (
+              `Open a model value guide to research original RRP, production information and `
+              + `estimated used values for ${brand.displayName} equipment.`
+            )}
+          </p>
+        </div>
         <Link
           to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
           className="brand-page__section-link"
@@ -434,19 +455,57 @@ export default function BrandPage() {
           View all models →
         </Link>
       </div>
-      {buyerConfig.modelsLede ? (
-        <p className="brand-page__section-lede">{buyerConfig.modelsLede}</p>
-      ) : null}
-      <ul className="brand-page__model-list">
-        {configuredModels.map(({ product, blurb }) => (
-          <li key={product.id || product.canonicalProductKey} className="brand-page__model-item">
-            <Link to={product.href} className="brand-page__model-link">
-              {product.displayName}
-            </Link>
-            {blurb ? <p className="brand-page__model-blurb">{blurb}</p> : null}
-          </li>
+      <div className="brand-page__value-research-list">
+        {valueResearchProducts.map((product, index) => (
+          <BrandValueResearchCard
+            key={product.id || product.canonicalProductKey}
+            product={product}
+            priority={index < 2}
+          />
         ))}
-      </ul>
+      </div>
+    </section>
+  ) : null
+
+  const modelsSection = buyerIntent && configuredModelGroups.length ? (
+    <section className="brand-page__section" aria-labelledby="brand-models-title">
+      <div className="brand-page__section-head">
+        <div className="brand-page__section-head-copy">
+          <h2 id="brand-models-title" className="brand-page__section-title">
+            {buyerConfig.modelsHeading || `Explore ${brand.displayName} equipment`}
+          </h2>
+          {buyerConfig.modelsLede ? (
+            <p className="brand-page__section-lede">{buyerConfig.modelsLede}</p>
+          ) : null}
+        </div>
+        <Link
+          to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
+          className="brand-page__section-link"
+          onClick={(event) => {
+            event.preventDefault()
+            openCatalogue()
+          }}
+        >
+          View all models →
+        </Link>
+      </div>
+      {configuredModelGroups.map((group) => (
+        <div key={group.id} className="brand-page__model-group">
+          {group.title ? (
+            <h3 className="brand-page__model-group-title">{group.title}</h3>
+          ) : null}
+          <div className="brand-page__model-grid">
+            {group.items.map(({ product, blurb }, index) => (
+              <BrandModelCard
+                key={product.id || product.canonicalProductKey}
+                product={product}
+                blurb={blurb}
+                priority={index < 3}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </section>
   ) : null
 
@@ -455,13 +514,24 @@ export default function BrandPage() {
       <h2 id="brand-buying-title" className="brand-page__section-title">
         {buyerConfig.buyingGuide.title}
       </h2>
-      <div className="brand-page__prose">
-        {buyerConfig.buyingGuide.paragraphs.map((paragraph) => (
-          <p key={paragraph.slice(0, 48)} className="brand-page__about-copy">
-            {paragraph}
-          </p>
-        ))}
-      </div>
+      {buyerConfig.buyingGuide.checkpoints?.length ? (
+        <div className="brand-page__checkpoint-grid">
+          {buyerConfig.buyingGuide.checkpoints.map((checkpoint) => (
+            <article key={checkpoint.title} className="brand-page__checkpoint">
+              <h3 className="brand-page__checkpoint-title">{checkpoint.title}</h3>
+              <p className="brand-page__checkpoint-body">{checkpoint.body}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="brand-page__prose">
+          {(buyerConfig.buyingGuide.paragraphs || []).map((paragraph) => (
+            <p key={paragraph.slice(0, 48)} className="brand-page__about-copy">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      )}
     </section>
   ) : null
 
@@ -470,15 +540,13 @@ export default function BrandPage() {
       <h2 id="brand-related-cats-title" className="brand-page__section-title">
         Related equipment on Equipd
       </h2>
-      <ul className="brand-page__related-links">
+      <nav className="brand-page__category-nav" aria-label="Related equipment categories">
         {buyerConfig.categoryLinks.map((link) => (
-          <li key={link.to}>
-            <Link to={link.to} className="brand-page__text-link">
-              {link.label}
-            </Link>
-          </li>
+          <Link key={link.to} to={link.to} className="brand-page__category-chip">
+            {link.label}
+          </Link>
         ))}
-      </ul>
+      </nav>
     </section>
   ) : null
 
@@ -504,17 +572,22 @@ export default function BrandPage() {
         />
 
         <header className="brand-page__hero">
-          <div className="brand-page__hero-inner">
+          <div className="brand-page__hero-main">
             <div className="brand-page__hero-logo-wrap">
               <BrandLogo brand={brand} size="hero" priority className="brand-page__hero-logo" />
             </div>
+
+            {buyerIntent ? (
+              <p className="brand-page__eyebrow">Used gym equipment</p>
+            ) : null}
+
             <h1 className="brand-page__title">{pageTitle}</h1>
             <p className="brand-page__lede">{heroLede}</p>
 
             <section className="brand-page__search-panel" aria-label={`${brand.displayName} model search`}>
               <form className="brand-page__search-form" onSubmit={handleSearchSubmit}>
                 <label className="visually-hidden" htmlFor={searchInputId}>
-                  Search {brand.displayName} models by name or keyword
+                  Search {brand.displayName} equipment and models
                 </label>
                 <div className="brand-page__search-control">
                   <div className="brand-page__search-field">
@@ -526,7 +599,10 @@ export default function BrandPage() {
                       type="search"
                       className="brand-page__search-input"
                       value={search}
-                      placeholder={`Search ${brand.displayName} models by name or keyword...`}
+                      placeholder={
+                        buyerConfig?.searchPlaceholder
+                        || `Search ${brand.displayName} equipment and models...`
+                      }
                       onChange={(event) => {
                         setSearch(event.target.value)
                         setPage(1)
@@ -551,7 +627,7 @@ export default function BrandPage() {
                         <li key={product.id} role="option">
                           <Link to={product.href} className="brand-page__search-suggestion">
                             <span className="brand-page__search-suggestion-name">{product.displayName}</span>
-                            {product.estimatedValueLabel ? (
+                            {product.estimatedValueLabel && !buyerIntent ? (
                               <span className="brand-page__search-suggestion-value">
                                 {product.estimatedValueLabel}
                               </span>
@@ -570,27 +646,60 @@ export default function BrandPage() {
                     </ul>
                   ) : null}
                 </div>
-                <Link to="/valuation" className="brand-page__search-cta">
-                  Value your equipment →
-                </Link>
               </form>
             </section>
 
-            {stats.length ? (
-              <ul className="brand-page__stats" aria-label={`${brand.displayName} coverage`}>
-                {stats.map((stat, index) => (
-                  <li key={stat.key} className="brand-page__stat">
-                    {index > 0 ? (
-                      <span className="brand-page__stat-sep" aria-hidden="true">•</span>
-                    ) : null}
-                    <strong>{stat.value}</strong>
+            <nav className="brand-page__hero-links" aria-label={`${brand.displayName} page actions`}>
+              {buyerIntent ? (
+                <>
+                  <Link to={brand.browseListingsHref} className="brand-page__hero-link">
+                    {buyerConfig?.heroCta?.label || `Browse ${brand.displayName} for sale`}
                     {' '}
-                    <span>{stat.label}</span>
+                    →
+                  </Link>
+                  <Link
+                    to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
+                    className="brand-page__hero-link"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      openCatalogue()
+                    }}
+                  >
+                    {buyerConfig?.heroSecondaryCta?.label || `Explore ${brand.displayName} values`}
+                    {' '}
+                    →
+                  </Link>
+                </>
+              ) : (
+                <Link to="/valuation" className="brand-page__hero-link">
+                  Value your equipment →
+                </Link>
+              )}
+            </nav>
+          </div>
+
+          <aside className="brand-page__hero-aside" aria-label={`${brand.displayName} marketplace summary`}>
+            {stats.length ? (
+              <ul className="brand-page__hero-stats">
+                {stats.map((stat) => (
+                  <li key={stat.key} className="brand-page__hero-stat">
+                    <span className="brand-page__hero-stat-value">{stat.value}</span>
+                    <span className="brand-page__hero-stat-label">{stat.label}</span>
                   </li>
                 ))}
               </ul>
             ) : null}
-          </div>
+
+            <div className="brand-page__hero-context">
+              <p className="brand-page__hero-context-heading">
+                {`${brand.displayName} on Equipd`}
+              </p>
+              <p className="brand-page__hero-context-body">
+                {buyerConfig?.heroContextBody
+                  || 'Compare models, research values and buy with confidence from UK sellers on Equipd.'}
+              </p>
+            </div>
+          </aside>
         </header>
 
         {buyerIntent ? (
@@ -599,8 +708,7 @@ export default function BrandPage() {
             {modelsSection}
             {buyingGuideSection}
             {categoryLinksSection}
-            {seriesSection}
-            {popularSection}
+            {valuesResearchSection}
           </>
         ) : (
           <>

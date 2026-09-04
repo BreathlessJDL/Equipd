@@ -25,7 +25,7 @@ import {
   getBrandBuyerSeoConfig,
   isBuyerIntentBrand,
   mapBrandListingsForSeo,
-  selectConfiguredBrandModels,
+  selectConfiguredBrandModelGroups,
 } from './brandBuyerSeo.js'
 import {
   buildEquipmentCanonicalPath,
@@ -298,23 +298,31 @@ export function buildBrandPageSeoDocument({
     </p>
   </section>`
 
-  const configuredModels = selectConfiguredBrandModels(buyer, products)
-  const modelBits = configuredModels.length
+  const configuredModelGroups = selectConfiguredBrandModelGroups(buyer, products)
+  const modelBits = configuredModelGroups.length
     ? `<section aria-labelledby="seo-brand-models-heading">
     <h2 id="seo-brand-models-heading">${escapeHtml(buyer.modelsHeading || `${brand.displayName} models`)}</h2>
     ${buyer.modelsLede ? `<p>${escapeHtml(buyer.modelsLede)}</p>` : ''}
-    <ul>${configuredModels.map(({ product, blurb }) => {
-      const href = product.href || buildEquipmentProductPagePath(product.canonicalProductKey || product.canonical_product_key)
-      const name = product.displayName || product.canonical_product_name
-      return `<li><a href="${escapeHtml(href)}">${escapeHtml(name)}</a>${blurb ? ` — ${escapeHtml(blurb)}` : ''}</li>`
-    }).join('')}</ul>
+    ${configuredModelGroups.map((group) => {
+      const list = `<ul>${group.items.map(({ product, blurb }) => {
+        const href = product.href || buildEquipmentProductPagePath(product.canonicalProductKey || product.canonical_product_key)
+        const name = product.displayName || product.canonical_product_name
+        return `<li><a href="${escapeHtml(href)}">${escapeHtml(name)}</a>${blurb ? ` — ${escapeHtml(blurb)}` : ''}</li>`
+      }).join('')}</ul>`
+      if (!group.title) return list
+      return `<h3>${escapeHtml(group.title)}</h3>${list}`
+    }).join('')}
   </section>`
     : ''
 
   const buyingGuideBits = buyer?.buyingGuide
     ? `<section aria-labelledby="seo-brand-buying-heading">
     <h2 id="seo-brand-buying-heading">${escapeHtml(buyer.buyingGuide.title)}</h2>
-    ${buyer.buyingGuide.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+    ${buyer.buyingGuide.checkpoints?.length
+      ? buyer.buyingGuide.checkpoints.map((checkpoint) => (
+        `<h3>${escapeHtml(checkpoint.title)}</h3><p>${escapeHtml(checkpoint.body)}</p>`
+      )).join('')
+      : (buyer.buyingGuide.paragraphs || []).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
   </section>`
     : ''
 
@@ -349,12 +357,13 @@ export function buildBrandPageSeoDocument({
     : ''
 
   const valuesHeading = buyerIntent
-    ? `${brand.displayName} equipment values`
+    ? (buyer?.valuesHeading || `Research ${brand.displayName} equipment values`)
     : `Explore ${brand.displayName} equipment values`
 
   const valuesBits = `
   <section aria-labelledby="seo-brand-products-heading">
     <h2 id="seo-brand-products-heading">${escapeHtml(valuesHeading)}</h2>
+    ${buyer?.valuesLede ? `<p>${escapeHtml(buyer.valuesLede)}</p>` : ''}
     ${renderLinkList(productLinks, { labelledBy: 'seo-brand-products-heading' })}
   </section>`
 
@@ -370,8 +379,6 @@ export function buildBrandPageSeoDocument({
   ${modelBits}
   ${buyingGuideBits}
   ${categoryLinkBits}
-  ${seriesBits}
-  ${categoryBits}
   ${valuesBits}
   ${aboutBits}
   ${renderFaqSection(faqItems)}`

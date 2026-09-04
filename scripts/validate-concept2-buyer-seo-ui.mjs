@@ -92,17 +92,21 @@ async function main() {
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       )
-      const listingCards = await page.locator('.brand-page__listings .listing-card, .brand-page__listings .listing-row').count()
+      const listingCards = await page.locator('.brand-page__listings .listing-card, .listing-card-grid .listing-card').count()
+      const usesSharedGrid = await page.locator('.brand-page__listings.listing-card-grid').count()
       const emptyHeading = await page.locator('#brand-listings-empty-title').count()
-      const modelLinks = await page.locator('.brand-page__model-link').count()
+      const modelCards = await page.locator('.brand-model-card').count()
+      const valueResearchCards = await page.locator('.brand-value-research-card').count()
+      const typicalValue = await page.getByText('Typical value today').count()
       const seoPrerenderVisible = await page.evaluate(() => {
         const el = document.querySelector('[data-equipd-seo-prerender="brand"]')
         if (!el) return false
         const style = window.getComputedStyle(el)
         return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null
       })
-      const valuationCta = await page.getByRole('link', { name: /Value your equipment/i }).count()
-      const viewAll = await page.getByRole('link', { name: /View all listings|Browse Concept2 listings/i }).count()
+      const browseCta = await page.getByRole('link', { name: /Browse Concept2 for sale/i }).count()
+      const viewAll = await page.getByRole('link', { name: /View all listings|Browse Concept2/i }).count()
+      const checkpoints = await page.locator('.brand-page__checkpoint').count()
 
       const path = join(OUT, `concept2-${vp.name}.png`)
       await page.screenshot({ path, fullPage: true })
@@ -121,39 +125,37 @@ async function main() {
         orderOk,
         overflow,
         listingCards,
+        usesSharedGrid: usesSharedGrid > 0,
         emptyHeading: emptyHeading > 0,
-        modelLinks,
+        modelCards,
+        valueResearchCards,
+        typicalValue,
         seoPrerenderVisible,
-        valuationCta,
+        browseCta,
         viewAll,
+        checkpoints,
         screenshot: path,
       })
       await context.close()
     }
 
-    // Zero-stock simulation: hide listing cards via DOM and confirm empty copy exists in config/page source path
+    // Confirm Phase 1B brands are activated on the shared buyer template
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
     const page = await context.newPage()
-    await page.goto(`${base}/brands/wattbike`, { waitUntil: 'networkidle', timeout: 90000 })
-    await dismissCookies(page)
-    await page.waitForSelector('.brand-page__title', { timeout: 60000 })
-    const wattbikeEmpty = await page.locator('#brand-listings-empty-title').innerText().catch(() => null)
-    const wattbikeTitle = await page.title()
-    const wattbikeH1 = await page.locator('h1.brand-page__title').innerText()
-    results.push({
-      zeroStockProxy: 'wattbike',
-      emptyHeading: wattbikeEmpty,
-      title: wattbikeTitle,
-      h1: wattbikeH1,
-    })
-
-    for (const slug of ['cybex', 'life-fitness', 'hammer-strength']) {
+    const expectedBuyerH1 = {
+      wattbike: 'Used Wattbikes for Sale',
+      cybex: 'Used Cybex Equipment for Sale',
+      'life-fitness': 'Used Life Fitness Equipment for Sale',
+      'hammer-strength': 'Used Hammer Strength Equipment for Sale',
+    }
+    for (const slug of Object.keys(expectedBuyerH1)) {
       await page.goto(`${base}/brands/${slug}`, { waitUntil: 'domcontentloaded', timeout: 90000 })
       await page.waitForSelector('.brand-page__title', { timeout: 60000 })
       results.push({
         regression: slug,
         title: await page.title(),
         h1: await page.locator('h1.brand-page__title').innerText(),
+        expectedH1: expectedBuyerH1[slug],
       })
     }
     await context.close()
@@ -164,8 +166,21 @@ async function main() {
   writeFileSync(join(OUT, 'results.json'), JSON.stringify({ results, consoleErrors }, null, 2))
   console.log(JSON.stringify({ results, consoleErrors }, null, 2))
 
-  const concept2Fails = results.filter((row) => row.viewport && (!row.orderOk || row.overflow || row.seoPrerenderVisible || row.modelLinks < 6))
-  if (concept2Fails.length || consoleErrors.length) {
+  const concept2Fails = results.filter((row) => row.viewport && (
+    !row.orderOk
+    || row.overflow
+    || row.seoPrerenderVisible
+    || row.modelCards < 6
+    || row.valueResearchCards < 6
+    || row.typicalValue > 0
+    || row.browseCta < 1
+    || row.checkpoints < 4
+    || row.usesSharedGrid === false
+  ))
+  const phase1bOk = results
+    .filter((row) => row.regression)
+    .every((row) => String(row.h1 || '').trim() === row.expectedH1)
+  if (concept2Fails.length || consoleErrors.length || !phase1bOk) {
     console.error('VALIDATION_FAILED')
     process.exit(1)
   }

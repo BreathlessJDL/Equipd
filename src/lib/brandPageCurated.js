@@ -133,7 +133,32 @@ export function buildBrandPageStats({
   listingCount = 0,
   categories = [],
   series = [],
+  variant = 'default',
 } = {}) {
+  if (variant === 'marketplace') {
+    const stats = []
+    stats.push({
+      key: 'listings',
+      value: Number(listingCount) || 0,
+      label: 'currently for sale',
+    })
+    if (productCount > 0) {
+      stats.push({
+        key: 'models',
+        value: productCount,
+        label: productCount === 1 ? 'model covered' : 'models covered',
+      })
+    }
+    if (categories.length > 0) {
+      stats.push({
+        key: 'types',
+        value: categories.length,
+        label: categories.length === 1 ? 'equipment type' : 'equipment types',
+      })
+    }
+    return stats
+  }
+
   const stats = []
   if (productCount > 0) {
     stats.push({
