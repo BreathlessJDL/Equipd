@@ -138,8 +138,9 @@ for (const row of screens) {
   if (row.h1.length !== 1 || row.h1[0] !== 'With Equipd') throw new Error(`${row.viewport}: H1`)
   if (row.faqCount !== 11 || row.faqSchemaCount !== 11) throw new Error(`${row.viewport}: FAQ mismatch`)
   if (!row.canonical.includes('/buy-used-gym-equipment')) throw new Error(`${row.viewport}: canonical`)
-  if (!row.title.includes('Buy Used Gym Equipment Across the UK')) throw new Error(`${row.viewport}: title`)
-  if (!row.description.includes('Search thousands of listings')) throw new Error(`${row.viewport}: description`)
+  if (!row.title.includes('Buy Used Gym Equipment for Sale Across the UK')) throw new Error(`${row.viewport}: title`)
+  if (!row.description.includes('Browse used gym equipment from sellers across the UK')) throw new Error(`${row.viewport}: description`)
+  if (/thousands of listings/i.test(row.description)) throw new Error(`${row.viewport}: unsupported inventory claim`)
   if (!row.hasArticle || !row.hasHeroHeader) throw new Error(`${row.viewport}: semantic structure`)
 }
 

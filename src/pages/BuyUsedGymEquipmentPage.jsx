@@ -1,16 +1,36 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import BrandLogo from '../components/BrandLogo'
+import ListingCard from '../components/ListingCard'
+import JsonLd from '../components/JsonLd'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import FaqPageSchema from '../components/seo/FaqPageSchema'
 import WebPageSchema from '../components/seo/WebPageSchema'
+import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
+import { useWantedRequest } from '../components/wanted/useWantedRequest'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { fetchBrandDirectory } from '../lib/brandCatalogue'
+import { buildFeaturedBrands } from '../lib/categoryLandingSeo'
+import { fetchActiveListings } from '../lib/listings'
+import { WANTED_REQUEST_SOURCES } from '../lib/wantedRequestConstants'
 import {
-  BROWSE_PATH,
   BUY_BENEFITS,
   BUY_BENEFITS_HEADING,
+  BUY_BRAND_HEADING,
+  BUY_BRAND_LEAD,
+  BUY_BRAND_NOTE,
+  BUY_CONTEXT_HEADING,
+  BUY_CONTEXT_HUBS,
+  BUY_CONTEXT_LEAD,
+  BUY_CONTEXT_NOTE,
+  BUY_EQUIPMENT_TYPE_HEADING,
+  BUY_EQUIPMENT_TYPE_LEAD,
+  BUY_EQUIPMENT_TYPE_NOTE,
+  BUY_EQUIPMENT_TYPES,
   BUY_FAQ_INTRO,
   BUY_FAQ_ITEMS,
   BUY_FAQ_NOTE,
+  BUY_FEATURED_BRAND_SLUGS,
   BUY_GUIDE_BRAND_LINKS,
   BUY_GUIDE_HEADING,
   BUY_GUIDE_HIGHLIGHTS,
@@ -19,16 +39,21 @@ import {
   BUY_GUIDE_NOTE,
   BUY_GUIDE_PARAGRAPHS,
   BUY_HERO_ARTWORK,
+  BUY_HERO_PRIMARY_CTA,
+  BUY_HERO_SECONDARY_CTA_LABEL,
   BUY_HERO_TRUST_ITEMS,
   BUY_JOURNEY_HEADING,
   BUY_JOURNEY_LEAD,
   BUY_JOURNEY_STEPS,
-  BUY_MID_CTA_HEADING,
-  BUY_MID_CTA_LABEL,
-  BUY_MID_CTA_LEAD,
+  BUY_LISTINGS_CTA,
+  BUY_LISTINGS_EMPTY,
+  BUY_LISTINGS_HEADING,
+  BUY_LISTINGS_LEAD,
+  BUY_LISTINGS_LIMIT,
+  BUY_LISTINGS_LOADING_LABEL,
+  BUY_LISTINGS_NOTE,
   BUY_USED_GYM_EQUIPMENT_EYEBROW,
   BUY_USED_GYM_EQUIPMENT_H1,
-  BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY,
   BUY_USED_GYM_EQUIPMENT_LEAD,
   BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION,
   BUY_USED_GYM_EQUIPMENT_META_TITLE,
@@ -37,13 +62,21 @@ import {
   BUY_VALUATION_EYEBROW,
   BUY_VALUATION_HEADING,
   BUY_VALUATION_STEPS,
+  BUY_WANTED_CTA_LABEL,
+  BUY_WANTED_HEADING,
+  BUY_WANTED_LEAD,
+  BUY_WANTED_NOTE,
+  BROWSE_PATH,
   buildBuyUsedGymEquipmentBreadcrumbSchema,
+  buildBuyUsedGymEquipmentCollectionSchema,
   buildBuyUsedGymEquipmentFaqSchema,
   buildBuyUsedGymEquipmentOpenGraph,
   buildBuyUsedGymEquipmentWebPageSchema,
   VALUATION_PATH,
 } from '../lib/buyUsedGymEquipmentPage.js'
 import './BuyUsedGymEquipmentPage.css'
+import './CommercialGymEquipmentPage.css'
+import '../components/ListingCard.css'
 
 function TrustLine() {
   return (
@@ -126,7 +159,6 @@ function BuyJourneyStep({
             type="image/png"
             srcSet={imageSrcMobilePng}
           />
-          {/* Prefer full-resolution PNG on desktop so UI text stays as sharp as the supplied masters. */}
           <source
             media="(min-width: 768px)"
             type="image/png"
@@ -185,6 +217,41 @@ function BuyFaqItem({ question, answer }) {
         <p className="buy-page__faq-answer">{answer}</p>
       </div>
     </details>
+  )
+}
+
+function formatListingCount(count) {
+  const n = Number(count) || 0
+  if (n <= 0) return 'View brand guide'
+  return `${new Intl.NumberFormat('en-GB').format(n)} live ${n === 1 ? 'listing' : 'listings'}`
+}
+
+function BuyWantedSection() {
+  const { openWantedRequest } = useWantedRequest()
+
+  return (
+    <section className="buy-page__wanted-section" aria-labelledby="buy-wanted-heading">
+      <div className="buy-page__reading-rail buy-page__reading-rail--wanted">
+        <span className="buy-page__handwritten-note">{BUY_WANTED_NOTE}</span>
+        <h2 id="buy-wanted-heading" className="buy-page__h2">
+          {BUY_WANTED_HEADING}
+        </h2>
+        <p className="buy-page__wanted-lead">{BUY_WANTED_LEAD}</p>
+        <button
+          type="button"
+          className="buy-page__btn buy-page__btn--primary"
+          onClick={(event) =>
+            openWantedRequest({
+              source: WANTED_REQUEST_SOURCES.BUY_PAGE,
+              preferredEntryMode: 'catalogue',
+              triggerElement: event.currentTarget,
+            })
+          }
+        >
+          {BUY_WANTED_CTA_LABEL}
+        </button>
+      </div>
+    </section>
   )
 }
 
@@ -247,6 +314,11 @@ function BuySeoSection() {
 export default function BuyUsedGymEquipmentPage() {
   const openGraph = useMemo(() => buildBuyUsedGymEquipmentOpenGraph(), [])
   const showHeroArtwork = useMinWidth(768)
+  const { openWantedRequest } = useWantedRequest()
+  const [listings, setListings] = useState([])
+  const [listingsLoading, setListingsLoading] = useState(true)
+  const [listingsError, setListingsError] = useState('')
+  const [brands, setBrands] = useState(() => buildFeaturedBrands([...BUY_FEATURED_BRAND_SLUGS], []))
 
   usePageMeta({
     title: BUY_USED_GYM_EQUIPMENT_META_TITLE,
@@ -258,12 +330,52 @@ export default function BuyUsedGymEquipmentPage() {
 
   const breadcrumbSchema = useMemo(() => buildBuyUsedGymEquipmentBreadcrumbSchema(), [])
   const webPageSchema = useMemo(() => buildBuyUsedGymEquipmentWebPageSchema(), [])
+  const collectionSchema = useMemo(
+    () => buildBuyUsedGymEquipmentCollectionSchema(listings),
+    [listings],
+  )
   const faqSchema = useMemo(() => buildBuyUsedGymEquipmentFaqSchema(), [])
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadMarketplace() {
+      setListingsLoading(true)
+      setListingsError('')
+
+      const [listingsResult, brandResult] = await Promise.all([
+        fetchActiveListings({
+          sort: 'newest',
+          limit: BUY_LISTINGS_LIMIT,
+        }),
+        fetchBrandDirectory(),
+      ])
+
+      if (cancelled) return
+
+      if (listingsResult.error) {
+        setListingsError(listingsResult.error.message || 'Unable to load listings.')
+        setListings([])
+      } else {
+        const rows = Array.isArray(listingsResult.data) ? listingsResult.data : []
+        setListings(rows.slice(0, BUY_LISTINGS_LIMIT))
+      }
+
+      setBrands(buildFeaturedBrands([...BUY_FEATURED_BRAND_SLUGS], brandResult?.brands || []))
+      setListingsLoading(false)
+    }
+
+    loadMarketplace()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
-    <article className="buy-page">
+    <article className="buy-page commercial-page buy-page--marketplace-hub">
       <BreadcrumbSchema schema={breadcrumbSchema} />
       <WebPageSchema schema={webPageSchema} />
+      <JsonLd data={collectionSchema} />
       <FaqPageSchema schema={faqSchema} />
 
       <header className="buy-page__hero" aria-labelledby="buy-page-title">
@@ -274,17 +386,26 @@ export default function BuyUsedGymEquipmentPage() {
                 {BUY_USED_GYM_EQUIPMENT_EYEBROW}
               </span>
               <h1 id="buy-page-title" className="buy-page__h1">
-                <span className="visually-hidden">{BUY_USED_GYM_EQUIPMENT_H1}</span>
-                <span aria-hidden="true">{BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY}</span>
+                {BUY_USED_GYM_EQUIPMENT_H1}
               </h1>
               <p className="buy-page__lead">{BUY_USED_GYM_EQUIPMENT_LEAD}</p>
               <div className="buy-page__actions">
-                <Link to={BROWSE_PATH} className="buy-page__btn buy-page__btn--primary">
-                  Browse Equipment
+                <Link to={BUY_HERO_PRIMARY_CTA.to} className="buy-page__btn buy-page__btn--primary">
+                  {BUY_HERO_PRIMARY_CTA.label}
                 </Link>
-                <Link to={VALUATION_PATH} className="buy-page__btn buy-page__btn--secondary">
-                  Get a Free Valuation
-                </Link>
+                <button
+                  type="button"
+                  className="buy-page__btn buy-page__btn--secondary"
+                  onClick={(event) =>
+                    openWantedRequest({
+                      source: WANTED_REQUEST_SOURCES.BUY_PAGE,
+                      preferredEntryMode: 'catalogue',
+                      triggerElement: event.currentTarget,
+                    })
+                  }
+                >
+                  {BUY_HERO_SECONDARY_CTA_LABEL}
+                </button>
               </div>
               <TrustLine />
             </div>
@@ -296,6 +417,62 @@ export default function BuyUsedGymEquipmentPage() {
           </div>
         </div>
       </header>
+
+      <section
+        className="commercial-page__listings-section"
+        aria-labelledby="buy-listings-heading"
+      >
+        <div className="buy-page__visual-rail">
+          <div className="commercial-page__listings-header">
+            <header className="buy-page__intro">
+              <span className="buy-page__handwritten-note">{BUY_LISTINGS_NOTE}</span>
+              <h2 id="buy-listings-heading" className="buy-page__h2">
+                {BUY_LISTINGS_HEADING}
+              </h2>
+              <p className="buy-page__intro-lead">{BUY_LISTINGS_LEAD}</p>
+            </header>
+            <Link to={BROWSE_PATH} className="buy-page__btn buy-page__btn--secondary">
+              {BUY_LISTINGS_CTA} →
+            </Link>
+          </div>
+
+          {listingsLoading && listings.length === 0 ? (
+            <LoadingState compact>{BUY_LISTINGS_LOADING_LABEL}</LoadingState>
+          ) : null}
+
+          {!listingsLoading && listingsError && listings.length === 0 ? (
+            <ErrorState compact>{listingsError}</ErrorState>
+          ) : null}
+
+          {!listingsLoading && !listingsError && listings.length === 0 ? (
+            <EmptyState compact>
+              <p className="commercial-page__listings-empty">{BUY_LISTINGS_EMPTY}</p>
+            </EmptyState>
+          ) : null}
+
+          {listings.length > 0 ? (
+            <div className="listing-card-grid buy-page__listing-grid">
+              {listings.map((listing, index) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  variant="home"
+                  showNewBadge
+                  imagePriority={index < 4}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {listings.length > 0 ? (
+            <div className="commercial-page__listings-footer">
+              <Link to={BROWSE_PATH} className="buy-page__btn buy-page__btn--primary">
+                {BUY_LISTINGS_CTA} →
+              </Link>
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       <section className="buy-page__journey-section" aria-labelledby="buy-journey-heading">
         <div className="buy-page__visual-rail">
@@ -315,6 +492,119 @@ export default function BuyUsedGymEquipmentPage() {
               />
             ))}
           </ol>
+        </div>
+      </section>
+
+      <section
+        className="commercial-page__categories-section"
+        aria-labelledby="buy-types-heading"
+      >
+        <div className="buy-page__visual-rail">
+          <header className="buy-page__intro">
+            <span className="buy-page__handwritten-note">{BUY_EQUIPMENT_TYPE_NOTE}</span>
+            <h2 id="buy-types-heading" className="buy-page__h2">
+              {BUY_EQUIPMENT_TYPE_HEADING}
+            </h2>
+            <p className="buy-page__intro-lead">{BUY_EQUIPMENT_TYPE_LEAD}</p>
+          </header>
+          <ul className="commercial-page__category-grid">
+            {BUY_EQUIPMENT_TYPES.map((category) => (
+              <li key={category.id}>
+                <Link to={category.to} className="commercial-page__category-card">
+                  <p className="commercial-page__category-label">{category.label}</p>
+                  <p className="commercial-page__category-copy">{category.description}</p>
+                  <span className="commercial-page__category-cta">Browse →</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section
+        className="commercial-page__brands-section"
+        aria-labelledby="buy-brands-heading"
+      >
+        <div className="buy-page__visual-rail">
+          <header className="buy-page__intro">
+            <span className="buy-page__handwritten-note">{BUY_BRAND_NOTE}</span>
+            <h2 id="buy-brands-heading" className="buy-page__h2">
+              {BUY_BRAND_HEADING}
+            </h2>
+            <p className="buy-page__intro-lead">{BUY_BRAND_LEAD}</p>
+          </header>
+          <ul className="commercial-page__brand-grid">
+            {brands.map((brand, index) => (
+              <li key={brand.slug}>
+                <Link to={brand.href} className="commercial-page__brand-card">
+                  <span className="commercial-page__brand-logo">
+                    <BrandLogo brand={brand} size="hero" priority={index < 4} />
+                  </span>
+                  <p className="commercial-page__brand-name">{brand.displayName}</p>
+                  <p className="commercial-page__brand-count">
+                    {formatListingCount(brand.listingCount)}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section
+        className="buy-page__context-section"
+        aria-labelledby="buy-context-heading"
+      >
+        <div className="buy-page__visual-rail">
+          <header className="buy-page__intro">
+            <span className="buy-page__handwritten-note">{BUY_CONTEXT_NOTE}</span>
+            <h2 id="buy-context-heading" className="buy-page__h2">
+              {BUY_CONTEXT_HEADING}
+            </h2>
+            <p className="buy-page__intro-lead">{BUY_CONTEXT_LEAD}</p>
+          </header>
+          <ul className="buy-page__context-grid">
+            {BUY_CONTEXT_HUBS.map((hub) => (
+              <li key={hub.id} className="buy-page__context-card">
+                <Link to={hub.to} className="buy-page__context-card-main">
+                  <p className="buy-page__context-label">{hub.label}</p>
+                  <p className="buy-page__context-copy">{hub.description}</p>
+                  <span className="buy-page__context-cta">Explore →</span>
+                </Link>
+                <p className="buy-page__context-children">
+                  {(hub.children || []).map((child, index) => (
+                    <span key={child.to}>
+                      {index > 0 ? <span aria-hidden="true"> · </span> : null}
+                      <Link to={child.to}>{child.label}</Link>
+                    </span>
+                  ))}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <BuyWantedSection />
+
+      <BuySeoSection />
+
+      <section className="buy-page__benefits-section" aria-labelledby="buy-benefits-heading">
+        <div className="buy-page__visual-rail">
+          <h2 id="buy-benefits-heading" className="buy-page__h2">
+            {BUY_BENEFITS_HEADING}
+          </h2>
+          <ul className="buy-page__benefits">
+            {BUY_BENEFITS.map((item, index) => (
+              <li key={item.id} className="buy-page__benefit">
+                <span className="buy-page__benefit-mark" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <h3 className="buy-page__benefit-title">{item.title}</h3>
+                <p className="buy-page__benefit-body">{item.body}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -340,42 +630,6 @@ export default function BuyUsedGymEquipmentPage() {
           </div>
         </div>
       </section>
-
-      <section className="buy-page__benefits-section" aria-labelledby="buy-benefits-heading">
-        <div className="buy-page__visual-rail">
-          <h2 id="buy-benefits-heading" className="buy-page__h2">
-            {BUY_BENEFITS_HEADING}
-          </h2>
-          <ul className="buy-page__benefits">
-            {BUY_BENEFITS.map((item, index) => (
-              <li key={item.id} className="buy-page__benefit">
-                <span className="buy-page__benefit-mark" aria-hidden="true">
-                  {index + 1}
-                </span>
-                <h3 className="buy-page__benefit-title">{item.title}</h3>
-                <p className="buy-page__benefit-body">{item.body}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="buy-page__mid-cta" aria-labelledby="buy-mid-cta-heading">
-        <div className="buy-page__reading-rail buy-page__reading-rail--mid-cta">
-          <h2 id="buy-mid-cta-heading" className="buy-page__mid-cta-title">
-            {BUY_MID_CTA_HEADING}
-          </h2>
-          <p className="buy-page__mid-cta-lead">{BUY_MID_CTA_LEAD}</p>
-          <Link
-            to={BROWSE_PATH}
-            className="buy-page__btn buy-page__btn--primary buy-page__btn--primary-lg"
-          >
-            {BUY_MID_CTA_LABEL}
-          </Link>
-        </div>
-      </section>
-
-      <BuySeoSection />
     </article>
   )
 }

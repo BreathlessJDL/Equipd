@@ -3,13 +3,15 @@
  * Node-safe (no DOM). Shared by the React page and build-time prerender.
  */
 
-import { EQUIPD_SITE_ORIGIN, getBrandPagePath } from './brandCatalogueCore.js'
+import { mapBrandListingsForSeo } from './brandBuyerSeo.js'
+import { EQUIPD_SITE_ORIGIN, getBrandLogoMeta, getBrandPagePath } from './brandCatalogueCore.js'
 import { buildBreadcrumbSchema } from './breadcrumbStructuredData.js'
 import {
   buildFaqPageSchemaNode,
   normalizeFaqItems,
   renderFaqPageScriptTag,
 } from './faqPageStructuredData.js'
+import { isActivePublicListingCandidate } from './listingDiscoveryEligibility.js'
 import { EQUIPD_ORGANIZATION_ID, SITE_SCHEMA_ATTR } from './siteStructuredData.js'
 import {
   BROWSE_PATH,
@@ -36,33 +38,167 @@ export {
 }
 
 export const BUY_USED_GYM_EQUIPMENT_META_TITLE =
-  'Buy Used Gym Equipment Across the UK'
+  'Buy Used Gym Equipment for Sale Across the UK'
 
 export const BUY_USED_GYM_EQUIPMENT_PAGE_TITLE =
   `${BUY_USED_GYM_EQUIPMENT_META_TITLE} | Equipd`
 
-/** Unique buyer-intent snippet — distinct from sell and homepage copy. */
+/** Unique buyer-intent snippet — no unsupported inventory quantities. */
 export const BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION =
-  'Browse used commercial and home gym equipment for sale across the UK. Search thousands of listings, make offers, pay securely and buy with confidence through Equipd.'
+  'Browse used gym equipment from sellers across the UK. Find commercial and home gym machines for sale, make offers and buy securely through Equipd.'
 
 export const BUY_USED_GYM_EQUIPMENT_H1 = 'Buy Used Gym Equipment'
 
-/** Visible hero H1 display copy — SEO H1 remains BUY_USED_GYM_EQUIPMENT_H1. */
-export const BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY = 'on Equipd'
-
-/** WebPage JSON-LD headline targets the SEO keyword, not the decorative hero display. */
+/** WebPage JSON-LD headline matches the visible H1. */
 const BUY_USED_GYM_EQUIPMENT_WEBPAGE_SCHEMA_HEADLINE = BUY_USED_GYM_EQUIPMENT_H1
 
-export const BUY_USED_GYM_EQUIPMENT_EYEBROW = 'Buy with confidence'
+export const BUY_USED_GYM_EQUIPMENT_EYEBROW = 'Find your next machine'
 
 export const BUY_USED_GYM_EQUIPMENT_LEAD =
-  'Buy used gym equipment from sellers across the UK. Browse commercial and home gym machines, ask questions, make offers and pay securely through Equipd with Buyer Protection.'
+  'Browse used gym equipment from sellers across the UK. Find commercial and home gym machines currently for sale, message sellers and buy with Buyer Protection.'
+
+export const BUY_HERO_PRIMARY_CTA = Object.freeze({
+  to: BROWSE_PATH,
+  label: 'Browse Equipment',
+})
+
+export const BUY_HERO_SECONDARY_CTA_LABEL = 'Request Equipment'
 
 export const BUY_HERO_TRUST_ITEMS = Object.freeze([
   'Buyer Protection',
   'Secure payments',
   'Sellers across the UK',
 ])
+
+/** Latest marketplace inventory shown directly under the hero. */
+export const BUY_LISTINGS_LIMIT = 12
+export const BUY_LISTINGS_NOTE = 'Live marketplace'
+export const BUY_LISTINGS_HEADING = 'Latest used gym equipment'
+export const BUY_LISTINGS_LEAD =
+  'Browse equipment currently listed by sellers on Equipd.'
+export const BUY_LISTINGS_CTA = 'View all equipment'
+export const BUY_LISTINGS_EMPTY =
+  'No live listings are available right now. Browse all equipment or request what you need — new stock appears as sellers list it.'
+export const BUY_LISTINGS_LOADING_LABEL = 'Loading listings…'
+
+export const BUY_EQUIPMENT_TYPE_NOTE = 'Shop by type'
+export const BUY_EQUIPMENT_TYPE_HEADING = 'Shop used gym equipment by type'
+export const BUY_EQUIPMENT_TYPE_LEAD =
+  'Explore indexable equipment destinations for popular commercial and home gym categories.'
+
+/** Curated SEO landings only — every `to` must exist as an indexed route. */
+export const BUY_EQUIPMENT_TYPES = Object.freeze([
+  {
+    id: 'treadmills',
+    label: 'Commercial Treadmills',
+    description: 'Facility-grade running decks',
+    to: '/used-commercial-treadmills',
+  },
+  {
+    id: 'bikes',
+    label: 'Commercial Exercise Bikes',
+    description: 'Upright, recumbent and studio bikes',
+    to: '/used-commercial-exercise-bikes',
+  },
+  {
+    id: 'cross-trainers',
+    label: 'Commercial Cross Trainers',
+    description: 'Ellipticals built for high use',
+    to: '/used-commercial-cross-trainers',
+  },
+  {
+    id: 'rowers',
+    label: 'Commercial Rowing Machines',
+    description: 'Air and magnetic rowers',
+    to: '/used-commercial-rowing-machines',
+  },
+  {
+    id: 'functional',
+    label: 'Functional Trainers',
+    description: 'Cable stations and frames',
+    to: '/used-functional-trainers',
+  },
+  {
+    id: 'cables',
+    label: 'Cable Machines',
+    description: 'Dual cable and multi-stations',
+    to: '/used-cable-machines',
+  },
+  {
+    id: 'plate',
+    label: 'Plate-Loaded Machines',
+    description: 'Plate-loaded strength stations',
+    to: '/used-plate-loaded-machines',
+  },
+  {
+    id: 'pin',
+    label: 'Pin-Loaded Machines',
+    description: 'Stack machines for clubs and homes',
+    to: '/used-pin-loaded-machines',
+  },
+  {
+    id: 'home-treadmills',
+    label: 'Home Treadmills',
+    description: 'Home running machines',
+    to: '/home-treadmills',
+  },
+  {
+    id: 'home-rowers',
+    label: 'Home Rowing Machines',
+    description: 'Home gym rowers',
+    to: '/home-rowing-machines',
+  },
+])
+
+export const BUY_BRAND_NOTE = 'Shop by brand'
+export const BUY_BRAND_HEADING = 'Shop used gym equipment by brand'
+export const BUY_BRAND_LEAD =
+  'Browse used equipment from manufacturers buyers search for most often on Equipd.'
+
+export const BUY_FEATURED_BRAND_SLUGS = Object.freeze([
+  'life-fitness',
+  'concept2',
+  'wattbike',
+  'cybex',
+  'hammer-strength',
+  'technogym',
+  'matrix-fitness',
+  'precor',
+])
+
+export const BUY_CONTEXT_NOTE = 'Commercial or home'
+export const BUY_CONTEXT_HEADING = 'Shop commercial or home gym equipment'
+export const BUY_CONTEXT_LEAD =
+  'Start with the right buyer context, then refine by cardio, strength, type or brand.'
+
+export const BUY_CONTEXT_HUBS = Object.freeze([
+  {
+    id: 'commercial',
+    label: 'Commercial Gym Equipment',
+    description: 'Facility-grade cardio and strength from UK sellers',
+    to: '/commercial-gym-equipment',
+    children: Object.freeze([
+      { label: 'Commercial cardio', to: '/commercial-cardio-equipment' },
+      { label: 'Commercial strength', to: '/commercial-strength-equipment' },
+    ]),
+  },
+  {
+    id: 'home',
+    label: 'Home Gym Equipment',
+    description: 'Home cardio, strength and multi-gym kit',
+    to: '/home-gym-equipment',
+    children: Object.freeze([
+      { label: 'Home cardio', to: '/home-cardio-equipment' },
+      { label: 'Home strength', to: '/home-strength-equipment' },
+    ]),
+  },
+])
+
+export const BUY_WANTED_NOTE = 'Need something specific?'
+export const BUY_WANTED_HEADING = "Can't find what you're looking for?"
+export const BUY_WANTED_LEAD =
+  'Tell Equipd what equipment you want. We will notify you when a matching listing appears.'
+export const BUY_WANTED_CTA_LABEL = 'Request Equipment'
 
 export const BUY_HERO_ANNOTATIONS = Object.freeze([
   'Find the right equipment',
@@ -252,13 +388,13 @@ export const BUY_GUIDE_LINKS = Object.freeze([
   },
   {
     before: 'See current ',
-    link: { to: `${BROWSE_PATH}?rating=full_commercial`, label: 'commercial gym equipment for sale' },
+    link: { to: '/commercial-gym-equipment', label: 'commercial gym equipment for sale' },
     after: '.',
   },
   {
     before: 'Shop ',
-    link: { to: `${BROWSE_PATH}?category=treadmill`, label: 'used treadmills' },
-    after: ' and other popular categories.',
+    link: { to: '/used-commercial-treadmills', label: 'used commercial treadmills' },
+    after: ' and other equipment types.',
   },
   {
     before: 'Compare models in ',
@@ -277,14 +413,16 @@ export const BUY_GUIDE_LINKS = Object.freeze([
   },
 ])
 
-export const BUY_GUIDE_BRAND_LINKS = Object.freeze([
-  { label: 'Life Fitness', to: getBrandPagePath('life-fitness') },
-  { label: 'Technogym', to: getBrandPagePath('technogym') },
-  { label: 'Matrix', to: getBrandPagePath('matrix-fitness') },
-  { label: 'Concept2', to: getBrandPagePath('concept2') },
-  { label: 'Precor', to: getBrandPagePath('precor') },
-  { label: 'Cybex', to: getBrandPagePath('cybex') },
-])
+export const BUY_GUIDE_BRAND_LINKS = Object.freeze(
+  BUY_FEATURED_BRAND_SLUGS.map((slug) => {
+    const meta = getBrandLogoMeta(slug)
+    return {
+      label: meta?.displayName || slug,
+      to: getBrandPagePath(slug),
+      slug,
+    }
+  }),
+)
 
 export const BUY_FAQ_NOTE = 'Common questions'
 export const BUY_FAQ_INTRO =
@@ -400,9 +538,19 @@ export function buildBuyUsedGymEquipmentWebPageSchema() {
     },
     significantLink: [
       `${EQUIPD_SITE_ORIGIN}${BROWSE_PATH}`,
-      `${EQUIPD_SITE_ORIGIN}${VALUATION_PATH}`,
+      `${EQUIPD_SITE_ORIGIN}/commercial-gym-equipment`,
+      `${EQUIPD_SITE_ORIGIN}/home-gym-equipment`,
+      `${EQUIPD_SITE_ORIGIN}/commercial-cardio-equipment`,
+      `${EQUIPD_SITE_ORIGIN}/commercial-strength-equipment`,
       `${EQUIPD_SITE_ORIGIN}${BRANDS_PATH}`,
+      `${EQUIPD_SITE_ORIGIN}${VALUATION_PATH}`,
       `${EQUIPD_SITE_ORIGIN}${SELL_GYM_EQUIPMENT_PATH}`,
+      ...BUY_EQUIPMENT_TYPES.slice(0, 6).map(
+        (category) => `${EQUIPD_SITE_ORIGIN}${category.to}`,
+      ),
+      ...BUY_FEATURED_BRAND_SLUGS.slice(0, 5).map(
+        (slug) => `${EQUIPD_SITE_ORIGIN}${getBrandPagePath(slug)}`,
+      ),
     ],
     primaryImageOfPage: {
       '@type': 'ImageObject',
@@ -413,6 +561,68 @@ export function buildBuyUsedGymEquipmentWebPageSchema() {
     image: [imageUrl],
     publisher: {
       '@id': EQUIPD_ORGANIZATION_ID,
+    },
+  }
+}
+
+/**
+ * Sort newest-first active public listings for the Buy hub (client + prerender).
+ * @param {Array<object>} listings
+ * @param {{ limit?: number }} [options]
+ */
+export function selectBuyHubListings(listings = [], { limit = BUY_LISTINGS_LIMIT } = {}) {
+  return (Array.isArray(listings) ? listings : [])
+    .filter(isActivePublicListingCandidate)
+    .slice()
+    .sort((a, b) => {
+      const ta = Date.parse(a?.published_at || a?.created_at || 0) || 0
+      const tb = Date.parse(b?.published_at || b?.created_at || 0) || 0
+      return tb - ta
+    })
+    .slice(0, Math.max(0, limit))
+}
+
+/**
+ * Prerender-safe listing summaries (title + /listings/{slug}).
+ * @param {Array<object>} listings
+ * @param {{ limit?: number }} [options]
+ */
+export function mapBuyHubListingsForSeo(listings = [], { limit = BUY_LISTINGS_LIMIT } = {}) {
+  return mapBrandListingsForSeo(selectBuyHubListings(listings, { limit }), { limit })
+}
+
+export function buildBuyUsedGymEquipmentCollectionSchema(listings = []) {
+  const pageUrl = `${EQUIPD_SITE_ORIGIN}${BUY_USED_GYM_EQUIPMENT_PATH}`
+  const listingSummaries = mapBuyHubListingsForSeo(listings)
+  const itemListElement = listingSummaries.length
+    ? listingSummaries.map((listing, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: listing.title,
+        url: `${EQUIPD_SITE_ORIGIN}${listing.href}`,
+      }))
+    : BUY_EQUIPMENT_TYPES.map((category, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: category.label,
+        url: `${EQUIPD_SITE_ORIGIN}${category.to}`,
+      }))
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${pageUrl}#collection`,
+    url: pageUrl,
+    name: BUY_USED_GYM_EQUIPMENT_H1,
+    description: BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION,
+    isPartOf: { '@id': `${pageUrl}#webpage` },
+    about: {
+      '@type': 'Thing',
+      name: 'Used gym equipment for sale',
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement,
     },
   }
 }
@@ -472,8 +682,38 @@ function renderGuideSectionHtml() {
 
 /**
  * Build SEO document for build-time prerender (/buy-used-gym-equipment/index.html).
+ * @param {{ listings?: Array<object> }} [options]
  */
-export function buildBuyUsedGymEquipmentSeoDocument() {
+export function buildBuyUsedGymEquipmentSeoDocument({ listings = [] } = {}) {
+  const listingSummaries = mapBuyHubListingsForSeo(listings)
+  const listingItems = listingSummaries
+    .map(
+      (listing) =>
+        `<li><a href="${escapeHtml(listing.href)}">${escapeHtml(listing.title)}</a></li>`,
+    )
+    .join('')
+
+  const equipmentTypeItems = BUY_EQUIPMENT_TYPES.map(
+    (category) =>
+      `<li><a href="${escapeHtml(category.to)}">${escapeHtml(category.label)}</a> — ${escapeHtml(category.description)}</li>`,
+  ).join('')
+
+  const brandItems = BUY_FEATURED_BRAND_SLUGS.map((slug) => {
+    const meta = getBrandLogoMeta(slug)
+    const name = meta?.displayName || slug
+    return `<li><a href="${escapeHtml(getBrandPagePath(slug))}">${escapeHtml(name)}</a></li>`
+  }).join('')
+
+  const contextItems = BUY_CONTEXT_HUBS.map((hub) => {
+    const children = (hub.children || [])
+      .map((child) => `<a href="${escapeHtml(child.to)}">${escapeHtml(child.label)}</a>`)
+      .join(' · ')
+    return `<li>
+      <a href="${escapeHtml(hub.to)}">${escapeHtml(hub.label)}</a> — ${escapeHtml(hub.description)}
+      ${children ? `<p>${children}</p>` : ''}
+    </li>`
+  }).join('')
+
   const journeyItems = BUY_JOURNEY_STEPS.map(
     (step) => `<li>
       <h3>${escapeHtml(String(step.step))}. ${escapeHtml(step.title)}</h3>
@@ -508,15 +748,52 @@ export function buildBuyUsedGymEquipmentSeoDocument() {
   <nav aria-label="Breadcrumb"><p><a href="/">Home</a> <span aria-hidden="true">/</span> Buy Used Gym Equipment</p></nav>
   <header>
     <p>${escapeHtml(BUY_USED_GYM_EQUIPMENT_EYEBROW)}</p>
-    <h1><span class="visually-hidden">${escapeHtml(BUY_USED_GYM_EQUIPMENT_H1)}</span><span aria-hidden="true">${escapeHtml(BUY_USED_GYM_EQUIPMENT_HERO_DISPLAY)}</span></h1>
+    <h1>${escapeHtml(BUY_USED_GYM_EQUIPMENT_H1)}</h1>
     <p>${escapeHtml(BUY_USED_GYM_EQUIPMENT_LEAD)}</p>
-    <p><a href="${BROWSE_PATH}">Browse Equipment</a> · <a href="${VALUATION_PATH}">Get a Free Valuation</a></p>
+    <p><a href="${BUY_HERO_PRIMARY_CTA.to}">${escapeHtml(BUY_HERO_PRIMARY_CTA.label)}</a></p>
     <ul>${BUY_HERO_TRUST_ITEMS.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
   </header>
+  <section aria-labelledby="seo-buy-listings-heading">
+    <p>${escapeHtml(BUY_LISTINGS_NOTE)}</p>
+    <h2 id="seo-buy-listings-heading">${escapeHtml(BUY_LISTINGS_HEADING)}</h2>
+    <p>${escapeHtml(BUY_LISTINGS_LEAD)}</p>
+    ${listingSummaries.length
+      ? `<ul>${listingItems}</ul>`
+      : `<p>${escapeHtml(BUY_LISTINGS_EMPTY)}</p>`}
+    <p><a href="${BROWSE_PATH}">${escapeHtml(BUY_LISTINGS_CTA)}</a></p>
+  </section>
   <section aria-labelledby="seo-buy-journey-heading">
     <h2 id="seo-buy-journey-heading">${escapeHtml(BUY_JOURNEY_HEADING)}</h2>
     <p>${escapeHtml(BUY_JOURNEY_LEAD)}</p>
     <ol>${journeyItems}</ol>
+  </section>
+  <section aria-labelledby="seo-buy-types-heading">
+    <p>${escapeHtml(BUY_EQUIPMENT_TYPE_NOTE)}</p>
+    <h2 id="seo-buy-types-heading">${escapeHtml(BUY_EQUIPMENT_TYPE_HEADING)}</h2>
+    <p>${escapeHtml(BUY_EQUIPMENT_TYPE_LEAD)}</p>
+    <ul>${equipmentTypeItems}</ul>
+  </section>
+  <section aria-labelledby="seo-buy-brands-heading">
+    <p>${escapeHtml(BUY_BRAND_NOTE)}</p>
+    <h2 id="seo-buy-brands-heading">${escapeHtml(BUY_BRAND_HEADING)}</h2>
+    <p>${escapeHtml(BUY_BRAND_LEAD)}</p>
+    <ul>${brandItems}</ul>
+  </section>
+  <section aria-labelledby="seo-buy-context-heading">
+    <p>${escapeHtml(BUY_CONTEXT_NOTE)}</p>
+    <h2 id="seo-buy-context-heading">${escapeHtml(BUY_CONTEXT_HEADING)}</h2>
+    <p>${escapeHtml(BUY_CONTEXT_LEAD)}</p>
+    <ul>${contextItems}</ul>
+  </section>
+  <section aria-labelledby="seo-buy-wanted-heading">
+    <p>${escapeHtml(BUY_WANTED_NOTE)}</p>
+    <h2 id="seo-buy-wanted-heading">${escapeHtml(BUY_WANTED_HEADING)}</h2>
+    <p>${escapeHtml(BUY_WANTED_LEAD)}</p>
+  </section>
+  ${renderGuideSectionHtml()}
+  <section aria-labelledby="seo-buy-benefits-heading">
+    <h2 id="seo-buy-benefits-heading">${escapeHtml(BUY_BENEFITS_HEADING)}</h2>
+    <ul>${benefitItems}</ul>
   </section>
   <section aria-labelledby="seo-buy-valuation-heading">
     <p>${escapeHtml(BUY_VALUATION_EYEBROW)}</p>
@@ -525,16 +802,6 @@ export function buildBuyUsedGymEquipmentSeoDocument() {
     <ol>${valuationSteps}</ol>
     <p><a href="${VALUATION_PATH}">Get a Free Valuation</a> · <a href="${BROWSE_PATH}">Browse Equipment</a></p>
   </section>
-  <section aria-labelledby="seo-buy-benefits-heading">
-    <h2 id="seo-buy-benefits-heading">${escapeHtml(BUY_BENEFITS_HEADING)}</h2>
-    <ul>${benefitItems}</ul>
-  </section>
-  <section aria-labelledby="seo-buy-mid-cta-heading">
-    <h2 id="seo-buy-mid-cta-heading">${escapeHtml(BUY_MID_CTA_HEADING)}</h2>
-    <p>${escapeHtml(BUY_MID_CTA_LEAD)}</p>
-    <p><a href="${BROWSE_PATH}">${escapeHtml(BUY_MID_CTA_LABEL)}</a></p>
-  </section>
-  ${renderGuideSectionHtml()}
   <section aria-labelledby="seo-buy-faq-heading">
     <h2 id="seo-buy-faq-heading">Frequently asked questions</h2>
     <p>${escapeHtml(BUY_FAQ_NOTE)}</p>
@@ -562,6 +829,7 @@ export function buildBuyUsedGymEquipmentSeoDocument() {
     ],
     jsonLd: [
       buildBuyUsedGymEquipmentWebPageSchema(),
+      buildBuyUsedGymEquipmentCollectionSchema(listings),
       buildBuyUsedGymEquipmentBreadcrumbSchema(),
       buildBuyUsedGymEquipmentFaqSchema(),
     ].filter(Boolean),

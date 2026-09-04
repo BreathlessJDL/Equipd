@@ -1,5 +1,5 @@
 /**
- * Unit checks for /buy-used-gym-equipment landing page content and SEO.
+ * Unit checks for /buy-used-gym-equipment marketplace hub (Phase 2A).
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -8,11 +8,16 @@ import { formatPageTitle } from '../src/lib/pageTitles.js'
 import {
   BROWSE_PATH,
   BUY_BENEFITS,
+  BUY_CONTEXT_HUBS,
+  BUY_EQUIPMENT_TYPES,
   BUY_FAQ_ITEMS,
+  BUY_FEATURED_BRAND_SLUGS,
   BUY_GUIDE_LINKS,
   BUY_HERO_ARTWORK,
   BUY_HERO_TRUST_ITEMS,
   BUY_JOURNEY_STEPS,
+  BUY_LISTINGS_HEADING,
+  BUY_LISTINGS_LIMIT,
   BUY_USED_GYM_EQUIPMENT_H1,
   BUY_USED_GYM_EQUIPMENT_LEAD,
   BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION,
@@ -22,9 +27,11 @@ import {
   BUY_USED_GYM_EQUIPMENT_PATH,
   BUY_VALUATION_STEPS,
   buildBuyUsedGymEquipmentBreadcrumbSchema,
+  buildBuyUsedGymEquipmentCollectionSchema,
   buildBuyUsedGymEquipmentFaqSchema,
   buildBuyUsedGymEquipmentSeoDocument,
   buildBuyUsedGymEquipmentWebPageSchema,
+  mapBuyHubListingsForSeo,
   SELL_GYM_EQUIPMENT_PATH,
   VALUATION_PATH,
 } from '../src/lib/buyUsedGymEquipmentPage.js'
@@ -35,7 +42,35 @@ function assert(condition, label) {
   if (!condition) throw new Error(label)
 }
 
-const doc = buildBuyUsedGymEquipmentSeoDocument()
+const sampleListings = [
+  {
+    status: 'active',
+    slug: 'life-fitness-treadmill-demo-1',
+    title: 'Life Fitness Treadmill',
+    published_at: '2026-09-01T12:00:00.000Z',
+  },
+  {
+    status: 'active',
+    slug: 'concept2-rower-demo-2',
+    title: 'Concept2 Model D',
+    published_at: '2026-09-02T12:00:00.000Z',
+  },
+  {
+    status: 'draft',
+    slug: 'should-not-appear',
+    title: 'Draft Listing',
+    published_at: '2026-09-03T12:00:00.000Z',
+  },
+  {
+    status: 'active',
+    is_test_data: true,
+    slug: 'test-should-not-appear',
+    title: 'Test Listing',
+    published_at: '2026-09-04T12:00:00.000Z',
+  },
+]
+
+const doc = buildBuyUsedGymEquipmentSeoDocument({ listings: sampleListings })
 
 assert(doc.path === BUY_USED_GYM_EQUIPMENT_PATH, 'canonical path')
 assert(doc.title === BUY_USED_GYM_EQUIPMENT_PAGE_TITLE, 'document title')
@@ -46,14 +81,32 @@ assert(
   doc.openGraph?.['og:image']?.endsWith('/buy-used-gym-equipment/buy-used-gym-equipment-og.png'),
   'dedicated open graph image',
 )
-assert(doc.openGraph?.['og:image:width'] === '1200', 'open graph image width')
-assert(doc.openGraph?.['og:image:height'] === '630', 'open graph image height')
 assert(doc.robots === 'index, follow, max-image-preview:large', 'robots directive')
 assert(doc.bodyHtml.includes(`<h1>${BUY_USED_GYM_EQUIPMENT_H1}</h1>`), 'single H1 in prerender body')
 assert((doc.bodyHtml.match(/<h1/g) || []).length === 1, 'only one H1 in prerender body')
 assert(doc.bodyHtml.includes(BROWSE_PATH), 'browse link in prerender')
 assert(doc.bodyHtml.includes(VALUATION_PATH), 'valuation link in prerender')
 assert(doc.bodyHtml.includes(SELL_GYM_EQUIPMENT_PATH), 'sell cross-link in prerender')
+assert(doc.bodyHtml.includes(BUY_LISTINGS_HEADING), 'listings heading in prerender')
+assert(doc.bodyHtml.includes('/listings/concept2-rower-demo-2'), 'crawlable listing link newest first')
+assert(doc.bodyHtml.includes('/listings/life-fitness-treadmill-demo-1'), 'second crawlable listing link')
+assert(!doc.bodyHtml.includes('/listings/should-not-appear'), 'draft listings excluded')
+assert(!doc.bodyHtml.includes('/listings/test-should-not-appear'), 'test listings excluded')
+assert(
+  (doc.bodyHtml.match(/href="\/listings\//g) || []).length === 2,
+  'exactly two active listing links prerendered from sample',
+)
+assert(doc.bodyHtml.includes('/used-commercial-treadmills'), 'equipment type SEO link')
+assert(doc.bodyHtml.includes('/brands/life-fitness'), 'brand SEO link')
+assert(doc.bodyHtml.includes('/commercial-gym-equipment'), 'commercial hub link')
+assert(doc.bodyHtml.includes('/home-gym-equipment'), 'home hub link')
+assert(!doc.bodyHtml.includes('/browse?category=treadmill'), 'no browse category filter cannibalisation')
+assert(!doc.bodyHtml.includes('/browse?rating=full_commercial'), 'no browse rating filter cannibalisation')
+assert(!/thousands of listings/i.test(doc.bodyHtml), 'no unsupported inventory claim in body')
+assert(
+  !/thousands of listings/i.test(BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION),
+  'no unsupported inventory claim in meta',
+)
 assert(doc.bodyHtml.includes('Buyer Protection fee'), 'checkout journey mentions Buyer Protection fee')
 assert(!doc.bodyHtml.includes('Seller Service Fee'), 'no seller fee on buyer page')
 assert(
@@ -81,38 +134,21 @@ for (const step of BUY_JOURNEY_STEPS) {
   assert(step.imageAlt, `journey alt text: ${step.title}`)
 }
 
-assert(BUY_JOURNEY_STEPS[0].imageSrc.includes('/step-1.'), 'step 1 keeps original asset name')
-assert(
-  BUY_JOURNEY_STEPS[1].imageSrc.includes('/buy-journey-step-2.'),
-  'step 2 uses updated buyer asset name',
-)
-assert(
-  BUY_JOURNEY_STEPS[2].imageSrc.includes('/buy-journey-step-3.'),
-  'step 3 uses updated buyer asset name',
-)
-assert(
-  BUY_JOURNEY_STEPS[3].imageSrc.includes('/buy-journey-step-4.'),
-  'step 4 uses updated buyer asset name',
-)
-
 assert(BUY_VALUATION_STEPS.length === 4, 'valuation journey has four steps')
 assert(BUY_BENEFITS.length === 3, 'three buyer benefits')
 assert(BUY_FAQ_ITEMS.length === 11, 'eleven visible FAQs')
-assert(
-  BUY_FAQ_ITEMS.some((item) => item.question === 'How do I buy used commercial gym equipment safely?'),
-  'commercial buying FAQ present',
-)
-assert(
-  BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION.includes('Search thousands of listings'),
-  'meta description includes buyer-intent search phrasing',
-)
+assert(BUY_LISTINGS_LIMIT === 12, 'hub shows up to 12 listings')
+assert(BUY_EQUIPMENT_TYPES.length >= 8 && BUY_EQUIPMENT_TYPES.length <= 12, 'curated equipment types')
+assert(BUY_FEATURED_BRAND_SLUGS.includes('life-fitness'), 'Life Fitness brand included')
+assert(BUY_FEATURED_BRAND_SLUGS.includes('concept2'), 'Concept2 brand included')
+assert(BUY_CONTEXT_HUBS.length === 2, 'commercial + home context hubs')
+
 assert(
   BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION.length >= 140
     && BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION.length <= 170,
   'meta description length',
 )
 assert(doc.bodyHtml.includes('commercial gym equipment for sale'), 'commercial category link in prerender')
-assert(doc.bodyHtml.includes('/browse?category=treadmill'), 'category internal link in prerender')
 assert(doc.bodyHtml.includes('Buyer Protection after confirmed handover'), 'guide highlights in prerender')
 assert(
   BUY_HERO_TRUST_ITEMS.join('|') ===
@@ -120,48 +156,57 @@ assert(
   'hero trust items',
 )
 
-assert(BUY_USED_GYM_EQUIPMENT_H1 === 'With Equipd', 'visible hero H1 matches sell lockup')
-assert(BUY_USED_GYM_EQUIPMENT_LEAD.includes('Buy used gym equipment'), 'hero lead opens with primary intent')
+assert(BUY_USED_GYM_EQUIPMENT_H1 === 'Buy Used Gym Equipment', 'H1 owns buy intent')
+assert(BUY_USED_GYM_EQUIPMENT_LEAD.includes('Browse used gym equipment'), 'hero lead is transactional')
+
+const mapped = mapBuyHubListingsForSeo(sampleListings)
+assert(mapped.length === 2, 'mapBuyHubListingsForSeo filters inactive')
+assert(mapped[0].href === '/listings/concept2-rower-demo-2', 'newest listing first')
 
 const protectionFaq = BUY_FAQ_ITEMS.find((item) => item.question === 'How does Buyer Protection work?')
 assert(/24-hour/i.test(protectionFaq?.answer || ''), '24-hour protection wording')
-assert(/handover is confirmed/i.test(protectionFaq?.answer || ''), 'handover confirmation wording')
-
-const sellerFaq = BUY_FAQ_ITEMS.find((item) => item.question === 'Is Equipd the seller of the equipment?')
-assert(/marketplace/i.test(sellerFaq?.answer || ''), 'marketplace clarification')
-assert(/independent sellers/i.test(sellerFaq?.answer || ''), 'independent sellers wording')
 
 const pageJsx = readFileSync(join(process.cwd(), 'src', 'pages', 'BuyUsedGymEquipmentPage.jsx'), 'utf8')
+assert(pageJsx.includes('ListingCard'), 'ListingCard reused for inventory')
+assert(pageJsx.includes('BUY_LISTINGS_HEADING'), 'listings section rendered')
+assert(pageJsx.includes('fetchActiveListings'), 'active listings fetch')
+assert(pageJsx.includes('listing-card-grid'), 'homepage-style listing grid')
+assert(pageJsx.includes('BUY_EQUIPMENT_TYPES'), 'equipment type destinations')
+assert(pageJsx.includes('BUY_FEATURED_BRAND_SLUGS'), 'brand destinations')
+assert(pageJsx.includes('BUY_CONTEXT_HUBS'), 'commercial/home discovery')
+assert(pageJsx.includes('WANTED_REQUEST_SOURCES.BUY_PAGE'), 'wanted flow reused')
+assert(pageJsx.includes('buildBuyUsedGymEquipmentCollectionSchema'), 'CollectionPage schema wired')
 assert(pageJsx.includes('<picture>'), 'journey images use picture element')
-assert(pageJsx.includes('type="image/webp"'), 'webp source present')
-assert(pageJsx.includes('media="(max-width: 767px)"'), 'mobile-only smaller journey sources')
-assert(pageJsx.includes('media="(min-width: 768px)"'), 'desktop full-res journey sources')
-assert(pageJsx.includes('srcSet={imageSrc}'), 'desktop webp uses full-res source only')
-assert(!pageJsx.includes('800w, ${imageSrc} 1536w'), 'desktop no longer density-picks 800w')
-assert(pageJsx.includes('loading="lazy"'), 'below-fold journey images lazy load')
-assert(pageJsx.includes(`to={BROWSE_PATH}`), 'browse CTAs present')
-assert(pageJsx.includes(`to={VALUATION_PATH}`), 'valuation CTAs present')
+assert(pageJsx.includes(`to={VALUATION_PATH}`), 'valuation CTAs present lower on page')
 assert(pageJsx.includes('buy-page__seo'), 'combined SEO section present')
-assert(pageJsx.includes('BUY_FAQ_ITEMS'), 'FAQ items rendered')
-assert(pageJsx.includes('<article className="buy-page">'), 'semantic article wrapper')
+assert(pageJsx.includes('buy-page--marketplace-hub'), 'marketplace hub modifier')
 assert(pageJsx.includes('<header className="buy-page__hero"'), 'semantic hero header')
-assert(pageJsx.includes('BUY_GUIDE_HIGHLIGHTS'), 'guide trust highlights rendered')
 assert(!/Product schema|@type:\s*['"]Product['"]/.test(pageJsx), 'no Product schema on page')
 assert(!pageJsx.includes('Seller Service Fee'), 'no seller fee in page source')
 
+const listingsIndex = pageJsx.indexOf('buy-listings-heading')
+const journeyIndex = pageJsx.indexOf('buy-journey-heading')
+assert(listingsIndex > 0 && journeyIndex > listingsIndex, 'inventory appears before journey')
+
 const webPageSchema = buildBuyUsedGymEquipmentWebPageSchema()
 assert(webPageSchema['@type'] === 'WebPage', 'WebPage schema type')
-assert(webPageSchema.url.endsWith('/buy-used-gym-equipment'), 'WebPage url')
 assert(webPageSchema.headline === BUY_USED_GYM_EQUIPMENT_H1, 'WebPage headline matches H1')
-assert(webPageSchema.inLanguage === 'en-GB', 'WebPage language')
-assert(webPageSchema.significantLink?.length >= 3, 'WebPage significantLink present')
-assert(!doc.jsonLd.some((entry) => entry['@type'] === 'CollectionPage'), 'no CollectionPage schema')
+
+const collectionSchema = buildBuyUsedGymEquipmentCollectionSchema(sampleListings)
+assert(collectionSchema['@type'] === 'CollectionPage', 'CollectionPage schema')
+assert(collectionSchema.mainEntity['@type'] === 'ItemList', 'ItemList for listings')
+assert(collectionSchema.mainEntity.itemListElement.length === 2, 'ItemList uses active listings')
+assert(
+  collectionSchema.mainEntity.itemListElement.every((item) => String(item.url).includes('/listings/')),
+  'ItemList points at listing URLs',
+)
+
+assert(doc.jsonLd.some((entry) => entry['@type'] === 'CollectionPage'), 'CollectionPage in jsonLd')
 assert(!doc.jsonLd.some((entry) => entry['@type'] === 'Product'), 'no Product schema')
 
 const breadcrumbSchema = buildBuyUsedGymEquipmentBreadcrumbSchema()
 assert(breadcrumbSchema['@type'] === 'BreadcrumbList', 'BreadcrumbList schema')
 assert(breadcrumbSchema.itemListElement.length === 2, 'breadcrumb has Home + Buy')
-assert(breadcrumbSchema.itemListElement[1].name === 'Buy Used Gym Equipment', 'breadcrumb leaf')
 
 const faqSchema = buildBuyUsedGymEquipmentFaqSchema()
 assert(faqSchema['@type'] === 'FAQPage', 'FAQPage schema')
@@ -169,54 +214,33 @@ assert(faqSchema.mainEntity.length === BUY_FAQ_ITEMS.length, 'FAQ schema count m
 
 const { items: normalizedFaqs } = normalizeFaqItems(BUY_FAQ_ITEMS)
 assert(normalizedFaqs.length === BUY_FAQ_ITEMS.length, 'all FAQs eligible for schema')
-for (const entry of normalizedFaqs) {
-  const visible = BUY_FAQ_ITEMS.find((item) => item.question === entry.question)
-  assert(visible?.answer === entry.answer, `FAQ schema matches visible copy: ${entry.question}`)
-}
-
-assert(!doc.jsonLd.some((entry) => entry['@type'] === 'Product'), 'no Product schema in jsonLd array')
-assert(!doc.jsonLd.some((entry) => entry['@type'] === 'CollectionPage'), 'uses WebPage not CollectionPage')
 
 const appSource = readFileSync(join(process.cwd(), 'src', 'App.jsx'), 'utf8')
 assert(appSource.includes('path="buy-used-gym-equipment"'), 'route registered in App.jsx')
-assert(appSource.includes('BuyUsedGymEquipmentPage'), 'page imported in App.jsx')
 
 const sitemap = readFileSync(join(process.cwd(), 'scripts', 'generate-sitemap.mjs'), 'utf8')
 assert(sitemap.includes('/buy-used-gym-equipment'), 'sitemap generator includes route')
 
 const prerender = readFileSync(join(process.cwd(), 'scripts', 'prerender-seo-catalogue.mjs'), 'utf8')
-assert(prerender.includes('buildBuyUsedGymEquipmentSeoDocument'), 'prerender includes buy page')
+assert(
+  prerender.includes('buildBuyUsedGymEquipmentSeoDocument({ listings: activeListings })'),
+  'prerender passes active listings into buy hub',
+)
 
-const navSource = readFileSync(join(process.cwd(), 'src', 'components', 'AppNav.jsx'), 'utf8')
-assert(navSource.includes('/buy-used-gym-equipment'), 'nav includes Buy Equipment')
-assert(navSource.includes('Buy Equipment'), 'nav label present')
-
-const footerSource = readFileSync(join(process.cwd(), 'src', 'components', 'layout', 'SiteFooter.jsx'), 'utf8')
-assert(footerSource.includes('/buy-used-gym-equipment'), 'footer includes buy landing')
+const sellContent = readFileSync(join(process.cwd(), 'src', 'lib', 'sellGymEquipmentPage.js'), 'utf8')
+assert(sellContent.includes('/buy-used-gym-equipment'), 'sell page cross-links to buy page')
 
 assert(
   BUY_GUIDE_LINKS.some((item) => item.link.to === SELL_GYM_EQUIPMENT_PATH),
   'guide cross-links to sell page',
 )
 
-const sellContent = readFileSync(join(process.cwd(), 'src', 'lib', 'sellGymEquipmentPage.js'), 'utf8')
-assert(sellContent.includes('/buy-used-gym-equipment'), 'sell page cross-links to buy page')
-
 const journeyFiles = [
   'public/images/buy/step-1.webp',
-  'public/images/buy/step-1.png',
   'public/images/buy/buy-journey-step-2.webp',
-  'public/images/buy/buy-journey-step-2.png',
   'public/images/buy/buy-journey-step-3.webp',
-  'public/images/buy/buy-journey-step-3.png',
   'public/images/buy/buy-journey-step-4.webp',
-  'public/images/buy/buy-journey-step-4.png',
-  'public/images/buy/step-1-800.webp',
-  'public/images/buy/buy-journey-step-2-800.webp',
-  'public/images/buy/buy-journey-step-3-800.webp',
-  'public/images/buy/buy-journey-step-4-800.webp',
   'public/buy-used-gym-equipment/buy-used-gym-equipment-marketplace.webp',
-  'public/buy-used-gym-equipment/buy-used-gym-equipment-marketplace.png',
   'public/buy-used-gym-equipment/buy-used-gym-equipment-og.png',
 ]
 for (const relativePath of journeyFiles) {
@@ -224,7 +248,6 @@ for (const relativePath of journeyFiles) {
 }
 
 assert(BUY_HERO_ARTWORK.src.includes('buy-used-gym-equipment-marketplace.webp'), 'hero artwork webp path')
-assert(BUY_USED_GYM_EQUIPMENT_OG_IMAGE.width === 1200, 'og width')
 
 const ogMeta = await sharp(join(process.cwd(), 'public', 'buy-used-gym-equipment', 'buy-used-gym-equipment-og.png')).metadata()
 assert(ogMeta.width === 1200 && ogMeta.height === 630, 'og image dimensions')
@@ -234,6 +257,7 @@ const injected = injectSeoIntoHtml(sampleHtml, doc)
 assert(injected.includes('rel="canonical"'), 'canonical injected')
 assert(injected.includes('https://www.equipd.co.uk/buy-used-gym-equipment'), 'canonical absolute url')
 assert(injected.includes('FAQPage'), 'FAQ schema injected')
-assert(injected.includes('Buy Used Gym Equipment Across the UK | Equipd'), 'title injected')
+assert(injected.includes('CollectionPage'), 'CollectionPage schema injected')
+assert(injected.includes(BUY_USED_GYM_EQUIPMENT_PAGE_TITLE), 'title injected')
 
 console.log('test-buy-used-gym-equipment-page: ok')

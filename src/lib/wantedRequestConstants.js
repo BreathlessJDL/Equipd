@@ -6,7 +6,7 @@
 export const WANTED_REQUEST_LOW_STOCK_MAX = 4
 export const WANTED_REQUEST_LOW_STOCK_MIN = 1
 
-/** @typedef {'homepage' | 'product_page' | 'browse_no_results' | 'browse_low_stock' | 'brand_page' | 'buyer_dashboard'} WantedRequestSource */
+/** @typedef {'homepage' | 'product_page' | 'browse_no_results' | 'browse_low_stock' | 'brand_page' | 'buyer_dashboard' | 'buy_page'} WantedRequestSource */
 
 export const WANTED_REQUEST_SOURCES = Object.freeze({
   HOMEPAGE: 'homepage',
@@ -15,6 +15,7 @@ export const WANTED_REQUEST_SOURCES = Object.freeze({
   BROWSE_LOW_STOCK: 'browse_low_stock',
   BRAND_PAGE: 'brand_page',
   BUYER_DASHBOARD: 'buyer_dashboard',
+  BUY_PAGE: 'buy_page',
 })
 
 export const WANTED_REQUEST_RADIUS_OPTIONS = Object.freeze([

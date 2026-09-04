@@ -374,7 +374,7 @@ async function main() {
 
   const staticMarketingPages = [
     buildSellGymEquipmentSeoDocument(),
-    buildBuyUsedGymEquipmentSeoDocument(),
+    buildBuyUsedGymEquipmentSeoDocument({ listings: activeListings }),
     buildCommercialGymEquipmentSeoDocument(),
     buildCommercialCardioEquipmentSeoDocument(),
     buildCommercialStrengthEquipmentSeoDocument(),

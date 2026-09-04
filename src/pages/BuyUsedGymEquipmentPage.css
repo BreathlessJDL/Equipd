@@ -1891,3 +1891,237 @@
     width: 100%;
   }
 }
+
+/* Phase 2A — marketplace hub discovery */
+button.buy-page__btn {
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Marketplace hub: hero compactness (keep design; reduce vertical footprint) */
+.buy-page--marketplace-hub .buy-page__hero {
+  padding-block: 1.5rem; /* 24px — mobile/tablet base */
+}
+
+.buy-page--marketplace-hub .commercial-page__listings-section {
+  /* Bring listings closer after shortened hero (target ~32–48px) */
+  padding-top: clamp(2rem, 2.8vw, 2.75rem);
+}
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .buy-page--marketplace-hub .buy-page__hero {
+    padding-block: 1.75rem;
+  }
+
+  .buy-page--marketplace-hub .buy-page__h1 {
+    margin: 0 0 1.15rem;
+    font-size: clamp(2.25rem, 5vw, 2.75rem); /* ~36–44px */
+    line-height: 1.05;
+  }
+
+  .buy-page--marketplace-hub .buy-page__lead {
+    margin: 0 0 1.15rem;
+  }
+
+  .buy-page--marketplace-hub .buy-page__actions {
+    margin-bottom: 0.75rem;
+  }
+
+  .buy-page--marketplace-hub .buy-page__hero-artwork-image {
+    max-height: min(26rem, 72vw); /* ~15–20% shorter than prior tablet art */
+  }
+}
+
+@media (min-width: 900px) {
+  .buy-page--marketplace-hub .buy-page__hero {
+    padding-block: 2rem; /* 32px top/bottom */
+  }
+
+  .buy-page--marketplace-hub .buy-page__hero-grid {
+    /* Slightly wider copy column so H1 wraps less */
+    grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr);
+    gap: clamp(0.5rem, 1vw, 1rem);
+    align-items: center;
+  }
+
+  .buy-page--marketplace-hub .buy-page__hero-copy {
+    padding-inline-start: clamp(1.75rem, 4vw, 5.5rem);
+  }
+
+  .buy-page--marketplace-hub .buy-page__hero-eyebrow {
+    margin-bottom: 0.625rem; /* 10px */
+  }
+
+  .buy-page--marketplace-hub .buy-page__h1 {
+    margin: 0 0 1.25rem; /* 20px to intro */
+    font-size: clamp(2.75rem, 3.5vw, 3.25rem); /* ~44–52px through mid desktop */
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+
+  .buy-page--marketplace-hub .buy-page__lead {
+    margin: 0 0 1.25rem; /* 20px to CTAs */
+  }
+
+  .buy-page--marketplace-hub .buy-page__actions {
+    margin-bottom: 0.75rem; /* 12px to trust line */
+  }
+
+  .buy-page--marketplace-hub .buy-page__hero-visual,
+  .buy-page--marketplace-hub .buy-page__hero-artwork {
+    align-self: center;
+  }
+
+  .buy-page--marketplace-hub .buy-page__hero-artwork-image {
+    max-height: 400px; /* ~24% below previous 525px cap */
+  }
+}
+
+@media (min-width: 1440px) {
+  .buy-page--marketplace-hub .buy-page__hero {
+    padding-block: 2.25rem; /* 36px */
+  }
+
+  .buy-page--marketplace-hub .buy-page__h1 {
+    font-size: clamp(3rem, 3.2vw, 3.5rem); /* 48–56px */
+    line-height: 1.04;
+  }
+}
+
+.buy-page__listing-grid {
+  /* Clear space below intro copy — do not rely on header margin alone. */
+  margin-top: 1.75rem; /* 28px — 390/430 */
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .buy-page--marketplace-hub .buy-page__listing-grid {
+    margin-top: 2rem; /* 32px — 768/1024 */
+  }
+}
+
+/*
+ * Cap at six equal columns from 1440px so 12 cards read as 6 + 6.
+ * Cards keep homepage fixed widths (no stretch); grid is centred in the rail.
+ */
+@media (min-width: 1440px) {
+  .buy-page--marketplace-hub .buy-page__listing-grid {
+    margin-top: 2.5rem; /* 40px — desktop breathing room below supporting copy */
+    grid-template-columns: repeat(6, var(--listing-card-width));
+    width: max-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+}
+
+/* Spacing to the grid is owned by .buy-page__listing-grid margin-top. */
+.buy-page--marketplace-hub .commercial-page__listings-header {
+  margin-bottom: 0;
+}
+
+.buy-page--marketplace-hub .commercial-page__listings-footer {
+  margin-top: 1.75rem; /* 28px — breathing room above bottom View all CTA */
+}
+
+.buy-page__context-section {
+  padding: clamp(2rem, 4vw, 3.25rem) 0;
+}
+
+.buy-page__context-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .buy-page__context-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+.buy-page__context-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: var(--color-surface);
+  padding: 1.15rem 1.25rem 1rem;
+}
+
+.buy-page__context-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.buy-page__context-card-main:hover .buy-page__context-cta,
+.buy-page__context-card-main:focus-visible .buy-page__context-cta {
+  color: var(--color-orange);
+}
+
+.buy-page__context-label {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.buy-page__context-copy {
+  margin: 0;
+  color: var(--color-text-secondary, #5b6573);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.buy-page__context-cta {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.buy-page__context-children {
+  margin: 0;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.buy-page__context-children a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.buy-page__wanted-section {
+  padding: clamp(1.75rem, 3.5vw, 2.75rem) 0;
+}
+
+.buy-page__reading-rail--wanted {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.35rem 1.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+}
+
+.buy-page__wanted-lead {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--color-text-secondary, #5b6573);
+  font-size: 1rem;
+  line-height: 1.5;
+}
