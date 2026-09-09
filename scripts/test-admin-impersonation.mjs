@@ -376,9 +376,15 @@ async function runLiveChecks() {
     summary.customerConcurrency = true
 
     // Simulate expiry safely on the impersonation session only.
+    // Keep expires_at > started_at (DB check constraint) while both are in the past.
+    const simulatedStartedAt = new Date(Date.now() - 120000).toISOString()
+    const simulatedExpiresAt = new Date(Date.now() - 60000).toISOString()
     const expireUpdate = await admin
       .from('admin_impersonation_sessions')
-      .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
+      .update({
+        started_at: simulatedStartedAt,
+        expires_at: simulatedExpiresAt,
+      })
       .eq('id', data.sessionId)
       .select('started_at, expires_at')
       .single()
@@ -386,6 +392,10 @@ async function runLiveChecks() {
     assert.ok(
       Date.parse(expireUpdate.data.expires_at) < Date.now(),
       'expiry simulation forced past-due expiry',
+    )
+    assert.ok(
+      Date.parse(expireUpdate.data.expires_at) > Date.parse(expireUpdate.data.started_at),
+      'expiry simulation preserves expires_at > started_at',
     )
 
     const expiredRefresh = await impersonationClient.auth.refreshSession({

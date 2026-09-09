@@ -3,6 +3,8 @@
 #
 # Custom Access Token Hook (impersonation claims / expiry). Hosted projects must
 # also enable this Auth Hook in the Supabase Dashboard to the same pg function.
+# WARNING: Do not `supabase config push` from this slim file alone — missing
+# [auth] fields can overwrite hosted production site_url/redirects with local defaults.
 [auth.hook.custom_access_token]
 enabled = true
 uri = "pg-functions://postgres/public/custom_access_token_hook"
