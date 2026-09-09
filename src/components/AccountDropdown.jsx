@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import {
+  exitImpersonation,
+  isImpersonatingSession,
+} from '../lib/adminImpersonation'
 import { fetchProfile, buildAvatarProfile, PROFILE_UPDATED_EVENT } from '../lib/profiles'
 import UserAvatar from './UserAvatar'
 import './AccountDropdown.css'
 
 function AccountDropdown({ onNavigate, className = '' }) {
-  const { user, signOut } = useAuth()
+  const { user, session, signOut } = useAuth()
   const navigate = useNavigate()
   const wrapRef = useRef(null)
   const [open, setOpen] = useState(false)
@@ -80,6 +84,13 @@ function AccountDropdown({ onNavigate, className = '' }) {
   async function handleSignOut() {
     closeMenu()
     onNavigate?.()
+
+    if (isImpersonatingSession(session, user)) {
+      const result = await exitImpersonation()
+      navigate(result.redirectTo || '/login', { replace: true })
+      return
+    }
+
     const { error } = await signOut()
 
     if (error) {

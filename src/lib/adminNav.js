@@ -1,5 +1,6 @@
 export const ADMIN_HUB_NAV = [
   { to: '/admin', label: 'Dashboard', end: true },
+  { to: '/admin/users', label: 'Users' },
   { to: '/admin/cases', label: 'Cases' },
   { to: '/admin/support', label: 'Support' },
   { to: '/admin/orders', label: 'Orders' },
@@ -9,6 +10,12 @@ export const ADMIN_HUB_NAV = [
 ]
 
 export const ADMIN_HUB_TOOLS = [
+  {
+    to: '/admin/users',
+    label: 'Users',
+    description: 'Search accounts and log in as a user for support.',
+    cta: 'View users',
+  },
   {
     to: '/admin/cases',
     label: 'Cases',

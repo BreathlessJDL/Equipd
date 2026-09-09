@@ -1,5 +1,11 @@
 # Supabase local development config (Edge Functions)
 # See: https://supabase.com/docs/guides/cli/config
+#
+# Custom Access Token Hook (impersonation claims / expiry). Hosted projects must
+# also enable this Auth Hook in the Supabase Dashboard to the same pg function.
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"
 
 [functions.stripe-webhook]
 verify_jwt = false
@@ -23,4 +29,12 @@ verify_jwt = false
 [functions.create-wanted-request]
 # Guests may submit without a JWT; authenticated users pass Authorization.
 # Auth and email verification are enforced in-function.
+verify_jwt = false
+
+[functions.admin-impersonate-start]
+# Auth enforced in-function via requireAdmin.
+verify_jwt = false
+
+[functions.admin-impersonate-end]
+# Auth enforced in-function via requireAdmin (after admin session restore).
 verify_jwt = false

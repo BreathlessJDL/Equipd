@@ -32,6 +32,9 @@ import {
 } from '../lib/profiles'
 import { getAuthErrorMessage, updateUserEmailWithPassword } from '../lib/auth'
 import {
+  isSensitiveAccountActionBlockedByImpersonation,
+} from '../lib/adminImpersonation'
+import {
   getStripeApiErrorMessage,
   syncStripeConnectStatus,
 } from '../lib/stripe-api'
@@ -47,7 +50,8 @@ import './SettingsPage.css'
 
 function SettingsPage() {
   usePageTitle('Settings')
-  const { user } = useAuth()
+  const { user, session } = useAuth()
+  const sensitiveAuthUiBlocked = isSensitiveAccountActionBlockedByImpersonation(session, user)
   const navigate = useNavigate()
   const location = useLocation()
   const { openCookieSettings } = useCookieConsent()
@@ -427,6 +431,11 @@ function SettingsPage() {
 
   async function handleEmailChangeSubmit(event) {
     event.preventDefault()
+    // UX safeguard only — not a cryptographic Auth boundary for updateUser.
+    if (sensitiveAuthUiBlocked) {
+      setEmailError('Unavailable while logged in as another user.')
+      return
+    }
     if (!user?.email || emailSaving) return
 
     setEmailSaving(true)
@@ -648,11 +657,19 @@ function SettingsPage() {
           <form className="settings-card settings-form" onSubmit={handleEmailChangeSubmit}>
             <div className="settings-card__section">
               <h2 className="settings-card__title">Login email</h2>
+              {sensitiveAuthUiBlocked ? (
+                <p className="settings-card__lead" role="status">
+                  Unavailable while logged in as another user.
+                </p>
+              ) : (
               <p className="settings-card__lead">
                 Change the email address you use to sign in. You must confirm the new address
                 before it takes effect.
               </p>
+              )}
 
+              {!sensitiveAuthUiBlocked ? (
+              <>
               <div className="settings-form__field">
                 <label className="settings-form__label" htmlFor="settings-current-email">
                   Current email
@@ -728,6 +745,21 @@ function SettingsPage() {
                   {emailSaving ? 'Sending confirmation…' : 'Change email'}
                 </button>
               </div>
+              </>
+              ) : (
+                <div className="settings-form__field">
+                  <label className="settings-form__label" htmlFor="settings-current-email-ro">
+                    Current email
+                  </label>
+                  <input
+                    id="settings-current-email-ro"
+                    className="settings-form__input settings-form__input--readonly"
+                    type="email"
+                    value={user?.email ?? ''}
+                    readOnly
+                  />
+                </div>
+              )}
             </div>
           </form>
         </div>

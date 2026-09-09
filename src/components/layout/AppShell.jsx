@@ -8,6 +8,7 @@ import SiteStructuredData from '../seo/SiteStructuredData'
 import GlobalSiteHeader from './GlobalSiteHeader'
 import SiteFooter from './SiteFooter'
 import RouteFallback from '../routing/RouteFallback'
+import AdminImpersonationBanner from '../admin/AdminImpersonationBanner'
 import { WantedRequestProvider } from '../wanted/WantedRequestContext'
 import './AppShell.css'
 
@@ -87,6 +88,7 @@ function AppShell() {
     <WantedRequestProvider>
       <div className="app-shell app-shell--home">
         <SiteStructuredData />
+        <AdminImpersonationBanner />
         <GlobalSiteHeader {...headerConfig} />
 
         <main

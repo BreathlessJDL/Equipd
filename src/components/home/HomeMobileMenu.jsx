@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import EquipdLogo from '../EquipdLogo'
 import MobileMenuIconImage from '../icons/MobileMenuIconImage'
 import {
@@ -12,6 +12,10 @@ import {
 } from '../../lib/mobileMenuCategories'
 import { useAuth } from '../../hooks/useAuth'
 import { useAuthModal } from '../../hooks/useAuthModal'
+import {
+  exitImpersonation,
+  isImpersonatingSession,
+} from '../../lib/adminImpersonation'
 
 function useMobileMenuEffects(open, onClose) {
   useEffect(() => {
@@ -319,7 +323,8 @@ function LoggedInMobileMenu({ user, onClose, onSignOut, onHomeBrandClick }) {
 }
 
 function HomeMobileMenu({ open, onClose, onHomeBrandClick }) {
-  const { user, loading, signOut } = useAuth()
+  const { user, session, loading, signOut } = useAuth()
+  const navigate = useNavigate()
 
   useMobileMenuEffects(open, onClose)
 
@@ -327,6 +332,13 @@ function HomeMobileMenu({ open, onClose, onHomeBrandClick }) {
 
   async function handleSignOut() {
     onClose()
+
+    if (isImpersonatingSession(session, user)) {
+      const result = await exitImpersonation()
+      navigate(result.redirectTo || '/login', { replace: true })
+      return
+    }
+
     const { error } = await signOut()
 
     if (error) {

@@ -34,6 +34,7 @@ const AdminEquipmentCatalogueAddProductPage = lazy(() => import('./pages/AdminEq
 const AdminEquipmentCatalogueImportsPage = lazy(() => import('./pages/AdminEquipmentCatalogueImportsPage'))
 const AdminEquipmentCatalogueConsolesPage = lazy(() => import('./pages/AdminEquipmentCatalogueConsolesPage'))
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'))
 const AdminMessagesPage = lazy(() => import('./pages/AdminMessagesPage'))
 const AdminConversationPage = lazy(() => import('./pages/AdminConversationPage'))
 const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'))
@@ -233,6 +234,7 @@ function App() {
             />
             <Route path="admin" element={<AdminProtectedRoute />}>
               <Route index element={<AdminDashboardPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
               <Route path="catalogue" element={<Navigate to="/admin/intelligence/products" replace />} />
               <Route path="cases" element={<AdminCasesPage />} />
               <Route path="support" element={<AdminSupportPage />} />

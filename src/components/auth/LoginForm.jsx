@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../AuthForm.css'
 import { getAuthErrorMessage } from '../../lib/auth'
+import { consumeImpersonationLoginMessage } from '../../lib/adminImpersonation'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import GoogleAuthButton from './GoogleAuthButton'
 
@@ -19,6 +20,12 @@ function LoginForm({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    const message = consumeImpersonationLoginMessage()
+    if (message) setNotice(message)
+  }, [])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -57,6 +64,12 @@ function LoginForm({
           </h2>
           <p className="auth-form__lead">Sign in with your Equipd account.</p>
         </>
+      ) : null}
+
+      {notice ? (
+        <p className="auth-form__message auth-form__message--error" role="status">
+          {notice}
+        </p>
       ) : null}
 
       <GoogleAuthButton postAuthRedirect={redirectTo} disabled={submitting} />

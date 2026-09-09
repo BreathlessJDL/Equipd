@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { getEmailAuthRedirectUrl, getOAuthCallbackUrl, getPasswordResetRedirectUrl, validateOAuthRedirectUrl } from './siteUrl'
 import { PASSWORD_POLICY_SUMMARY } from './passwordPolicy'
+import { isImpersonatingSession } from './adminImpersonation'
 
 export { getAuthRedirectUrl, getEmailAuthRedirectUrl, getOAuthCallbackUrl, OAUTH_CALLBACK_PATH, EMAIL_AUTH_CALLBACK_PATH, getPasswordResetRedirectUrl, RESET_PASSWORD_PATH, FORGOT_PASSWORD_PATH } from './siteUrl'
 
@@ -93,6 +94,12 @@ export function validateEmailAddress(email) {
 export async function updateUserEmailWithPassword({ currentEmail, currentPassword, newEmail }) {
   if (!supabase) {
     return { error: new Error('Supabase is not configured.') }
+  }
+
+  // UX safeguard only — not a cryptographic Auth boundary for updateUser.
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (isImpersonatingSession(sessionData.session, sessionData.session?.user)) {
+    return { error: new Error('Unavailable while logged in as another user.') }
   }
 
   const validation = validateEmailAddress(newEmail)
@@ -191,6 +198,12 @@ export async function requestPasswordReset(email) {
 export async function updatePasswordAfterReset(password) {
   if (!supabase) {
     return { error: new Error('Supabase is not configured.') }
+  }
+
+  // UX safeguard only — not a cryptographic Auth boundary for updateUser.
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (isImpersonatingSession(sessionData.session, sessionData.session?.user)) {
+    return { error: new Error('Unavailable while logged in as another user.') }
   }
 
   const { error } = await supabase.auth.updateUser({ password })
