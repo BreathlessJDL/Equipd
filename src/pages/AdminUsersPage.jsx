@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { getAdminErrorMessage } from '../lib/admin'
 import {
@@ -7,6 +7,7 @@ import {
   searchAdminUsers,
   startAdminImpersonation,
 } from '../lib/adminImpersonation'
+import { suspendUser, unsuspendUser } from '../lib/adminModeration'
 import { formatAdminJoinedAt, formatAdminSignupName } from '../lib/adminUserStatistics'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './AdminIntelligencePage.css'
@@ -23,6 +24,9 @@ function AdminUsersPage() {
   const [confirmUser, setConfirmUser] = useState(null)
   const [startingId, setStartingId] = useState('')
   const [actionError, setActionError] = useState('')
+  const [suspendTarget, setSuspendTarget] = useState(null)
+  const [suspendReason, setSuspendReason] = useState('')
+  const [busyId, setBusyId] = useState('')
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -85,6 +89,52 @@ function AdminUsersPage() {
     navigate('/my-listings', { replace: true })
   }
 
+  async function handleConfirmSuspend() {
+    if (!suspendTarget || busyId) return
+    setBusyId(suspendTarget.id)
+    setActionError('')
+    const { error: suspendError, warning } = await suspendUser(suspendTarget.id, suspendReason)
+    setBusyId('')
+    if (suspendError) {
+      setActionError(getAdminErrorMessage(suspendError))
+      return
+    }
+    if (warning) {
+      setActionError(warning)
+    }
+    setSuspendTarget(null)
+    setSuspendReason('')
+    setLoading(true)
+    const { data, error: fetchError } = await searchAdminUsers(query, 50)
+    setLoading(false)
+    if (fetchError) {
+      setError(getAdminErrorMessage(fetchError))
+      return
+    }
+    setItems(data.items)
+  }
+
+  async function handleUnsuspend(userId) {
+    if (!userId || busyId) return
+    setBusyId(userId)
+    setActionError('')
+    const { error: unsuspendError, warning } = await unsuspendUser(userId, 'Admin unsuspend')
+    setBusyId('')
+    if (unsuspendError) {
+      setActionError(getAdminErrorMessage(unsuspendError))
+      return
+    }
+    if (warning) {
+      setActionError(warning)
+    }
+    const { data, error: fetchError } = await searchAdminUsers(query, 50)
+    if (fetchError) {
+      setError(getAdminErrorMessage(fetchError))
+      return
+    }
+    setItems(data.items)
+  }
+
   return (
     <section className="admin-intelligence admin-users">
       <header className="admin-intelligence__header">
@@ -135,6 +185,7 @@ function AdminUsersPage() {
                   <th scope="col">Signed up</th>
                   <th scope="col">Listings</th>
                   <th scope="col">Role</th>
+                  <th scope="col">Status</th>
                   <th scope="col">Actions</th>
                 </tr>
               </thead>
@@ -145,6 +196,8 @@ function AdminUsersPage() {
                     row.username?.trim() ||
                     formatAdminSignupName(row)
                   const isAdmin = row.isAdmin === true
+                  const isSuspended = row.isSuspended === true
+                  const isOfficial = row.isOfficialEquipd === true
                   return (
                     <tr key={row.id}>
                       <td data-label="Name">{name}</td>
@@ -154,23 +207,62 @@ function AdminUsersPage() {
                       </td>
                       <td data-label="Signed up">{formatAdminJoinedAt(row.createdAt)}</td>
                       <td data-label="Listings">{row.listingCount ?? 0}</td>
-                      <td data-label="Role">{isAdmin ? 'Admin' : 'User'}</td>
-                      <td data-label="Actions">
-                        {isAdmin ? (
-                          <span className="admin-users__unavailable">Unavailable</span>
+                      <td data-label="Role">
+                        {isOfficial ? 'Official Equipd' : isAdmin ? 'Admin' : 'User'}
+                      </td>
+                      <td data-label="Status">
+                        {isSuspended ? (
+                          <span className="admin-users__badge admin-users__badge--suspended">
+                            SUSPENDED
+                          </span>
                         ) : (
-                          <button
-                            type="button"
-                            className="admin-users__login-btn"
-                            onClick={() => {
-                              setActionError('')
-                              setConfirmUser({ ...row, _label: name })
-                            }}
-                            disabled={Boolean(startingId)}
-                          >
-                            Log in as user
-                          </button>
+                          'Active'
                         )}
+                      </td>
+                      <td data-label="Actions">
+                        <div className="admin-users__actions">
+                          <Link className="admin-users__link" to={`/admin/trust-safety`}>
+                            Investigate
+                          </Link>
+                          {isAdmin || isOfficial ? (
+                            <span className="admin-users__unavailable">Unavailable</span>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                className="admin-users__login-btn"
+                                onClick={() => {
+                                  setActionError('')
+                                  setConfirmUser({ ...row, _label: name })
+                                }}
+                                disabled={Boolean(startingId) || isSuspended}
+                              >
+                                Log in as user
+                              </button>
+                              {isSuspended ? (
+                                <button
+                                  type="button"
+                                  className="admin-users__login-btn"
+                                  onClick={() => handleUnsuspend(row.id)}
+                                  disabled={busyId === row.id}
+                                >
+                                  Unsuspend
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="admin-users__danger-btn"
+                                  onClick={() =>
+                                    setSuspendTarget({ id: row.id, label: name })
+                                  }
+                                  disabled={busyId === row.id}
+                                >
+                                  Suspend
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -213,6 +305,45 @@ function AdminUsersPage() {
                 disabled={Boolean(startingId)}
               >
                 {startingId === confirmUser.id ? 'Starting…' : 'Log in as user'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {suspendTarget ? (
+        <div className="admin-users__dialog-backdrop" role="presentation">
+          <div className="admin-users__dialog" role="dialog" aria-modal="true">
+            <h2 className="admin-users__dialog-title">Suspend {suspendTarget.label}?</h2>
+            <p className="admin-users__dialog-copy">
+              They will lose messaging, listing, offer and profile edit access immediately. Existing
+              data remains available for investigation.
+            </p>
+            <label className="admin-users__search-label" htmlFor="admin-users-suspend-reason">
+              Reason
+            </label>
+            <textarea
+              id="admin-users-suspend-reason"
+              className="admin-users__search"
+              rows={3}
+              value={suspendReason}
+              onChange={(event) => setSuspendReason(event.target.value)}
+            />
+            <div className="admin-users__dialog-actions">
+              <button
+                type="button"
+                className="admin-users__dialog-cancel"
+                onClick={() => setSuspendTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="admin-users__danger-btn"
+                onClick={handleConfirmSuspend}
+                disabled={Boolean(busyId)}
+              >
+                {busyId ? 'Suspending…' : 'Confirm suspend'}
               </button>
             </div>
           </div>

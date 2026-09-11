@@ -43,6 +43,11 @@
   overflow-wrap: anywhere;
 }
 
+.user-shop__official-badge {
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
 .user-shop__display-name {
   margin: 0 0 0.35rem;
   color: var(--color-muted);

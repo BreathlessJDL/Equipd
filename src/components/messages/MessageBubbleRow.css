@@ -20,6 +20,26 @@
   height: 2rem;
 }
 
+.message-bubble-row__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.message-bubble-row__report {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
 .message-bubble-row--continued {
   margin-top: -0.15rem;
 }

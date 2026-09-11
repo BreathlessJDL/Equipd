@@ -1,15 +1,20 @@
 import { supabase } from './supabase'
 import { isValidCoordinate } from './listingDistance'
 import { profileLocationFromRecord } from './listingLocation'
+import {
+  RESERVED_EQUIPD_IDENTITY_ERROR,
+  isReservedEquipdIdentity,
+} from './reservedEquipdIdentity'
 
 const PROFILE_FIELDS_BASE =
-  'id, display_name, location, latitude, longitude, avatar_url, stripe_onboarding_complete, is_admin'
+  'id, display_name, location, latitude, longitude, avatar_url, stripe_onboarding_complete, is_admin, is_official_equipd, is_suspended, suspended_at, suspension_reason'
 
 const PROFILE_FIELDS_WITH_LOCATION_COLUMNS = `${PROFILE_FIELDS_BASE}, city, county, postcode`
 
 const PROFILE_FIELDS_WITH_USERNAME = `${PROFILE_FIELDS_WITH_LOCATION_COLUMNS}, username, username_last_changed_at`
 
-const PUBLIC_PROFILE_FIELDS_BASE = 'id, display_name, location, avatar_url, created_at, last_active_at'
+const PUBLIC_PROFILE_FIELDS_BASE =
+  'id, display_name, location, avatar_url, created_at, last_active_at, is_official_equipd'
 
 const PUBLIC_PROFILE_FIELDS_WITH_USERNAME = `${PUBLIC_PROFILE_FIELDS_BASE}, username`
 
@@ -250,7 +255,7 @@ async function publicProfileSelectFields() {
   return supported ? PUBLIC_PROFILE_FIELDS_WITH_USERNAME : PUBLIC_PROFILE_FIELDS_BASE
 }
 
-export function validateUsername(value, { required = true } = {}) {
+export function validateUsername(value, { required = true, currentUsername = null } = {}) {
   const username = normalizeUsername(value)
 
   if (!username) {
@@ -282,6 +287,20 @@ export function validateUsername(value, { required = true } = {}) {
       valid: false,
       username,
       error: 'Username can only contain letters, numbers, underscores, and hyphens.',
+    }
+  }
+
+  const keepingExisting =
+    currentUsername != null
+    && normalizeUsername(currentUsername).toLowerCase() === username.toLowerCase()
+
+  // Allow an existing reserved username to be kept (official Equipd bootstrap).
+  // Changing *to* a reserved identity remains blocked.
+  if (isReservedEquipdIdentity(username) && !keepingExisting) {
+    return {
+      valid: false,
+      username,
+      error: RESERVED_EQUIPD_IDENTITY_ERROR,
     }
   }
 
@@ -347,7 +366,7 @@ async function isUsernameAvailableViaView(validation, excludeUserId) {
   return { available: true, username: validation.username, error: null }
 }
 
-export async function isUsernameAvailable(username, { excludeUserId } = {}) {
+export async function isUsernameAvailable(username, { excludeUserId, currentUsername = null } = {}) {
   if (!supabase) {
     return { available: false, error: new Error('Supabase is not configured.') }
   }
@@ -359,7 +378,9 @@ export async function isUsernameAvailable(username, { excludeUserId } = {}) {
     }
   }
 
-  const validation = validateUsername(username)
+  const validation = validateUsername(username, {
+    currentUsername: currentUsername ?? null,
+  })
   if (!validation.valid) {
     return { available: false, error: new Error(validation.error) }
   }
@@ -674,13 +695,29 @@ export async function updateProfile(
           error: new Error('Usernames are not enabled yet. Run supabase/profile-username.sql.'),
         }
       }
+      if (isReservedEquipdIdentity(normalized)) {
+        const { data: currentRow } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .maybeSingle()
+        const keepingExisting =
+          normalizeUsername(currentRow?.username).toLowerCase() === normalized.toLowerCase()
+        if (!keepingExisting) {
+          return { data: null, error: new Error(RESERVED_EQUIPD_IDENTITY_ERROR) }
+        }
+      }
     }
 
     updates.username = normalized || null
   }
 
   if (display_name !== undefined) {
-    updates.display_name = display_name?.trim() || null
+    const nextDisplayName = display_name?.trim() || null
+    if (nextDisplayName && isReservedEquipdIdentity(nextDisplayName)) {
+      return { data: null, error: new Error(RESERVED_EQUIPD_IDENTITY_ERROR) }
+    }
+    updates.display_name = nextDisplayName
   }
 
   if (location !== undefined) {

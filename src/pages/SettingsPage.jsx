@@ -303,6 +303,7 @@ function SettingsPage() {
     if (usernameSupported) {
       const validation = validateUsername(normalizedUsername, {
         required: usernameRequired,
+        currentUsername: profileData?.username ?? null,
       })
       if (!validation.valid) {
         setSaving(false)

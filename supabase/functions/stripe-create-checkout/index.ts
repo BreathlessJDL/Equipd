@@ -73,6 +73,16 @@ Deno.serve(async (req) => {
       return errorResponse('Only the buyer can pay for this offer', 403)
     }
 
+    const { data: buyerProfile } = await admin
+      .from('profiles')
+      .select('is_suspended')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (buyerProfile?.is_suspended === true) {
+      return errorResponse('Your account is suspended and cannot start checkout', 403)
+    }
+
     const offer = Array.isArray(payment.offer) ? payment.offer[0] : payment.offer
     const listing = Array.isArray(payment.listing) ? payment.listing[0] : payment.listing
 

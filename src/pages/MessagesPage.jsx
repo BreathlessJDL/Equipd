@@ -690,6 +690,8 @@ function MessagesPage() {
         isMine={isMine}
         showAvatar={showAvatar}
         otherPartyProfile={otherPartyProfile}
+        conversation={selectedConversation}
+        currentUserId={user?.id}
         onOpenAttachment={setAttachmentLightbox}
       />
     )

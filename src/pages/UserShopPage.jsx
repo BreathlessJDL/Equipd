@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useRequireAuth } from '../hooks/useRequireAuth'
 import { usePageMeta } from '../hooks/usePageMeta'
 import JsonLd from '../components/JsonLd'
+import OfficialEquipdBadge from '../components/OfficialEquipdBadge'
 import ReportTrigger from '../components/ReportTrigger'
 import { canReportUser, REPORT_TYPES } from '../lib/reports'
 import {
@@ -240,7 +241,15 @@ function UserShopPage({ shopParam }) {
           <div className="user-shop__identity">
             <UserAvatar profile={avatarProfile} user={user} size="lg" className="user-shop__avatar" />
             <div className="user-shop__meta">
-              <h1 className="user-shop__name">{displayName}</h1>
+              <h1 className="user-shop__name">
+                {displayName}
+                {profile?.is_official_equipd ? (
+                  <>
+                    {' '}
+                    <OfficialEquipdBadge className="user-shop__official-badge" />
+                  </>
+                ) : null}
+              </h1>
               <p className="user-shop__reviews">
                 {hasReviews ? (
                   <>

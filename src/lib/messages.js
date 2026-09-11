@@ -585,18 +585,12 @@ export async function ensureConversationForListing({ listingId, buyerId, sellerI
     }
   }
 
-  const { data, error } = await supabase
-    .from('conversations')
-    .insert({
-      listing_id: listingId,
-      buyer_id: buyerId,
-      seller_id: sellerId,
-    })
-    .select(conversationFields)
-    .single()
+  const { data, error } = await supabase.rpc('start_listing_conversation', {
+    p_listing_id: listingId,
+  })
 
   if (error || !data) {
-    return { data, error }
+    return { data: null, error }
   }
 
   const normalized = normalizeConversationDetail(data)

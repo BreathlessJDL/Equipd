@@ -58,6 +58,13 @@
 .message-thread-header__info {
   min-width: 0;
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.message-thread-header__badge {
+  display: flex;
 }
 
 .message-thread-header__participant {

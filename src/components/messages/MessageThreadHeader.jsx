@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import ProfileAvatarLink from './ProfileAvatarLink'
 import UserAvatar from '../UserAvatar'
 import ReportTrigger from '../ReportTrigger'
+import OfficialEquipdBadge from '../OfficialEquipdBadge'
 import {
   getConversationListingImageUrl,
   getConversationOtherPartyAvatarProfile,
@@ -13,8 +14,8 @@ function MessageThreadHeader({ conversation, userId, onBack, reportProps = null 
   const participantName = getConversationOtherPartyName(conversation, userId)
   const participantProfile = getConversationOtherPartyAvatarProfile(conversation, userId)
   const listingImageUrl = getConversationListingImageUrl(conversation)
-  // Header label is always the other participant — never the listing title.
   const primaryTitle = participantName || 'Unknown user'
+  const isOfficial = Boolean(participantProfile?.is_official_equipd)
   const menuId = useId()
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -84,6 +85,11 @@ function MessageThreadHeader({ conversation, userId, onBack, reportProps = null 
 
         <div className="message-thread-header__info">
           <h2 className="message-thread-header__participant">{primaryTitle}</h2>
+          {isOfficial ? (
+            <div className="message-thread-header__badge">
+              <OfficialEquipdBadge />
+            </div>
+          ) : null}
         </div>
 
         {reportProps ? (

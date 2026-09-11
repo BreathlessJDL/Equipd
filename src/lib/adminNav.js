@@ -1,6 +1,7 @@
 export const ADMIN_HUB_NAV = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/users', label: 'Users' },
+  { to: '/admin/trust-safety', label: 'Trust & Safety' },
   { to: '/admin/cases', label: 'Cases' },
   { to: '/admin/support', label: 'Support' },
   { to: '/admin/orders', label: 'Orders' },
@@ -15,6 +16,12 @@ export const ADMIN_HUB_TOOLS = [
     label: 'Users',
     description: 'Search accounts and log in as a user for support.',
     cta: 'View users',
+  },
+  {
+    to: '/admin/trust-safety',
+    label: 'Trust & Safety',
+    description: 'Reports, suspensions, suspicious messages and outreach spikes.',
+    cta: 'Open Trust & Safety',
   },
   {
     to: '/admin/cases',

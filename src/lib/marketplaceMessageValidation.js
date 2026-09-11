@@ -2,7 +2,7 @@ export const MARKETPLACE_MESSAGE_BLOCK_MESSAGE =
   "For everyone's safety, please keep communication and payments on Equipd. Collection details are shared securely after payment."
 
 export const MARKETPLACE_MESSAGE_SAFETY_NOTE =
-  'Keep payments and communication on Equipd to stay protected.'
+  'Stay safe on Equipd. Equipd will never contact you through a standard user conversation asking you to scan a QR code, make a bank transfer, or pay a fee to verify your account.'
 
 export const MESSAGE_CONTEXT_MAX_RECENT_MESSAGES = 5
 export const MESSAGE_CONTEXT_WINDOW_MINUTES = 10

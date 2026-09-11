@@ -1,20 +1,5 @@
-import { useEffect, useState } from 'react'
 import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../../lib/marketplaceMessageValidation'
 import './MessageThreadSafetyBanner.css'
-
-function getDismissStorageKey(conversationId) {
-  return `equipd:message-safety-dismissed:${conversationId}`
-}
-
-function readDismissed(conversationId) {
-  if (!conversationId || typeof window === 'undefined') return false
-
-  try {
-    return window.sessionStorage.getItem(getDismissStorageKey(conversationId)) === '1'
-  } catch {
-    return false
-  }
-}
 
 function SafetyShieldIcon() {
   return (
@@ -36,39 +21,14 @@ function SafetyShieldIcon() {
   )
 }
 
-function MessageThreadSafetyBanner({ conversationId }) {
-  const [dismissed, setDismissed] = useState(() => readDismissed(conversationId))
-
-  useEffect(() => {
-    setDismissed(readDismissed(conversationId))
-  }, [conversationId])
-
-  if (!conversationId || dismissed) {
-    return null
-  }
-
-  function handleDismiss() {
-    try {
-      window.sessionStorage.setItem(getDismissStorageKey(conversationId), '1')
-    } catch {
-      // Ignore storage errors; still hide for this render.
-    }
-
-    setDismissed(true)
-  }
-
+function MessageThreadSafetyBanner() {
   return (
     <div className="message-thread-safety-banner" role="note">
       <SafetyShieldIcon />
-      <p className="message-thread-safety-banner__text">{MARKETPLACE_MESSAGE_SAFETY_NOTE}</p>
-      <button
-        type="button"
-        className="message-thread-safety-banner__close"
-        onClick={handleDismiss}
-        aria-label="Dismiss safety notice"
-      >
-        ×
-      </button>
+      <div className="message-thread-safety-banner__copy">
+        <p className="message-thread-safety-banner__title">Stay safe on Equipd</p>
+        <p className="message-thread-safety-banner__text">{MARKETPLACE_MESSAGE_SAFETY_NOTE}</p>
+      </div>
     </div>
   )
 }

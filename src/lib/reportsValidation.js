@@ -26,6 +26,9 @@ export const REPORT_REASONS = {
   ABUSIVE_LANGUAGE: 'abusive_language',
   FRAUD: 'fraud',
   SHARED_CONTACT_DETAILS: 'shared_contact_details',
+  IMPERSONATING_EQUIPD: 'impersonating_equipd',
+  SUSPICIOUS_PAYMENT_REQUEST: 'suspicious_payment_request',
+  SPAM: 'spam',
   OTHER: 'other',
 }
 
@@ -40,27 +43,55 @@ const LISTING_REASON_OPTIONS = [
 ]
 
 const USER_REASON_OPTIONS = [
+  { value: REPORT_REASONS.SUSPECTED_FRAUD, label: 'Scam or fraud' },
+  { value: REPORT_REASONS.IMPERSONATING_EQUIPD, label: 'Impersonating Equipd' },
+  {
+    value: REPORT_REASONS.SUSPICIOUS_PAYMENT_REQUEST,
+    label: 'Suspicious payment request',
+  },
+  { value: REPORT_REASONS.SPAM, label: 'Spam' },
+  {
+    value: REPORT_REASONS.HARASSMENT,
+    label: 'Harassment or inappropriate content',
+  },
   {
     value: REPORT_REASONS.REQUESTED_OFF_PLATFORM_PAYMENT,
     label: 'Requested off-platform payment',
   },
-  { value: REPORT_REASONS.SUSPICIOUS_BEHAVIOUR, label: 'Suspicious behaviour' },
-  { value: REPORT_REASONS.HARASSMENT, label: 'Harassment' },
-  { value: REPORT_REASONS.NO_SHOW, label: 'No show' },
-  { value: REPORT_REASONS.ABUSIVE_LANGUAGE, label: 'Abusive language' },
-  { value: REPORT_REASONS.FRAUD, label: 'Fraud' },
   { value: REPORT_REASONS.OTHER, label: 'Other' },
 ]
 
 const CONVERSATION_REASON_OPTIONS = [
+  { value: REPORT_REASONS.SUSPECTED_FRAUD, label: 'Scam or fraud' },
+  { value: REPORT_REASONS.IMPERSONATING_EQUIPD, label: 'Impersonating Equipd' },
+  {
+    value: REPORT_REASONS.SUSPICIOUS_PAYMENT_REQUEST,
+    label: 'Suspicious payment request',
+  },
   {
     value: REPORT_REASONS.REQUESTED_OFF_PLATFORM_PAYMENT,
     label: 'Requested off-platform payment',
   },
   { value: REPORT_REASONS.SHARED_CONTACT_DETAILS, label: 'Shared contact details' },
   { value: REPORT_REASONS.HARASSMENT, label: 'Harassment' },
-  { value: REPORT_REASONS.ABUSIVE_LANGUAGE, label: 'Abusive language' },
-  { value: REPORT_REASONS.SUSPICIOUS_BEHAVIOUR, label: 'Suspicious behaviour' },
+  { value: REPORT_REASONS.SPAM, label: 'Spam' },
+  { value: REPORT_REASONS.OTHER, label: 'Other' },
+]
+
+const MESSAGE_REASON_OPTIONS = [
+  { value: REPORT_REASONS.SUSPECTED_FRAUD, label: 'Scam or fraud' },
+  { value: REPORT_REASONS.IMPERSONATING_EQUIPD, label: 'Impersonating Equipd' },
+  {
+    value: REPORT_REASONS.SUSPICIOUS_PAYMENT_REQUEST,
+    label: 'Suspicious payment request',
+  },
+  {
+    value: REPORT_REASONS.REQUESTED_OFF_PLATFORM_PAYMENT,
+    label: 'Requested off-platform payment',
+  },
+  { value: REPORT_REASONS.SHARED_CONTACT_DETAILS, label: 'Shared contact details' },
+  { value: REPORT_REASONS.HARASSMENT, label: 'Harassment' },
+  { value: REPORT_REASONS.SPAM, label: 'Spam' },
   { value: REPORT_REASONS.OTHER, label: 'Other' },
 ]
 
@@ -79,7 +110,7 @@ const REASON_OPTIONS_BY_TYPE = {
   [REPORT_TYPES.LISTING]: LISTING_REASON_OPTIONS,
   [REPORT_TYPES.USER]: USER_REASON_OPTIONS,
   [REPORT_TYPES.CONVERSATION]: CONVERSATION_REASON_OPTIONS,
-  [REPORT_TYPES.MESSAGE]: CONVERSATION_REASON_OPTIONS,
+  [REPORT_TYPES.MESSAGE]: MESSAGE_REASON_OPTIONS,
 }
 
 export function getReportReasons(reportType) {
@@ -164,4 +195,10 @@ export function canReportUser(reportedUserId, userId) {
 export function canReportConversation(conversation, userId) {
   if (!conversation?.id || !userId) return false
   return conversation.buyer_id === userId || conversation.seller_id === userId
+}
+
+export function canReportMessage(message, conversation, userId) {
+  if (!message?.id || !userId) return false
+  if (message.sender_id === userId) return false
+  return canReportConversation(conversation, userId)
 }

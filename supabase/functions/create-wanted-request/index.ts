@@ -361,10 +361,14 @@ Deno.serve(async (req) => {
 
       const { data: profileRow } = await admin
         .from('profiles')
-        .select('id, username, display_name')
+        .select('id, username, display_name, is_suspended')
         .eq('id', user.id)
         .maybeSingle()
       profile = profileRow
+
+      if (profileRow?.is_suspended === true) {
+        return errorResponse('Your account is suspended and cannot create wanted requests', 403)
+      }
     } else {
       buyerEmail = String(body.email ?? '').trim().toLowerCase()
       if (!buyerEmail || !isValidWantedRequestEmail(buyerEmail)) {

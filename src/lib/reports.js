@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import {
   canReportConversation,
   canReportListing,
+  canReportMessage,
   canReportUser,
   formatReportReason,
   formatReportStatus,
@@ -20,6 +21,7 @@ import {
 export {
   canReportConversation,
   canReportListing,
+  canReportMessage,
   canReportUser,
   formatReportReason,
   formatReportStatus,

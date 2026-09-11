@@ -40,3 +40,11 @@ verify_jwt = false
 [functions.admin-impersonate-end]
 # Auth enforced in-function via requireAdmin (after admin session restore).
 verify_jwt = false
+
+[functions.upload-profile-image]
+# Auth enforced in-function; service role used only for Storage write after QR scan.
+verify_jwt = false
+
+[functions.admin-moderate-user]
+# Auth enforced in-function via requireAdmin; revokes sessions on suspend.
+verify_jwt = false
