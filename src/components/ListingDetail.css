@@ -688,6 +688,13 @@
   color: var(--color-navy);
 }
 
+.listing-summary__seller-name .official-equipd-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+}
+
 .listing-summary__seller-rating {
   display: inline-flex;
   flex-wrap: wrap;

@@ -19,3 +19,33 @@
   height: 0.7rem;
   flex: 0 0 auto;
 }
+
+.official-equipd-badge--compact {
+  gap: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #1f6feb;
+  vertical-align: -0.12em;
+}
+
+.official-equipd-badge--compact .official-equipd-badge__mark {
+  width: 0.95em;
+  height: 0.95em;
+  min-width: 0.85rem;
+  min-height: 0.85rem;
+}
+
+.official-equipd-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.official-equipd-name__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

@@ -36,6 +36,7 @@ import './HubItemRow.css'
 import { HubEmptyState } from './HubEmptyState'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
 import { getProfileDisplayName } from '../../lib/profiles'
+import { OfficialEquipdName } from '../OfficialEquipdBadge'
 import {
   getHubItemStatusBadge,
   getHubOfferMetadataItems,
@@ -181,14 +182,27 @@ function HubOfferCard({
     showPaymentStatus,
     disputes: getDisputesForOrderFromMap(order?.id, disputesByOrderId),
   })
+  const partyDisplayName = partyProfile ? getProfileDisplayName(partyProfile) : null
+  const partyIsOfficial = partyProfile?.is_official_equipd === true
   const metadataItems = getHubOfferMetadataItems({
     partyLabel,
-    partyName: partyProfile ? getProfileDisplayName(partyProfile) : null,
+    partyName: partyDisplayName,
     quantity: offer.quantity ?? 1,
     order,
     isOrderContext: Boolean(orderStatusRole),
     datePrefix: orderStatusRole ? 'Updated' : 'Submitted',
     date: orderStatusRole ? offer.updated_at ?? offer.created_at : offer.created_at,
+  }).map((item) => {
+    if (item.type !== 'party' || !partyLabel || !partyDisplayName) return item
+    return {
+      ...item,
+      content: (
+        <>
+          {partyLabel}:{' '}
+          <OfficialEquipdName name={partyDisplayName} isOfficial={partyIsOfficial} />
+        </>
+      ),
+    }
   })
 
   const stageHint = getHubOrderStageHint(offer, orderStatusRole)

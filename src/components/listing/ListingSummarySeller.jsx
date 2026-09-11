@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import UserAvatar from '../UserAvatar'
+import { OfficialEquipdName } from '../OfficialEquipdBadge'
 import { fetchPublicProfile, getProfileDisplayName, buildAvatarProfile } from '../../lib/profiles'
 import { getSellerShopPath } from '../../lib/sellerShopUrls'
 import {
@@ -60,6 +61,7 @@ function ListingSummarySeller({ sellerId }) {
   if (!sellerId) return null
 
   const displayName = getProfileDisplayName(profile)
+  const isOfficial = profile?.is_official_equipd === true
   const hasReviews = reviewSummary.reviewCount > 0 && reviewSummary.averageRating != null
   const compactRating = formatReviewCompact(reviewSummary.averageRating, reviewSummary.reviewCount)
   const salesLabel = formatCompletedSales(completedSalesCount)
@@ -83,7 +85,9 @@ function ListingSummarySeller({ sellerId }) {
         <div className="listing-summary__seller-card">
           <UserAvatar profile={avatarProfile} size="md" className="listing-summary__seller-avatar" />
           <div className="listing-summary__seller-body">
-            <p className="listing-summary__seller-name">{displayName}</p>
+            <p className="listing-summary__seller-name">
+              <OfficialEquipdName name={displayName} isOfficial={isOfficial} />
+            </p>
             {hasReviews ? (
               <p className="listing-summary__seller-rating">
                 <span className="listing-summary__seller-stars" aria-hidden="true">

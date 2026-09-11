@@ -690,7 +690,7 @@ export async function fetchDraftConversationContext({ listingId, buyerId }) {
 
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles_public')
-    .select('id, display_name, username, avatar_url')
+    .select('id, display_name, username, avatar_url, is_official_equipd')
     .in('id', [buyerId, listing.seller_id])
 
   if (profilesError) {

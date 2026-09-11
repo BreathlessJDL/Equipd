@@ -83,6 +83,7 @@ import {
 } from '../lib/reviews'
 import { getOrderStatusBadge } from '../lib/orderStatusBadge'
 import { fetchPublicProfile, getProfileDisplayName } from '../lib/profiles'
+import { OfficialEquipdName } from '../components/OfficialEquipdBadge'
 import { getSellerShopPath } from '../lib/sellerShopUrls'
 
 function formatOrderNumber(orderId) {
@@ -151,12 +152,16 @@ function OrderParticipantProfileLink({ label, userId, profile }) {
 
   const username = profile?.username?.trim()
   const linkLabel = username ? `@${username}` : getProfileDisplayName(profile)
+  const isOfficial = profile?.is_official_equipd === true
 
   return (
     <p className="order-detail__overview-meta">
       {label}:{' '}
-      <Link to={getSellerShopPath({ id: userId, username: profile?.username })} className="order-detail__participant-link">
-        {linkLabel}
+      <Link
+        to={getSellerShopPath({ id: userId, username: profile?.username })}
+        className="order-detail__participant-link"
+      >
+        <OfficialEquipdName name={linkLabel} isOfficial={isOfficial} />
       </Link>
     </p>
   )

@@ -70,23 +70,27 @@ const HUB_METADATA_ICONS = {
 }
 
 export function HubItemMetadata({ items = [] }) {
-  const visibleItems = items.filter((item) => item?.text)
+  const visibleItems = items.filter((item) => item?.text || item?.content)
 
   if (visibleItems.length === 0) return null
 
   return (
     <ul className="hub-item-row__metadata-list">
-      {visibleItems.map((item) => {
+      {visibleItems.map((item, index) => {
         const Icon = HUB_METADATA_ICONS[item.type] ?? null
+        const keyBase =
+          typeof item.text === 'string' && item.text
+            ? item.text
+            : `${item.type ?? 'meta'}-${index}`
 
         return (
-          <li key={`${item.type}-${item.text}`} className="hub-item-row__metadata-item">
+          <li key={`${item.type}-${keyBase}`} className="hub-item-row__metadata-item">
             {Icon ? (
               <span className="hub-item-row__metadata-icon">
                 <Icon />
               </span>
             ) : null}
-            <span>{item.text}</span>
+            <span>{item.content ?? item.text}</span>
           </li>
         )
       })}

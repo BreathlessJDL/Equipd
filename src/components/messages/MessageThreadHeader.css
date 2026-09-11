@@ -78,6 +78,19 @@
   white-space: nowrap;
 }
 
+.message-thread-header__participant .official-equipd-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.message-thread-header__participant .official-equipd-name__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .message-thread-header__listing {
   margin: 0.1rem 0 0;
   font-size: 0.75rem;

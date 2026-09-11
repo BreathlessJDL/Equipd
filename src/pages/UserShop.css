@@ -43,9 +43,20 @@
   overflow-wrap: anywhere;
 }
 
+.user-shop__name .official-equipd-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+}
+
 .user-shop__official-badge {
-  margin-left: 0.35rem;
+  margin-left: 0;
   vertical-align: middle;
+}
+
+.user-shop__official-row {
+  margin: 0 0 0.35rem;
 }
 
 .user-shop__display-name {

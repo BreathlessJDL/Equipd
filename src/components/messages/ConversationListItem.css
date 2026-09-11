@@ -121,8 +121,15 @@
   z-index: 2;
 }
 
-.conversation-card__participant > span {
+.conversation-card__participant > span,
+.conversation-card__participant .official-equipd-name {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-card__participant .official-equipd-name__text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

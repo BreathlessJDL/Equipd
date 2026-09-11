@@ -4,6 +4,7 @@ import '../icons/EquipdTypeIcon.css'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
 import ProfileAvatarLink from './ProfileAvatarLink'
 import UserAvatar from '../UserAvatar'
+import { OfficialEquipdName } from '../OfficialEquipdBadge'
 import {
   formatConversationListTime,
   getConversationListingImageUrl,
@@ -21,6 +22,7 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
   const imageUrl = getConversationListingImageUrl(conversation)
   const participantLine = getConversationParticipantLine(conversation, userId)
   const participantProfile = getConversationOtherPartyAvatarProfile(conversation, userId)
+  const isOfficial = participantProfile?.is_official_equipd === true
   const preview = getConversationMessagePreview(conversation.last_message)
   const updatedAt = conversation.last_message?.created_at ?? conversation.updated_at
   const timeLabel = formatConversationListTime(updatedAt)
@@ -77,7 +79,7 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
                   />
                 )
               ) : null}
-              <span>{participantLine}</span>
+              <OfficialEquipdName name={participantLine} isOfficial={isOfficial} />
             </p>
           ) : null}
 
