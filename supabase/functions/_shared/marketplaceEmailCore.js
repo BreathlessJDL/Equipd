@@ -265,7 +265,11 @@ export function formatPricePence(pence) {
   }).format(Number(pence) / 100)
 }
 
-export function getMarketplaceUserName(profile, { email, fallback = 'Equipd member' } = {}) {
+export function getMarketplaceUserName(profile, {
+  email = null,
+  fallback = 'Equipd user',
+  allowEmailSeededDisplayName = false,
+} = {}) {
   const username = profile?.username?.trim()
   if (username) {
     return username
@@ -273,20 +277,24 @@ export function getMarketplaceUserName(profile, { email, fallback = 'Equipd memb
 
   const displayName = profile?.display_name?.trim()
   if (displayName) {
-    return displayName
-  }
-
-  const emailValue = email ?? profile?.email
-  const emailPrefix = emailValue?.split('@')[0]?.trim()
-  if (emailPrefix) {
-    return emailPrefix
+    const emailForCheck = email ?? profile?.email ?? null
+    const local = String(emailForCheck ?? '')
+      .trim()
+      .split('@')[0]
+      ?.trim()
+    const isEmailSeeded =
+      Boolean(local) &&
+      displayName.toLowerCase() === local.toLowerCase()
+    if (allowEmailSeededDisplayName || !isEmailSeeded) {
+      return displayName
+    }
   }
 
   return fallback
 }
 
 /** @deprecated Use getMarketplaceUserName */
-export function getProfileDisplayName(profile, fallback = 'Equipd member') {
+export function getProfileDisplayName(profile, fallback = 'Equipd user') {
   return getMarketplaceUserName(profile, { fallback })
 }
 
@@ -1055,11 +1063,12 @@ async function fetchProfile(admin, userId) {
   return data
 }
 
-function profileNeedsEmailFallback(profile) {
-  return !profile?.username?.trim() && !profile?.display_name?.trim()
+function profileNeedsEmailForPublicName(profile) {
+  // Username missing → load auth email so legacy email-seeded display_name can be suppressed.
+  return !profile?.username?.trim()
 }
 
-/** Load participant profiles once per email compose, with auth email only when needed for fallback. */
+/** Load participant profiles once per email compose, with auth email only when needed for public naming. */
 export async function loadMarketplaceParticipants(admin, userIds) {
   const ids = [...new Set(userIds.filter(Boolean))]
   if (ids.length === 0) {
@@ -1074,7 +1083,7 @@ export async function loadMarketplaceParticipants(admin, userIds) {
       const profile = profileRows[index]
       let email = null
 
-      if (!profile || profileNeedsEmailFallback(profile)) {
+      if (!profile || profileNeedsEmailForPublicName(profile)) {
         const resolved = await resolveUserEmail(admin, id)
         email = resolved.email
       }

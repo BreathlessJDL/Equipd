@@ -3,6 +3,8 @@
  * Kept free of Supabase imports so Node unit tests can load this module.
  */
 
+import { getPublicUserName, PUBLIC_USER_NAME_FALLBACK } from './publicUserName.js'
+
 function normalizeEmbeddedRow(row) {
   if (!row) return null
   return Array.isArray(row) ? (row[0] ?? null) : row
@@ -13,14 +15,13 @@ export function sameParticipantId(left, right) {
   return String(left) === String(right)
 }
 
-export function getConversationParticipantLabel(profile) {
-  const displayName = profile?.display_name?.trim()
-  if (displayName) return displayName
-
-  const username = profile?.username?.trim()
-  if (username) return username
-
-  return null
+export function getConversationParticipantLabel(profile, { email = null } = {}) {
+  if (!profile) return null
+  const name = getPublicUserName(profile, {
+    email: email ?? profile?.email ?? null,
+    fallback: '',
+  })
+  return name || null
 }
 
 export function getConversationOtherPartyId(conversation, userId) {
@@ -47,7 +48,7 @@ export function getConversationOtherPartyProfile(conversation, userId) {
 export function getConversationOtherPartyName(conversation, userId) {
   const otherParty = getConversationOtherPartyProfile(conversation, userId)
   if (!otherParty) return 'Unknown user'
-  return getConversationParticipantLabel(otherParty) || 'Unknown user'
+  return getConversationParticipantLabel(otherParty) || PUBLIC_USER_NAME_FALLBACK
 }
 
 export function getConversationViewerRoleLabel(conversation, userId) {

@@ -83,11 +83,39 @@ assert(
 assert(
   getMarketplaceUserName({ display_name: 'James Carter' }, { email: 'jlinnell95@gmail.com' }) ===
     'James Carter',
-  'getMarketplaceUserName falls back to display name before email',
+  'getMarketplaceUserName falls back to safe display name',
 )
 assert(
-  getMarketplaceUserName({}, { email: 'jlinnell95@gmail.com' }) === 'jlinnell95',
-  'getMarketplaceUserName falls back to email local-part last',
+  getMarketplaceUserName({}, { email: 'jlinnell95@gmail.com' }) === 'Equipd user',
+  'getMarketplaceUserName never uses email local-part',
+)
+assert(
+  getMarketplaceUserName(
+    { username: 'rower-sellpoint', display_name: 'siobhan.oleary81' },
+    { email: 'siobhan.oleary81@gmail.com' },
+  ) === 'rower-sellpoint',
+  'username wins over email-seeded display_name',
+)
+assert(
+  getMarketplaceUserName(
+    { username: null, display_name: 'siobhan.oleary81' },
+    { email: 'siobhan.oleary81@gmail.com' },
+  ) === 'Equipd user',
+  'legacy email-seeded display_name is suppressed',
+)
+assert(
+  getMarketplaceUserName(
+    { username: null, display_name: 'SIOBHAN.OLEARY81' },
+    { email: 'siobhan.oleary81@gmail.com' },
+  ) === 'Equipd user',
+  'case-variant email-seeded display_name is suppressed',
+)
+assert(
+  getMarketplaceUserName(
+    { username: null, display_name: "Siobhan O'Leary" },
+    { email: 'siobhan.oleary81@gmail.com' },
+  ) === "Siobhan O'Leary",
+  'safe display_name remains public',
 )
 
 assert(

@@ -5,6 +5,7 @@ import {
   RESERVED_EQUIPD_IDENTITY_ERROR,
   isReservedEquipdIdentity,
 } from './reservedEquipdIdentity'
+import { getPublicUserName } from './publicUserName'
 
 const PROFILE_FIELDS_BASE =
   'id, display_name, location, latitude, longitude, avatar_url, stripe_onboarding_complete, is_admin, is_official_equipd, is_suspended, suspended_at, suspension_reason'
@@ -406,17 +407,18 @@ export function formatProfileJoinDate(createdAt) {
   }
 }
 
-export function getProfileDisplayName(profile, { email } = {}) {
-  const username = profile?.username?.trim()
-  if (username) return username
-
-  const displayName = profile?.display_name?.trim()
-  if (displayName) return displayName
-
-  const emailPrefix = email?.split('@')[0]?.trim()
-  if (emailPrefix) return emailPrefix
-
-  return 'Equipd member'
+/**
+ * Public marketplace identity — never derive from email.
+ * Priority: username → safe display_name → Equipd user
+ *
+ * Pass `email` when available so legacy email-seeded display_name values are suppressed.
+ * For the viewer's own private settings preview, pass allowEmailSeededDisplayName: true.
+ */
+export function getProfileDisplayName(profile, {
+  email = null,
+  allowEmailSeededDisplayName = false,
+} = {}) {
+  return getPublicUserName(profile, { email, allowEmailSeededDisplayName })
 }
 
 function avatarLetter(value) {
@@ -518,11 +520,9 @@ export async function fetchProfile(userId, { email } = {}) {
     }
   }
 
-  const displayName = email?.split('@')[0] ?? null
-
   const { data: created, error: insertError } = await supabase
     .from('profiles')
-    .insert({ id: userId, display_name: displayName })
+    .insert({ id: userId, display_name: null })
     .select(fields)
     .single()
 

@@ -477,7 +477,10 @@ function SettingsPage() {
     [profileData, username, removeAvatar, pendingAvatarPreview, avatarUrl],
   )
 
-  const displayName = getProfileDisplayName(previewProfile, { email: user?.email })
+  const displayName = getProfileDisplayName(previewProfile, {
+    email: user?.email,
+    allowEmailSeededDisplayName: true,
+  })
   const trimmedUsername = username.trim()
   const showUsernamePreviewMeta = Boolean(
     trimmedUsername && trimmedUsername.toLowerCase() !== displayName.toLowerCase(),
