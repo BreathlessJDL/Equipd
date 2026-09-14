@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import CanonicalEquipmentAutocomplete from '../CanonicalEquipmentAutocomplete'
 import { buildValuationHref } from '../../lib/valuationNavigation'
+import LinkedCopy from './LinkedCopy'
 import './MarketingLandingHero.css'
 
 function SearchIcon({ className = '' }) {
@@ -58,9 +59,7 @@ export default function MarketingLandingHero({
           {title}
         </h1>
 
-        {description ? (
-          <p className="marketing-landing-hero__lead">{description}</p>
-        ) : null}
+        <LinkedCopy value={description} className="marketing-landing-hero__lead" />
 
         <div className="marketing-landing-hero__actions">
           <Link to={primaryCta.to} className="buy-page__btn buy-page__btn--primary">

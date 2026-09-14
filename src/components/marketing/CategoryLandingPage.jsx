@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from '../BrandLogo'
-import ListingCard from '../ListingCard'
 import MarketingLandingHero from './MarketingLandingHero'
+import CategoryListingsSection from './CategoryListingsSection'
+import LinkedCopy from './LinkedCopy'
 import BreadcrumbSchema from '../seo/BreadcrumbSchema'
 import FaqPageSchema from '../seo/FaqPageSchema'
 import WebPageSchema from '../seo/WebPageSchema'
 import JsonLd from '../JsonLd'
-import { EmptyState, ErrorState, LoadingState } from '../ui/UiState'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { fetchBrandDirectory } from '../../lib/brandCatalogue'
 import { fetchActiveListings, fetchCategories } from '../../lib/listings'
+import { faqItemsForSchema } from '../../lib/linkedCopy.js'
+import { CATEGORY_LISTINGS_FETCH_LIMIT } from '../../lib/oneRowListingCapacity'
 import {
   buildCategoryLandingBreadcrumbSchema,
   buildCategoryLandingCollectionSchema,
@@ -22,7 +24,7 @@ import {
 import '../../pages/BuyUsedGymEquipmentPage.css'
 import '../../pages/CommercialGymEquipmentPage.css'
 
-const LISTINGS_LIMIT = 8
+const LISTINGS_LIMIT = CATEGORY_LISTINGS_FETCH_LIMIT
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -87,7 +89,7 @@ function FaqItem({ question, answer }) {
     <details className="buy-page__faq-item">
       <summary className="buy-page__faq-question">{question}</summary>
       <div className="buy-page__faq-answer-wrap">
-        <p className="buy-page__faq-answer">{answer}</p>
+        <LinkedCopy value={answer} className="buy-page__faq-answer" />
       </div>
     </details>
   )
@@ -122,7 +124,13 @@ export default function CategoryLandingPage({ content }) {
   const breadcrumbSchema = useMemo(() => buildCategoryLandingBreadcrumbSchema(content), [content])
   const webPageSchema = useMemo(() => buildCategoryLandingWebPageSchema(content), [content])
   const collectionSchema = useMemo(() => buildCategoryLandingCollectionSchema(content), [content])
-  const faqSchema = useMemo(() => buildCategoryLandingFaqSchema(content), [content])
+  const faqSchema = useMemo(
+    () => buildCategoryLandingFaqSchema({
+      ...content,
+      faqItems: faqItemsForSchema(content.faqItems || []),
+    }),
+    [content],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -209,58 +217,22 @@ export default function CategoryLandingPage({ content }) {
         className="commercial-page__listings-section"
         aria-labelledby={`${idPrefix}-listings-heading`}
       >
-        <div className="buy-page__visual-rail">
-          <div className="commercial-page__listings-header">
-            <header className="buy-page__intro">
-              <span className="buy-page__handwritten-note">{content.listingsNote}</span>
-              <h2 id={`${idPrefix}-listings-heading`} className="buy-page__h2">
-                {content.listingsHeading}
-              </h2>
-              <p className="buy-page__intro-lead">{content.listingsLead}</p>
-            </header>
-            <Link to={content.browsePath} className="buy-page__btn buy-page__btn--secondary">
-              {content.listingsCta}
-            </Link>
-          </div>
-
-          {listingsLoading && listings.length === 0 ? (
-            <LoadingState compact>{content.listingsLoadingLabel || 'Loading listings…'}</LoadingState>
-          ) : null}
-
-          {!listingsLoading && listingsError && listings.length === 0 ? (
-            <ErrorState compact>{listingsError}</ErrorState>
-          ) : null}
-
-          {!listingsLoading && !listingsError && listings.length === 0 ? (
-            <EmptyState compact>
-              <p className="commercial-page__listings-empty">
-                {content.listingsEmpty ||
-                  'No matching listings are live right now. Browse all equipment or check back soon.'}
-              </p>
-            </EmptyState>
-          ) : null}
-
-          {listings.length > 0 ? (
-            <div className="commercial-page__listing-grid">
-              {listings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  variant="home"
-                  showNewBadge
-                />
-              ))}
-            </div>
-          ) : null}
-
-          {listings.length > 0 ? (
-            <div className="commercial-page__listings-footer">
-              <Link to={content.browsePath} className="buy-page__btn buy-page__btn--primary">
-                {content.listingsCta}
-              </Link>
-            </div>
-          ) : null}
-        </div>
+        <CategoryListingsSection
+          headingId={`${idPrefix}-listings-heading`}
+          note={content.listingsNote}
+          heading={content.listingsHeading}
+          lead={<LinkedCopy value={content.listingsLead} className="buy-page__intro-lead" />}
+          browsePath={content.browsePath}
+          ctaLabel={content.listingsCta}
+          listings={listings}
+          loading={listingsLoading}
+          error={listingsError}
+          emptyMessage={
+            content.listingsEmpty ||
+            'No matching listings are live right now. Browse all equipment or check back soon.'
+          }
+          loadingLabel={content.listingsLoadingLabel || 'Loading listings…'}
+        />
       </section>
 
       <section
@@ -273,7 +245,7 @@ export default function CategoryLandingPage({ content }) {
             <h2 id={`${idPrefix}-categories-heading`} className="buy-page__h2">
               {content.categoryHeading}
             </h2>
-            <p className="buy-page__intro-lead">{content.categoryLead}</p>
+            <LinkedCopy value={content.categoryLead} className="buy-page__intro-lead" />
           </header>
           <ul className="commercial-page__category-grid">
             {(content.categories || []).map((category) => (
@@ -299,7 +271,7 @@ export default function CategoryLandingPage({ content }) {
             <h2 id={`${idPrefix}-brands-heading`} className="buy-page__h2">
               {content.brandHeading}
             </h2>
-            <p className="buy-page__intro-lead">{content.brandLead}</p>
+            <LinkedCopy value={content.brandLead} className="buy-page__intro-lead" />
           </header>
           <ul className="commercial-page__brand-grid">
             {brands.map((brand, index) => (
@@ -349,7 +321,7 @@ export default function CategoryLandingPage({ content }) {
               <h2 id={`${idPrefix}-valuation-heading`} className="buy-page__h2 buy-page__h2--optional">
                 {content.valuationHeading}
               </h2>
-              <p className="buy-page__optional-copy">{content.valuationCopy}</p>
+              <LinkedCopy value={content.valuationCopy} className="buy-page__optional-copy" />
               <div className="buy-page__optional-actions buy-page__optional-actions--row">
                 <Link to={content.secondaryCta.to} className="buy-page__btn buy-page__btn--primary">
                   Get a Free Valuation
@@ -371,7 +343,7 @@ export default function CategoryLandingPage({ content }) {
             <h2 id={`${idPrefix}-guide-heading`} className="buy-page__h2 buy-page__h2--guide">
               {content.guideHeading}
             </h2>
-            <p className="buy-page__guide-lede">{content.guideIntro}</p>
+            <LinkedCopy value={content.guideIntro} className="buy-page__guide-lede" />
             <div className="commercial-page__guide-sections">
               {(content.guideSections || []).map((section) => (
                 <section
@@ -385,8 +357,11 @@ export default function CategoryLandingPage({ content }) {
                   >
                     {section.heading}
                   </h3>
-                  {section.paragraphs.map((text) => (
-                    <p key={text.slice(0, 48)}>{text}</p>
+                  {section.paragraphs.map((text, paragraphIndex) => (
+                    <LinkedCopy
+                      key={`${section.id}-${paragraphIndex}`}
+                      value={text}
+                    />
                   ))}
                 </section>
               ))}
@@ -433,7 +408,7 @@ export default function CategoryLandingPage({ content }) {
             <h2 id={`${idPrefix}-explore-heading`} className="buy-page__h2">
               {content.exploreHeading}
             </h2>
-            <p className="buy-page__intro-lead">{content.exploreLead}</p>
+            <LinkedCopy value={content.exploreLead} className="buy-page__intro-lead" />
           </header>
           <ul className="commercial-page__explore-grid">
             {(content.exploreLinks || []).map((link) => (

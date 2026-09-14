@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo'
-import ListingCard from '../components/ListingCard'
 import MarketingLandingHero from '../components/marketing/MarketingLandingHero'
+import CategoryListingsSection from '../components/marketing/CategoryListingsSection'
+import LinkedCopy from '../components/marketing/LinkedCopy'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import FaqPageSchema from '../components/seo/FaqPageSchema'
 import WebPageSchema from '../components/seo/WebPageSchema'
 import JsonLd from '../components/JsonLd'
-import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { fetchBrandDirectory } from '../lib/brandCatalogue'
 import { fetchActiveListings } from '../lib/listings'
+import { CATEGORY_LISTINGS_FETCH_LIMIT } from '../lib/oneRowListingCapacity'
 import {
   HOME_BENEFITS,
   HOME_BENEFITS_HEADING,
@@ -64,7 +65,7 @@ import {
 import './BuyUsedGymEquipmentPage.css'
 import './CommercialGymEquipmentPage.css'
 
-const LISTINGS_LIMIT = 8
+const LISTINGS_LIMIT = CATEGORY_LISTINGS_FETCH_LIMIT
 
 function ValuationJourney() {
   return (
@@ -87,7 +88,7 @@ function FaqItem({ question, answer }) {
     <details className="buy-page__faq-item">
       <summary className="buy-page__faq-question">{question}</summary>
       <div className="buy-page__faq-answer-wrap">
-        <p className="buy-page__faq-answer">{answer}</p>
+        <LinkedCopy value={answer} className="buy-page__faq-answer" />
       </div>
     </details>
   )
@@ -181,60 +182,19 @@ export default function HomeGymEquipmentPage() {
         className="commercial-page__listings-section"
         aria-labelledby="home-listings-heading"
       >
-        <div className="buy-page__visual-rail">
-          <div className="commercial-page__listings-header">
-            <header className="buy-page__intro">
-              <span className="buy-page__handwritten-note">{HOME_LISTINGS_NOTE}</span>
-              <h2 id="home-listings-heading" className="buy-page__h2">
-                {HOME_LISTINGS_HEADING}
-              </h2>
-              <p className="buy-page__intro-lead">{HOME_LISTINGS_LEAD}</p>
-            </header>
-            <Link to={HOME_BROWSE_PATH} className="buy-page__btn buy-page__btn--secondary">
-              {HOME_LISTINGS_CTA}
-            </Link>
-          </div>
-
-          {listingsLoading && listings.length === 0 ? (
-            <LoadingState compact>Loading home listings…</LoadingState>
-          ) : null}
-
-          {!listingsLoading && listingsError && listings.length === 0 ? (
-            <ErrorState compact>{listingsError}</ErrorState>
-          ) : null}
-
-          {!listingsLoading && !listingsError && listings.length === 0 ? (
-            <EmptyState compact>
-              <p className="commercial-page__listings-empty">
-                No home-use listings are live right now. Browse all equipment or check back soon.
-              </p>
-            </EmptyState>
-          ) : null}
-
-          {listings.length > 0 ? (
-            <div className="commercial-page__listing-grid">
-              {listings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  variant="home"
-                  showNewBadge
-                />
-              ))}
-            </div>
-          ) : null}
-
-          {listings.length > 0 ? (
-            <div className="commercial-page__listings-footer">
-              <Link
-                to={HOME_BROWSE_PATH}
-                className="buy-page__btn buy-page__btn--primary"
-              >
-                {HOME_LISTINGS_CTA}
-              </Link>
-            </div>
-          ) : null}
-        </div>
+        <CategoryListingsSection
+          headingId="home-listings-heading"
+          note={HOME_LISTINGS_NOTE}
+          heading={HOME_LISTINGS_HEADING}
+          lead={<p className="buy-page__intro-lead">{HOME_LISTINGS_LEAD}</p>}
+          browsePath={HOME_BROWSE_PATH}
+          ctaLabel={HOME_LISTINGS_CTA}
+          listings={listings}
+          loading={listingsLoading}
+          error={listingsError}
+          emptyMessage="No home-use listings are live right now. Browse all equipment or check back soon."
+          loadingLabel="Loading home listings…"
+        />
       </section>
 
       <section
@@ -350,8 +310,8 @@ export default function HomeGymEquipmentPage() {
                   <h3 id={`home-guide-${section.id}`} className="commercial-page__guide-block-title">
                     {section.heading}
                   </h3>
-                  {section.paragraphs.map((text) => (
-                    <p key={text.slice(0, 48)}>{text}</p>
+                  {section.paragraphs.map((text, paragraphIndex) => (
+                    <LinkedCopy key={`${section.id}-${paragraphIndex}`} value={text} />
                   ))}
                 </section>
               ))}

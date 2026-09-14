@@ -82,3 +82,54 @@
     white-space: normal;
   }
 }
+
+/* Compact vertical rail card */
+.brand-value-research-card--rail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0.85rem;
+}
+
+.brand-value-research-card--rail .brand-value-research-card__media {
+  width: 100%;
+  height: 5.5rem;
+  border-radius: 0;
+  flex: 0 0 auto;
+}
+
+.brand-value-research-card--rail .brand-value-research-card__body {
+  padding: 0.65rem 0.75rem 0.2rem;
+  min-width: 0;
+}
+
+.brand-value-research-card--rail .brand-value-research-card__title {
+  font-size: 0.875rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.brand-value-research-card--rail .brand-value-research-card__meta {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.brand-value-research-card--rail .brand-value-research-card__cta {
+  padding: 0.45rem 0.75rem 0.7rem;
+  font-size: 0.75rem;
+  white-space: normal;
+}
+

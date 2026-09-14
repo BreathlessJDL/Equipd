@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo'
-import ListingCard from '../components/ListingCard'
 import MarketingLandingHero from '../components/marketing/MarketingLandingHero'
+import CategoryListingsSection from '../components/marketing/CategoryListingsSection'
+import LinkedCopy from '../components/marketing/LinkedCopy'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import FaqPageSchema from '../components/seo/FaqPageSchema'
 import WebPageSchema from '../components/seo/WebPageSchema'
 import JsonLd from '../components/JsonLd'
-import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { fetchBrandDirectory } from '../lib/brandCatalogue'
 import { fetchActiveListings, fetchCategories } from '../lib/listings'
+import { CATEGORY_LISTINGS_FETCH_LIMIT } from '../lib/oneRowListingCapacity'
 import {
   COMMERCIAL_CARDIO_BENEFITS,
   COMMERCIAL_CARDIO_BENEFITS_HEADING,
@@ -65,7 +66,7 @@ import {
 import './BuyUsedGymEquipmentPage.css'
 import './CommercialGymEquipmentPage.css'
 
-const LISTINGS_LIMIT = 8
+const LISTINGS_LIMIT = CATEGORY_LISTINGS_FETCH_LIMIT
 
 const CARDIO_SLUG_SET = new Set(COMMERCIAL_CARDIO_CATEGORY_SLUGS)
 
@@ -90,7 +91,7 @@ function FaqItem({ question, answer }) {
     <details className="buy-page__faq-item">
       <summary className="buy-page__faq-question">{question}</summary>
       <div className="buy-page__faq-answer-wrap">
-        <p className="buy-page__faq-answer">{answer}</p>
+        <LinkedCopy value={answer} className="buy-page__faq-answer" />
       </div>
     </details>
   )
@@ -201,59 +202,19 @@ export default function CommercialCardioEquipmentPage() {
         className="commercial-page__listings-section"
         aria-labelledby="commercial-cardio-listings-heading"
       >
-        <div className="buy-page__visual-rail">
-          <div className="commercial-page__listings-header">
-            <header className="buy-page__intro">
-              <span className="buy-page__handwritten-note">{COMMERCIAL_CARDIO_LISTINGS_NOTE}</span>
-              <h2 id="commercial-cardio-listings-heading" className="buy-page__h2">
-                {COMMERCIAL_CARDIO_LISTINGS_HEADING}
-              </h2>
-              <p className="buy-page__intro-lead">{COMMERCIAL_CARDIO_LISTINGS_LEAD}</p>
-            </header>
-            <Link
-              to={COMMERCIAL_CARDIO_BROWSE_PATH}
-              className="buy-page__btn buy-page__btn--secondary"
-            >
-              {COMMERCIAL_CARDIO_LISTINGS_CTA}
-            </Link>
-          </div>
-
-          {listingsLoading && listings.length === 0 ? (
-            <LoadingState compact>Loading commercial cardio listings…</LoadingState>
-          ) : null}
-
-          {!listingsLoading && listingsError && listings.length === 0 ? (
-            <ErrorState compact>{listingsError}</ErrorState>
-          ) : null}
-
-          {!listingsLoading && !listingsError && listings.length === 0 ? (
-            <EmptyState compact>
-              <p className="commercial-page__listings-empty">
-                No commercial cardio listings are live right now. Browse all commercial equipment or
-                check back soon.
-              </p>
-            </EmptyState>
-          ) : null}
-
-          {listings.length > 0 ? (
-            <div className="commercial-page__listing-grid">
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} variant="home" showNewBadge />
-              ))}
-            </div>
-          ) : null}
-
-          {listings.length > 0 ? (
-            <div className="commercial-page__listings-footer">
-              <Link
-                to={COMMERCIAL_CARDIO_BROWSE_PATH}
-                className="buy-page__btn buy-page__btn--primary"
-              >
-                {COMMERCIAL_CARDIO_LISTINGS_CTA}
-              </Link>
-            </div>
-          ) : null}
-        </div>
+        <CategoryListingsSection
+          headingId="commercial-cardio-listings-heading"
+          note={COMMERCIAL_CARDIO_LISTINGS_NOTE}
+          heading={COMMERCIAL_CARDIO_LISTINGS_HEADING}
+          lead={<p className="buy-page__intro-lead">{COMMERCIAL_CARDIO_LISTINGS_LEAD}</p>}
+          browsePath={COMMERCIAL_CARDIO_BROWSE_PATH}
+          ctaLabel={COMMERCIAL_CARDIO_LISTINGS_CTA}
+          listings={listings}
+          loading={listingsLoading}
+          error={listingsError}
+          emptyMessage="No commercial cardio listings are live right now. Browse all commercial equipment or check back soon."
+          loadingLabel="Loading commercial cardio listings…"
+        />
       </section>
 
       <section
@@ -384,8 +345,8 @@ export default function CommercialCardioEquipmentPage() {
                   >
                     {section.heading}
                   </h3>
-                  {section.paragraphs.map((text) => (
-                    <p key={text.slice(0, 48)}>{text}</p>
+                  {section.paragraphs.map((text, paragraphIndex) => (
+                    <LinkedCopy key={`${section.id}-${paragraphIndex}`} value={text} />
                   ))}
                 </section>
               ))}

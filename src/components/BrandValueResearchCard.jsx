@@ -17,10 +17,13 @@ function formatMoney(amount, currency = 'GBP') {
 /**
  * Compact brand-page entry into a model value guide.
  * Intentionally omits typical-value £ ranges — those belong on the model page.
+ *
+ * @param {'default' | 'rail'} [variant='default']
  */
 export default function BrandValueResearchCard({
   product,
   priority = false,
+  variant = 'default',
 }) {
   if (!product?.href) return null
 
@@ -31,11 +34,12 @@ export default function BrandValueResearchCard({
     product.yearLabel || null,
     rrpLabel ? `Original RRP ${rrpLabel}` : null,
   ].filter(Boolean)
+  const isRail = variant === 'rail'
 
   return (
     <Link
       to={product.href}
-      className="brand-value-research-card"
+      className={`brand-value-research-card${isRail ? ' brand-value-research-card--rail' : ''}`}
       aria-label={`View value guide for ${name}`}
     >
       <div className="brand-value-research-card__media">

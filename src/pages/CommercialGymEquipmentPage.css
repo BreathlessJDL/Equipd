@@ -167,16 +167,24 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/* Latest listings — lighter cards, left-aligned with section header          */
+/* Latest listings — intro grouped, then breathing room, one row, CTA below   */
 /* -------------------------------------------------------------------------- */
 
 .commercial-page__listings-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem 1.25rem;
-  margin-bottom: 1.15rem;
+  display: block;
+  margin-bottom: 1.375rem; /* 22px — mobile breathing room before cards */
+}
+
+@media (min-width: 768px) {
+  .commercial-page__listings-header {
+    margin-bottom: 1.75rem; /* 28px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .commercial-page__listings-header {
+    margin-bottom: 2rem; /* 32px — desktop target 28–36px */
+  }
 }
 
 .commercial-page__listings-header .buy-page__intro {
@@ -200,68 +208,74 @@
   text-align: left;
 }
 
-.commercial-page__listing-grid {
-  --listing-card-image-ratio: 3 / 2;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+/*
+ * One row of fixed-width marketplace cards (homepage card size).
+ * Count is capped in JS so a second row never appears.
+ * Selector beats shared .listing-card-grid wrapping rules.
+ */
+.commercial-page__listing-grid.listing-card-grid,
+.commercial-page__listing-grid--one-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--listing-card-grid-gap);
+  justify-content: start;
   width: 100%;
   max-width: none;
   margin-inline: 0;
+  overflow: hidden;
 }
 
-@media (min-width: 720px) {
-  .commercial-page__listing-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem;
+.commercial-page__listing-grid.listing-card-grid > .listing-card,
+.commercial-page__listing-grid--one-row > .listing-card {
+  flex: 0 0 var(--listing-card-width);
+  width: var(--listing-card-width);
+  max-width: var(--listing-card-width);
+  min-width: 0;
+}
+
+/* Width probe while listings are loading / empty */
+.commercial-page__listing-grid-measure {
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Mobile: one row of two equal cards (tap-friendly, no orphan second row). */
+@media (max-width: 639px) {
+  .commercial-page__listing-grid.listing-card-grid,
+  .commercial-page__listing-grid--one-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.875rem;
+    justify-content: stretch;
+    overflow: visible;
   }
-}
 
-@media (min-width: 1100px) {
-  .commercial-page__listing-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.7rem;
+  .commercial-page__listing-grid.listing-card-grid > .listing-card,
+  .commercial-page__listing-grid--one-row > .listing-card {
+    width: 100%;
+    max-width: none;
+    flex: unset;
   }
-}
-
-.commercial-page__listing-grid .listing-card {
-  --listing-card-radius: 0.7rem;
-  box-shadow: 0 1px 2px rgb(15 33 55 / 4%);
-}
-
-.commercial-page__listing-grid .listing-card__body {
-  gap: 0.18rem;
-  padding: 0.4rem 0.5rem 0.48rem;
-}
-
-.commercial-page__listing-grid .listing-card__title {
-  font-size: 0.8125rem;
-  min-height: calc(1.3em * 2);
-  max-height: calc(1.3em * 2);
-}
-
-.commercial-page__listing-grid .listing-card__price-stack.buyer-protection-price--compact
-  .buyer-protection-price__item--primary {
-  font-size: 0.9rem;
-}
-
-.commercial-page__listing-grid .listing-card__meta,
-.commercial-page__listing-grid .listing-card__location,
-.commercial-page__listing-grid .listing-card__availability {
-  font-size: 0.6875rem;
-}
-
-.commercial-page__listing-grid .listing-card__badge {
-  top: 0.45rem;
-  left: 0.45rem;
-  padding: 0.12rem 0.38rem;
-  font-size: 0.6rem;
 }
 
 .commercial-page__listings-footer {
   display: flex;
   justify-content: center;
-  margin-top: 0.95rem;
+  margin-top: 1.5rem; /* 24px — mobile */
+}
+
+@media (min-width: 768px) {
+  .commercial-page__listings-footer {
+    margin-top: 1.75rem; /* 28px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .commercial-page__listings-footer {
+    margin-top: 2rem; /* 32px — desktop target 28–36px */
+  }
 }
 
 .commercial-page__listings-empty {

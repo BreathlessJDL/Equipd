@@ -544,12 +544,86 @@
   padding-top: 0.15rem;
 }
 
-.brand-page__listings {
-  margin-top: 1rem;
+.brand-page__section-head--marketplace {
+  display: block;
+  margin-bottom: 1.5rem; /* 24px — breathing room before listing grid */
+}
+
+.brand-page__section-head--marketplace .brand-page__section-lede {
+  max-width: 42rem;
+}
+
+/*
+ * One-row marketplace preview (homepage card width).
+ * Mobile: 2 equal columns. Desktop/tablet: fixed --listing-card-width, no wrap.
+ * Visible count is capped in JS so a second desktop row never appears.
+ */
+.brand-page__listings.listing-card-grid,
+.brand-page__listings--one-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--listing-card-grid-gap);
+  justify-content: start;
+  width: 100%;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.brand-page__listings.listing-card-grid > .listing-card,
+.brand-page__listings--one-row > .listing-card {
+  flex: 0 0 var(--listing-card-width);
+  width: var(--listing-card-width);
+  max-width: var(--listing-card-width);
+  min-width: 0;
+}
+
+.brand-page__listing-grid-measure {
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.brand-page__listings-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem; /* 28px — between grid and View all CTA */
+}
+
+.brand-page__listings-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.25rem;
+  border: 1.5px solid var(--color-navy, #0f2137);
+  border-radius: 0.65rem;
+  background: #fff;
+  color: var(--color-navy, #0f2137);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.brand-page__listings-cta:hover {
+  background: color-mix(in srgb, var(--color-navy, #0f2137) 5%, #fff);
+  text-decoration: none;
+}
+
+.brand-page__listings-cta:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
 }
 
 .brand-page__marketplace-empty {
-  margin-top: 1rem;
+  margin-top: 0;
   padding: 1.15rem 1.25rem;
   border-radius: 0.9rem;
   background: color-mix(in srgb, var(--color-navy, #0f2137) 3.5%, #fff);
@@ -564,10 +638,15 @@
 }
 
 .brand-page__wanted-wrap {
-  margin-top: 1.15rem;
+  margin-top: 1.35rem;
 }
 
 /* ── Model discovery ────────────────────────────────────── */
+
+.brand-page__section-head--stack {
+  display: block;
+  margin-bottom: 0.85rem;
+}
 
 .brand-page__model-grid {
   display: grid;
@@ -580,11 +659,144 @@
   margin-top: 1.75rem;
 }
 
+.brand-page__model-group--rail + .brand-page__model-group--rail {
+  margin-top: 0.95rem;
+}
+
 .brand-page__model-group-title {
   margin: 0 0 0.15rem;
   font-size: 1.05rem;
   font-weight: 650;
   color: var(--color-navy, var(--color-text));
+}
+
+.brand-page__model-group--rail .brand-page__model-group-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Shared horizontal navigation rails */
+.brand-page__rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(9.75rem, 46vw);
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.1rem 0.15rem 0.45rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.brand-page__rail--models {
+  grid-auto-columns: minmax(9.5rem, 44vw);
+}
+
+.brand-page__rail--values {
+  grid-auto-columns: minmax(11.25rem, 68vw);
+  margin-top: 0.85rem;
+}
+
+.brand-page__rail-item {
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.brand-page__rail-item > a {
+  height: 100%;
+}
+
+.brand-page__rail-footer {
+  margin: 0.75rem 0 0;
+}
+
+.brand-page__values-search {
+  margin-top: 0.15rem;
+}
+
+.brand-page__values-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 28rem;
+  min-height: 2.65rem;
+  padding: 0.2rem 0.35rem 0.2rem 0.85rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.brand-page__values-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  outline: none;
+}
+
+.brand-page__values-search-input::placeholder {
+  color: color-mix(in srgb, var(--color-muted) 88%, transparent);
+}
+
+.brand-page__values-search-clear {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.brand-page__values-search-clear:hover,
+.brand-page__values-search-clear:focus-visible {
+  color: var(--color-navy);
+  background: #f3f5f7;
+}
+
+.brand-page__values-empty {
+  margin: 0.9rem 0 0;
+  padding: 0.95rem 1rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--color-navy, #0f2137) 3%, #fff);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+@media (min-width: 768px) {
+  .brand-page__rail--models {
+    grid-auto-columns: 10.75rem;
+  }
+
+  .brand-page__rail--values {
+    grid-auto-columns: 12.75rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .brand-page__rail--models {
+    grid-auto-columns: 11.25rem;
+  }
+
+  .brand-page__rail--values {
+    grid-auto-columns: 13.25rem;
+  }
 }
 
 /* ── Buying checkpoints ─────────────────────────────────── */
@@ -854,8 +1066,8 @@
 @media (max-width: 1100px) {
   .brand-page__hero {
     grid-template-columns: 1fr;
-    padding: 1.75rem 1.4rem;
-    gap: 1.35rem;
+    padding: 1.5rem 1.25rem;
+    gap: 1.2rem;
   }
 
   .brand-page__hero-main {
@@ -865,7 +1077,7 @@
 
   .brand-page__hero-aside {
     padding-left: 0;
-    padding-top: 1.15rem;
+    padding-top: 1.05rem;
     border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
   }
 
@@ -885,11 +1097,11 @@
 
 @media (max-width: 900px) {
   .brand-page__hero {
-    padding: 1.65rem 1.25rem;
+    padding: 1.35rem 1.15rem;
   }
 
   .brand-page__title {
-    font-size: 1.875rem;
+    font-size: clamp(1.45rem, 4.5vw, 1.7rem);
   }
 
   .brand-page__checkpoint-grid {
@@ -898,49 +1110,65 @@
 
   .brand-page__about-grid {
     grid-template-columns: 1fr;
-    gap: 2.75rem;
+    gap: 2rem;
+  }
+
+  .brand-page__section-head--marketplace {
+    margin-bottom: 1.5rem;
+  }
+
+  .brand-page__listings-footer {
+    margin-top: 1.5rem;
   }
 }
 
 @media (max-width: 767px) {
   .brand-page {
-    padding: 0.75rem 0.9rem 3.25rem;
+    --brand-section-gap: 2.35rem;
+    padding: 0.85rem 1rem 3rem; /* 12–16px side padding; clearer header → content gap */
   }
 
-  .brand-page__hero {
-    margin-bottom: 1.15rem;
-    padding: 1.25rem 1.1rem;
-    border-radius: var(--radius, 0.75rem);
-    gap: 1.1rem;
-  }
-
-  .brand-page__hero-logo-wrap {
-    width: min(100%, 10rem);
-    height: 3.5rem;
+  .brand-page .page-breadcrumbs {
     margin-bottom: 0.85rem;
   }
 
+  .brand-page__hero {
+    margin-top: 0.15rem;
+    margin-bottom: 1.25rem;
+    padding: 1.1rem 1rem;
+    border-radius: var(--radius, 0.75rem);
+    gap: 1rem;
+  }
+
+  .brand-page__hero-logo-wrap {
+    width: min(100%, 9.5rem);
+    height: 3.15rem;
+    margin-bottom: 0.7rem;
+  }
+
   .brand-page__hero-logo .brand-logo__text {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 
   .brand-page__title {
-    font-size: 1.7rem;
+    font-size: 1.45rem;
     max-width: none;
+    line-height: 1.2;
   }
 
   .brand-page__lede {
     font-size: 0.9rem;
-    margin-bottom: 0.95rem;
+    margin-bottom: 0.85rem;
     max-width: none;
+    line-height: 1.45;
   }
 
   .brand-page__search-panel {
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.65rem;
   }
 
   .brand-page__search-field {
-    min-height: 2.85rem;
+    min-height: 2.75rem;
   }
 
   .brand-page__search-input {
@@ -950,21 +1178,22 @@
   .brand-page__hero-links {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.45rem;
   }
 
   .brand-page__hero-aside {
-    padding-top: 1rem;
+    padding-top: 0.9rem;
   }
 
   .brand-page__hero-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
   }
 
   .brand-page__hero-stat {
     align-items: center;
     text-align: center;
-    padding: 0 0.45rem;
+    padding: 0 0.35rem;
   }
 
   .brand-page__hero-stat:first-child {
@@ -973,15 +1202,38 @@
 
   .brand-page__hero-stat-label {
     max-width: none;
+    font-size: 0.6875rem;
   }
 
   .brand-page__hero-stat-value {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 
   .brand-page__hero-context {
-    margin-top: 0.9rem;
-    padding-top: 0.85rem;
+    margin-top: 0.8rem;
+    padding-top: 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .brand-page__section-title {
+    font-size: 1.15rem;
+  }
+
+  .brand-page__section-lede {
+    font-size: 0.9rem;
+  }
+
+  .brand-page__section-head--marketplace {
+    margin-bottom: 1.5rem; /* 24px before listings */
+  }
+
+  .brand-page__listings-footer {
+    margin-top: 1.5rem; /* 24px */
+  }
+
+  .brand-page__listings-cta {
+    width: 100%;
+    max-width: 22rem;
   }
 
   .brand-page__series-row {
@@ -1005,15 +1257,35 @@
 
   .brand-page__value-grid,
   .brand-page__model-grid {
-    grid-template-columns: 1fr;
-    gap: 1.05rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
   }
 
   .brand-page__related {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 
   .brand-page__section-head .brand-page__section-link {
     white-space: normal;
+  }
+}
+
+/* Phones: 2-column marketplace grid (equal cards, consistent image height). */
+@media (max-width: 639px) {
+  .brand-page__listings.listing-card-grid,
+  .brand-page__listings--one-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem; /* 10px — within 8–12px target */
+    justify-content: stretch;
+    overflow: visible;
+  }
+
+  .brand-page__listings.listing-card-grid > .listing-card,
+  .brand-page__listings--one-row > .listing-card {
+    width: 100%;
+    max-width: none;
+    flex: unset;
   }
 }

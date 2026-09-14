@@ -11,6 +11,7 @@ import {
 } from './faqPageStructuredData.js'
 import { EQUIPD_ORGANIZATION_ID } from './siteStructuredData.js'
 import { BUY_USED_GYM_EQUIPMENT_OG_IMAGE } from './buyUsedGymEquipmentPage.js'
+import { faqItemsForSchema, linkedCopyToHtml } from './linkedCopy.js'
 
 export function buildFeaturedBrands(slugs = [], directoryBrands = []) {
   const bySlug = new Map((directoryBrands || []).map((brand) => [brand.slug, brand]))
@@ -41,7 +42,7 @@ function escapeHtml(value) {
 }
 
 function renderFaqSectionHtml(faqs = []) {
-  const { items } = normalizeFaqItems(faqs)
+  const { items } = normalizeFaqItems(faqItemsForSchema(faqs))
   if (!items.length) return ''
   return items
     .map(
@@ -146,7 +147,7 @@ export function buildCategoryLandingCollectionSchema(content) {
 }
 
 export function buildCategoryLandingFaqSchema(content) {
-  return buildFaqPageSchemaNode([...(content.faqItems || [])], {
+  return buildFaqPageSchemaNode(faqItemsForSchema([...(content.faqItems || [])]), {
     canonicalUrl: content.path,
   })
 }
@@ -181,7 +182,7 @@ export function buildCategoryLandingSeoDocument(content) {
   const guideSections = (content.guideSections || [])
     .map((section) => {
       const paragraphs = section.paragraphs
-        .map((text) => `<p>${escapeHtml(text)}</p>`)
+        .map((text) => `<p>${linkedCopyToHtml(text)}</p>`)
         .join('\n      ')
       return `<section aria-labelledby="seo-guide-${escapeHtml(section.id)}">
       <h3 id="seo-guide-${escapeHtml(section.id)}">${escapeHtml(section.heading)}</h3>
@@ -191,7 +192,7 @@ export function buildCategoryLandingSeoDocument(content) {
     .join('\n    ')
 
   const faqHtml = renderFaqSectionHtml(content.faqItems || [])
-  const { items: faqItems } = normalizeFaqItems([...(content.faqItems || [])])
+  const { items: faqItems } = normalizeFaqItems(faqItemsForSchema(content.faqItems || []))
   const prerenderId = content.prerenderId || content.path.replace(/^\//, '')
 
   const crumbTrail = (content.breadcrumbs || [{ name: content.h1, item: content.path }])
@@ -209,7 +210,7 @@ export function buildCategoryLandingSeoDocument(content) {
   <header>
     <p>${escapeHtml(content.eyebrow)}</p>
     <h1>${escapeHtml(content.h1)}</h1>
-    <p>${escapeHtml(content.lead)}</p>
+    <p>${linkedCopyToHtml(content.lead)}</p>
     <p>
       <a href="${escapeHtml(content.primaryCta.to)}">${escapeHtml(content.primaryCta.label)}</a>
       · <a href="${escapeHtml(content.secondaryCta.to)}">${escapeHtml(content.secondaryCta.label)}</a>
@@ -217,17 +218,17 @@ export function buildCategoryLandingSeoDocument(content) {
   </header>
   <section aria-labelledby="seo-listings-heading">
     <h2 id="seo-listings-heading">${escapeHtml(content.listingsHeading)}</h2>
-    <p>${escapeHtml(content.listingsLead)}</p>
+    <p>${linkedCopyToHtml(content.listingsLead)}</p>
     <p><a href="${escapeHtml(content.browsePath)}">${escapeHtml(content.listingsCta)}</a></p>
   </section>
   <section aria-labelledby="seo-categories-heading">
     <h2 id="seo-categories-heading">${escapeHtml(content.categoryHeading)}</h2>
-    <p>${escapeHtml(content.categoryLead)}</p>
+    <p>${linkedCopyToHtml(content.categoryLead)}</p>
     <ul>${categoryLinks}</ul>
   </section>
   <section aria-labelledby="seo-brands-heading">
     <h2 id="seo-brands-heading">${escapeHtml(content.brandHeading)}</h2>
-    <p>${escapeHtml(content.brandLead)}</p>
+    <p>${linkedCopyToHtml(content.brandLead)}</p>
     <ul>${brandLinks}</ul>
   </section>
   <section aria-labelledby="seo-benefits-heading">
@@ -236,13 +237,13 @@ export function buildCategoryLandingSeoDocument(content) {
   </section>
   <section aria-labelledby="seo-valuation-heading">
     <h2 id="seo-valuation-heading">${escapeHtml(content.valuationHeading)}</h2>
-    <p>${escapeHtml(content.valuationCopy)}</p>
+    <p>${linkedCopyToHtml(content.valuationCopy)}</p>
     <p><a href="${escapeHtml(content.secondaryCta.to)}">Get a free valuation</a></p>
   </section>
   <section aria-labelledby="seo-guide-heading">
     <p>${escapeHtml(content.guideNote)}</p>
     <h2 id="seo-guide-heading">${escapeHtml(content.guideHeading)}</h2>
-    <p>${escapeHtml(content.guideIntro)}</p>
+    <p>${linkedCopyToHtml(content.guideIntro)}</p>
     ${guideSections}
   </section>
   <section aria-labelledby="seo-faq-heading">

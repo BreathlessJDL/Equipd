@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo'
 import BrandModelCard from '../components/BrandModelCard'
@@ -10,6 +10,7 @@ import { BrandWantedRequestCard } from '../components/wanted/WantedRequestSurfac
 import PageBreadcrumbs from '../components/PageBreadcrumbs'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { useOneRowListingCapacity } from '../hooks/useOneRowListingCapacity'
 import {
   buildBrandPageJsonLd,
   buildBrandPageMetaDescription,
@@ -34,6 +35,7 @@ import {
   FEATURED_SERIES_LIMIT,
 } from '../lib/brandPageCurated'
 import { buildBrandPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
+import { BRAND_LISTINGS_FETCH_LIMIT } from '../lib/oneRowListingCapacity'
 import './BrandPage.css'
 
 const PAGE_SIZE = 24
@@ -52,7 +54,13 @@ function BrandMarketplaceSection({
   listings,
   buyerConfig,
 }) {
+  const gridRef = useRef(null)
   const hasListings = listings.length > 0
+  const capacity = useOneRowListingCapacity(gridRef, {
+    enabled: true,
+    capacityOptions: { mobileCapacity: 4 },
+  })
+  const visibleListings = hasListings ? listings.slice(0, capacity) : []
   const heading = hasListings
     ? (buyerConfig?.marketplaceHeading || 'Currently for sale')
     : (buyerConfig?.marketplaceHeadingEmpty || `Looking for used ${brand.displayName} equipment?`)
@@ -63,26 +71,30 @@ function BrandMarketplaceSection({
       + 'or request what you need — new stock appears on Equipd as sellers list it.'
     ))
   const headingId = hasListings ? 'brand-listings-title' : 'brand-listings-empty-title'
+  const ctaLabel = hasListings
+    ? `View all ${brand.displayName} listings`
+    : `Browse ${brand.displayName}`
 
   return (
     <section
       className={`brand-page__section brand-page__section--marketplace${hasListings ? '' : ' brand-page__section--marketplace-empty'}`}
       aria-labelledby={headingId}
     >
-      <div className="brand-page__section-head">
+      <div className="brand-page__section-head brand-page__section-head--marketplace">
         <div className="brand-page__section-head-copy">
           <h2 id={headingId} className="brand-page__section-title">
             {heading}
           </h2>
           <p className="brand-page__section-lede">{lede}</p>
         </div>
-        <Link to={brand.browseListingsHref} className="brand-page__section-link">
-          {hasListings ? 'View all listings →' : `Browse ${brand.displayName} →`}
-        </Link>
       </div>
+
       {hasListings ? (
-        <div className="brand-page__listings listing-card-grid">
-          {listings.slice(0, 6).map((listing, index) => (
+        <div
+          ref={gridRef}
+          className="brand-page__listings listing-card-grid brand-page__listings--one-row"
+        >
+          {visibleListings.map((listing, index) => (
             <ListingCard
               key={listing.id}
               listing={listing}
@@ -92,13 +104,27 @@ function BrandMarketplaceSection({
           ))}
         </div>
       ) : (
-        <div className="brand-page__marketplace-empty">
-          <p className="brand-page__marketplace-empty-actions">
-            Request the equipment you need, or browse related {brand.displayName} results while new
-            listings arrive.
-          </p>
-        </div>
+        <>
+          <div
+            ref={gridRef}
+            className="brand-page__listing-grid-measure"
+            aria-hidden="true"
+          />
+          <div className="brand-page__marketplace-empty">
+            <p className="brand-page__marketplace-empty-actions">
+              Request the equipment you need, or browse related {brand.displayName} results while new
+              listings arrive.
+            </p>
+          </div>
+        </>
       )}
+
+      <div className="brand-page__listings-footer">
+        <Link to={brand.browseListingsHref} className="brand-page__listings-cta">
+          {ctaLabel}
+        </Link>
+      </div>
+
       <div className="brand-page__wanted-wrap">
         <BrandWantedRequestCard brandName={brand.displayName} />
       </div>
@@ -121,6 +147,8 @@ export default function BrandPage() {
   const [showAllSeries, setShowAllSeries] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState(0)
+  const [valuesSearch, setValuesSearch] = useState('')
+  const valuesSearchId = useId()
 
   useEffect(() => {
     let cancelled = false
@@ -134,7 +162,10 @@ export default function BrandPage() {
       setShowAllModels(false)
       setShowAllSeries(false)
       setOpenFaqIndex(0)
-      const result = await fetchBrandPageData(brandSlug)
+      setValuesSearch('')
+      const result = await fetchBrandPageData(brandSlug, {
+        listingLimit: BRAND_LISTINGS_FETCH_LIMIT,
+      })
       if (cancelled) return
       if (result.error && !result.brand) {
         setError(result.error.message || 'Unable to load brand.')
@@ -210,6 +241,26 @@ export default function BrandPage() {
     const configured = configuredModelGroups.flatMap((group) => group.items.map((item) => item.product))
     return configured.length ? configured : selectPopularBrandProducts(allProducts, { listings })
   }, [buyerIntent, configuredModelGroups, allProducts, listings])
+
+  const filteredValueResearchProducts = useMemo(() => {
+    const query = valuesSearch.trim().toLowerCase()
+    if (!query) return valueResearchProducts
+    return valueResearchProducts.filter((product) => {
+      const haystack = [
+        product.displayName,
+        product.canonicalProductKey,
+        product.canonical_product_key,
+        product.series,
+        product.equipmentType,
+        product.yearLabel,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [valueResearchProducts, valuesSearch])
+
   const featuredSeries = useMemo(
     () => selectFeaturedBrandSeries(series),
     [series],
@@ -431,8 +482,8 @@ export default function BrandPage() {
   ) : null
 
   const valuesResearchSection = buyerIntent && valueResearchProducts.length ? (
-    <section className="brand-page__section" aria-labelledby="brand-popular-title">
-      <div className="brand-page__section-head">
+    <section className="brand-page__section brand-page__section--values-rail" aria-labelledby="brand-popular-title">
+      <div className="brand-page__section-head brand-page__section-head--stack">
         <div className="brand-page__section-head-copy">
           <h2 id="brand-popular-title" className="brand-page__section-title">
             {buyerConfig?.valuesHeading || `Research ${brand.displayName} equipment values`}
@@ -444,6 +495,62 @@ export default function BrandPage() {
             )}
           </p>
         </div>
+      </div>
+
+      <div className="brand-page__values-search">
+        <label className="visually-hidden" htmlFor={valuesSearchId}>
+          {`Search ${brand.displayName} models`}
+        </label>
+        <div className="brand-page__values-search-field">
+          <input
+            id={valuesSearchId}
+            type="search"
+            className="brand-page__values-search-input"
+            placeholder={`Search ${brand.displayName} models…`}
+            value={valuesSearch}
+            onChange={(event) => setValuesSearch(event.target.value)}
+            autoComplete="off"
+            enterKeyHint="search"
+          />
+          {valuesSearch.trim() ? (
+            <button
+              type="button"
+              className="brand-page__values-search-clear"
+              onClick={() => setValuesSearch('')}
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {filteredValueResearchProducts.length > 0 ? (
+        <div
+          className="brand-page__rail brand-page__rail--values"
+          role="list"
+          aria-label={`${brand.displayName} model value guides`}
+        >
+          {filteredValueResearchProducts.map((product, index) => (
+            <div
+              key={product.id || product.canonicalProductKey}
+              className="brand-page__rail-item"
+              role="listitem"
+            >
+              <BrandValueResearchCard
+                product={product}
+                priority={index < 3}
+                variant="rail"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="brand-page__values-empty" role="status">
+          {`No matching ${brand.displayName} models found.`}
+        </p>
+      )}
+
+      <p className="brand-page__rail-footer">
         <Link
           to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
           className="brand-page__section-link"
@@ -454,22 +561,13 @@ export default function BrandPage() {
         >
           View all models →
         </Link>
-      </div>
-      <div className="brand-page__value-research-list">
-        {valueResearchProducts.map((product, index) => (
-          <BrandValueResearchCard
-            key={product.id || product.canonicalProductKey}
-            product={product}
-            priority={index < 2}
-          />
-        ))}
-      </div>
+      </p>
     </section>
   ) : null
 
   const modelsSection = buyerIntent && configuredModelGroups.length ? (
-    <section className="brand-page__section" aria-labelledby="brand-models-title">
-      <div className="brand-page__section-head">
+    <section className="brand-page__section brand-page__section--models-rail" aria-labelledby="brand-models-title">
+      <div className="brand-page__section-head brand-page__section-head--stack">
         <div className="brand-page__section-head-copy">
           <h2 id="brand-models-title" className="brand-page__section-title">
             {buyerConfig.modelsHeading || `Explore ${brand.displayName} equipment`}
@@ -478,6 +576,35 @@ export default function BrandPage() {
             <p className="brand-page__section-lede">{buyerConfig.modelsLede}</p>
           ) : null}
         </div>
+      </div>
+      {configuredModelGroups.map((group) => (
+        <div key={group.id} className="brand-page__model-group brand-page__model-group--rail">
+          {group.title ? (
+            <h3 className="brand-page__model-group-title">{group.title}</h3>
+          ) : null}
+          <div
+            className="brand-page__rail brand-page__rail--models"
+            role="list"
+            aria-label={group.title || `${brand.displayName} equipment`}
+          >
+            {group.items.map(({ product, blurb }, index) => (
+              <div
+                key={product.id || product.canonicalProductKey}
+                className="brand-page__rail-item"
+                role="listitem"
+              >
+                <BrandModelCard
+                  product={product}
+                  blurb={blurb}
+                  priority={index < 3}
+                  variant="rail"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <p className="brand-page__rail-footer">
         <Link
           to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
           className="brand-page__section-link"
@@ -488,24 +615,7 @@ export default function BrandPage() {
         >
           View all models →
         </Link>
-      </div>
-      {configuredModelGroups.map((group) => (
-        <div key={group.id} className="brand-page__model-group">
-          {group.title ? (
-            <h3 className="brand-page__model-group-title">{group.title}</h3>
-          ) : null}
-          <div className="brand-page__model-grid">
-            {group.items.map(({ product, blurb }, index) => (
-              <BrandModelCard
-                key={product.id || product.canonicalProductKey}
-                product={product}
-                blurb={blurb}
-                priority={index < 3}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+      </p>
     </section>
   ) : null
 

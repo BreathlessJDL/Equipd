@@ -115,3 +115,50 @@
     height: 9.5rem;
   }
 }
+
+/* Compact horizontal-rail variant — navigation strip, not gallery */
+.brand-model-card--rail {
+  width: 100%;
+  height: auto;
+  border-radius: 0.85rem;
+}
+
+.brand-model-card--rail:hover {
+  transform: none;
+}
+
+.brand-model-card--rail .brand-model-card__media {
+  flex: 0 0 5.75rem;
+  height: 5.75rem;
+  padding: 0.65rem 0.7rem;
+}
+
+.brand-model-card--rail .brand-model-card__body {
+  padding: 0.65rem 0.75rem 0.75rem;
+  gap: 0.15rem;
+}
+
+.brand-model-card--rail .brand-model-card__type {
+  margin: 0 0 0.15rem;
+  font-size: 0.65rem;
+}
+
+.brand-model-card--rail .brand-model-card__title {
+  font-size: 0.875rem;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-height: calc(1.3em * 2);
+}
+
+.brand-model-card--rail .brand-model-card__cta {
+  margin-top: 0.45rem;
+  font-size: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .brand-model-card--rail .brand-model-card__media {
+    flex-basis: 6.25rem;
+    height: 6.25rem;
+  }
+}
+

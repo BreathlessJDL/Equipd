@@ -324,8 +324,20 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, var(--listing-card-width-min)), var(--listing-card-width))
+  );
+  gap: var(--listing-card-grid-gap);
+  justify-content: start;
+}
+
+@media (max-width: 639px) {
+  .equipment-model-page__marketplace-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.875rem;
+    justify-content: stretch;
+  }
 }
 
 .equipment-model-page__marketplace-browse {

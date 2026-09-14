@@ -147,7 +147,9 @@ function SignupForm({
           <h2 className="auth-form__heading" id={`${idPrefix}-heading`}>
             Sign up
           </h2>
-          <p className="auth-form__lead">Create an Equipd account to sell and manage listings.</p>
+          <p className="auth-form__lead">
+            Join Equipd to buy and sell used gym equipment across the UK.
+          </p>
         </>
       ) : null}
 
