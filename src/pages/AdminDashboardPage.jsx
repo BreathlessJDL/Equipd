@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { fetchAdminUserStatistics } from '../lib/admin'
+import { fetchAdminMarketplaceActivityStatistics } from '../lib/adminUserActivity'
 import { ADMIN_HUB_TOOLS } from '../lib/adminNav'
 import {
   formatAdminJoinedAt,
   formatAdminSignupName,
 } from '../lib/adminUserStatistics'
+import { formatOfferStatus } from '../lib/offers'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './AdminIntelligencePage.css'
 import './AdminDashboard.css'
@@ -22,14 +24,21 @@ const USER_STAT_CARDS = [
 function AdminDashboardPage() {
   usePageTitle('Equipd Admin')
   const [stats, setStats] = useState(null)
+  const [activity, setActivity] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activityLoading, setActivityLoading] = useState(true)
   const [error, setError] = useState('')
+  const [activityError, setActivityError] = useState('')
 
   useEffect(() => {
     let active = true
 
     async function loadStats() {
-      const { data, error: fetchError } = await fetchAdminUserStatistics()
+      const [{ data, error: fetchError }, { data: activityData, error: activityFetchError }] =
+        await Promise.all([
+          fetchAdminUserStatistics(),
+          fetchAdminMarketplaceActivityStatistics(),
+        ])
       if (!active) return
 
       if (fetchError) {
@@ -40,7 +49,18 @@ function AdminDashboardPage() {
         setError('')
         setStats(data)
       }
+
+      if (activityFetchError) {
+        console.error('[admin-marketplace-activity] failed to load activity statistics')
+        setActivityError('Unable to load marketplace activity.')
+        setActivity(null)
+      } else {
+        setActivityError('')
+        setActivity(activityData)
+      }
+
       setLoading(false)
+      setActivityLoading(false)
     }
 
     loadStats()
@@ -92,7 +112,15 @@ function AdminDashboardPage() {
                     <tbody>
                       {stats.latestSignups.map((signup) => (
                         <tr key={signup.id ?? `${signup.username}-${signup.createdAt}`}>
-                          <td>{formatAdminSignupName(signup)}</td>
+                          <td>
+                            {signup.id ? (
+                              <Link to={`/admin/users/${signup.id}`}>
+                                {formatAdminSignupName(signup)}
+                              </Link>
+                            ) : (
+                              formatAdminSignupName(signup)
+                            )}
+                          </td>
                           <td className="admin-dashboard__email">{signup.email || '—'}</td>
                           <td>{formatAdminJoinedAt(signup.createdAt)}</td>
                         </tr>
@@ -103,6 +131,54 @@ function AdminDashboardPage() {
               )}
             </div>
           </>
+        ) : null}
+      </section>
+
+      <section
+        className="admin-intelligence__panel"
+        aria-labelledby="admin-marketplace-activity-heading"
+      >
+        <h2 id="admin-marketplace-activity-heading" className="admin-intelligence__panel-title">
+          Marketplace activity
+        </h2>
+        <p className="admin-dashboard__activity-lead">
+          Liquidity signals across saves, offers, and conversations.
+        </p>
+
+        {activityLoading ? (
+          <LoadingState compact>Loading marketplace activity…</LoadingState>
+        ) : null}
+        {activityError ? <ErrorState compact>{activityError}</ErrorState> : null}
+
+        {!activityLoading && !activityError && activity ? (
+          <div className="admin-dashboard__activity-grid" aria-label="Marketplace activity">
+            <div className="admin-intelligence__stat">
+              <span>Saved listings</span>
+              <strong>{activity.savedListings.total}</strong>
+              <em>+{activity.savedListings.last7Days} last 7 days</em>
+            </div>
+            <div className="admin-intelligence__stat">
+              <span>Offers</span>
+              <strong>{activity.offers.total}</strong>
+              <em>
+                {activity.offers.pending} pending · {activity.offers.accepted} accepted · +
+                {activity.offers.last7Days} last 7 days
+              </em>
+              <ul className="admin-dashboard__offer-status">
+                {activity.offers.byStatus.map((row) => (
+                  <li key={row.status}>
+                    <span>{formatOfferStatus(row.status)}</span>
+                    <strong>{row.count}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="admin-intelligence__stat">
+              <span>Conversations</span>
+              <strong>{activity.conversations.total}</strong>
+              <em>+{activity.conversations.last7Days} last 7 days</em>
+            </div>
+          </div>
         ) : null}
       </section>
 

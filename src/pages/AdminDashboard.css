@@ -66,3 +66,42 @@
   color: var(--color-primary);
 }
 
+.admin-dashboard__activity-lead {
+  margin: 0 0 0.85rem;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+.admin-dashboard__activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-dashboard__activity-grid .admin-intelligence__stat {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+}
+
+.admin-dashboard__activity-grid .admin-intelligence__stat em {
+  font-style: normal;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.admin-dashboard__offer-status {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-dashboard__offer-status li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+

@@ -9,6 +9,7 @@ import {
 } from '../lib/adminImpersonation'
 import { suspendUser, unsuspendUser } from '../lib/adminModeration'
 import { formatAdminJoinedAt, formatAdminSignupName } from '../lib/adminUserStatistics'
+import { formatAdminActivityClass } from '../lib/adminMarketplaceActivity'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './AdminIntelligencePage.css'
 import './AdminUsersPage.css'
@@ -140,8 +141,8 @@ function AdminUsersPage() {
       <header className="admin-intelligence__header">
         <h1 className="admin-intelligence__title">Users</h1>
         <p className="admin-intelligence__lead">
-          Search Equipd accounts and log in as a user for support. Impersonation is audited and
-          expires after 60 minutes.
+          Search Equipd accounts, review marketplace activity, and log in as a user for support.
+          Impersonation is audited and expires after 60 minutes.
         </p>
       </header>
 
@@ -179,12 +180,13 @@ function AdminUsersPage() {
             <table className="admin-dashboard__table admin-users__table">
               <thead>
                 <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Username</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Signed up</th>
+                  <th scope="col">User</th>
                   <th scope="col">Listings</th>
-                  <th scope="col">Role</th>
+                  <th scope="col">Saved</th>
+                  <th scope="col">Offers made</th>
+                  <th scope="col">Offers received</th>
+                  <th scope="col">Conversations</th>
+                  <th scope="col">Activity</th>
                   <th scope="col">Status</th>
                   <th scope="col">Actions</th>
                 </tr>
@@ -198,17 +200,43 @@ function AdminUsersPage() {
                   const isAdmin = row.isAdmin === true
                   const isSuspended = row.isSuspended === true
                   const isOfficial = row.isOfficialEquipd === true
+                  const activityClass = row.activityClass || 'none'
                   return (
                     <tr key={row.id}>
-                      <td data-label="Name">{name}</td>
-                      <td data-label="Username">{row.username || '—'}</td>
-                      <td data-label="Email" className="admin-dashboard__email">
-                        {row.email || '—'}
+                      <td data-label="User">
+                        <div>
+                          <Link
+                            className="admin-users__link admin-users__view-link"
+                            to={`/admin/users/${row.id}`}
+                          >
+                            {row.username || name}
+                          </Link>
+                        </div>
+                        <div className="admin-dashboard__email">{row.email || '—'}</div>
+                        <div className="admin-users__meta">
+                          {formatAdminJoinedAt(row.createdAt)}
+                          {isOfficial ? ' · Official' : isAdmin ? ' · Admin' : ''}
+                        </div>
                       </td>
-                      <td data-label="Signed up">{formatAdminJoinedAt(row.createdAt)}</td>
-                      <td data-label="Listings">{row.listingCount ?? 0}</td>
-                      <td data-label="Role">
-                        {isOfficial ? 'Official Equipd' : isAdmin ? 'Admin' : 'User'}
+                      <td data-label="Listings" className="admin-users__metric-cell">
+                        {row.listingCount ?? 0}
+                      </td>
+                      <td data-label="Saved" className="admin-users__metric-cell">
+                        {row.savedCount ?? 0}
+                      </td>
+                      <td data-label="Offers made" className="admin-users__metric-cell">
+                        {row.offersMadeCount ?? 0}
+                      </td>
+                      <td data-label="Offers received" className="admin-users__metric-cell">
+                        {row.offersReceivedCount ?? 0}
+                      </td>
+                      <td data-label="Conversations" className="admin-users__metric-cell">
+                        {row.conversationCount ?? 0}
+                      </td>
+                      <td data-label="Activity">
+                        <span className={`admin-users__activity admin-users__activity--${activityClass}`}>
+                          {formatAdminActivityClass(activityClass)}
+                        </span>
                       </td>
                       <td data-label="Status">
                         {isSuspended ? (
@@ -221,6 +249,12 @@ function AdminUsersPage() {
                       </td>
                       <td data-label="Actions">
                         <div className="admin-users__actions">
+                          <Link
+                            className="admin-users__link"
+                            to={`/admin/users/${row.id}`}
+                          >
+                            Activity
+                          </Link>
                           <Link className="admin-users__link" to={`/admin/trust-safety`}>
                             Investigate
                           </Link>

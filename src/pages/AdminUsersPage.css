@@ -189,7 +189,37 @@
   font-size: 0.92rem;
 }
 
-@media (max-width: 720px) {
+.admin-users__metric-cell {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.admin-users__activity {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.admin-users__activity--buyer_seller,
+.admin-users__activity--buyer {
+  color: var(--color-navy);
+  font-weight: 600;
+}
+
+.admin-users__activity--seller {
+  color: var(--color-navy);
+}
+
+.admin-users__view-link {
+  font-weight: 700;
+}
+
+.admin-users__meta {
+  color: var(--color-muted);
+  font-size: 0.85em;
+}
+
+@media (max-width: 900px) {
   .admin-users__table thead {
     display: none;
   }
@@ -209,15 +239,20 @@
 
   .admin-users__table td {
     display: grid;
-    grid-template-columns: 7rem 1fr;
+    grid-template-columns: 8rem 1fr;
     gap: 0.35rem;
     padding: 0.25rem 0;
     border: 0;
+    text-align: left;
   }
 
   .admin-users__table td::before {
     content: attr(data-label);
     font-weight: 700;
     color: var(--color-navy);
+  }
+
+  .admin-users__metric-cell {
+    text-align: left;
   }
 }

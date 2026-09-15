@@ -1,0 +1,147 @@
+.admin-user-detail__back {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.admin-user-detail__back a {
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-user-detail__back a:hover {
+  text-decoration: underline;
+}
+
+.admin-user-detail__profile {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+}
+
+.admin-user-detail__profile dt {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.admin-user-detail__profile dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  color: var(--color-navy);
+  word-break: break-word;
+}
+
+.admin-user-detail__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.admin-user-detail__metric {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  border-radius: 0.45rem;
+  background: #fff;
+}
+
+.admin-user-detail__metric dt {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.admin-user-detail__metric dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 750;
+  color: var(--color-navy);
+}
+
+.admin-user-detail__offer-summaries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.admin-user-detail__breakdown {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  border-radius: 0.45rem;
+}
+
+.admin-user-detail__subheading {
+  margin: 1.1rem 0 0.55rem;
+  font-size: 1rem;
+  color: var(--color-navy);
+}
+
+.admin-user-detail__total {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.admin-user-detail__status-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-user-detail__status-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.admin-user-detail__status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.25rem;
+  background: #eef2f6;
+  color: var(--color-navy);
+}
+
+.admin-user-detail__status--pending {
+  background: #fff4e5;
+  color: #9a6700;
+}
+
+.admin-user-detail__status--accepted {
+  background: #e7f6ed;
+  color: #0f6b3a;
+}
+
+.admin-user-detail__status--rejected,
+.admin-user-detail__status--cancelledn,
+.admin-user-detail__status--cancelledled {
+  background: #fde8e8;
+  color: #9b2c2c;
+}
+
+.admin-user-detail__status--countered {
+  background: #e8eefc;
+  color: #1d4f91;
+}
+
+.admin-user-detail__muted {
+  color: var(--color-muted);
+  font-size: 0.85em;
+}
+
+.admin-user-detail__table {
+  margin-bottom: 0.5rem;
+}
