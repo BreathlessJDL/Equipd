@@ -66,6 +66,10 @@ export function isPaymentOutstanding(payment) {
   ].includes(payment.status)
 }
 
+export function isAcceptedOfferAwaitingPayment(offer) {
+  return isPaymentOutstanding(offer?.payment)
+}
+
 export function isPaymentExpired(payment) {
   if (!payment?.expires_at) return false
 

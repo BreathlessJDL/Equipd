@@ -19,6 +19,7 @@ import {
 } from '../lib/collectionQr'
 import { fetchOrderById } from '../lib/orders'
 import { getListingPrimaryImageUrl } from '../lib/listingImages'
+import ListingPhoto from '../components/ListingPhoto'
 import {
   uploadSupportEvidenceFile,
   validateIssueEvidenceFile,
@@ -62,10 +63,11 @@ function CollectOrderSummaryCard({ preview, orderDetails }) {
       <div className="collect-order-page__summary-top">
         <div className="collect-order-page__thumb-wrap">
           {thumbnailUrl ? (
-            <img
-              src={thumbnailUrl}
+            <ListingPhoto
+              url={thumbnailUrl}
               alt=""
               className="collect-order-page__thumb"
+              priority
             />
           ) : (
             <div className="collect-order-page__thumb collect-order-page__thumb--empty" aria-hidden="true" />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import AdminConversationThread from '../components/admin/AdminConversationThread'
+import ListingPhoto from '../components/ListingPhoto'
 import UserAvatar from '../components/UserAvatar'
 import { getAdminErrorMessage } from '../lib/admin'
 import {
@@ -127,7 +128,7 @@ function AdminConversationPage() {
               <p className="admin-messages__card-label">Listing</p>
               <div className="admin-messages__listing-block">
                 <div className="admin-messages__listing-thumb" aria-hidden="true">
-                  {listingImage ? <img src={listingImage} alt="" /> : null}
+                  {listingImage ? <ListingPhoto url={listingImage} alt="" /> : null}
                 </div>
                 <div>
                   {listingPath ? (

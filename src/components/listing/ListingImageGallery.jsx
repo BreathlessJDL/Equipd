@@ -1,4 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import ListingPhoto from '../ListingPhoto'
+import {
+  LISTING_GALLERY_MAIN_QUALITY,
+  LISTING_GALLERY_MAIN_SIZES,
+  LISTING_GALLERY_MAIN_WIDTHS,
+  LISTING_GALLERY_THUMB_SIZES,
+  LISTING_GALLERY_THUMB_WIDTHS,
+} from '../../lib/listingImageTransforms'
 import './ListingImageGallery.css'
 
 const SWIPE_THRESHOLD_PX = 40
@@ -135,16 +143,16 @@ function ListingImageGallery({
                 }`}
                 onClick={() => setSelectedIndex(index)}
               >
-                <img
-                  src={image.url}
+                <ListingPhoto
+                  url={image.url}
                   alt={
                     images.length > 1
                       ? `${thumbAltBase} — photo ${index + 1}`
                       : thumbAltBase
                   }
                   className="listing-gallery__thumb-image"
-                  loading="lazy"
-                  decoding="async"
+                  widths={LISTING_GALLERY_THUMB_WIDTHS}
+                  sizes={LISTING_GALLERY_THUMB_SIZES}
                   draggable={false}
                 />
               </button>
@@ -162,13 +170,15 @@ function ListingImageGallery({
 
           {hasImages ? (
             <>
-              <img
-                src={currentImage.url}
+              <ListingPhoto
+                url={currentImage.url}
                 alt={mainAlt}
                 className="listing-gallery__main-image"
+                widths={LISTING_GALLERY_MAIN_WIDTHS}
+                sizes={LISTING_GALLERY_MAIN_SIZES}
+                quality={LISTING_GALLERY_MAIN_QUALITY}
+                priority={safeIndex === 0}
                 loading={safeIndex === 0 ? 'eager' : 'lazy'}
-                fetchPriority={safeIndex === 0 ? 'high' : 'auto'}
-                decoding="async"
                 draggable={false}
               />
               {hasMultiple ? (

@@ -8,6 +8,7 @@ import { SELL_GYM_EQUIPMENT_PATH, VALUATION_PATH, BRANDS_PATH } from './sellGymE
 import { BUY_USED_GYM_EQUIPMENT_PATH, BUY_USED_GYM_EQUIPMENT_OG_IMAGE } from './buyUsedGymEquipmentPage.js'
 import { LANDING_PATHS } from './landingPagePaths.js'
 import { buildCategoryLandingSeoDocument } from './categoryLandingSeo.js'
+import { enrichLandingContentLinks, LINK_RULES } from './landingContextualLinks.js'
 
 export const REFURBISHED_HOME_GYM_EQUIPMENT_PATH = LANDING_PATHS.refurbishedHome
 
@@ -16,7 +17,7 @@ export const REFURBISHED_HOME_BROWSE_PATH = buildBrowseNavPath({
   search: 'refurbished',
 })
 
-export const REFURBISHED_HOME_CONTENT = Object.freeze({
+export const REFURBISHED_HOME_CONTENT = Object.freeze(enrichLandingContentLinks({
   idPrefix: 'refurbished-home',
   prerenderId: 'refurbished-home-gym-equipment',
   path: REFURBISHED_HOME_GYM_EQUIPMENT_PATH,
@@ -376,7 +377,7 @@ export const REFURBISHED_HOME_CONTENT = Object.freeze({
       to: VALUATION_PATH,
     },
   ],
-})
+}, LINK_RULES.refurbishedHome))
 
 export function buildRefurbishedHomeGymEquipmentSeoDocument() {
   return buildCategoryLandingSeoDocument(REFURBISHED_HOME_CONTENT)

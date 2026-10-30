@@ -6,6 +6,7 @@
  *   node scripts/test-message-attachments-phase3c.mjs
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -265,6 +266,7 @@ async function sendImageMessage(client, conversationId, { body = '', count = 1 }
 }
 
 loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL
 const anonKey = process.env.VITE_SUPABASE_ANON_KEY

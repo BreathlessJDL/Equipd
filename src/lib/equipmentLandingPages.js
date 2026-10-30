@@ -17,6 +17,10 @@ import {
   EQUIPMENT_LANDING_PATH_SET,
   getEquipmentLandingDef,
 } from './equipmentLandingDefs.js'
+import {
+  buildEquipmentLinkRules,
+  enrichLandingContentLinks,
+} from './landingContextualLinks.js'
 
 function buildBrowsePath(def) {
   return buildBrowseNavPath({
@@ -92,6 +96,21 @@ export function buildEquipmentLandingContent(def) {
 
   const browsePath = buildBrowsePath(def)
   const isCommercial = def.rating === 'full_commercial'
+  const linkRules = buildEquipmentLinkRules(def)
+  const enriched = enrichLandingContentLinks(
+    {
+      lead: copy.lead,
+      guideIntro: copy.guideIntro,
+      categoryLead: copy.categoryLead,
+      brandLead: copy.brandLead,
+      valuationCopy: copy.valuationCopy,
+      listingsLead: copy.listingsLead,
+      exploreLead: copy.exploreLead,
+      guideSections: copy.guideSections,
+      faqItems: copy.faqItems,
+    },
+    linkRules,
+  )
 
   return Object.freeze({
     idPrefix: def.id,
@@ -121,7 +140,7 @@ export function buildEquipmentLandingContent(def) {
     ]),
     eyebrow: copy.eyebrow,
     h1: copy.h1,
-    lead: copy.lead,
+    lead: enriched.lead || copy.lead,
     primaryCta: Object.freeze({
       to: browsePath,
       label: copy.midCtaLabel || `Browse ${copy.h1}`,
@@ -142,7 +161,7 @@ export function buildEquipmentLandingContent(def) {
     browsePath,
     listingsNote: 'Live marketplace',
     listingsHeading: copy.listingsHeading,
-    listingsLead: copy.listingsLead,
+    listingsLead: enriched.listingsLead || copy.listingsLead,
     listingsCta: copy.listingsCta,
     listingsEmpty:
       def.search
@@ -150,31 +169,31 @@ export function buildEquipmentLandingContent(def) {
         : undefined,
     categoryNote: 'Browse by type',
     categoryHeading: copy.categoryHeading,
-    categoryLead: copy.categoryLead,
+    categoryLead: enriched.categoryLead || copy.categoryLead,
     categories: def.neighborCategories,
     brandNote: 'Trusted manufacturers',
     brandHeading: 'Shop by brand',
-    brandLead: copy.brandLead,
+    brandLead: enriched.brandLead || copy.brandLead,
     featuredBrandSlugs: def.featuredBrandSlugs,
     benefitsHeading: copy.benefitsHeading,
     benefits: copy.benefits,
     valuationEyebrow: copy.valuationEyebrow,
     valuationHeading: copy.valuationHeading,
-    valuationCopy: copy.valuationCopy,
+    valuationCopy: enriched.valuationCopy || copy.valuationCopy,
     valuationSteps: copy.valuationSteps,
     guideNote: copy.guideNote || 'Buying guide',
     guideHeading: copy.guideHeading,
-    guideIntro: copy.guideIntro,
-    guideSections: copy.guideSections,
+    guideIntro: enriched.guideIntro || copy.guideIntro,
+    guideSections: enriched.guideSections,
     faqNote: copy.faqNote || 'Common questions',
     faqIntro: copy.faqIntro,
-    faqItems: copy.faqItems,
+    faqItems: enriched.faqItems,
     midCtaHeading: copy.midCtaHeading,
     midCtaLead: copy.midCtaLead,
     midCtaLabel: copy.midCtaLabel,
     exploreNote: 'Keep exploring',
     exploreHeading: 'Explore more',
-    exploreLead: copy.exploreLead,
+    exploreLead: enriched.exploreLead || copy.exploreLead,
     exploreLinks: clusterExploreLinks(def),
   })
 }

@@ -18,6 +18,23 @@ export const LISTING_CARD_IMAGE_WIDTHS = [300, 450, 600, 900]
 /** Row thumbnails render far smaller than grid cards. */
 export const LISTING_ROW_IMAGE_WIDTHS = [150, 240, 360]
 
+/** Hub, messages, and order thumbs are typically 64–96px. */
+export const LISTING_THUMB_IMAGE_WIDTHS = [96, 160, 240]
+
+/** Gallery filmstrip thumbs (~6.25rem). */
+export const LISTING_GALLERY_THUMB_WIDTHS = [160, 240, 320]
+
+/** Main gallery image: sharp on 2x displays without the original upload. */
+export const LISTING_GALLERY_MAIN_WIDTHS = [800, 1200, 1600]
+
+export const LISTING_GALLERY_MAIN_QUALITY = 75
+
+export const LISTING_CARD_IMAGE_SIZES = '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 300px'
+export const LISTING_ROW_IMAGE_SIZES = '120px'
+export const LISTING_THUMB_IMAGE_SIZES = '96px'
+export const LISTING_GALLERY_THUMB_SIZES = '(max-width: 767px) 4.5rem, 6.25rem'
+export const LISTING_GALLERY_MAIN_SIZES = '(max-width: 767px) 100vw, min(720px, 70vw)'
+
 export function buildListingImageVariantUrl(url, { width, quality = DEFAULT_QUALITY } = {}) {
   if (typeof url !== 'string' || !url.includes(PUBLIC_OBJECT_SEGMENT)) return null
   if (!Number.isFinite(width) || width <= 0) return null
@@ -49,4 +66,21 @@ export function buildListingImageSources(url, { widths = LISTING_CARD_IMAGE_WIDT
     src: variants[0].url,
     srcSet: variants.map((variant) => `${variant.url} ${variant.width}w`).join(', '),
   }
+}
+
+export function isListingImageTransformUrl(url) {
+  return typeof url === 'string' && url.includes(RENDER_SEGMENT)
+}
+
+/**
+ * If a transformed src fails (plan without Image Transformations, or a 4xx),
+ * drop srcset and show the original public object URL.
+ */
+export function restoreOriginalListingImage(image, originalUrl) {
+  if (!image || !originalUrl) return
+  const current = image.currentSrc || image.src
+  if (current === originalUrl || !isListingImageTransformUrl(current)) return
+  image.srcset = ''
+  image.sizes = ''
+  image.src = originalUrl
 }

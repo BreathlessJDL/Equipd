@@ -16,11 +16,11 @@ const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
 const valuatorCss = read('src/components/home/HomeEquipmentValuator.css')
 
 assert.match(homePage, /import HomeEquipmentValuator from/, 'homepage imports shared valuator')
-assert.match(homePage, /<HomeEquipmentValuator/, 'homepage renders shared valuator')
-assert.doesNotMatch(
+assert.match(homePage, /<HomeEquipmentValuator/, 'logged-out homepage still renders shared valuator')
+assert.match(
   homePage,
-  /\{!\s*isLoggedIn\s*\?\s*<HomeEquipmentValuator/,
-  'homepage valuator is visible for signed-in users too',
+  /\{!\s*isLoggedIn\s*\?\s*\(\s*<HomeEquipmentValuator/,
+  'homepage search valuator is logged-out only so it does not duplicate the carousel',
 )
 assert.doesNotMatch(
   homePage,
@@ -28,31 +28,57 @@ assert.doesNotMatch(
   'homepage does not use brands id prefix',
 )
 
-assert.match(brandsPage, /import HomeEquipmentValuator from/, 'brands page imports same shared valuator')
-assert.match(brandsPage, /<HomeEquipmentValuator[\s\S]*idPrefix=["']brands-valuator["']/, 'brands uses distinct idPrefix')
-assert.match(brandsPage, /contained/, 'brands uses contained layout inside page shell')
-assert.match(
+assert.match(brandsPage, /import EquipmentValuesHero from/, 'brands page mounts the Equipment Values hero')
+assert.match(brandsPage, /<EquipmentValuesHero/, 'brands page renders the artwork hero')
+assert.doesNotMatch(
   brandsPage,
   /Instant Gym Equipment Valuation/,
-  'brands uses Equipment Values copy for heading',
+  'old dynamically rendered Instant Valuation hero heading is gone',
 )
+
+const hero = read('src/components/brands/EquipmentValuesHero.jsx')
+const heroLib = read('src/lib/equipmentValuesHero.js')
+assert.match(hero, /import HomeEquipmentValuator from/, 'hero reuses the shared valuator search')
+assert.match(hero, /idPrefix=["']brands-valuator["']/, 'brands uses distinct idPrefix')
+assert.match(hero, /searchOnly/, 'hero does not duplicate baked-in heading or chart as HTML')
+assert.match(hero, /showShowcase=\{false\}/, 'hero does not render the old graph/card showcase')
+assert.match(hero, /<picture>/, 'hero uses responsive picture')
+assert.match(heroLib, /Equipment Valuations Hero Banner Desktop\.png/, 'desktop artwork is wired')
+assert.match(heroLib, /Equipment Valuations Hero Banner Mobile\.png/, 'mobile artwork is wired')
+assert.match(hero, /submitLabel=["']Find value["']/, 'hero uses a Find value submit button')
+assert.match(
+  hero,
+  /popularSearches=\{EQUIPMENT_VALUES_POPULAR_SEARCHES\}/,
+  'hero uses catalogue-backed popular searches',
+)
+assert.match(heroLib, /concept2-rowers-rowerg-model-d/, 'Concept2 RowErg popular search is a catalogue model')
+assert.match(heroLib, /technogym-non-motorised-treadmill-skill-line-skillmill/, 'Skillmill popular search is a catalogue model')
+assert.match(heroLib, /wattbike-exercise-bike-atom-atom/, 'Wattbike Atom popular search is a catalogue model')
+assert.match(valuator, /searchOnly = false/, 'shared valuator supports search-only mode')
+assert.match(valuator, /submitLabel = null/, 'shared valuator accepts a custom submit label')
 assert.match(
   brandsPage,
   /Used Gym Equipment Values by Brand/,
-  'brand directory heading remains',
+  'page title remains for SEO metadata / accessible heading',
 )
-assert.match(
+assert.doesNotMatch(
   brandsPage,
   /Search equipment brands/,
-  'brand directory search input remains',
+  'directory brand-search panel is removed',
 )
+assert.doesNotMatch(
+  brandsPage,
+  /className="brands-page__hero"/,
+  'beige directory intro panel is removed',
+)
+assert.match(brandsPage, /Featured brands/, 'featured brands section remains')
 
-// Placement: breadcrumb → valuator → explore-by-brand hero
+// Placement: breadcrumb → artwork hero → featured brands
 const breadcrumbIdx = brandsPage.indexOf('<PageBreadcrumbs')
-const valuatorIdx = brandsPage.indexOf('<HomeEquipmentValuator')
-const heroTitleIdx = brandsPage.indexOf('className="brands-page__title"')
-assert.ok(breadcrumbIdx > -1 && valuatorIdx > breadcrumbIdx, 'valuator after breadcrumb')
-assert.ok(heroTitleIdx > valuatorIdx, 'brand explore section after valuator')
+const valuatorIdx = brandsPage.indexOf('<EquipmentValuesHero')
+const featuredIdx = brandsPage.indexOf('featured-brands-title')
+assert.ok(breadcrumbIdx > -1 && valuatorIdx > breadcrumbIdx, 'artwork hero after breadcrumb')
+assert.ok(featuredIdx > valuatorIdx, 'featured brands follow the artwork hero')
 
 assert.match(valuator, /idPrefix = 'home-valuator'/, 'default idPrefix preserves homepage ids')
 assert.match(valuator, /const inputId = `\$\{idPrefix\}-search`/, 'input ids derive from idPrefix')

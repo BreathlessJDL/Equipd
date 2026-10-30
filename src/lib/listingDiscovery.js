@@ -6,9 +6,9 @@
 import {
   getBrandPagePath,
   getBrandDisplayName,
-  getProductSeriesLabel,
   resolveBrandRegistryEntry,
 } from './brandCatalogueCore.js'
+import { getDefaultCompatibleConsoleName } from './consoleCompatibility.js'
 import { resolveCategorySlugForEquipmentType } from './createListingFromEquipment.js'
 import {
   buildListingSeoProductName,
@@ -16,22 +16,15 @@ import {
 } from './listingPageSeo.js'
 import {
   calculateEquipmentProductValuation,
-  formatProductProductionYears,
   formatValuationMoney,
-  formatValuationRange,
   getEquipmentProductDisplayName,
-  productHasValuationRrp,
+  getProductManufacturedFromYear,
 } from './equipmentValuation.js'
 import { buildEquipmentCanonicalPath } from './equipmentPageSeo.js'
 import { buildValuationHref } from './valuationNavigation.js'
 
-const LISTING_TO_VALUATION_CONDITION = {
-  new: 'Excellent',
-  like_new: 'Excellent',
-  good: 'Good',
-  fair: 'Fair',
-  poor: 'Poor',
-}
+export const LISTING_INTELLIGENCE_VALUATION_DISCLAIMER =
+  'Indicative valuation based on original equipment pricing, age-based depreciation and applicable model adjustments. Not based on verified completed sales.'
 
 function normalizeWhitespace(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim()
@@ -167,16 +160,30 @@ export function buildListingInternalLinks(listing, equipmentProduct = null) {
   return links
 }
 
-function mapListingConditionToValuationCondition(condition) {
-  const key = String(condition ?? '').trim().toLowerCase()
-  return LISTING_TO_VALUATION_CONDITION[key] || 'Good'
+/**
+ * Default console for the earliest supported year — same rule as Equipment Values.
+ * Listings do not store a console, so we never infer one from the title.
+ */
+export function resolveListingIntelligenceConsoleName({
+  productConsoleOptions = [],
+  manufactureYear,
+} = {}) {
+  return getDefaultCompatibleConsoleName({
+    productConsoleOptions,
+    manufactureYear,
+  }) || null
 }
 
 /**
- * Concise Equipd Intelligence summary for mapped listings only.
- * Hides missing/unreliable fields. Never uses listing price as market value.
+ * Compact Equipd Intelligence summary for mapped listings only.
+ * Shows the catalogue earliest year and the modelled resale value at that year.
+ * Never guesses a product from the listing title, and never uses the seller’s price.
  */
-export function buildListingIntelligenceSummary(listing, equipmentProduct) {
+export function buildListingIntelligenceSummary(listing, equipmentProduct, {
+  productConsoleOptions = [],
+  modifiers = [],
+  currentYear = new Date().getFullYear(),
+} = {}) {
   if (!equipmentProduct) return null
 
   const status = String(equipmentProduct.status ?? 'approved').toLowerCase()
@@ -190,72 +197,49 @@ export function buildListingIntelligenceSummary(listing, equipmentProduct) {
     || normalizeWhitespace(equipmentProduct.canonical_product_name)
   if (!name) return null
 
-  const fields = []
-  fields.push({ key: 'name', label: 'Product', value: name })
+  const earliestYear = getProductManufacturedFromYear(equipmentProduct)
+  if (earliestYear == null) return null
 
-  const brand = normalizeWhitespace(equipmentProduct.brand)
-  if (brand) fields.push({ key: 'brand', label: 'Brand', value: getBrandDisplayName(brand) })
-
-  const type = normalizeWhitespace(equipmentProduct.equipment_type)
-  if (type && type.toLowerCase() !== 'unknown') {
-    fields.push({ key: 'type', label: 'Equipment type', value: type })
-  }
-
-  const series = getProductSeriesLabel(equipmentProduct)
-  if (series) fields.push({ key: 'series', label: 'Series', value: series })
-
-  const currency = equipmentProduct.original_base_price_currency || 'GBP'
-  if (productHasValuationRrp(equipmentProduct)) {
-    fields.push({
-      key: 'rrp',
-      label: 'Original RRP',
-      value: formatValuationMoney(equipmentProduct.original_base_price, currency),
-    })
-  }
-
-  const productionRange = formatProductProductionYears(equipmentProduct)
-  if (productionRange) {
-    fields.push({ key: 'production', label: 'Production years', value: productionRange })
-  } else {
-    const baseline = Number(equipmentProduct.baseline_manufacture_year)
-    if (Number.isFinite(baseline) && baseline > 0) {
-      fields.push({ key: 'year', label: 'Manufacture year', value: String(baseline) })
-    }
-  }
+  const consoleName = resolveListingIntelligenceConsoleName({
+    productConsoleOptions,
+    manufactureYear: earliestYear,
+  })
 
   const valuation = calculateEquipmentProductValuation(equipmentProduct, {
-    condition: mapListingConditionToValuationCondition(listing?.condition),
+    condition: 'Good',
+    actual_manufacture_year: earliestYear,
+    current_year: currentYear,
+    console_name: consoleName,
+    console_key: consoleName,
+    modifiers,
+    product_console_options: productConsoleOptions,
   })
-  if (
-    valuation?.ok
-    && Number(valuation.estimated_mid) > 0
-    && Number(valuation.estimated_low) > 0
-    && Number(valuation.estimated_high) > 0
-  ) {
-    fields.push({
-      key: 'market',
-      label: 'Estimated used market value',
-      value: formatValuationRange(
-        valuation.estimated_low,
-        valuation.estimated_high,
-        valuation.currency || currency,
-      ),
-      note: 'Equipd estimate — not the seller’s asking price.',
-    })
-  }
 
-  const equipmentHref = getListingEquipmentPagePath(listing, equipmentProduct)
-  const valuationHref = getListingValuationHref(listing, equipmentProduct)
-  const brandHref = brand ? getListingBrandPageHref(brand) : null
+  if (!valuation?.ok || Number(valuation.estimated_mid) <= 0) return null
+
+  const currency = valuation.currency || equipmentProduct.original_base_price_currency || 'GBP'
+  const brand = normalizeWhitespace(equipmentProduct.brand)
 
   return {
     name,
-    fields,
-    disclaimer:
-      'Equipment information provided by Equipd Intelligence and independent of the seller’s listing.',
-    equipmentHref,
-    valuationHref,
-    brandHref,
+    earliestYear,
+    estimatedMid: valuation.estimated_mid,
+    fields: [
+      {
+        key: 'earliestYear',
+        label: 'Earliest supported model year',
+        value: String(earliestYear),
+      },
+      {
+        key: 'earliestValue',
+        label: `Estimated resale value for a ${earliestYear} model`,
+        value: formatValuationMoney(valuation.estimated_mid, currency),
+      },
+    ],
+    disclaimer: LISTING_INTELLIGENCE_VALUATION_DISCLAIMER,
+    equipmentHref: getListingEquipmentPagePath(listing, equipmentProduct),
+    valuationHref: getListingValuationHref(listing, equipmentProduct),
+    brandHref: brand ? getListingBrandPageHref(brand) : null,
     productName: name,
   }
 }

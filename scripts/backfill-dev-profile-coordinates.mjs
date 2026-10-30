@@ -11,6 +11,7 @@ import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { DEV_PROFILE_COORDINATES } from './seed-dev-data.mjs'
+import { assertSeedWriteAllowed } from './lib/supabaseProjectSafety.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -32,19 +33,10 @@ function loadEnvFile(relativePath) {
 
 async function main() {
   loadEnvFile('.env.local')
-
-  if (process.env.SEED_DEV_ALLOW !== 'true') {
-    throw new Error('Set SEED_DEV_ALLOW=true before running dev profile backfill.')
-  }
-
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const target = assertSeedWriteAllowed()
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url || !serviceKey) {
-    throw new Error('Missing Supabase URL or service role key in .env.local')
-  }
-
-  const supabase = createClient(url, serviceKey, {
+  const supabase = createClient(target.url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 

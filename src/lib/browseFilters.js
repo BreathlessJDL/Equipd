@@ -142,13 +142,19 @@ export function applyBrowseFiltersToSearchParams(
   if (filters.maxPrice?.trim()) searchParams.set('maxPrice', filters.maxPrice.trim())
 
   const categoryIds = normalizeStringArray(filters.categoryIds, filters.categoryId)
+  const resolvedCategorySlugs = []
   for (const categoryId of categoryIds) {
     const category = categories.find((entry) => entry.id === categoryId)
-    if (category?.slug) searchParams.append('category', category.slug)
+    if (category?.slug) resolvedCategorySlugs.push(category.slug)
   }
 
-  if (categoryIds.length === 0 && filters.categorySlug) {
-    searchParams.append('category', filters.categorySlug)
+  const categorySlugs =
+    resolvedCategorySlugs.length > 0
+      ? resolvedCategorySlugs
+      : normalizeStringArray(filters.categorySlugs, filters.categorySlug)
+
+  for (const slug of categorySlugs) {
+    searchParams.append('category', slug)
   }
 
   const hasLocationSearch = hasBrowseLocationForSort(filters, profileCoordinates)
@@ -392,13 +398,19 @@ export function removeBrowseFilterKey(filters, removeKey, removeValue = '') {
     case 'search':
       next.search = ''
       break
-    case 'categoryIds':
-      next.categoryIds = normalizeStringArray(filters.categoryIds, filters.categoryId).filter(
-        (id) => id !== removeValue,
-      )
+    case 'categoryIds': {
+      const ids = normalizeStringArray(filters.categoryIds, filters.categoryId)
+      const slugs = normalizeStringArray(filters.categorySlugs, filters.categorySlug)
+      const removedIndex = ids.indexOf(removeValue)
+      next.categoryIds = ids.filter((id) => id !== removeValue)
+      next.categorySlugs =
+        removedIndex >= 0 && slugs.length === ids.length
+          ? slugs.filter((_, index) => index !== removedIndex)
+          : slugs
       next.categoryId = next.categoryIds[0] ?? ''
-      next.categorySlug = ''
+      next.categorySlug = next.categorySlugs[0] ?? ''
       break
+    }
     case 'categoryId':
       next.categoryIds = []
       next.categoryId = ''

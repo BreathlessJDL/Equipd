@@ -9,6 +9,7 @@
  *   node scripts/test-admin-impersonation.mjs
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -139,6 +140,8 @@ async function runLiveChecks() {
     console.log('live admin impersonation checks: skipped (missing env)')
     return
   }
+
+  assertServiceRoleTestNotProduction()
 
   const admin = createClient(url, service, {
     auth: { persistSession: false, autoRefreshToken: false },

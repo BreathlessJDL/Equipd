@@ -27,6 +27,7 @@ import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { DEV_SEED_PREFIX } from './seed-dev-data.mjs'
+import { assertStagingWriteTarget } from './lib/supabaseProjectSafety.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -56,23 +57,15 @@ function loadEnvFile(relativePath) {
 }
 
 function assertEnv() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  if (!url) {
-    throw new Error('Missing SUPABASE_URL or VITE_SUPABASE_URL in .env.local')
-  }
-
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY (staging service role only).')
   }
-
-  if (/prod/i.test(url) && process.env.CLEANUP_DEV_IGNORE_PROD_URL !== 'true') {
-    throw new Error(
-      `Refusing cleanup: Supabase URL looks like production (${url}).\n` +
-        'Set CLEANUP_DEV_IGNORE_PROD_URL=true only if you are certain this is a dev project.',
-    )
+  if (process.env.CLEANUP_DEV_IGNORE_PROD_URL === 'true') {
+    throw new Error('CLEANUP_DEV_IGNORE_PROD_URL is no longer supported.')
   }
-
-  return url
+  return assertStagingWriteTarget({
+    url: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  }).url
 }
 
 function isDeleteAllowed() {

@@ -27,6 +27,8 @@ assert.match(appSrc, /path="admin" element=\{<AdminProtectedRoute \/>\}/)
 assert.match(protectedSrc, /isAdmin/)
 assert.match(listSrc, /Conversation access is provided for support/)
 assert.match(detailSrc, /Read-only inspection/)
+assert.match(detailSrc, /ListingPhoto/)
+assert.doesNotMatch(detailSrc, /<img src=\{listingImage\}/)
 
 for (const src of [listSrc, detailSrc, threadSrc, offerSrc, libSrc]) {
   assert.doesNotMatch(src, /markConversationRead/)

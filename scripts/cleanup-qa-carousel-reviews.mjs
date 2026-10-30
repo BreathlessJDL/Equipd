@@ -41,9 +41,8 @@ function loadEnvFile(relativePath) {
 async function main() {
   loadEnvFile('.env.local')
 
-  assertQaCarouselServiceRole({ requireConfirm: true })
-  const supabase = createQaCarouselAdminClient()
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const url = assertQaCarouselServiceRole({ requireConfirm: true })
+  const supabase = createQaCarouselAdminClient(url)
 
   console.log(`Target: ${url}`)
   console.log(`Requires ${QA_CAROUSEL_SEED_CONFIRM_ENV}=true\n`)

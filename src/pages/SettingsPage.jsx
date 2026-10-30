@@ -8,9 +8,6 @@ import { usePageTitle } from '../hooks/usePageTitle'
 import '../components/AuthForm.css'
 import '../components/listing/ListingLocationAutocomplete.css'
 import { useAuth } from '../hooks/useAuth'
-import DeleteAccountSection from '../components/settings/DeleteAccountSection'
-import { accountHasPasswordIdentity } from '../lib/accountAuthIdentities'
-import { isAccountDeletionUiEnabled } from '../lib/accountDeletion'
 import { buildProfileLocationPayload } from '../lib/listingLocation'
 import {
   getProfileImageErrorMessage,
@@ -53,7 +50,7 @@ import './SettingsPage.css'
 
 function SettingsPage() {
   usePageTitle('Settings')
-  const { user, session, signOut } = useAuth()
+  const { user, session } = useAuth()
   const sensitiveAuthUiBlocked = isSensitiveAccountActionBlockedByImpersonation(session, user)
   const navigate = useNavigate()
   const location = useLocation()
@@ -770,16 +767,6 @@ function SettingsPage() {
             </div>
           </form>
 
-          {isAccountDeletionUiEnabled() ? (
-            <DeleteAccountSection
-              blockedByImpersonation={sensitiveAuthUiBlocked}
-              passwordAuthAvailable={accountHasPasswordIdentity(user)}
-              onDeleted={async () => {
-                await signOut()
-                navigate('/', { replace: true })
-              }}
-            />
-          ) : null}
         </div>
 
         <aside className="settings-page__sidebar">

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
@@ -23,6 +24,7 @@ function loadEnvFile(filename) {
 
 loadEnvFile('.env.local')
 loadEnvFile('.env')
+assertServiceRoleTestNotProduction()
 
 function isMissingRpc(error) {
   return Boolean(error?.message && /could not find the function|schema cache/i.test(error.message))

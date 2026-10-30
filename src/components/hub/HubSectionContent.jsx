@@ -63,6 +63,9 @@ import {
   isOrderRefundedForHub,
 } from '../../lib/orders'
 import { isOrderDisputed } from '../../lib/orderDisputes'
+import { buildHubNeedsAttention } from '../../lib/hubNeedsAttention'
+
+export { buildHubNeedsAttention }
 
 function HubPanel({ title, lead, action, className = '', children }) {
   return (
@@ -898,119 +901,6 @@ function HubReviewsSection({
       ) : null}
     </HubPanel>
   )
-}
-
-export function buildHubNeedsAttention({
-  pendingOffersFromBuyers,
-  pendingBuyerCounterOffers = [],
-  acceptedUnpaidOffers,
-  sellerAcceptedUnpaidOffers,
-  buyerAwaitingFulfilmentOrders,
-  activeSellerSales,
-  showPayoutSetupBanner,
-  pendingReviewCount = 0,
-}) {
-  const items = []
-
-  if (pendingOffersFromBuyers.length > 0) {
-    items.push({
-      id: 'offers-received',
-      label: 'Offers awaiting your response',
-      count: pendingOffersFromBuyers.length,
-      section: 'selling',
-      tab: 'offers',
-    })
-  }
-
-  if (pendingBuyerCounterOffers.length > 0) {
-    items.push({
-      id: 'counter-offers-received',
-      label: 'Counter offers awaiting your response',
-      count: pendingBuyerCounterOffers.length,
-      section: 'buying',
-      tab: 'offers',
-    })
-  }
-
-  if (acceptedUnpaidOffers.length > 0) {
-    items.push({
-      id: 'buyer-pay',
-      label: 'Accepted offers awaiting your payment',
-      count: acceptedUnpaidOffers.length,
-      section: 'offers',
-    })
-  }
-
-  if (sellerAcceptedUnpaidOffers.length > 0) {
-    items.push({
-      id: 'seller-awaiting-pay',
-      label: 'Accepted sales awaiting buyer payment',
-      count: sellerAcceptedUnpaidOffers.length,
-      section: 'selling',
-      tab: 'awaiting_payment',
-    })
-  }
-
-  if (buyerAwaitingFulfilmentOrders.length > 0) {
-    items.push({
-      id: 'buyer-collection',
-      label: 'Orders awaiting collection',
-      count: buyerAwaitingFulfilmentOrders.length,
-      section: 'buying',
-      tab: 'in_progress',
-    })
-  }
-
-  const courierEvidenceCount = activeSellerSales.filter((offer) => {
-    if (!hasOfferLinkedOrder(offer)) return false
-    return canSellerSubmitCourierEvidence(getOfferOrder(offer), offer.payment)
-  }).length
-
-  if (courierEvidenceCount > 0) {
-    items.push({
-      id: 'courier-evidence',
-      label: 'Courier evidence required',
-      count: courierEvidenceCount,
-      section: 'selling',
-      tab: 'active',
-    })
-  }
-
-  const disputeCount = activeSellerSales.filter((offer) => {
-    if (!hasOfferLinkedOrder(offer)) return false
-    return isOrderDisputed(getOfferOrder(offer))
-  }).length
-
-  if (disputeCount > 0) {
-    items.push({
-      id: 'disputes',
-      label: 'Open disputes',
-      count: disputeCount,
-      section: 'selling',
-      tab: 'active',
-    })
-  }
-
-  if (showPayoutSetupBanner) {
-    items.push({
-      id: 'payout-setup',
-      label: 'Payout setup required',
-      count: 1,
-      section: 'settings',
-    })
-  }
-
-  if (pendingReviewCount > 0) {
-    items.push({
-      id: 'pending-reviews',
-      label: 'Orders ready for review',
-      count: pendingReviewCount,
-      section: 'reviews',
-      tab: 'pending',
-    })
-  }
-
-  return items
 }
 
 export function buildHubRecentActivity({

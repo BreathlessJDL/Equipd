@@ -124,4 +124,70 @@ assert(afterBrandRemoval.brands[0] === 'Life Fitness', 'Correct brand remains af
 
 logPass('Multi-select filters round-trip and per-chip removal')
 
+assert(
+  afterCategoryRemoval.categorySlugs.length === 1 && afterCategoryRemoval.categorySlugs[0] === 'bench',
+  'Removing a category chip keeps the remaining slug',
+)
+assert(afterCategoryRemoval.categorySlug === 'bench', 'Remaining category slug stays in sync')
+
+const { CARDIO_CATEGORY_SLUGS } = await import('../src/lib/landingCategorySlugs.js')
+const { CARDIO_EQUIPMENT_BROWSE_PATH } = await import('../src/lib/homeHeroCarousel.js')
+const { HOME_CARDIO_BROWSE_PATH } = await import('../src/lib/homeCardioEquipmentPage.js')
+const { buildBrowseNavPath } = await import('../src/lib/browseSearchNavigation.js')
+
+const cardioPath = buildBrowseNavPath({ categorySlugs: CARDIO_CATEGORY_SLUGS })
+assert(cardioPath === CARDIO_EQUIPMENT_BROWSE_PATH, 'Hero cardio banner uses the shared cardio browse path')
+assert(CARDIO_CATEGORY_SLUGS.length === 10, 'Cardio banner selects the full cardio category set')
+
+const cardioParams = new URLSearchParams(cardioPath.split('?')[1])
+assert(
+  cardioParams.getAll('category').join(',') === CARDIO_CATEGORY_SLUGS.join(','),
+  'Cardio banner URL lists every cardio category slug',
+)
+
+const unresolved = parseBrowseFiltersFromSearchParams(cardioParams, [])
+assert(unresolved.categoryIds.length === 0, 'Category ids stay empty until the catalogue loads')
+assert(
+  unresolved.categorySlugs.join(',') === CARDIO_CATEGORY_SLUGS.join(','),
+  'All cardio slugs are kept before categories resolve',
+)
+
+const staleWrite = new URLSearchParams(cardioParams.toString())
+applyBrowseFiltersToSearchParams(staleWrite, unresolved, [])
+assert(
+  staleWrite.getAll('category').join(',') === CARDIO_CATEGORY_SLUGS.join(','),
+  'Writing unresolved multi-category draft must not collapse to the first slug',
+)
+assert(
+  staleWrite.toString() === cardioParams.toString(),
+  'Unresolved cardio URL write-back is a no-op',
+)
+
+const cardioCategories = CARDIO_CATEGORY_SLUGS.map((slug, index) => ({
+  id: `cat-${index}`,
+  name: slug,
+  slug,
+}))
+const resolved = parseBrowseFiltersFromSearchParams(cardioParams, cardioCategories)
+assert(resolved.categoryIds.length === 10, 'All cardio slugs resolve once categories load')
+
+const resolvedWrite = new URLSearchParams()
+applyBrowseFiltersToSearchParams(resolvedWrite, resolved, cardioCategories)
+assert(
+  resolvedWrite.getAll('category').join(',') === CARDIO_CATEGORY_SLUGS.join(','),
+  'Resolved cardio filters write the same category set back to the URL',
+)
+
+const homeCardioParams = new URLSearchParams(HOME_CARDIO_BROWSE_PATH.split('?')[1] || '')
+const homeCardioUnresolved = parseBrowseFiltersFromSearchParams(homeCardioParams, [])
+const homeCardioWrite = new URLSearchParams(homeCardioParams.toString())
+applyBrowseFiltersToSearchParams(homeCardioWrite, homeCardioUnresolved, [])
+assert(
+  homeCardioWrite.getAll('category').length === homeCardioParams.getAll('category').length,
+  'Other multi-category browse links keep every slug during unresolved write-back',
+)
+assert(homeCardioWrite.get('rating') === 'home_use', 'Home cardio rating is preserved during write-back')
+
+logPass('Cardio and other multi-category browse URLs stay stable across unresolved write-back')
+
 console.log('\nAll browse filter URL checks passed.')

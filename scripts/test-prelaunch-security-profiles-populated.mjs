@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Probe profiles with populated sensitive fields */
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync } from 'fs'
 import { dirname, join } from 'path'
@@ -17,6 +18,7 @@ for (const line of readFileSync(join(ROOT, '.env.local'), 'utf8').split('\n')) {
 const url = process.env.VITE_SUPABASE_URL.replace(/\/+$/, '')
 const anonKey = process.env.VITE_SUPABASE_ANON_KEY
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+assertServiceRoleTestNotProduction()
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
 const anon = createClient(url, anonKey, { auth: { persistSession: false } })
 

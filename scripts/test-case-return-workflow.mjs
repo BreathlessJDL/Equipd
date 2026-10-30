@@ -9,6 +9,7 @@
  * Run supabase/case-management-phase2-return-workflow.sql on Supabase first.
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -237,6 +238,7 @@ function hasCaseUpdate(updates, eventType) {
 
 async function main() {
   loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY

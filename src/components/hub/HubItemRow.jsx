@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { getHubStatusAccentClass } from '../../lib/hubItemStatus'
+import ListingPhoto from '../ListingPhoto'
 import './HubItemRow.css'
 
 export function HubItemStatusBadge({ variant, label }) {
@@ -11,19 +12,21 @@ export function HubItemStatusBadge({ variant, label }) {
 }
 
 export function HubItemThumbnail({ src, href, alt = '' }) {
+  const thumb = src ? (
+    <ListingPhoto url={src} alt={alt} className="hub-item-row__thumb" />
+  ) : (
+    <div className="hub-item-row__thumb hub-item-row__thumb--empty" aria-hidden="true" />
+  )
+
   if (src && href) {
     return (
       <Link to={href} className="hub-item-row__thumb-link">
-        <img src={src} alt={alt} className="hub-item-row__thumb" />
+        {thumb}
       </Link>
     )
   }
 
-  if (src) {
-    return <img src={src} alt={alt} className="hub-item-row__thumb" />
-  }
-
-  return <div className="hub-item-row__thumb hub-item-row__thumb--empty" aria-hidden="true" />
+  return thumb
 }
 
 function HubMetadataPinIcon() {

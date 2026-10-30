@@ -5,6 +5,7 @@
  * Usage: node scripts/test-fulfilment-architecture-qa.mjs
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -585,6 +586,7 @@ function testOrderDetailAppSurface() {
 
 async function main() {
   loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
 
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY

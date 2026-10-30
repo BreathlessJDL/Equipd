@@ -206,8 +206,10 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
       { label: 'Technogym', to: getBrandPagePath('technogym') },
       { label: 'Matrix', to: getBrandPagePath('matrix-fitness') },
       { label: 'Concept2', to: getBrandPagePath('concept2') },
+      { label: 'Wattbike', to: getBrandPagePath('wattbike') },
       { label: 'Precor', to: getBrandPagePath('precor') },
       { label: 'Cybex', to: getBrandPagePath('cybex') },
+      { label: 'Hammer Strength', to: getBrandPagePath('hammer-strength') },
     ],
     paragraphsAfter: [
       'See more brands in the ',
@@ -236,18 +238,80 @@ export const SELL_GUIDE_SECTIONS = Object.freeze([
     ],
   },
   {
+    id: 'what-affects-sale-price',
+    title: 'What affects your sale price',
+    paragraphs: [
+      'Buyers compare your listing against alternatives, not against what you paid. Age and usage hours set the first range. Condition and completeness move it: missing attachments, worn belts, frayed cables and damaged upholstery all reduce offers even when the frame is sound.',
+      'Brand and parts support matter because buyers think about the next service, not only the purchase. Machines from brands that dominate commercial floors usually attract more serious enquiries when the model is clear in photos.',
+      'Refurbishment work you have already paid for can justify a higher ask if you document it — replaced belts, cables, bearings or a cleaned and tested console. A private warranty you are willing to offer may help a cautious buyer, but it is your agreement with them, separate from Equipd Buyer Protection.',
+      'Demand finishes the picture. Popular commercial treadmills and racks often clear faster than niche specialty machines. Ease of collection also changes what buyers will pay: ground-floor access with parking usually supports a firmer price than a third-floor studio with a tight stairwell.',
+    ],
+    bullets: [
+      {
+        before: 'Sense-check popular decks on ',
+        link: { to: '/used-commercial-treadmills', label: 'Used Commercial Treadmills' },
+        after: '.',
+      },
+      {
+        before: 'See how buyers research facility kit on ',
+        link: { to: '/commercial-gym-equipment', label: 'Commercial Gym Equipment' },
+        after: '.',
+      },
+    ],
+  },
+  {
+    id: 'prepare-listing-inspection',
+    title: 'Prepare your machine before you list',
+    paragraphs: [
+      'Listings that answer the obvious questions get better offers. Photograph the whole machine, close-ups of wear points, the serial plate, console screens and any damage. For cardio, include a short video of the machine running if you can.',
+      'Check the same points a careful buyer will: belt or rail condition, unusual noise, incline or resistance response, emergency stops, cables, pins, upholstery, rust at the base and whether all attachments are present. Note anything you cannot test.',
+      'Write an honest condition summary. Buyers on Equipd expect commercial and home gym equipment details they can trust. Surprises on collection day create disputes; clear notes create faster sales.',
+    ],
+  },
+  {
+    id: 'remaining-life',
+    title: 'Describing remaining life honestly',
+    paragraphs: [
+      'Calendar age alone rarely tells the story. A commercial machine from a quiet hotel can have years of use left, while a younger unit from a busy club may already need consumables. Share hours where the console stores them, and say where the machine lived.',
+      'If you have serviced or refurbished the equipment, list what was replaced and when. That helps buyers compare your asking price with as-seen alternatives and with new equipment they may also be considering.',
+      'Do not oversell lifespan. Buyers understand that belts, decks, cables and upholstery wear. What they want is enough information to judge maintenance cost after the sale.',
+    ],
+  },
+  {
     id: 'handover-and-payments',
     title: 'Collection, delivery and secure payments',
     paragraphs: [
       'You can offer buyer collection, seller delivery or a buyer-arranged courier. Collection and seller delivery use Equipd’s QR confirmation. Courier sales use collection evidence and delivery confirmation, so both sides know when the handover is done.',
       'Payments go through Stripe Connect. Once the order completes under Buyer Protection, your payout is released. You do not need to take cash on the doorstep or rely on informal bank transfers.',
       'Listings are free. When an item sells, Equipd takes a 2% Seller Service Fee from your payout. You see the sale price, fee and amount you receive before you accept.',
+      'For heavy commercial machines, be ready to discuss dismantling, parking, floor protection and whether a specialist mover is needed. Clear access notes in the listing reduce cancelled collections.',
     ],
     bullets: [
       {
         before: 'Learn more about ',
         link: { to: BUYER_PROTECTION_PATH, label: 'Equipd Buyer Protection' },
         after: '.',
+      },
+    ],
+  },
+  {
+    id: 'positioning-against-new',
+    title: 'How buyers compare new, used and refurbished',
+    paragraphs: [
+      'Many buyers shortlist your listing alongside new quotes and refurbished dealers. Used as-seen wins when the price reflects known wear and the buyer can inspect. Refurbished wins when someone needs floor-ready kit quickly. New wins when warranty and exact aesthetics matter more than capital cost.',
+      'You do not need to match new pricing. You need a clear reason your machine is the sensible option: documented service, easy collection, the right brand for their floor, or a realistic discount for as-seen condition.',
+      'If you are clearing a commercial floor, consider listing related machines together in messages once a buyer engages. Operators often prefer matched brands or a small package over hunting single stations across multiple sellers.',
+    ],
+    bullets: [
+      {
+        before: 'Buyers researching cardio often start at ',
+        link: { to: '/commercial-cardio-equipment', label: 'Commercial Cardio Equipment' },
+        after: '.',
+      },
+      {
+        before: 'Looking to buy instead? ',
+        link: { to: '/buy-used-gym-equipment', label: 'Buy used gym equipment' },
+        after: ' on Equipd.',
       },
     ],
   },

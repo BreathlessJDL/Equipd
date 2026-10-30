@@ -23,6 +23,7 @@ import OrderTimeline from '../components/OrderTimeline'
 import { TransactionCancelButton } from '../components/TransactionCancel'
 import { EnvelopeIcon, EyeIcon } from '../components/icons/NavIcons'
 import { HubItemStatusBadge } from '../components/hub/HubItemRow'
+import ListingPhoto from '../components/ListingPhoto'
 import { ErrorState, LoadingState } from '../components/ui/UiState'
 import '../components/hub/HubItemRow.css'
 import '../components/OrderDetail.css'
@@ -639,17 +640,19 @@ function OrderDetailPage() {
               <div className="order-detail__overview-media">
                 {listingUrl ? (
                   <Link to={listingUrl} className="order-detail__image-link">
-                    <img
-                      src={listing.primary_image_url}
+                    <ListingPhoto
+                      url={listing.primary_image_url}
                       alt=""
                       className="order-detail__image"
+                      priority
                     />
                   </Link>
                 ) : (
-                  <img
-                    src={listing.primary_image_url}
+                  <ListingPhoto
+                    url={listing.primary_image_url}
                     alt=""
                     className="order-detail__image"
+                    priority
                   />
                 )}
               </div>

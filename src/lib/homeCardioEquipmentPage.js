@@ -9,6 +9,7 @@ import { BUY_USED_GYM_EQUIPMENT_PATH, BUY_USED_GYM_EQUIPMENT_OG_IMAGE } from './
 import { LANDING_PATHS } from './landingPagePaths.js'
 import { HOME_CARDIO_CATEGORY_SLUGS } from './landingCategorySlugs.js'
 import { buildCategoryLandingSeoDocument } from './categoryLandingSeo.js'
+import { enrichLandingContentLinks, LINK_RULES } from './landingContextualLinks.js'
 
 export const HOME_CARDIO_EQUIPMENT_PATH = LANDING_PATHS.homeCardio
 
@@ -19,7 +20,7 @@ export const HOME_CARDIO_BROWSE_PATH = buildBrowseNavPath({
 
 export { HOME_CARDIO_CATEGORY_SLUGS }
 
-export const HOME_CARDIO_CONTENT = Object.freeze({
+export const HOME_CARDIO_CONTENT = Object.freeze(enrichLandingContentLinks({
   idPrefix: 'home-cardio',
   prerenderId: 'home-cardio-equipment',
   path: HOME_CARDIO_EQUIPMENT_PATH,
@@ -172,9 +173,9 @@ export const HOME_CARDIO_CONTENT = Object.freeze({
       id: 'choosing-type',
       heading: 'Choosing the right home cardio machine',
       paragraphs: [
-        'Start with what you will actually do, not what looks best in a showroom. Runners who train seriously need a treadmill with a decent deck and motor; casual walkers may be fine with a compact folding model. Honest self-assessment saves money and floor space.',
-        'Exercise bikes suit smaller rooms and lower noise levels. Upright bikes feel closest to road cycling; recumbent bikes support the back and suit longer, easier sessions; spin-style indoor cycles suit interval training and Peloton-style setups without the subscription.',
-        'Cross trainers offer low-impact full-body work but need ceiling height and swing clearance. Rowers fold or stand upright and suit garages and spare rooms where a treadmill would dominate.',
+        'Start with what you will actually do, not what looks best in a showroom. Runners who train seriously need Home Treadmills with a decent deck and motor; casual walkers may be fine with a compact folding model. Honest self-assessment saves money and floor space.',
+        'Home Exercise Bikes suit smaller rooms and lower noise levels. Upright bikes feel closest to road cycling; recumbent bikes support the back and suit longer, easier sessions; spin-style indoor cycles suit interval training and Peloton-style setups without the subscription.',
+        'Home Cross Trainers offer low-impact full-body work but need ceiling height and swing clearance. Home Rowing Machines fold or stand upright and suit garages and spare rooms where a treadmill would dominate.',
         'Air bikes and ski ergs are the specialist choice for HIIT and conditioning. They are loud compared with magnetic bikes but take less space than a treadmill and deliver intense sessions in short windows.',
         'One good machine you use beats three that clutter the room. If you are unsure, try the type at a gym or hire before committing budget on the used market.',
       ],
@@ -382,7 +383,7 @@ export const HOME_CARDIO_CONTENT = Object.freeze({
       to: SELL_GYM_EQUIPMENT_PATH,
     },
   ],
-})
+}, LINK_RULES.homeCardio))
 
 export function buildHomeCardioEquipmentSeoDocument() {
   return buildCategoryLandingSeoDocument(HOME_CARDIO_CONTENT)

@@ -6,6 +6,7 @@
  *   node scripts/test-seller-shop-public-listings.mjs [sellerEmail]
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { chromium } from 'playwright-core'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
@@ -89,6 +90,7 @@ async function verifyShopUi(baseUrl, sellerId) {
 
 async function main() {
   loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
   loadEnvFile('.env')
 
   const sellerEmail = process.argv[2] ?? DEFAULT_SELLER_EMAIL

@@ -8,6 +8,7 @@
  * Requires .env.local with VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -71,6 +72,7 @@ function buildChecks() {
 
 async function main() {
   loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY

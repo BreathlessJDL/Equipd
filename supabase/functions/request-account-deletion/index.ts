@@ -7,6 +7,8 @@ import { createClient, type User } from 'npm:@supabase/supabase-js@2'
 const AUTH_BAN_DURATION = '876000h'
 const CONFIRMATION_TEXT = 'DELETE'
 const LISTING_IMAGES_BUCKET = 'listing-images'
+/** Shelved indefinitely. Keep the implementation below; do not serve it to users. */
+const ACCOUNT_DELETION_SHELVED = true
 
 type Body = {
   password?: string
@@ -240,6 +242,10 @@ async function lockAuthAccount(user: User) {
 Deno.serve(async (req) => {
   const cors = handleCors(req)
   if (cors) return cors
+
+  if (ACCOUNT_DELETION_SHELVED) {
+    return errorResponse('Account deletion is not available.', 410)
+  }
 
   if (req.method !== 'POST') {
     return errorResponse('Method not allowed', 405)

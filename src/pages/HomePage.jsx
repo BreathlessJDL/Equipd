@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChips'
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
 import ListingBrowseResults from '../components/ListingBrowseResults'
-import HomeHero from '../components/home/HomeHero'
+import HomeHeroCarousel from '../components/home/HomeHeroCarousel'
 import HomeEquipmentValuator from '../components/home/HomeEquipmentValuator'
 import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
 import HomeRecentListings from '../components/home/HomeRecentListings'
@@ -215,7 +215,7 @@ function HomePage() {
 
   return (
     <div className={`home-page${isLoggedIn ? ' home-page--feed' : ''}`}>
-      {!isLoggedIn ? <HomeHero /> : null}
+      <HomeHeroCarousel isLoggedIn={isLoggedIn} />
 
       {!isLoggedIn ? (
         <HomeRecentListings
@@ -225,12 +225,9 @@ function HomePage() {
         />
       ) : null}
 
-      <HomeEquipmentValuator
-        className={[
-          'home-valuator--compact-mobile',
-          isLoggedIn ? 'home-valuator--signed-in' : '',
-        ].filter(Boolean).join(' ')}
-      />
+      {!isLoggedIn ? (
+        <HomeEquipmentValuator className="home-valuator--compact-mobile" />
+      ) : null}
 
       <section
         id="browse"

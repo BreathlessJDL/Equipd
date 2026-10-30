@@ -2,6 +2,7 @@
 /**
  * Ranking checks for homepage valuator queries against the live approved catalogue.
  */
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import assert from 'node:assert/strict'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'node:fs'
@@ -29,6 +30,7 @@ function loadEnvFile(relativePath) {
 
 loadEnvFile('.env.local')
 loadEnvFile('.env')
+assertServiceRoleTestNotProduction()
 
 const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '')
   .replace(/\/+$/, '')

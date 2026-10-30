@@ -2,7 +2,7 @@
 /**
  * Validate logged-out homepage section order:
  * mobile  → Hero → Recently Added → Equipment Valuator → …
- * desktop → Hero → Equipment Valuator → Recently Added → … (unchanged)
+ * desktop → Hero → Recently Added → Equipment Valuator → … (document order)
  *
  *   node scripts/test-homepage-mobile-section-order.mjs [baseUrl]
  */
@@ -62,7 +62,7 @@ async function measureOrder(page) {
 for (const viewport of [
   { name: 'mobile-390', width: 390, height: 844, expect: ['hero', 'recent', 'valuator', 'browse'] },
   { name: 'mobile-375', width: 375, height: 812, expect: ['hero', 'recent', 'valuator', 'browse'] },
-  { name: 'desktop-1280', width: 1280, height: 900, expect: ['hero', 'valuator', 'recent', 'browse'] },
+  { name: 'desktop-1280', width: 1280, height: 900, expect: ['hero', 'recent', 'valuator', 'browse'] },
 ]) {
   const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } })
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 90000 })

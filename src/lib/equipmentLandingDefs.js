@@ -73,6 +73,7 @@ const RAW_DEFS = [
       'matrix-fitness',
       'precor',
       'cybex',
+      'wattbike',
       'spirit-fitness',
       'schwinn',
       'pulse-fitness',

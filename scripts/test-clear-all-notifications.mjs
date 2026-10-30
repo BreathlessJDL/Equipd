@@ -7,6 +7,7 @@
  * Requires .env.local with Supabase keys. Run supabase/mark-all-notifications-read.sql first.
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { chromium } from 'playwright-core'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
@@ -159,6 +160,7 @@ async function testUi() {
 
 async function main() {
   loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
 
   assert(
     CLEAR_ALL_NOTIFICATIONS_CONFIRM === 'Mark all notifications as read?',

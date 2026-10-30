@@ -4,9 +4,14 @@ export { accountHasPasswordIdentity } from './accountAuthIdentities'
 
 export const ACCOUNT_DELETION_CONFIRMATION_TEXT = 'DELETE'
 
-/** Off unless VITE_ENABLE_ACCOUNT_DELETION=true. Production stays off until separately approved. */
+const ACCOUNT_DELETION_UNAVAILABLE = 'Account deletion is not available.'
+
+/**
+ * Shelved indefinitely. Implementation below is retained for a possible
+ * future relaunch and must not be called from the live product.
+ */
 export function isAccountDeletionUiEnabled() {
-  return import.meta.env.VITE_ENABLE_ACCOUNT_DELETION === 'true'
+  return false
 }
 
 export function getAccountDeletionErrorMessage(error) {
@@ -34,6 +39,10 @@ async function readFunctionError(error, fallback) {
 }
 
 export async function evaluateAccountDeletion() {
+  if (!isAccountDeletionUiEnabled()) {
+    return { data: null, error: new Error(ACCOUNT_DELETION_UNAVAILABLE) }
+  }
+
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -59,7 +68,11 @@ export async function evaluateAccountDeletion() {
   return { data: sqlEvaluation, error: null }
 }
 
-export async function requestAccountDeletion({ password, confirmationText, passwordRequired = true }) {
+export async function requestAccountDeletion({ password, confirmationText, passwordRequired = true } = {}) {
+  if (!isAccountDeletionUiEnabled()) {
+    return { data: null, error: new Error(ACCOUNT_DELETION_UNAVAILABLE) }
+  }
+
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }

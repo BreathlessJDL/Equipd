@@ -36,6 +36,7 @@ import {
   QA_CAROUSEL_REVIEWS,
   QA_CAROUSEL_REVIEW_SEED_ORDER,
 } from './qa-carousel-reviews-data.mjs'
+import { assertStagingWriteTarget } from './lib/supabaseProjectSafety.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -64,17 +65,17 @@ export function assertQaCarouselServiceRole({ requireConfirm = true } = {}) {
     )
   }
 
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  if (!url) throw new Error('Missing SUPABASE_URL or VITE_SUPABASE_URL.')
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY.')
   }
 
-  return url
+  const target = assertStagingWriteTarget({
+    url: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  })
+  return target.url
 }
 
-export function createQaCarouselAdminClient() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+export function createQaCarouselAdminClient(url) {
   return createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
@@ -433,15 +434,14 @@ async function main() {
   const reset = process.argv.includes('--reset')
 
   if (dryRun) {
-    assertQaCarouselServiceRole({ requireConfirm: false })
-    const supabase = createQaCarouselAdminClient()
+    const url = assertQaCarouselServiceRole({ requireConfirm: false })
+    const supabase = createQaCarouselAdminClient(url)
     await dryRunQaCarouselReviews(supabase)
     return
   }
 
-  assertQaCarouselServiceRole({ requireConfirm: true })
-  const supabase = createQaCarouselAdminClient()
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const url = assertQaCarouselServiceRole({ requireConfirm: true })
+  const supabase = createQaCarouselAdminClient(url)
   console.log(`Target: ${url}\n`)
 
   if (reset) {

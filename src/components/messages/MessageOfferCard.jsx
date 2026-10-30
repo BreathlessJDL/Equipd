@@ -18,6 +18,7 @@ import { canPayNow } from '../../lib/payments'
 import PayNowWithFulfilment from '../PayNowWithFulfilment'
 import { formatMessageTimestamp } from '../../lib/messages'
 import { CircleCheckIcon, NewOfferTagIcon } from '../icons/NotificationIcons'
+import ListingPhoto from '../ListingPhoto'
 import CounterOfferModal from './CounterOfferModal'
 import AcceptOfferConfirmationModal from '../listing/AcceptOfferConfirmationModal'
 import './MessageOfferCard.css'
@@ -151,7 +152,7 @@ function MessageOfferCard({ message, conversation, user, onOfferUpdated }) {
 
         <div className="message-offer-card__body">
           {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt="" className="message-offer-card__thumb" />
+            <ListingPhoto url={thumbnailUrl} alt="" className="message-offer-card__thumb" />
           ) : (
             <div
               className="message-offer-card__thumb message-offer-card__thumb--empty"

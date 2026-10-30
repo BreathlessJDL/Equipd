@@ -1,6 +1,7 @@
 // Stage 2 production verification: atomic multi-quantity creation and
 // seller quantity editing, exercised through the real authenticated path.
 // Fixtures stay in draft (never publicly visible) and are deleted afterwards.
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 
@@ -15,6 +16,7 @@ function loadEnvFile(path) {
 }
 
 loadEnvFile('.env.local')
+assertServiceRoleTestNotProduction()
 
 const url = process.env.VITE_SUPABASE_URL
 const anonKey = process.env.VITE_SUPABASE_ANON_KEY

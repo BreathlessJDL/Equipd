@@ -8,6 +8,7 @@
  * Skips cleanly when credentials are unavailable.
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -42,6 +43,7 @@ async function listPage(client, args) {
 async function main() {
   loadEnvFile('.env.local')
   loadEnvFile('.env')
+  assertServiceRoleTestNotProduction()
 
   const url = process.env.VITE_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY

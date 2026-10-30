@@ -10,6 +10,11 @@ import { buildListingBreadcrumbSchema } from '../src/lib/breadcrumbStructuredDat
 import { findProductSchemas } from '../src/lib/productPageStructuredData.js'
 import { findBreadcrumbSchemas } from '../src/lib/breadcrumbStructuredData.js'
 import {
+  calculateEquipmentProductValuation,
+  formatValuationMoney,
+} from '../src/lib/equipmentValuation.js'
+import {
+  LISTING_INTELLIGENCE_VALUATION_DISCLAIMER,
   buildListingIntelligenceSummary,
   buildListingInternalLinks,
   getListingBrandPageHref,
@@ -153,25 +158,84 @@ assertEqual(
 )
 
 // 8–10 intelligence summary
-const intelligence = buildListingIntelligenceSummary(mappedListing, approvedProduct)
+const CURRENT_YEAR = 2026
+const intelligence = buildListingIntelligenceSummary(mappedListing, approvedProduct, {
+  currentYear: CURRENT_YEAR,
+})
 assert(intelligence, 'intelligence for mapped+approved')
-assert(intelligence.fields.some((f) => f.key === 'rrp'), 'shows RRP when present')
-assert(intelligence.fields.some((f) => f.key === 'market'), 'shows market estimate when calculable')
-assert(intelligence.disclaimer.includes('Equipd Intelligence'), 'disclaimer present')
+assertEqual(
+  intelligence.fields.find((field) => field.key === 'earliestYear')?.value,
+  '2018',
+  'uses baseline manufacture year as earliest supported year',
+)
+const expectedValuation = calculateEquipmentProductValuation(approvedProduct, {
+  condition: 'Good',
+  actual_manufacture_year: 2018,
+  current_year: CURRENT_YEAR,
+})
+assertEqual(
+  intelligence.fields.find((field) => field.key === 'earliestValue')?.value,
+  formatValuationMoney(expectedValuation.estimated_mid, 'GBP'),
+  'estimated value matches Equipment Values at the earliest year',
+)
+assertEqual(
+  intelligence.disclaimer,
+  LISTING_INTELLIGENCE_VALUATION_DISCLAIMER,
+  'modelled-valuation disclaimer present',
+)
 assertEqual(
   intelligence.equipmentHref,
   '/equipment/proform-tour-de-france-clc',
   'intelligence equipment link',
 )
 
+const poorConditionListing = { ...mappedListing, condition: 'poor' }
+const poorSummary = buildListingIntelligenceSummary(poorConditionListing, approvedProduct, {
+  currentYear: CURRENT_YEAR,
+})
+assertEqual(
+  poorSummary.fields.find((field) => field.key === 'earliestValue')?.value,
+  intelligence.fields.find((field) => field.key === 'earliestValue')?.value,
+  'listing condition does not change the modelled earliest-year value',
+)
+
+const consoleOptions = [{
+  console_name: 'LED',
+  console_key: 'led',
+  is_default: true,
+  compatibility_type: 'factory',
+  available_from_year: 2018,
+  available_to_year: 2020,
+  modifier_percent: 10,
+}]
+const consoleSummary = buildListingIntelligenceSummary(mappedListing, approvedProduct, {
+  currentYear: CURRENT_YEAR,
+  productConsoleOptions: consoleOptions,
+})
+const expectedConsoleValuation = calculateEquipmentProductValuation(approvedProduct, {
+  condition: 'Good',
+  actual_manufacture_year: 2018,
+  current_year: CURRENT_YEAR,
+  console_name: 'led',
+  console_key: 'led',
+  product_console_options: consoleOptions,
+})
+assertEqual(
+  consoleSummary.fields.find((field) => field.key === 'earliestValue')?.value,
+  formatValuationMoney(expectedConsoleValuation.estimated_mid, 'GBP'),
+  'applies the default console variant for the earliest year',
+)
+assert(
+  consoleSummary.fields.find((field) => field.key === 'earliestValue')?.value
+    !== intelligence.fields.find((field) => field.key === 'earliestValue')?.value,
+  'console variant changes the modelled value',
+)
+
 const incompleteSummary = buildListingIntelligenceSummary(
   { ...mappedListing, equipment_product_id: incompleteProduct.id, canonical_product_key: incompleteProduct.canonical_product_key },
   incompleteProduct,
 )
-assert(incompleteSummary, 'incomplete product still shows section')
-assert(!incompleteSummary.fields.some((f) => f.key === 'rrp'), 'hides missing RRP')
-assert(!incompleteSummary.fields.some((f) => f.key === 'market'), 'hides missing market value')
-assert(!incompleteSummary.fields.some((f) => f.key === 'production'), 'hides missing production years')
+assertNull(incompleteSummary, 'hides intelligence when RRP or baseline year is missing')
 
 assertNull(
   buildListingIntelligenceSummary(unmappedListing, approvedProduct),

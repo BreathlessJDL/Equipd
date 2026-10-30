@@ -5,10 +5,12 @@
  * Usage:
  *   node scripts/test-buyer-protection-phase4b-payout-release.mjs
  *
- * Requires .env.local with VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
- * Run buyer-protection-phase4b-payout-release.sql on Supabase first.
+ * Requires a local or staging Supabase URL plus SUPABASE_SERVICE_ROLE_KEY.
+ * Production project mhwvzovxlqimcuxvyyjf is refused.
+ * Run buyer-protection-phase4b-payout-release.sql on that non-production project first.
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -93,6 +95,7 @@ async function findEligibleCollectedOrder(admin) {
 
 async function main() {
   loadEnvFile('.env.local')
+  assertServiceRoleTestNotProduction()
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY

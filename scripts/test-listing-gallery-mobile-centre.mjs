@@ -11,7 +11,11 @@ function read(rel) {
 }
 
 const galleryCss = read('src/components/listing/ListingImageGallery.css')
+const galleryJsx = read('src/components/listing/ListingImageGallery.jsx')
 const detailCss = read('src/components/ListingDetail.css')
+
+assert.match(galleryJsx, /LISTING_GALLERY_MAIN_WIDTHS/, 'gallery main image uses transformed sizes')
+assert.match(galleryJsx, /LISTING_GALLERY_THUMB_WIDTHS/, 'gallery thumbs use transformed sizes')
 
 assert.match(galleryCss, /\.listing-gallery__main-image[\s\S]*object-fit:\s*contain/, 'main image uses contain')
 assert.match(galleryCss, /\.listing-gallery__main-image[\s\S]*margin:\s*0 auto/, 'main image has horizontal auto margin')

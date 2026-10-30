@@ -35,6 +35,7 @@ export const HUB_SUMMARY_ICON_VARIANT = {
 
 export const HUB_ATTENTION_ICON_VARIANT = {
   'offers-received': EQUIPD_ICON_VARIANT.NEW_OFFER,
+  'counter-offers-received': EQUIPD_ICON_VARIANT.COUNTER_OFFER,
   'buyer-pay': EQUIPD_ICON_VARIANT.PAYOUT_PAYMENT,
   'seller-awaiting-pay': EQUIPD_ICON_VARIANT.PAYOUT_PAYMENT,
   'buyer-collection': EQUIPD_ICON_VARIANT.COLLECTION_CONFIRMED,

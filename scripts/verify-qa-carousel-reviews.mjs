@@ -52,9 +52,9 @@ function assert(condition, message) {
 
 async function main() {
   loadEnvFile('.env.local')
-  assertQaCarouselServiceRole({ requireConfirm: false })
+  const url = assertQaCarouselServiceRole({ requireConfirm: false })
 
-  const supabase = createQaCarouselAdminClient()
+  const supabase = createQaCarouselAdminClient(url)
 
   const { data: reviews, error: reviewsError } = await supabase
     .from('reviews')

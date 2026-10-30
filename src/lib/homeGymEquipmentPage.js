@@ -24,6 +24,8 @@ import {
   BUY_USED_GYM_EQUIPMENT_PATH,
   BUY_USED_GYM_EQUIPMENT_OG_IMAGE,
 } from './buyUsedGymEquipmentPage.js'
+import { enrichFaqItems, enrichGuideSections, LINK_RULES } from './landingContextualLinks.js'
+import { faqItemsForSchema, linkedCopyToHtml } from './linkedCopy.js'
 
 export const HOME_GYM_EQUIPMENT_PATH = '/home-gym-equipment'
 export const HOME_BROWSE_PATH = buildBrowseNavPath({ rating: 'home_use' })
@@ -224,7 +226,7 @@ export const HOME_GUIDE_HEADING = 'Home gym equipment buying guide'
 export const HOME_GUIDE_INTRO =
   'Building a home gym is mostly a series of trade-offs: space against capability, budget against longevity, and convenience against the temptation to buy everything at once. Used home gym equipment lets you get far more machine for your money, but only if you know what to check, how to move it and which pieces genuinely earn their footprint. This guide covers choosing home fitness equipment for your room, comparing cardio and strength, inspecting second-hand machines, arranging delivery and keeping kit running — and how Equipd helps you buy with a clearer, more protected process from first search through to confirmed handover.'
 
-export const HOME_GUIDE_SECTIONS = Object.freeze([
+export const HOME_GUIDE_SECTIONS = enrichGuideSections([
   {
     id: 'why-buy',
     heading: 'Why buy used home gym equipment?',
@@ -325,13 +327,13 @@ export const HOME_GUIDE_SECTIONS = Object.freeze([
       'If you are new to the marketplace, start with the Buy Gym Equipment guide, then come back here when you are ready to focus on home gym machines specifically. Refurbished home gym equipment is worth asking about too — some sellers service machines before listing.',
     ],
   },
-])
+], LINK_RULES.homeGym)
 
 export const HOME_FAQ_NOTE = 'Common questions'
 export const HOME_FAQ_INTRO =
   'Answers on buying and selling used home gym equipment, Buyer Protection, delivery and valuations on Equipd.'
 
-export const HOME_FAQ_ITEMS = Object.freeze([
+export const HOME_FAQ_ITEMS = enrichFaqItems([
   {
     question: 'What counts as home gym equipment on Equipd?',
     answer:
@@ -402,7 +404,7 @@ export const HOME_FAQ_ITEMS = Object.freeze([
     answer:
       'No. Equipd is the marketplace. Listings are offered by independent sellers. Equipd provides messaging, secure checkout, handover confirmation and Buyer Protection for eligible purchases.',
   },
-])
+], LINK_RULES.homeGym)
 
 export const HOME_EXPLORE_NOTE = 'Keep exploring'
 export const HOME_EXPLORE_HEADING = 'Explore more'
@@ -554,7 +556,7 @@ export function buildHomeGymEquipmentCollectionSchema() {
 }
 
 export function buildHomeGymEquipmentFaqSchema() {
-  return buildFaqPageSchemaNode([...HOME_FAQ_ITEMS], {
+  return buildFaqPageSchemaNode(faqItemsForSchema([...HOME_FAQ_ITEMS]), {
     canonicalUrl: HOME_GYM_EQUIPMENT_PATH,
   })
 }
@@ -584,7 +586,7 @@ function renderFaqSectionHtml(faqs = []) {
 function renderGuideSectionHtml() {
   const sections = HOME_GUIDE_SECTIONS.map((section) => {
     const paragraphs = section.paragraphs
-      .map((text) => `<p>${escapeHtml(text)}</p>`)
+      .map((text) => `<p>${linkedCopyToHtml(text)}</p>`)
       .join('\n      ')
     return `<section aria-labelledby="seo-home-guide-${escapeHtml(section.id)}">
       <h3 id="seo-home-guide-${escapeHtml(section.id)}">${escapeHtml(section.heading)}</h3>
@@ -624,8 +626,8 @@ export function buildHomeGymEquipmentSeoDocument() {
     (item) => `<li><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p></li>`,
   ).join('')
 
-  const faqHtml = renderFaqSectionHtml(HOME_FAQ_ITEMS)
-  const { items: faqItems } = normalizeFaqItems([...HOME_FAQ_ITEMS])
+  const faqHtml = renderFaqSectionHtml(faqItemsForSchema(HOME_FAQ_ITEMS))
+  const { items: faqItems } = normalizeFaqItems(faqItemsForSchema([...HOME_FAQ_ITEMS]))
 
   const bodyHtml = `
 <article class="seo-prerender home-gym-equipment-seo" data-equipd-seo-prerender="home-gym-equipment">
@@ -700,7 +702,7 @@ export function buildHomeGymEquipmentSeoDocument() {
 }
 
 export function renderHomeGymEquipmentFaqScriptTag() {
-  return renderFaqPageScriptTag(HOME_FAQ_ITEMS, {
+  return renderFaqPageScriptTag(faqItemsForSchema(HOME_FAQ_ITEMS), {
     canonicalUrl: HOME_GYM_EQUIPMENT_PATH,
   })
 }

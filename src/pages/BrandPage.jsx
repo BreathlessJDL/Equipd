@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import BrandPageHero from '../components/brands/BrandPageHero'
 import BrandLogo from '../components/BrandLogo'
 import BrandModelCard from '../components/BrandModelCard'
 import BrandValueResearchCard from '../components/BrandValueResearchCard'
@@ -28,7 +29,7 @@ import {
 import {
   buildBrandFaqItems,
   buildBrandFaqPageSchema,
-  buildBrandPageStats,
+  buildBrandHeroStats,
   enrichBrandSeriesWithTags,
   selectFeaturedBrandSeries,
   selectPopularBrandProducts,
@@ -39,15 +40,6 @@ import { BRAND_LISTINGS_FETCH_LIMIT } from '../lib/oneRowListingCapacity'
 import './BrandPage.css'
 
 const PAGE_SIZE = 24
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" fill="none">
-      <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.6" />
-      <path d="m13.1 13.1 4.15 4.15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 function BrandMarketplaceSection({
   brand,
@@ -62,7 +54,7 @@ function BrandMarketplaceSection({
   })
   const visibleListings = hasListings ? listings.slice(0, capacity) : []
   const heading = hasListings
-    ? (buyerConfig?.marketplaceHeading || 'Currently for sale')
+    ? (buyerConfig?.marketplaceHeading || `Used ${brand.displayName} equipment for sale`)
     : (buyerConfig?.marketplaceHeadingEmpty || `Looking for used ${brand.displayName} equipment?`)
   const lede = hasListings
     ? (buyerConfig?.marketplaceLede || `Live ${brand.displayName} listings from Equipd marketplace sellers.`)
@@ -123,10 +115,6 @@ function BrandMarketplaceSection({
         <Link to={brand.browseListingsHref} className="brand-page__listings-cta">
           {ctaLabel}
         </Link>
-      </div>
-
-      <div className="brand-page__wanted-wrap">
-        <BrandWantedRequestCard brandName={brand.displayName} />
       </div>
     </section>
   )
@@ -281,14 +269,12 @@ export default function BrandPage() {
       .slice(0, 8)
   }, [allProducts, search])
   const stats = useMemo(
-    () => buildBrandPageStats({
+    () => buildBrandHeroStats({
       productCount: brand?.productCount,
       listingCount: brand?.listingCount,
-      categories,
-      series,
-      variant: buyerIntent ? 'marketplace' : 'default',
+      categoryCount: categories.length,
     }),
-    [brand?.productCount, brand?.listingCount, categories, series, buyerIntent],
+    [brand?.productCount, brand?.listingCount, categories.length],
   )
   const faqItems = useMemo(
     () => (brand ? buildBrandFaqItems(brand.displayName, { slug: brand.slug }) : []),
@@ -668,6 +654,14 @@ export default function BrandPage() {
     />
   )
 
+  const wantedSection = (
+    <section className="brand-page__section brand-page__section--wanted" aria-label={`${brand.displayName} wanted equipment`}>
+      <div className="brand-page__wanted-wrap">
+        <BrandWantedRequestCard brandName={brand.displayName} />
+      </div>
+    </section>
+  )
+
   return (
     <div className="brand-page">
       <JsonLd data={jsonLd} />
@@ -681,140 +675,38 @@ export default function BrandPage() {
           ]}
         />
 
-        <header className="brand-page__hero">
-          <div className="brand-page__hero-main">
-            <div className="brand-page__hero-logo-wrap">
-              <BrandLogo brand={brand} size="hero" priority className="brand-page__hero-logo" />
-            </div>
+        <BrandPageHero
+          brand={brand}
+          seoTitle={pageTitle}
+          lede={heroLede}
+          stats={stats}
+          searchInputId={searchInputId}
+          search={search}
+          searchPlaceholder={
+            buyerConfig?.searchPlaceholder
+            || `Search ${brand.displayName} equipment and models...`
+          }
+          searchSuggestions={searchSuggestions}
+          searchFocused={searchFocused}
+          showSuggestionValues={!buyerIntent}
+          onSearchChange={(event) => {
+            setSearch(event.target.value)
+            setPage(1)
+            if (event.target.value.trim().length >= 2) setShowAllModels(true)
+          }}
+          onSearchFocus={() => setSearchFocused(true)}
+          onSearchBlur={() => {
+            window.setTimeout(() => setSearchFocused(false), 120)
+          }}
+          onSearchSubmit={handleSearchSubmit}
+          onExploreValues={openCatalogue}
+        />
 
-            {buyerIntent ? (
-              <p className="brand-page__eyebrow">Used gym equipment</p>
-            ) : null}
-
-            <h1 className="brand-page__title">{pageTitle}</h1>
-            <p className="brand-page__lede">{heroLede}</p>
-
-            <section className="brand-page__search-panel" aria-label={`${brand.displayName} model search`}>
-              <form className="brand-page__search-form" onSubmit={handleSearchSubmit}>
-                <label className="visually-hidden" htmlFor={searchInputId}>
-                  Search {brand.displayName} equipment and models
-                </label>
-                <div className="brand-page__search-control">
-                  <div className="brand-page__search-field">
-                    <span className="brand-page__search-icon" aria-hidden="true">
-                      <SearchIcon />
-                    </span>
-                    <input
-                      id={searchInputId}
-                      type="search"
-                      className="brand-page__search-input"
-                      value={search}
-                      placeholder={
-                        buyerConfig?.searchPlaceholder
-                        || `Search ${brand.displayName} equipment and models...`
-                      }
-                      onChange={(event) => {
-                        setSearch(event.target.value)
-                        setPage(1)
-                        if (event.target.value.trim().length >= 2) setShowAllModels(true)
-                      }}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => {
-                        window.setTimeout(() => setSearchFocused(false), 120)
-                      }}
-                      autoComplete="off"
-                      aria-autocomplete="list"
-                      aria-controls={searchSuggestions.length ? `${searchInputId}-suggestions` : undefined}
-                    />
-                  </div>
-                  {searchFocused && searchSuggestions.length ? (
-                    <ul
-                      id={`${searchInputId}-suggestions`}
-                      className="brand-page__search-suggestions"
-                      role="listbox"
-                    >
-                      {searchSuggestions.map((product) => (
-                        <li key={product.id} role="option">
-                          <Link to={product.href} className="brand-page__search-suggestion">
-                            <span className="brand-page__search-suggestion-name">{product.displayName}</span>
-                            {product.estimatedValueLabel && !buyerIntent ? (
-                              <span className="brand-page__search-suggestion-value">
-                                {product.estimatedValueLabel}
-                              </span>
-                            ) : null}
-                          </Link>
-                        </li>
-                      ))}
-                      <li>
-                        <button
-                          type="submit"
-                          className="brand-page__search-suggestion brand-page__search-suggestion--all"
-                        >
-                          View all matching models →
-                        </button>
-                      </li>
-                    </ul>
-                  ) : null}
-                </div>
-              </form>
-            </section>
-
-            <nav className="brand-page__hero-links" aria-label={`${brand.displayName} page actions`}>
-              {buyerIntent ? (
-                <>
-                  <Link to={brand.browseListingsHref} className="brand-page__hero-link">
-                    {buyerConfig?.heroCta?.label || `Browse ${brand.displayName} for sale`}
-                    {' '}
-                    →
-                  </Link>
-                  <Link
-                    to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
-                    className="brand-page__hero-link"
-                    onClick={(event) => {
-                      event.preventDefault()
-                      openCatalogue()
-                    }}
-                  >
-                    {buyerConfig?.heroSecondaryCta?.label || `Explore ${brand.displayName} values`}
-                    {' '}
-                    →
-                  </Link>
-                </>
-              ) : (
-                <Link to="/valuation" className="brand-page__hero-link">
-                  Value your equipment →
-                </Link>
-              )}
-            </nav>
-          </div>
-
-          <aside className="brand-page__hero-aside" aria-label={`${brand.displayName} marketplace summary`}>
-            {stats.length ? (
-              <ul className="brand-page__hero-stats">
-                {stats.map((stat) => (
-                  <li key={stat.key} className="brand-page__hero-stat">
-                    <span className="brand-page__hero-stat-value">{stat.value}</span>
-                    <span className="brand-page__hero-stat-label">{stat.label}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            <div className="brand-page__hero-context">
-              <p className="brand-page__hero-context-heading">
-                {`${brand.displayName} on Equipd`}
-              </p>
-              <p className="brand-page__hero-context-body">
-                {buyerConfig?.heroContextBody
-                  || 'Compare models, research values and buy with confidence from UK sellers on Equipd.'}
-              </p>
-            </div>
-          </aside>
-        </header>
+        {marketplaceSection}
+        {wantedSection}
 
         {buyerIntent ? (
           <>
-            {marketplaceSection}
             {modelsSection}
             {buyingGuideSection}
             {categoryLinksSection}
@@ -824,7 +716,6 @@ export default function BrandPage() {
           <>
             {seriesSection}
             {popularSection}
-            {marketplaceSection}
           </>
         )}
 

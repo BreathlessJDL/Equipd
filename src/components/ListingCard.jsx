@@ -11,11 +11,13 @@ import { formatListingLocationCard } from '../lib/listingLocation'
 import { formatListingDistanceLabel } from '../lib/listingDistance'
 import { getListingPrimaryImageUrl } from '../lib/listingImages'
 import {
+  LISTING_CARD_IMAGE_SIZES,
   LISTING_CARD_IMAGE_WIDTHS,
+  LISTING_ROW_IMAGE_SIZES,
   LISTING_ROW_IMAGE_WIDTHS,
-  buildListingImageSources,
 } from '../lib/listingImageTransforms'
 import { buildListingImageAltText } from '../lib/listingPageSeo'
+import ListingPhoto from './ListingPhoto'
 import ListingSaveButton from './ListingSaveButton'
 import './ListingCard.css'
 
@@ -44,9 +46,6 @@ function getConditionTone(value) {
   return CONDITION_TONE_BY_VALUE[value] || 'neutral'
 }
 
-const GRID_IMAGE_SIZES = '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 300px'
-const ROW_IMAGE_SIZES = '120px'
-
 function ListingCardImage({ listing, priority = false, variant = 'grid' }) {
   const imageUrl = getListingPrimaryImageUrl(listing)
   const imageAlt = buildListingImageAltText(listing)
@@ -56,28 +55,15 @@ function ListingCardImage({ listing, priority = false, variant = 'grid' }) {
   }
 
   const isRow = variant === 'row'
-  const { src, srcSet } = buildListingImageSources(imageUrl, {
-    widths: isRow ? LISTING_ROW_IMAGE_WIDTHS : LISTING_CARD_IMAGE_WIDTHS,
-  })
 
   return (
-    <img
-      src={src}
-      srcSet={srcSet}
-      sizes={srcSet ? (isRow ? ROW_IMAGE_SIZES : GRID_IMAGE_SIZES) : undefined}
+    <ListingPhoto
+      url={imageUrl}
       alt={imageAlt}
       className="listing-card__image"
-      loading={priority ? 'eager' : 'lazy'}
-      fetchPriority={priority ? 'high' : 'auto'}
-      decoding="async"
-      onError={(event) => {
-        // If the transform endpoint is unavailable, show the original upload.
-        const image = event.currentTarget
-        if (image.src === imageUrl) return
-        image.srcset = ''
-        image.sizes = ''
-        image.src = imageUrl
-      }}
+      widths={isRow ? LISTING_ROW_IMAGE_WIDTHS : LISTING_CARD_IMAGE_WIDTHS}
+      sizes={isRow ? LISTING_ROW_IMAGE_SIZES : LISTING_CARD_IMAGE_SIZES}
+      priority={priority}
     />
   )
 }

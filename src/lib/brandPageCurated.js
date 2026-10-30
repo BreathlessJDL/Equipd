@@ -191,6 +191,39 @@ export function buildBrandPageStats({
   return stats
 }
 
+export function buildBrandHeroVisibleTitle(brandDisplayName) {
+  const name = String(brandDisplayName || '').trim() || 'brand'
+  return `Find used ${name} equipment for sale.`
+}
+
+export function buildBrandHeroStats({
+  productCount = 0,
+  listingCount = 0,
+  categoryCount = 0,
+} = {}) {
+  const listings = Number(listingCount) || 0
+  const models = Number(productCount) || 0
+  const types = Number(categoryCount) || 0
+
+  return [
+    {
+      key: 'listings',
+      value: listings,
+      label: listings === 1 ? 'active listing' : 'active listings',
+    },
+    {
+      key: 'models',
+      value: models,
+      label: models === 1 ? 'equipment model covered' : 'equipment models covered',
+    },
+    {
+      key: 'types',
+      value: types,
+      label: types === 1 ? 'equipment type covered' : 'equipment types covered',
+    },
+  ]
+}
+
 /**
  * Brand FAQs aligned with Equipd valuation + marketplace behaviour.
  * Same array must drive visible accordion and FAQPage JSON-LD.

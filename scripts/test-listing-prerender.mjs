@@ -153,6 +153,7 @@ const equipmentProduct = {
   canonical_product_key: 'life-fitness-integrity-series-treadmill',
   original_base_price: 899500,
   original_base_price_currency: 'GBP',
+  baseline_manufacture_year: 2014,
 }
 
 const sellerProfile = {
@@ -180,7 +181,9 @@ assert(activeDoc.bodyHtml.includes('<h1>Life Fitness Integrity Series Treadmill<
 assert(activeDoc.bodyHtml.includes('£3250') || activeDoc.bodyHtml.includes('Price:'), 'active price included')
 assert(activeDoc.bodyHtml.includes("Seller's description"), 'active description section')
 assert(activeDoc.bodyHtml.includes('View seller profile'), 'seller profile included')
-assert(activeDoc.bodyHtml.includes('About this equipment'), 'equipment intelligence included')
+assert(activeDoc.bodyHtml.includes('Equipd Intelligence'), 'equipment intelligence included')
+assert(activeDoc.bodyHtml.includes('Earliest supported model year'), 'earliest year included')
+assert(activeDoc.bodyHtml.includes('Not based on verified completed sales'), 'modelled-valuation disclaimer included')
 assert(activeDoc.bodyHtml.includes('Listing summary'), 'active summary included')
 
 const soldDoc = buildListingSeoDocument({

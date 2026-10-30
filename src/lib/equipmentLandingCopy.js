@@ -23,7 +23,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all commercial treadmills',
     categoryHeading: 'Other commercial cardio to consider',
     categoryLead:
-      'Treadmills rarely go in on their own. Most operators balance the running line with bikes, cross trainers, rowers and climbers so the busiest stations are not the only stations.',
+      'Treadmills rarely go in on their own. Most operators balance the running line with commercial exercise bikes, commercial cross trainers, commercial rowing machines and stair climbers so the busiest stations are not the only stations.',
     brandLead:
       'Life Fitness, Technogym, Precor, Matrix, Star Trac and Woodway decks all appear regularly on the used market. Service coverage and parts availability vary more between generations than the badge on the console suggests, so it is worth checking both.',
     benefitsHeading: 'Why buy used commercial treadmills on Equipd?',
@@ -62,7 +62,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     guideNote: 'Buying guide',
     guideHeading: 'Used commercial treadmill buying guide',
     guideIntro:
-      'Treadmills are the hardest-working machines on almost every gym floor and the first thing members complain about when one goes out of service. They are also where buying used saves the most money, because a well-maintained commercial deck has a long working life and the parts that wear are designed to be replaced. The risk sits in the detail: a glazed belt, a deck that has already been flipped twice, a discontinued console, or a bank of machines sharing a circuit that trips as soon as the floor gets busy. This guide covers specifying the right deck for your duty cycle, reading hours honestly, the faults that actually cost money, footprint and power, servicing and consumables, how the major brands differ on parts support, and how to handle transport and inspection so you find problems before you pay rather than afterwards.',
+      'Treadmills are the hardest-working machines on almost every gym floor and the first thing members complain about when one goes out of service. They are also where buying used saves the most money, because a well-maintained commercial deck has a long working life and the parts that wear are designed to be replaced. The risk sits in the detail: a glazed belt, a deck that has already been flipped twice, a discontinued console, or a bank of machines sharing a circuit that trips as soon as the floor gets busy. This guide covers specifying the right deck for your duty cycle, reading hours honestly, common faults, footprint and power, servicing, brand and parts support, what drives used prices, when new, used or refurbished makes sense, a practical inspection checklist, and how to handle transport so you find problems before you pay rather than afterwards.',
     guideSections: Object.freeze([
       Object.freeze({
         id: 'specifying',
@@ -125,14 +125,44 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
         ]),
       }),
       Object.freeze({
-        id: 'transport-refurb-inspection',
-        heading: 'Refurbished or as-seen, transport, and inspecting before you pay',
+        id: 'what-affects-price',
+        heading: 'What affects used commercial treadmill prices',
         paragraphs: Object.freeze([
-          'Decide early whether you want refurbished or as-seen. Refurbished should mean a technician has replaced consumables, corrected faults, cleaned and tested the machine — but the word is not regulated, so ask for the list of parts replaced and any test report and keep that detail in Equipd messages alongside the listing. As-seen suits buyers with an engineer available who can price a belt and a bearing honestly.',
-          'Plan transport before payment. Equipd does not run a delivery fleet, so collection, seller delivery or a buyer-arranged courier is agreed directly between buyer and seller. Commercial treadmills are heavy, top-heavy once tilted and easy to damage, so specialist gym equipment movers with the right trolleys and straps are usually worth the cost. Agree who dismantles, who reassembles and who keeps the fixings.',
-          'Inspect in person wherever the value justifies the trip. Photographs will not reveal a bearing rumble, a belt that hesitates under load or a console that resets on incline. Run the machine for several minutes with someone on the belt, take it through the full speed and incline range, and test the emergency stop and safety key rather than assuming they work.',
-          'Work through a consistent checklist and photograph what you find: console and key function, emergency stop, belt tracking and tension, belt surface condition, deck flip status, noise at speed and on incline, motor and incline response, frame corrosion, missing covers or bolts, and the serial plate. If you cannot attend, ask for a video of the machine running with the console and serial number visible — a confident seller will not object.',
-          'Only confirm handover once you are satisfied. Confirmation is what starts the post-handover Buyer Protection window on eligible purchases, so inspect first and confirm second, never the other way round because a driver is waiting.',
+          'Used treadmill prices follow remaining useful life and demand, not original list price. Hours, belt and deck condition, and console generation usually move the range more than the year on the serial plate.',
+          'Brand and parts support set how wide the buyer pool is. Decks that UK engineers already service clear more easily. A scarce control board or retired entertainment platform suppresses offers even on a strong frame and motor.',
+          'Refurbishment quality and any seller warranty sit above as-seen condition when the seller can list parts replaced and tests completed. Awkward access, missing hours readings or vague fault descriptions usually widen the negotiation gap.',
+          'Always price the landed cost: specialist transport, electrical work if needed, first service and known consumables. Use the free Instant Valuation for the model, then adjust for the belt, deck, rollers and console you have actually inspected. Compare against other Commercial Cardio Equipment options if a bike or rower would meet the same programming need for less capital risk.',
+        ]),
+      }),
+      Object.freeze({
+        id: 'new-used-refurbished',
+        heading: 'New vs used vs refurbished treadmills',
+        paragraphs: Object.freeze([
+          'New commercial treadmills suit matched banks, connected platforms and openings that cannot wait on secondary-market supply. You pay list price for warranty and specification certainty.',
+          'Refurbished should mean a technician has replaced consumables, corrected faults, cleaned and tested the machine — but the word is not regulated. Ask for the list of parts replaced and any test report, and keep that detail in Equipd messages. Refurbished suits hotels, boutique studios and sites without in-house engineers.',
+          'As-seen used treadmills are usually the lowest purchase price. They suit operators who can inspect thoroughly and either service decks themselves or price a belt, deck and bearing job honestly before offering.',
+          'There is no universal winner. A busy club with a technician on call can buy high-hour as-seen confidently. A small studio that cannot afford downtime usually prefers refurbished or a carefully inspected low-hour used deck. Buy new when you must match an existing console ecosystem across the floor.',
+        ]),
+      }),
+      Object.freeze({
+        id: 'inspection-checklist',
+        heading: 'Commercial treadmill inspection checklist',
+        paragraphs: Object.freeze([
+          'Work the same checklist on every deck so you can compare like with like. Photograph the serial plate, console hours screen, belt surface and any damage before you confirm handover.',
+          'Belt and deck: feel for glazing or fraying in the walking zone, watch tracking at speed with someone on the belt, and ask whether the deck has already been flipped. A twice-used deck needs replacement.',
+          'Motor, incline and rollers: listen at several speeds and on incline for grinding, rhythmic slap or drive-belt squeal. Run incline through its full range and back. Watch for hesitation under foot strike that points to tension or roller wear.',
+          'Console and safety: confirm boot-up, keys, quick-start controls, heart-rate contacts if you need them, emergency stop and safety key. Entertainment screens should be checked for dead pixels, licences and what still works without a retired platform.',
+          'Frame, covers and history: look for sweat corrosion around connectors, missing shrouds or bolts, and ask for service history. If you cannot attend, request a video of the machine running with the console and serial number visible.',
+        ]),
+      }),
+      Object.freeze({
+        id: 'transport-refurb-inspection',
+        heading: 'Transport, installation and confirming handover',
+        paragraphs: Object.freeze([
+          'Plan transport before payment. Equipd does not run a delivery fleet, so collection, seller delivery or a buyer-arranged courier is agreed directly between buyer and seller. Commercial treadmills commonly weigh 180-230kg, become top-heavy when tilted and are easy to damage — specialist gym equipment movers with the right trolleys and straps are usually worth the cost.',
+          'Agree who dismantles, who reassembles and who keeps the fixings. Consoles, uprights and handrails often come off for transit. Measure doorways, corridor turns, stairs and lifts before you offer, and confirm electrical supply for the model before delivery day.',
+          'Book installation to match arrival: space cleared, matting down, sockets live and someone ready to run the deck before movers leave. Finding a fault while the vehicle is still outside is far easier than a week later.',
+          'Only confirm handover once you are satisfied with the inspection checklist. Confirmation is what starts the post-handover Buyer Protection window on eligible purchases, so inspect first and confirm second, never the other way round because a driver is waiting.',
         ]),
       }),
     ]),
@@ -196,7 +226,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'See what UK gyms, dealers and refurbishers are listing right now, from single decks to complete running lines.',
     midCtaLabel: 'Browse Commercial Treadmills',
     exploreLead:
-      'Keep going with related commercial cardio categories, brand pages and the marketplace guides that explain how buying and selling on Equipd works.',
+      'Keep going with related Commercial Cardio Equipment categories, brand pages and the marketplace guides that explain how buying and selling on Equipd works.',
     heroTrustItems: Object.freeze([
       'Ex-facility and refurbished stock',
       'Buyer Protection on eligible orders',
@@ -219,7 +249,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all commercial exercise bikes',
     categoryHeading: 'Other commercial cardio to consider',
     categoryLead:
-      'Bikes are the lowest-maintenance stations on most floors. Pair them with treadmills, cross trainers and rowers to spread demand and give members a low-impact option when the running line is full.',
+      'Bikes are the lowest-maintenance stations on most floors. Pair them with commercial treadmills, commercial cross trainers and commercial rowing machines to spread demand and give members a low-impact option when the running line is full.',
     brandLead:
       'Life Fitness Lifecycle, Technogym, Precor, Matrix and Cybex bikes dominate the UK used market. Frames and drives are broadly similar in quality across the group, so upholstery condition, console generation and parts support usually decide which is the better buy.',
     benefitsHeading: 'Why buy used commercial exercise bikes on Equipd?',
@@ -391,7 +421,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare upright and recumbent commercial exercise bikes listed by UK gyms, dealers and refurbishers, including matched groups from single floors.',
     midCtaLabel: 'Browse Commercial Exercise Bikes',
     exploreLead:
-      'Carry on into related cardio categories, the brands behind most UK bike fleets, and guides on how buying, selling and valuing works on Equipd.',
+      'Carry on into related Commercial Cardio Equipment categories, the brands behind most UK bike fleets, and guides on how buying, selling and valuing works on Equipd.',
     heroTrustItems: Object.freeze([
       'Upright and recumbent stock',
       'Buyer Protection on eligible orders',
@@ -414,7 +444,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all commercial cross trainers',
     categoryHeading: 'Other commercial cardio to consider',
     categoryLead:
-      'Cross trainers pull members away from a busy running line. Balance them with treadmills, bikes, rowers and climbers so no single machine type becomes the bottleneck at peak times.',
+      'Cross trainers pull members away from a busy running line. Balance them with commercial treadmills, commercial exercise bikes, commercial rowing machines and stair climbers so no single machine type becomes the bottleneck at peak times.',
     brandLead:
       'Precor, Life Fitness, Technogym, Matrix and Cybex all build ellipticals with distinctly different feels. Stride path and ramp design vary far more between these brands than between treadmills, so it is worth trying a machine before you commit to a row of them.',
     benefitsHeading: 'Why buy used commercial cross trainers on Equipd?',
@@ -586,7 +616,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used commercial ellipticals from UK gyms, dealers and refurbishers, and compare stride, condition and price side by side.',
     midCtaLabel: 'Browse Commercial Cross Trainers',
     exploreLead:
-      'Continue into the rest of the commercial cardio range, the brands behind most UK elliptical fleets, and the Equipd guides to buying, selling and valuing equipment.',
+      'Continue into the rest of the Commercial Cardio Equipment range, the brands behind most UK elliptical fleets, and the Equipd guides to buying, selling and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Facility-grade ellipticals',
       'Buyer Protection on eligible orders',
@@ -609,7 +639,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all commercial rowing machines',
     categoryHeading: 'Other commercial cardio to consider',
     categoryLead:
-      'Rowers are the cheapest way to add conditioning stations. Combine them with treadmills, bikes, cross trainers and climbers to cover both steady-state and interval programming.',
+      'Rowers are the cheapest way to add conditioning stations. Combine them with commercial treadmills, commercial exercise bikes, commercial cross trainers and stair climbers to cover both steady-state and interval programming.',
     brandLead:
       'Concept2 dominates commercial rowing for good reason, with Technogym, Life Fitness and WaterRower each offering machines with a different feel. Parts availability is unusually good across this category, which is what makes used rowers such a dependable purchase.',
     benefitsHeading: 'Why buy used commercial rowers on Equipd?',
@@ -781,7 +811,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse air, magnetic and water rowers listed by UK gyms, studios, dealers and refurbishers — singles and matched batches.',
     midCtaLabel: 'Browse Commercial Rowers',
     exploreLead:
-      'Explore the rest of the commercial cardio range, the brands behind most UK rowing fleets, and the Equipd guides to buying, selling and valuation.',
+      'Explore the rest of the Commercial Cardio Equipment range, the brands behind most UK rowing fleets, and the Equipd guides to buying, selling and valuation.',
     heroTrustItems: Object.freeze([
       'Matched studio batches',
       'Buyer Protection on eligible orders',
@@ -804,7 +834,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all commercial stair climbers',
     categoryHeading: 'Other commercial cardio to consider',
     categoryLead:
-      'Climbers are a specialist station rather than a floor filler. Most operators run one or two alongside a full complement of treadmills, bikes, cross trainers and rowers.',
+      'Climbers are a specialist station rather than a floor filler. Most operators run one or two alongside a full complement of commercial treadmills, commercial exercise bikes, commercial cross trainers and commercial rowing machines.',
     brandLead:
       'StairMaster effectively defined this category and its stepmills remain the most sought-after used climbers in the UK, with Life Fitness, Matrix and Technogym also building capable machines. Parts and engineer familiarity vary noticeably, so check support before committing.',
     benefitsHeading: 'Why buy used commercial stair climbers on Equipd?',
@@ -976,7 +1006,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'See the stepmills and stair climbers currently listed by UK gyms, dealers and refurbishers — stock in this category does not stay long.',
     midCtaLabel: 'Browse Stair Climbers',
     exploreLead:
-      'Look at the rest of the commercial cardio range, the brands that build most UK climbers, and the Equipd guides to buying, selling and valuing equipment.',
+      'Look at the rest of the Commercial Cardio Equipment range, the brands that build most UK climbers, and the Equipd guides to buying, selling and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Ex-facility stepmills',
       'Buyer Protection on eligible orders',
@@ -999,7 +1029,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all indoor cycles',
     categoryHeading: 'Other commercial cardio to consider',
     categoryLead:
-      'A cycling studio is only part of the offer. Look at treadmills, upright and recumbent bikes, cross trainers and rowers for the main floor alongside your class programme.',
+      'A cycling studio is only part of the offer. Look at commercial treadmills, commercial exercise bikes, commercial cross trainers and commercial rowing machines for the main floor alongside your class programme.',
     brandLead:
       'Keiser, Schwinn, Life Fitness, Technogym, Stages and Wattbike all appear on the UK used market with very different resistance systems and maintenance profiles. The difference between magnetic and friction resistance matters more here than the brand name.',
     benefitsHeading: 'Why buy used indoor cycles on Equipd?',
@@ -1171,7 +1201,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used indoor cycles from UK gyms, boutique studios, dealers and refurbishers, including complete matched batches.',
     midCtaLabel: 'Browse Indoor Cycles',
     exploreLead:
-      'Keep exploring the commercial cardio range, the brands behind most UK cycling studios, and the Equipd guides to buying, selling and valuing kit.',
+      'Keep exploring the Commercial Cardio Equipment range, the brands behind most UK cycling studios, and the Equipd guides to buying, selling and valuing kit.',
     heroTrustItems: Object.freeze([
       'Complete studio batches',
       'Buyer Protection on eligible orders',
@@ -1367,7 +1397,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used commercial functional trainers and dual adjustable pulleys listed by UK gyms, dealers and refurbishers.',
     midCtaLabel: 'Browse Functional Trainers',
     exploreLead:
-      'Continue into the rest of the commercial strength range, the brands behind most UK functional areas, and the Equipd guides to buying and valuing equipment.',
+      'Continue into the rest of the Commercial Strength Equipment range, the brands behind most UK functional areas, and the Equipd guides to buying and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Commercial-grade frames',
       'Buyer Protection on eligible orders',
@@ -1390,7 +1420,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all Smith machines',
     categoryHeading: 'Other commercial strength to consider',
     categoryLead:
-      'A Smith machine works best alongside free-weight provision. Look at power racks, benches, plate-loaded machines and dumbbells to build a complete strength offer.',
+      'A Smith machine works best alongside free-weight provision. Look at power racks, commercial benches, plate-loaded machines and commercial dumbbells to build a complete strength offer.',
     brandLead:
       'Hammer Strength, Life Fitness, Technogym, Matrix, Cybex and Atlantis all build commercial Smith machines. The differences that matter are bar path angle, whether the carriage runs on bushings or linear bearings, and how the safety catches work.',
     benefitsHeading: 'Why buy used Smith machines on Equipd?',
@@ -1562,7 +1592,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used commercial Smith machines from UK gyms, dealers and refurbishers, including angled and vertical bar paths.',
     midCtaLabel: 'Browse Smith Machines',
     exploreLead:
-      'Explore more commercial strength categories, the brands that build most UK strength floors, and the Equipd guides to buying and valuing equipment.',
+      'Explore more Commercial Strength Equipment categories, the brands that build most UK strength floors, and the Equipd guides to buying and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Heavy commercial frames',
       'Buyer Protection on eligible orders',
@@ -1585,7 +1615,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all power racks',
     categoryHeading: 'Other commercial strength to consider',
     categoryLead:
-      'A rack needs a bar, plates and a bench to be useful. Look at commercial benches, dumbbells and plate-loaded machines to complete the strength area around it.',
+      'A rack needs a bar, plates and a bench to be useful. Look at commercial benches, commercial dumbbells, plate-loaded machines and smith machines to complete the strength area around it.',
     brandLead:
       'Hammer Strength, Eleiko, Rogue, Watson, Jordan and Escape all build commercial racks, with differences in upright size, steel gauge, hole spacing and attachment ecosystems that affect what you can bolt on later.',
     benefitsHeading: 'Why buy used commercial power racks on Equipd?',
@@ -1757,7 +1787,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used commercial racks, half racks, squat stands and rigs listed by UK gyms, dealers and refurbishers.',
     midCtaLabel: 'Browse Power Racks',
     exploreLead:
-      'Keep going through the commercial strength range, the brands behind most UK strength floors, and the Equipd guides to buying, selling and valuing kit.',
+      'Keep going through the Commercial Strength Equipment range, the brands behind most UK strength floors, and the Equipd guides to buying, selling and valuing kit.',
     heroTrustItems: Object.freeze([
       'Commercial 75mm uprights',
       'Buyer Protection on eligible orders',
@@ -1953,7 +1983,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used pulldowns, rows, crossovers and dual pulley stations listed by UK gyms, dealers and refurbishers.',
     midCtaLabel: 'Browse Cable Machines',
     exploreLead:
-      'Continue through the commercial strength range, the brands behind most UK gym floors, and the Equipd guides to buying, selling and valuing equipment.',
+      'Continue through the Commercial Strength Equipment range, the brands behind most UK gym floors, and the Equipd guides to buying, selling and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Facility-grade stations',
       'Buyer Protection on eligible orders',
@@ -2149,7 +2179,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used 45 degree, horizontal, selectorised and hack squat combination presses listed by UK gyms, dealers and refurbishers.',
     midCtaLabel: 'Browse Leg Press Machines',
     exploreLead:
-      'Explore the rest of the commercial strength range, the brands behind most UK strength floors, and the Equipd guides to buying and valuing equipment.',
+      'Explore the rest of the Commercial Strength Equipment range, the brands behind most UK strength floors, and the Equipd guides to buying and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Heavy plate-loaded steel',
       'Buyer Protection on eligible orders',
@@ -2344,7 +2374,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used plate-loaded presses, rows and leg machines listed by UK gyms, dealers and refurbishers — individual stations and full circuits.',
     midCtaLabel: 'Browse Plate-Loaded Machines',
     exploreLead:
-      'Continue through the commercial strength range, the brands serious lifters look for, and the Equipd guides to buying, selling and valuing kit.',
+      'Continue through the Commercial Strength Equipment range, the brands serious lifters look for, and the Equipd guides to buying, selling and valuing kit.',
     heroTrustItems: Object.freeze([
       'Iso-lateral and fixed-arm stations',
       'Buyer Protection on eligible orders',
@@ -2540,7 +2570,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used pin-loaded and selectorised machines from UK gyms, dealers and refurbishers — individual stations and complete circuits.',
     midCtaLabel: 'Browse Pin-Loaded Machines',
     exploreLead:
-      'Keep exploring the commercial strength range, the brands behind most UK circuits, and the Equipd guides to buying, selling and valuing equipment.',
+      'Keep exploring the Commercial Strength Equipment range, the brands behind most UK circuits, and the Equipd guides to buying, selling and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Complete matched circuits',
       'Buyer Protection on eligible orders',
@@ -2735,7 +2765,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used flat, adjustable, incline, decline and Olympic benches from UK gyms, dealers and refurbishers — singles and matched sets.',
     midCtaLabel: 'Browse Commercial Benches',
     exploreLead:
-      'Continue through the commercial strength range, the brands strength facilities specify, and the Equipd guides to buying, selling and valuing equipment.',
+      'Continue through the Commercial Strength Equipment range, the brands strength facilities specify, and the Equipd guides to buying, selling and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Heavy commercial frames',
       'Buyer Protection on eligible orders',
@@ -2930,7 +2960,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used rubber hex, urethane and pro-style commercial dumbbells from UK gyms, dealers and refurbishers, including complete racked sets.',
     midCtaLabel: 'Browse Commercial Dumbbells',
     exploreLead:
-      'Explore the rest of the commercial strength range, the brands supplying UK free-weight areas, and the Equipd guides to buying and valuing kit.',
+      'Explore the rest of the Commercial Strength Equipment range, the brands supplying UK free-weight areas, and the Equipd guides to buying and valuing kit.',
     heroTrustItems: Object.freeze([
       'Complete racked sets',
       'Buyer Protection on eligible orders',
@@ -2953,7 +2983,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home treadmills',
     categoryHeading: 'Other home cardio to consider',
     categoryLead:
-      'A treadmill is not the only option for cardio at home. Bikes, cross trainers and rowers are quieter, lighter and often better suited to flats and upstairs rooms.',
+      'A treadmill is not the only option for cardio at home. Home Exercise Bikes, Home Cross Trainers and Home Rowing Machines are quieter, lighter and often better suited to flats and upstairs rooms.',
     brandLead:
       'NordicTrack, ProForm, Sole, Horizon, JTX, Reebok and Technogym all sell home treadmills in the UK, with big differences in deck size, motor rating and whether the console needs a subscription to be useful.',
     benefitsHeading: 'Why buy a used home treadmill on Equipd?',
@@ -3126,7 +3156,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used home treadmills listed across the UK, from compact folding machines to full-size decks for a garage gym.',
     midCtaLabel: 'Browse Home Treadmills',
     exploreLead:
-      'Keep looking through home cardio and home strength categories, plus the Equipd guides to buying, selling and valuing equipment safely.',
+      'Keep looking through Home Cardio Equipment and Home Strength Equipment, plus the Equipd guides to buying, selling and valuing equipment safely.',
     heroTrustItems: Object.freeze([
       'Folding and full-size models',
       'Buyer Protection on eligible orders',
@@ -3149,7 +3179,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home exercise bikes',
     categoryHeading: 'Other home cardio to consider',
     categoryLead:
-      'Bikes are the easiest cardio to live with at home. If you want variety, cross trainers and rowers are also quiet, while treadmills give you walking and running at the cost of noise and space.',
+      'Bikes are the easiest cardio to live with at home. If you want variety, Home Cross Trainers and Home Rowing Machines are also quiet, while Home Treadmills give you walking and running at the cost of noise and space.',
     brandLead:
       'JTX, Reebok, NordicTrack, Schwinn, Decathlon, Horizon and Technogym all sell home bikes in the UK. Build weight, flywheel smoothness and whether the console connects to training apps are what separate them.',
     benefitsHeading: 'Why buy a used home exercise bike on Equipd?',
@@ -3321,7 +3351,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used upright and recumbent home bikes listed by private sellers, dealers and refurbishers across the UK.',
     midCtaLabel: 'Browse Home Exercise Bikes',
     exploreLead:
-      'Carry on through the home cardio and home strength ranges, plus the Equipd guides to buying, selling and valuing used equipment.',
+      'Carry on through Home Cardio Equipment and Home Strength Equipment, plus the Equipd guides to buying, selling and valuing used equipment.',
     heroTrustItems: Object.freeze([
       'Quiet magnetic resistance',
       'Buyer Protection on eligible orders',
@@ -3344,7 +3374,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home cross trainers',
     categoryHeading: 'Other home cardio to consider',
     categoryLead:
-      'Cross trainers give full-body, low-impact cardio. Bikes are smaller and quieter still, rowers store upright, and treadmills add walking and running if you have the space and the floor for it.',
+      'Cross trainers give full-body, low-impact cardio. Home Exercise Bikes are smaller and quieter still, Home Rowing Machines store upright, and Home Treadmills add walking and running if you have the space and the floor for it.',
     brandLead:
       'JTX, NordicTrack, Reebok, Horizon, Domyos and Life Fitness all sell home cross trainers in the UK. Stride length, flywheel weight and frame rigidity vary enormously across price points and are what decide how the machine feels.',
     benefitsHeading: 'Why buy a used home cross trainer on Equipd?',
@@ -3516,7 +3546,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used home ellipticals and cross trainers listed by private sellers, dealers and refurbishers across the UK.',
     midCtaLabel: 'Browse Home Cross Trainers',
     exploreLead:
-      'Keep exploring home cardio and home strength categories, plus the Equipd guides to buying, selling and valuing equipment.',
+      'Keep exploring Home Cardio Equipment and Home Strength Equipment, plus the Equipd guides to buying, selling and valuing equipment.',
     heroTrustItems: Object.freeze([
       'Low-impact and quiet',
       'Buyer Protection on eligible orders',
@@ -3539,7 +3569,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home rowing machines',
     categoryHeading: 'Other home cardio to consider',
     categoryLead:
-      'Rowers give whole-body work in a footprint you can stand up in a corner. Bikes are smaller still and quieter, cross trainers suit sore joints, and treadmills add walking and running if the space allows.',
+      'Rowers give whole-body work in a footprint you can stand up in a corner. Home Exercise Bikes are smaller still and quieter, Home Cross Trainers suit sore joints, and Home Treadmills add walking and running if the space allows.',
     brandLead:
       'Concept2, WaterRower, JTX, Domyos and Hydrow are the names most commonly found used in the UK. Resistance type matters most: air rowers are loud and comparable, magnetic rowers are quiet, and water rowers sound and look quite different.',
     benefitsHeading: 'Why buy a used home rowing machine on Equipd?',
@@ -3578,7 +3608,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     guideNote: 'Buying guide',
     guideHeading: 'Used home rowing machine buying guide',
     guideIntro:
-      'A rowing machine is arguably the best value home cardio purchase there is. It works most of your body, it produces no impact, it stores upright in a corner, and the better machines are so well supported for parts that a decade-old example can be brought back to new condition for the price of a few consumables. The decisions worth thinking about are resistance type, which determines how loud the machine is and therefore whether it suits a flat, and length, because a rower needs more clear floor than people expect even though it stores away neatly. This guide covers air, magnetic and water resistance, monitors and data, what to check on a used machine, space and storage, noise and neighbours, maintenance you can do yourself, and how to collect one.',
+      'A rowing machine is arguably the best value purchase in Home Cardio Equipment. It works most of your body, it produces no impact, it stores upright in a corner, and the better machines are so well supported for parts that a decade-old example can be brought back to new condition for the price of a few consumables. The decisions worth thinking about are resistance type, which determines how loud the machine is and therefore whether it suits a flat, and length, because a rower needs more clear floor than people expect even though it stores away neatly. This guide covers air, magnetic and water resistance, monitors and data, what to check on a used machine, space and storage, noise and neighbours, maintenance you can do yourself, and how to collect one.',
     guideSections: Object.freeze([
       Object.freeze({
         id: 'resistance-types',
@@ -3711,7 +3741,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used air, magnetic and water rowers listed by private sellers, dealers and refurbishers across the UK.',
     midCtaLabel: 'Browse Home Rowing Machines',
     exploreLead:
-      'Continue through home cardio and home strength categories, plus the Equipd guides to buying, selling and valuing used equipment.',
+      'Continue through Home Cardio Equipment and Home Strength Equipment, plus the Equipd guides to buying, selling and valuing used equipment.',
     heroTrustItems: Object.freeze([
       'Stores upright at home',
       'Buyer Protection on eligible orders',
@@ -3734,7 +3764,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home multi-gyms',
     categoryHeading: 'Other home strength to consider',
     categoryLead:
-      'A multi-gym is one route to home strength. Dumbbells and a bench are cheaper and more flexible, and a power rack suits anyone who wants to squat and press with a barbell.',
+      'A multi-gym is one route within Home Strength Equipment. Home Dumbbells and Home Weight Benches are cheaper and more flexible, and Home Power Racks suit anyone who wants to squat and press with a barbell.',
     brandLead:
       'Body-Solid, Powertec, Marcy, BH Fitness, Inspire, Force USA and TuffStuff are the names most often found used in the UK. The difference between a light home unit and a light-commercial one shows in cable quality, pulley bearings and how the frame feels under load.',
     benefitsHeading: 'Why buy a used home multi-gym on Equipd?',
@@ -3899,7 +3929,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       Object.freeze({
         question: 'Should I buy a multi-gym or dumbbells and a bench?',
         answer:
-          'A multi-gym suits flats and upstairs rooms where dropping weights is impossible, and it guides you through exercises. Dumbbells and a bench are cheaper, more flexible and far easier to move, but they need more technique and a floor that can take them. Choose based on your building as much as your training.',
+          'A multi-gym suits flats and upstairs rooms where dropping weights is impossible, and it guides you through exercises. Home Dumbbells and Home Weight Benches are cheaper, more flexible and far easier to move, but they need more technique and a floor that can take them. Choose based on your building as much as your training.',
       }),
     ]),
     midCtaHeading: 'Looking for a home multi-gym?',
@@ -3907,7 +3937,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Compare used multi-gyms, cable stations and all-in-one strength machines listed by sellers across the UK.',
     midCtaLabel: 'Browse Home Multi-Gyms',
     exploreLead:
-      'Keep exploring home strength and home cardio categories, plus the Equipd guides to buying, selling and valuing used equipment.',
+      'Keep exploring Home Strength Equipment and Home Cardio Equipment, plus the Equipd guides to buying, selling and valuing used equipment.',
     heroTrustItems: Object.freeze([
       'No loose weights to drop',
       'Buyer Protection on eligible orders',
@@ -3930,7 +3960,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home dumbbells',
     categoryHeading: 'Other home strength to consider',
     categoryLead:
-      'Dumbbells work best with something to lie on and something to store them in. Look at home benches, power racks and multi-gyms to build out the rest of a home setup.',
+      'Dumbbells work best with something to lie on and something to store them in. Look at Home Weight Benches, Home Power Racks and Home Multi Gyms to build out the rest of a home setup.',
     brandLead:
       'Bowflex, PowerBlock, NÜOBELL, Mirafit, Bodymax, York and Domyos all appear regularly on the UK used market. Fixed dumbbells last indefinitely, while adjustable designs vary a lot in how well their mechanisms survive years of use.',
     benefitsHeading: 'Why buy used dumbbells on Equipd?',
@@ -4102,7 +4132,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used fixed, spinlock and adjustable dumbbells listed by sellers across the UK, from single pairs to full sets with racks.',
     midCtaLabel: 'Browse Home Dumbbells',
     exploreLead:
-      'Continue through home strength and home cardio categories, plus the Equipd guides to buying, selling and valuing used equipment.',
+      'Continue through Home Strength Equipment and Home Cardio Equipment, plus the Equipd guides to buying, selling and valuing used equipment.',
     heroTrustItems: Object.freeze([
       'Fixed and adjustable sets',
       'Buyer Protection on eligible orders',
@@ -4125,7 +4155,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home weight benches',
     categoryHeading: 'Other home strength to consider',
     categoryLead:
-      'A bench needs weights to be useful. Look at dumbbells, power racks and multi-gyms to build the rest of a home strength setup around it.',
+      'A bench needs weights to be useful. Look at Home Dumbbells, Home Power Racks and Home Multi Gyms to build the rest of a home strength setup around it.',
     brandLead:
       'Mirafit, Bodymax, York, Adidas, Domyos, Bowflex and Rep all sell home benches in the UK, and light-commercial benches from gym brands also turn up used. Frame weight, pad width and the adjustment mechanism are what separate a bench that lasts from one that wobbles.',
     benefitsHeading: 'Why buy a used home weight bench on Equipd?',
@@ -4297,7 +4327,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used flat, adjustable, folding and bench press combination benches listed by sellers across the UK.',
     midCtaLabel: 'Browse Home Weight Benches',
     exploreLead:
-      'Keep exploring home strength and home cardio categories, plus the Equipd guides to buying, selling and valuing used equipment.',
+      'Keep exploring Home Strength Equipment and Home Cardio Equipment, plus the Equipd guides to buying, selling and valuing used equipment.',
     heroTrustItems: Object.freeze([
       'Adjustable and folding options',
       'Buyer Protection on eligible orders',
@@ -4320,7 +4350,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
     listingsCta: 'Browse all home power racks',
     categoryHeading: 'Other home strength to consider',
     categoryLead:
-      'A rack needs a bar, plates and a bench. Look at home benches, dumbbells and multi-gyms to complete a garage or spare-room setup.',
+      'A rack needs a bar, plates and a bench. Look at Home Weight Benches, Home Dumbbells and Home Multi Gyms to complete a garage or spare-room setup within Home Strength Equipment.',
     brandLead:
       'Mirafit, Bodymax, Titan, Force USA, Rogue and Eleiko all appear used in the UK, alongside ex-commercial racks from gym brands. Upright size and hole pattern matter most, because they decide which attachments you can add later.',
     benefitsHeading: 'Why buy a used home power rack on Equipd?',
@@ -4450,7 +4480,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       Object.freeze({
         question: 'Can I use a power rack in an upstairs room or a flat?',
         answer:
-          'It is the hardest equipment to make work in a shared building, because racking a bar and setting weights down sends sharp impacts through the structure. Matting, bumper plates and controlled lifting help a great deal, but if you are above a neighbour, dumbbells or a multi-gym are far more considerate choices.',
+          'It is the hardest equipment to make work in a shared building, because racking a bar and setting weights down sends sharp impacts through the structure. Matting, bumper plates and controlled lifting help a great deal, but if you are above a neighbour, Home Dumbbells or Home Multi Gyms are far more considerate choices.',
       }),
       Object.freeze({
         question: 'Does upright size really matter on a home rack?',
@@ -4493,7 +4523,7 @@ export const EQUIPMENT_LANDING_COPY = Object.freeze({
       'Browse used full racks, half racks, squat stands and folding wall racks listed by sellers across the UK.',
     midCtaLabel: 'Browse Home Power Racks',
     exploreLead:
-      'Continue through home strength and home cardio categories, plus the Equipd guides to buying, selling and valuing used equipment.',
+      'Continue through Home Strength Equipment and Home Cardio Equipment, plus the Equipd guides to buying, selling and valuing used equipment.',
     heroTrustItems: Object.freeze([
       'Full, half and folding racks',
       'Buyer Protection on eligible orders',

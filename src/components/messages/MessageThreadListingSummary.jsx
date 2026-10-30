@@ -8,6 +8,7 @@ import { getConversationListingImageUrl } from '../../lib/messages'
 import EquipdTypeIcon from '../icons/EquipdTypeIcon'
 import '../icons/EquipdTypeIcon.css'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
+import ListingPhoto from '../ListingPhoto'
 import './MessageThreadListingSummary.css'
 
 function ProtectionShieldIcon() {
@@ -56,7 +57,7 @@ function MessageThreadListingSummary({
       <div className="message-thread-listing-summary__main">
         <div className="message-thread-listing-summary__thumb" aria-hidden="true">
           {imageUrl ? (
-            <img className="message-thread-listing-summary__thumb-image" src={imageUrl} alt="" />
+            <ListingPhoto className="message-thread-listing-summary__thumb-image" url={imageUrl} alt="" />
           ) : (
             <EquipdTypeIcon
               variant={EQUIPD_ICON_VARIANT.MESSAGES}

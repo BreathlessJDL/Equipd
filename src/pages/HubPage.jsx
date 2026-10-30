@@ -35,7 +35,7 @@ import {
   getOfferErrorMessage,
   logSupabaseError,
 } from '../lib/offers'
-import { isPaymentComplete } from '../lib/payments'
+import { isAcceptedOfferAwaitingPayment, isPaymentComplete } from '../lib/payments'
 import { fetchDisputesForOrders } from '../lib/orderDisputes'
 import {
   canBuyerConfirmOrder,
@@ -450,7 +450,7 @@ function HubPage() {
   const listingsByTab = useMemo(() => groupListingsByTab(myListings), [myListings])
 
   const acceptedUnpaidOffers = useMemo(
-    () => acceptedOffersMade.filter((offer) => !isPaymentComplete(offer.payment)),
+    () => acceptedOffersMade.filter(isAcceptedOfferAwaitingPayment),
     [acceptedOffersMade],
   )
 
@@ -531,7 +531,7 @@ function HubPage() {
   )
 
   const sellerAcceptedUnpaidOffers = useMemo(
-    () => acceptedOffersReceived.filter((offer) => !isPaymentComplete(offer.payment)),
+    () => acceptedOffersReceived.filter(isAcceptedOfferAwaitingPayment),
     [acceptedOffersReceived],
   )
 

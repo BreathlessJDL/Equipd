@@ -4,6 +4,8 @@
 import {
   buildBrandFaqItems,
   buildBrandFaqPageSchema,
+  buildBrandHeroStats,
+  buildBrandHeroVisibleTitle,
   buildBrandPageStats,
   buildBrandSeriesTags,
   selectFeaturedBrandSeries,
@@ -124,6 +126,21 @@ const zeroListingMarketplace = buildBrandPageStats({
   variant: 'marketplace',
 })
 assert(zeroListingMarketplace[0]?.value === 0, 'marketplace shows zero listings')
+
+const heroStats = buildBrandHeroStats({
+  productCount: 1,
+  listingCount: 0,
+  categoryCount: 2,
+})
+assert(heroStats.length === 3, 'hero always shows listings, models and types')
+assert(heroStats[0].value === 0 && heroStats[0].label === 'active listings', 'zero listings stay visible')
+assert(heroStats[1].label === 'equipment model covered', 'singular model label')
+assert(heroStats[2].label === 'equipment types covered', 'plural type label')
+assert(
+  buildBrandHeroVisibleTitle('Technogym') === 'Find used Technogym equipment for sale.',
+  'hero title is brand-dynamic',
+)
+assert(!buildBrandHeroVisibleTitle('Horizon Fitness').includes('Life Fitness'), 'does not hardcode Life Fitness')
 
 const faqs = buildBrandFaqItems('Life Fitness')
 assert(faqs.length >= 4, 'brand faqs present')

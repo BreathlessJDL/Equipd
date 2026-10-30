@@ -13,7 +13,7 @@
 }
 
 .home-page--feed .home-valuator--signed-in {
-  order: 0;
+  order: 1;
   flex-shrink: 0;
 }
 

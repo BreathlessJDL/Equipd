@@ -9,6 +9,7 @@ import { BUY_USED_GYM_EQUIPMENT_PATH, BUY_USED_GYM_EQUIPMENT_OG_IMAGE } from './
 import { LANDING_PATHS } from './landingPagePaths.js'
 import { STRENGTH_CATEGORY_SLUGS } from './landingCategorySlugs.js'
 import { buildCategoryLandingSeoDocument } from './categoryLandingSeo.js'
+import { enrichLandingContentLinks, LINK_RULES } from './landingContextualLinks.js'
 
 export const COMMERCIAL_STRENGTH_EQUIPMENT_PATH = LANDING_PATHS.commercialStrength
 
@@ -19,7 +20,7 @@ export const COMMERCIAL_STRENGTH_BROWSE_PATH = buildBrowseNavPath({
 
 export { STRENGTH_CATEGORY_SLUGS as COMMERCIAL_STRENGTH_CATEGORY_SLUGS }
 
-export const COMMERCIAL_STRENGTH_CONTENT = Object.freeze({
+export const COMMERCIAL_STRENGTH_CONTENT = Object.freeze(enrichLandingContentLinks({
   idPrefix: 'commercial-strength',
   prerenderId: 'commercial-strength-equipment',
   path: COMMERCIAL_STRENGTH_EQUIPMENT_PATH,
@@ -174,7 +175,7 @@ export const COMMERCIAL_STRENGTH_CONTENT = Object.freeze({
       paragraphs: [
         'Start with how members actually train rather than what looks impressive on a brochure. Plate-loaded machines suit facilities where experienced lifters want natural movement paths and heavy loads — Hammer Strength and similar lines dominate this space and hold value well on the used market.',
         'Pin-loaded selectorised machines are the member-friendly backbone of most gyms. They need less coaching, reset quickly between users and cover the standard push, pull and leg patterns. A sensible floor usually mixes both: plate-loaded for signature pieces and pin-loaded for volume.',
-        'Free-weight zones — racks, benches, barbells and dumbbells — remain the heart of serious training spaces. Even a cardio-heavy club needs at least one squat rack, a flat bench and enough plates to serve beginners and intermediates without queues.',
+        'Free-weight zones — power racks, smith machines, benches, barbells and dumbbells — remain the heart of serious training spaces. Even a cardio-heavy club needs at least one squat rack, a flat bench and enough plates to serve beginners and intermediates without queues.',
         'Functional trainers and dual-cable pulleys fill the gap between fixed machines and free weights. They suit small studios, physiotherapy spaces and any floor that needs versatile cable work without dedicating metres to a full multi-station.',
         'Match the mix to your membership. A budget 24-hour gym needs durable selectorised kit and plenty of benches; a performance facility may justify more plate-loaded stations and competition-grade bars. Usage data beats generic ratios if you have it.',
       ],
@@ -382,7 +383,7 @@ export const COMMERCIAL_STRENGTH_CONTENT = Object.freeze({
       to: SELL_GYM_EQUIPMENT_PATH,
     },
   ],
-})
+}, LINK_RULES.commercialStrength))
 
 export function buildCommercialStrengthEquipmentSeoDocument() {
   return buildCategoryLandingSeoDocument(COMMERCIAL_STRENGTH_CONTENT)

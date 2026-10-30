@@ -127,8 +127,13 @@ function ListingBrowseResults({
         </header>
       ) : null}
       <div className="listing-browse__list">
-        {listings.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} variant="row" />
+        {listings.map((listing, index) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            variant="row"
+            imagePriority={index < ABOVE_FOLD_CARD_COUNT}
+          />
         ))}
       </div>
       {lowStockBanner}

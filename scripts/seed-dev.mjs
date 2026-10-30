@@ -2,17 +2,19 @@
 /**
  * Equipd development seed script.
  *
- * Populates Supabase with realistic marketplace data for UI testing.
- * Requires service role access — never run against production.
+ * Populates a staging Supabase project with synthetic marketplace data.
+ * Refuses to run unless STAGING_SUPABASE_PROJECT_REF matches SUPABASE_URL
+ * and is not the known production project.
  *
  * Usage:
- *   SEED_DEV_ALLOW=true npm run seed:dev
- *   SEED_DEV_ALLOW=true npm run seed:dev -- --reset
+ *   $env:SEED_DEV_ALLOW="true"
+ *   $env:STAGING_SUPABASE_PROJECT_REF="<staging-ref>"
+ *   $env:SUPABASE_URL="https://<staging-ref>.supabase.co"
+ *   $env:SUPABASE_SERVICE_ROLE_KEY="<staging service role>"
+ *   npm run seed:dev
  *
- * Env (.env.local):
- *   VITE_SUPABASE_URL or SUPABASE_URL
- *   SUPABASE_SERVICE_ROLE_KEY
- *   SEED_DEV_ALLOW=true
+ * Set process env before this script loads .env.local so a production Vite
+ * URL cannot win.
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -35,6 +37,7 @@ import {
 } from './seed-dev-data.mjs'
 import { calculateBuyerProtectionFee } from '../src/lib/buyerProtection.js'
 import { calculateSellerNetPayout, calculateSellerServiceFee } from '../src/lib/sellerServiceFee.js'
+import { assertSeedWriteAllowed } from './lib/supabaseProjectSafety.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -78,33 +81,7 @@ function loadEnvFile(relativePath) {
   }
 }
 
-function assertDevSafe() {
-  if (process.env.SEED_DEV_ALLOW !== 'true') {
-    throw new Error(
-      'Refusing to seed: set SEED_DEV_ALLOW=true in your environment.\n' +
-        'This script uses the Supabase service role and is for local/dev only.',
-    )
-  }
-
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  if (!url) {
-    throw new Error('Missing SUPABASE_URL or VITE_SUPABASE_URL.')
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY.')
-  }
-
-  if (/prod/i.test(url) && process.env.SEED_DEV_IGNORE_PROD_URL !== 'true') {
-    throw new Error(
-      `Refusing to seed: Supabase URL looks like production (${url}).\n` +
-        'Set SEED_DEV_IGNORE_PROD_URL=true only if you are certain this is a dev project.',
-    )
-  }
-}
-
-function createAdminClient() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+function createAdminClient(url) {
   return createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
@@ -464,10 +441,11 @@ async function seedSavedListings(supabase) {
 async function main() {
   loadEnvFile('.env.local')
   loadEnvFile('.env')
-  assertDevSafe()
+  const target = assertSeedWriteAllowed()
+  console.log(`Seeding staging project ${target.projectRef} (${target.url})`)
 
   const reset = process.argv.includes('--reset')
-  const supabase = createAdminClient()
+  const supabase = createAdminClient(target.url)
 
   if (reset) {
     await resetDevSeed(supabase)
@@ -485,8 +463,9 @@ async function main() {
     console.log(`  ${user.email} — ${user.displayName}`)
   }
   console.log(`\nListings prefixed with "${DEV_SEED_PREFIX}" are safe to delete.`)
-  console.log('Re-run safely: SEED_DEV_ALLOW=true npm run seed:dev')
-  console.log('Full reset first: SEED_DEV_ALLOW=true npm run seed:dev -- --reset')
+  console.log(
+    'Re-run with STAGING_SUPABASE_PROJECT_REF, matching SUPABASE_URL, and SEED_DEV_ALLOW=true',
+  )
 }
 
 main().catch((error) => {

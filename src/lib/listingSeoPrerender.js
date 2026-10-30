@@ -164,17 +164,14 @@ function renderIntelligenceSection(listing, equipmentProduct) {
   if (!summary) return ''
   return `
 <section aria-labelledby="seo-listing-intelligence">
-  <h2 id="seo-listing-intelligence">About this equipment</h2>
-  <p>${escapeHtml(summary.disclaimer)}</p>
+  <h2 id="seo-listing-intelligence">Equipd Intelligence</h2>
   <dl>${summary.fields.map((field) => (
-    `<div><dt>${escapeHtml(field.label)}</dt><dd>${escapeHtml(field.value)}${
-      field.note ? ` <span>${escapeHtml(field.note)}</span>` : ''
-    }</dd></div>`
+    `<div><dt>${escapeHtml(field.label)}</dt><dd>${escapeHtml(field.value)}</dd></div>`
   )).join('')}</dl>
+  <p>${escapeHtml(summary.disclaimer)}</p>
   <p>
     ${summary.equipmentHref ? `<a href="${escapeHtml(summary.equipmentHref)}">View full product information</a>` : ''}
     ${summary.valuationHref ? ` · <a href="${escapeHtml(summary.valuationHref)}">Value this equipment</a>` : ''}
-    ${summary.brandHref ? ` · <a href="${escapeHtml(summary.brandHref)}">More from this brand</a>` : ''}
   </p>
 </section>`.trim()
 }

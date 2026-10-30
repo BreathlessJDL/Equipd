@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DeferredEquipmentAutocomplete from '../DeferredEquipmentAutocomplete'
 import {
   buildEquipmentDepreciationGraphData,
@@ -294,12 +294,16 @@ export default function HomeEquipmentValuator({
   contained = false,
   className = '',
   showShowcase = true,
+  searchOnly = false,
+  submitLabel = null,
+  popularSearches = [],
 } = {}) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [useCompactPlaceholder, setUseCompactPlaceholder] = useState(false)
   const isCompactMobileVariant = className.split(/\s+/).includes('home-valuator--compact-mobile')
+    || searchOnly
 
   useEffect(() => {
     if (!isCompactMobileVariant || typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -323,10 +327,15 @@ export default function HomeEquipmentValuator({
   const titleId = `${idPrefix}-title`
   const inputId = `${idPrefix}-search`
   const TitleTag = titleAs === 'h1' ? 'h1' : 'h2'
-  const resolvedTitleMobile = titleMobile == null ? null : titleMobile
-  const resolvedLedeMobile = ledeMobile == null ? null : ledeMobile
+  const resolvedTitleMobile = searchOnly ? null : titleMobile == null ? null : titleMobile
+  const resolvedLedeMobile = searchOnly ? null : ledeMobile == null ? null : ledeMobile
+  const showCopy = !searchOnly
+  const resolvedTitle = showCopy ? title : null
+  const resolvedLede = showCopy ? lede : null
+  const resolvedEyebrow = showCopy ? eyebrow : null
   const usesResponsiveTitle = Boolean(resolvedTitleMobile)
-  const usesResponsiveLede = Boolean(resolvedLedeMobile && lede)
+  const usesResponsiveLede = Boolean(resolvedLedeMobile && resolvedLede)
+  const visiblePopularSearches = Array.isArray(popularSearches) ? popularSearches : []
 
   function goToValuator({ product = selectedProduct, queryText = query } = {}) {
     if (typeof document !== 'undefined') {
@@ -359,53 +368,55 @@ export default function HomeEquipmentValuator({
   const card = (
     <div className="home-valuator__card">
       <div className="home-valuator__main">
-        <div className="home-valuator__copy">
-          <div className="home-valuator__heading-row">
-            <span className="home-valuator__heading-icon" aria-hidden="true">
-              <ValuatorTrendIcon />
-            </span>
-            <div className="home-valuator__heading-copy">
-              {eyebrow ? (
-                <p className="home-valuator__eyebrow">
-                  <span className="home-valuator__eyebrow-icon">
-                    <ValuatorTrendIcon />
-                  </span>
-                  <span>{eyebrow}</span>
-                </p>
-              ) : null}
-              <TitleTag id={titleId} className="home-valuator__title">
-                {usesResponsiveTitle ? (
-                  <>
-                    <span className="home-valuator__title-text home-valuator__title-text--desktop">
-                      {title}
+        {showCopy ? (
+          <div className="home-valuator__copy">
+            <div className="home-valuator__heading-row">
+              <span className="home-valuator__heading-icon" aria-hidden="true">
+                <ValuatorTrendIcon />
+              </span>
+              <div className="home-valuator__heading-copy">
+                {resolvedEyebrow ? (
+                  <p className="home-valuator__eyebrow">
+                    <span className="home-valuator__eyebrow-icon">
+                      <ValuatorTrendIcon />
                     </span>
-                    <span className="home-valuator__title-text home-valuator__title-text--mobile">
-                      {resolvedTitleMobile}
-                    </span>
-                  </>
-                ) : (
-                  title
-                )}
-              </TitleTag>
-              {lede ? (
-                <p className="home-valuator__lede">
-                  {usesResponsiveLede ? (
+                    <span>{resolvedEyebrow}</span>
+                  </p>
+                ) : null}
+                <TitleTag id={titleId} className="home-valuator__title">
+                  {usesResponsiveTitle ? (
                     <>
-                      <span className="home-valuator__lede-text home-valuator__lede-text--desktop">
-                        {lede}
+                      <span className="home-valuator__title-text home-valuator__title-text--desktop">
+                        {resolvedTitle}
                       </span>
-                      <span className="home-valuator__lede-text home-valuator__lede-text--mobile">
-                        {resolvedLedeMobile}
+                      <span className="home-valuator__title-text home-valuator__title-text--mobile">
+                        {resolvedTitleMobile}
                       </span>
                     </>
                   ) : (
-                    lede
+                    resolvedTitle
                   )}
-                </p>
-              ) : null}
+                </TitleTag>
+                {resolvedLede ? (
+                  <p className="home-valuator__lede">
+                    {usesResponsiveLede ? (
+                      <>
+                        <span className="home-valuator__lede-text home-valuator__lede-text--desktop">
+                          {resolvedLede}
+                        </span>
+                        <span className="home-valuator__lede-text home-valuator__lede-text--mobile">
+                          {resolvedLedeMobile}
+                        </span>
+                      </>
+                    ) : (
+                      resolvedLede
+                    )}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
 
         <form className="home-valuator__form" onSubmit={handleSubmit}>
           <label className="visually-hidden" htmlFor={inputId}>
@@ -441,16 +452,37 @@ export default function HomeEquipmentValuator({
                 }}
               />
             </div>
-            <button type="submit" className="home-valuator__submit" aria-label="Value equipment">
-              <span className="home-valuator__submit-label home-valuator__submit-label--desktop">
-                Value equipment
-              </span>
-              <span className="home-valuator__submit-label home-valuator__submit-label--mobile" aria-hidden="true">
-                <SubmitArrowIcon />
-              </span>
+            <button
+              type="submit"
+              className="home-valuator__submit"
+              aria-label={submitLabel || 'Value equipment'}
+            >
+              {submitLabel ? (
+                <span className="home-valuator__submit-label">{submitLabel}</span>
+              ) : (
+                <>
+                  <span className="home-valuator__submit-label home-valuator__submit-label--desktop">
+                    Value equipment
+                  </span>
+                  <span className="home-valuator__submit-label home-valuator__submit-label--mobile" aria-hidden="true">
+                    <SubmitArrowIcon />
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </form>
+        {visiblePopularSearches.length > 0 ? (
+          <ul className="home-valuator__popular" aria-label="Popular searches">
+            {visiblePopularSearches.map((item) => (
+              <li key={item.id || item.href}>
+                <Link to={item.href} className="home-valuator__popular-chip">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       {showShowcase ? (
@@ -460,7 +492,11 @@ export default function HomeEquipmentValuator({
   )
 
   return (
-    <section className={sectionClassName} aria-labelledby={titleId}>
+    <section
+      className={sectionClassName}
+      aria-labelledby={showCopy ? titleId : undefined}
+      aria-label={showCopy ? undefined : 'Search equipment values'}
+    >
       {contained ? card : (
         <div className="home-section__inner">
           {card}

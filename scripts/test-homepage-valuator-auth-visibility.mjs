@@ -16,16 +16,16 @@ const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
 const valuatorCss = read('src/components/home/HomeEquipmentValuator.css')
 
 assert.match(homePage, /import HomeEquipmentValuator from/, 'homepage imports shared valuator')
-assert.match(homePage, /<HomeEquipmentValuator/, 'homepage renders shared valuator')
-assert.doesNotMatch(
+assert.match(homePage, /<HomeEquipmentValuator/, 'logged-out homepage still renders the search valuator')
+assert.match(
   homePage,
-  /\{!\s*isLoggedIn\s*\?\s*<HomeEquipmentValuator/,
-  'valuator is not gated behind logged-out-only conditional',
+  /\{!\s*isLoggedIn\s*\?\s*\(\s*<HomeEquipmentValuator/,
+  'standalone valuator is gated to logged-out homepage only',
 )
 assert.doesNotMatch(
   homePage,
-  /isLoggedIn\s*\?\s*null\s*:\s*<HomeEquipmentValuator/,
-  'valuator is not hidden when logged in',
+  /home-valuator--signed-in/,
+  'logged-in homepage no longer mounts the duplicate valuation hero',
 )
 
 const valuatorRender = homePage.match(/<HomeEquipmentValuator[\s\S]*?\/>/)
@@ -35,18 +35,18 @@ assert.match(
   /home-valuator--compact-mobile/,
   'homepage uses compact mobile valuator class',
 )
-assert.match(
-  valuatorRender[0],
-  /home-valuator--signed-in/,
-  'signed-in homepage uses compact class via props',
-)
 assert.doesNotMatch(
   valuatorRender[0],
   /idPrefix=["']brands-valuator["']/,
   'homepage keeps default home-valuator ids',
 )
 
-assert.match(homePage, /\{!\s*isLoggedIn\s*\?\s*<HomeHero/, 'hero remains logged-out marketing only')
+assert.match(homePage, /<HomeHeroCarousel/, 'homepage uses the rotating hero carousel')
+assert.match(
+  homePage,
+  /<HomeHeroCarousel isLoggedIn=\{isLoggedIn\} \/>/,
+  'carousel receives logged-in state so signed-in users get the cardio-first slides',
+)
 assert.match(homePage, /HomeDiscoverySection/, 'signed-in homepage keeps marketplace discovery')
 assert.match(homePage, /ListingBrowseResults/, 'signed-in homepage keeps marketplace listings')
 assert.match(homePage, /home-page--feed/, 'signed-in compact feed class retained')
@@ -60,12 +60,17 @@ assert.match(app, /<Route index element=\{<HomePage \/>\} \/>/, 'index route rem
 assert.match(app, /path=["']browse["'][\s\S]*BrowsePage/, '/browse route remains available')
 assert.doesNotMatch(
   app,
-  /path=["']browse["'][\s\S]*Navigate[\s\S]*index|index[\s\S]*Navigate[\s\S]*browse/,
-  'no index→browse redirect route',
+  /<Route index element=\{<Navigate[\s\S]*browse/,
+  'index route is not a Navigate to browse',
+)
+assert.doesNotMatch(
+  app,
+  /<Route path=["']browse["'][^>]*element=\{<Navigate/,
+  'browse route is not a Navigate away from listings',
 )
 
 assert.match(valuator, /idPrefix = 'home-valuator'/, 'shared defaults preserve homepage ids')
-assert.match(valuator, /CanonicalEquipmentAutocomplete/, 'shared autocomplete')
+assert.match(valuator, /DeferredEquipmentAutocomplete/, 'shared autocomplete')
 assert.match(valuator, /buildValuationHref/, 'shared valuation routing')
 assert.match(valuator, /useState\(''\)/, 'instance-local query state')
 assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
@@ -75,12 +80,11 @@ assert.match(
   'shared default lede is not commercial-only',
 )
 assert.doesNotMatch(valuator, /commercial fitness products/, 'no commercial-only valuator lede')
-assert.match(valuatorCss, /\.home-valuator--signed-in/, 'signed-in compact spacing class exists')
-assert.match(homePage, /home-valuator--compact-mobile/, 'homepage uses compact mobile valuator layout')
+assert.match(homePage, /home-valuator--compact-mobile/, 'logged-out homepage uses compact mobile valuator layout')
 
 const hero = read('src/components/home/HomeHero.jsx')
 assert.doesNotMatch(hero, /home-hero__copy/, 'homepage does not render duplicate marketplace intro block')
 assert.doesNotMatch(hero, /EQUIPD MARKETPLACE|Equipd Marketplace/, 'no marketplace eyebrow under hero')
-assert.match(homePage, /<HomeHero/, 'homepage still uses hero banner component')
+assert.match(homePage, /<HomeHeroCarousel/, 'homepage still uses the hero carousel')
 
 console.log('homepage-valuator-auth-visibility: ok')

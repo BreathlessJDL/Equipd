@@ -13,6 +13,7 @@ import {
   getConversationParticipantLine,
   getConversationUnreadCount,
 } from '../../lib/messages'
+import ListingPhoto from '../ListingPhoto'
 import './ConversationListItem.css'
 
 function ConversationListItem({ conversation, userId, isActive = false }) {
@@ -43,7 +44,7 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
 
         <div className="conversation-card__thumb" aria-hidden="true">
           {imageUrl ? (
-            <img className="conversation-card__thumb-image" src={imageUrl} alt="" loading="lazy" />
+            <ListingPhoto className="conversation-card__thumb-image" url={imageUrl} alt="" />
           ) : (
             <EquipdTypeIcon
               variant={EQUIPD_ICON_VARIANT.MESSAGES}

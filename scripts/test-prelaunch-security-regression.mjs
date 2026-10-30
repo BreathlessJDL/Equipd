@@ -4,6 +4,7 @@
  * Run: npx vite-node scripts/test-prelaunch-security-regression.mjs
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
@@ -55,6 +56,7 @@ async function main() {
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+assertServiceRoleTestNotProduction()
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
   const authed = createClient(url, anonKey, { auth: { persistSession: false } })
   const anon = createClient(url, anonKey, { auth: { persistSession: false } })

@@ -6,6 +6,12 @@ import { HUB_PNG_ICONS } from '../../lib/hubPngIcons'
 import { HUB_SUMMARY_ICON_VARIANT } from '../../lib/equipdIconVariants'
 import { HUB_ORDERS_SUB_TABS, HUB_ORDERS_TABS } from '../../lib/hubNavigation'
 import HubScopedPngIcon from './HubScopedPngIcon'
+import {
+  HUB_ATTENTION_DISPLAY,
+  getHubAttentionTone,
+} from '../../lib/hubNeedsAttention'
+
+export { HUB_ATTENTION_DISPLAY, getHubAttentionTone }
 
 export const HUB_TRANSACTION_ACTION_CARDS = [
   {
@@ -31,60 +37,6 @@ export const HUB_TRANSACTION_ACTION_CARDS = [
       count === 0 ? 'No active sales' : `${count} active sale${count === 1 ? '' : 's'}`,
   },
 ]
-
-export const HUB_ATTENTION_DISPLAY = {
-  'offers-received': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} offer${count === 1 ? '' : 's'} need accepting, declining, or countering.`,
-    actionLabel: 'Review offers',
-  },
-  'buyer-pay': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} accepted offer${count === 1 ? '' : 's'} waiting for your payment.`,
-    actionLabel: 'Complete payment',
-  },
-  'seller-awaiting-pay': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} buyer${count === 1 ? '' : 's'} still need to complete checkout.`,
-    actionLabel: 'View sales',
-  },
-  'buyer-collection': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} order${count === 1 ? '' : 's'} ready for collection or delivery.`,
-    actionLabel: 'View orders',
-  },
-  'courier-evidence': {
-    actionRequired: true,
-    description: () => 'Upload handover evidence before courier collection.',
-    actionLabel: 'Submit evidence',
-  },
-  disputes: {
-    description: (count) =>
-      `${count} open dispute${count === 1 ? '' : 's'} need your attention.`,
-    actionLabel: 'View disputes',
-    urgent: true,
-  },
-  'counter-offers-received': {
-    actionRequired: true,
-    description: (count) =>
-      `${count} counter offer${count === 1 ? '' : 's'} need your response.`,
-    actionLabel: 'Review counter offers',
-  },
-  'payout-setup': {
-    description: () => 'Connect your payout account to receive funds from reserved listings.',
-    actionLabel: 'Set up payouts',
-    urgent: true,
-  },
-  'pending-reviews': {
-    actionRequired: true,
-    description: () => 'Leave a review for completed orders.',
-    actionLabel: 'Review orders',
-  },
-}
 
 export function HubAttentionChevron() {
   return (

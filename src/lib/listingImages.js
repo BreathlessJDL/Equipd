@@ -122,6 +122,7 @@ export async function uploadListingImage({ userId, listingId, file, sortOrder })
     .from(LISTING_IMAGES_BUCKET)
     .upload(storagePath, file, {
       contentType: file.type,
+      cacheControl: '31536000',
       upsert: false,
     })
 

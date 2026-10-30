@@ -103,19 +103,27 @@ for (let run = 0; run < RUNS; run += 1) {
   })
   const page = await context.newPage()
 
-  let transferred = 0
+  let decoded = 0
   let requestCount = 0
   page.on('response', async (response) => {
     requestCount += 1
     try {
-      const lengthHeader = response.headers()['content-length']
-      transferred += lengthHeader ? Number(lengthHeader) : (await response.body()).length
+      decoded += (await response.body()).length
     } catch {
       // Redirects / aborted responses have no body.
     }
   })
 
   const client = await context.newCDPSession(page)
+
+  // On-the-wire bytes. content-length is unreliable here: it is absent on
+  // chunked/compressed CDN responses, which would silently report the
+  // uncompressed size and overstate a compressed origin against a local one.
+  let transferred = 0
+  client.on('Network.loadingFinished', (event) => {
+    transferred += event.encodedDataLength ?? 0
+  })
+
   await client.send('Network.enable')
   await client.send('Network.emulateNetworkConditions', { offline: false, ...config.network })
   await client.send('Emulation.setCPUThrottlingRate', { rate: config.cpuThrottle })
@@ -154,7 +162,7 @@ for (let run = 0; run < RUNS; run += 1) {
     }
   })
 
-  samples.push({ ...result, transferred, requestCount })
+  samples.push({ ...result, transferred, decoded, requestCount })
   await context.close()
 }
 
@@ -174,6 +182,7 @@ const summary = {
   lcpMs: Math.round(median(samples.map((s) => s.lcp))),
   cls: Number(median(samples.map((s) => s.cls)).toFixed(4)),
   transferredKb: Math.round(median(samples.map((s) => s.transferred)) / 1024),
+  decodedKb: Math.round(median(samples.map((s) => s.decoded)) / 1024),
   requests: Math.round(median(samples.map((s) => s.requestCount))),
   lcpElement: samples[samples.length - 1].lcpElement,
 }

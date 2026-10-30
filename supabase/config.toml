@@ -50,5 +50,5 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.request-account-deletion]
-# Auth, password re-check, and service-role anonymisation enforced in-function.
+# Shelved: handler returns 410 before auth. Keep deployed so the stub replaces any older live function.
 verify_jwt = false

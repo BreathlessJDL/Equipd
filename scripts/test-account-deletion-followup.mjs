@@ -57,23 +57,34 @@ assert.equal(
   DELETED_ACCOUNT_DISPLAY_NAME,
 )
 
-const [deletionFn, stripeHelper, settingsPage] = await Promise.all([
+const [deletionFn, stripeHelper, settingsPage, clientLib, deletionUi] = await Promise.all([
   readFile(new URL('../supabase/functions/request-account-deletion/index.ts', import.meta.url), 'utf8'),
   readFile(new URL('../supabase/functions/_shared/checkAccountStripeDisputes.ts', import.meta.url), 'utf8'),
   readFile(new URL('../src/pages/SettingsPage.jsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/accountDeletion.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/components/settings/DeleteAccountSection.jsx', import.meta.url), 'utf8'),
 ])
 assert.match(deletionFn, /evaluateOnly/)
 assert.match(deletionFn, /evaluateDeletionWithStripe/)
 assert.match(deletionFn, /checkAccountStripeDisputes/)
+assert.match(deletionFn, /ACCOUNT_DELETION_SHELVED = true/)
+assert.match(deletionFn, /Account deletion is not available/)
 assert.match(stripeHelper, /stripe\.disputes\.list/)
 assert.doesNotMatch(deletionFn, /auth\.admin\.deleteUser/)
-assert.match(settingsPage, /isAccountDeletionUiEnabled\(\)/)
+assert.doesNotMatch(settingsPage, /DeleteAccountSection/)
+assert.doesNotMatch(settingsPage, /isAccountDeletionUiEnabled/)
+assert.doesNotMatch(settingsPage, /Delete account/)
+assert.match(clientLib, /export function isAccountDeletionUiEnabled\(\) \{\r?\n  return false/)
+assert.match(clientLib, /if \(!isAccountDeletionUiEnabled\(\)\) \{\r?\n    return \{ data: null, error: new Error\(ACCOUNT_DELETION_UNAVAILABLE\) \}/)
+assert.match(deletionUi, /Delete account/)
 assert.match(
-  settingsPage,
-  /isAccountDeletionUiEnabled\(\) \? \([\s\S]*<DeleteAccountSection/,
+  deletionFn,
+  /ACCOUNT_DELETION_SHELVED[\s\S]*errorResponse\('Account deletion is not available\.', 410\)[\s\S]*getAuthenticatedUser/,
 )
 
 console.log('PASS: Stripe dispute blockers fail closed')
 console.log('PASS: Google/Apple-only users are not treated as password accounts')
 console.log('PASS: historic identity fallback is Deleted account')
+console.log('PASS: Delete Account UI is unmounted and client helpers refuse')
+console.log('PASS: Edge Function is shelved with 410 before authentication')
 console.log('\nAll account-deletion follow-up checks passed.')

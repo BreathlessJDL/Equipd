@@ -2,7 +2,7 @@
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 1.6rem 1.7rem;
+  padding: 1.25rem 1.35rem;
   border: 1px solid color-mix(in srgb, var(--color-border) 92%, transparent);
   border-radius: 1.15rem;
   background: var(--color-surface);
@@ -10,31 +10,23 @@
 }
 
 .listing-equipment-intelligence__header {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.75rem;
 }
 
 .listing-equipment-intelligence__title {
   margin: 0;
-  font-size: 1.1875rem;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   color: var(--color-navy);
   letter-spacing: -0.015em;
 }
 
-.listing-equipment-intelligence__eyebrow {
-  margin: 0.35rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
 .listing-equipment-intelligence__disclaimer {
-  margin: 0 0 1rem;
-  font-size: 0.875rem;
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
   line-height: 1.45;
+  font-style: italic;
   color: var(--color-muted);
 }
 

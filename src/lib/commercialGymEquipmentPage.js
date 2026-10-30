@@ -24,6 +24,8 @@ import {
   BUY_USED_GYM_EQUIPMENT_PATH,
   BUY_USED_GYM_EQUIPMENT_OG_IMAGE,
 } from './buyUsedGymEquipmentPage.js'
+import { faqItemsForSchema, linkedCopyToHtml } from './linkedCopy.js'
+import { enrichFaqItems, enrichGuideSections, LINK_RULES } from './landingContextualLinks.js'
 
 export const COMMERCIAL_GYM_EQUIPMENT_PATH = '/commercial-gym-equipment'
 export const COMMERCIAL_BROWSE_PATH = buildBrowseNavPath({ rating: 'full_commercial' })
@@ -151,6 +153,7 @@ export const COMMERCIAL_FEATURED_BRAND_SLUGS = Object.freeze([
   'matrix-fitness',
   'precor',
   'concept2',
+  'wattbike',
   'stairmaster',
   'cybex',
   'hammer-strength',
@@ -217,15 +220,15 @@ export const COMMERCIAL_VALUATION_STEPS = Object.freeze([
 export const COMMERCIAL_GUIDE_NOTE = 'Buying guide'
 export const COMMERCIAL_GUIDE_HEADING = 'Commercial gym equipment buying guide'
 export const COMMERCIAL_GUIDE_INTRO =
-  'Buying used commercial gym equipment is different from shopping for home gym kit. Facility-grade machines are built for long duty cycles, but age, service history, access and installation still decide whether a deal is right for your club, studio or workplace gym. This guide walks through how to choose, inspect, move and maintain commercial fitness equipment — and how Equipd helps you buy with a clearer, more protected process from first search through to confirmed handover.'
+  'Buying used commercial gym equipment is different from shopping for home gym kit. Facility-grade machines are built for long duty cycles, but age, service history, access and installation still decide whether a deal is right for your club, studio or workplace gym. This guide covers what drives used prices, how to inspect, when new, used or refurbished makes sense, lifespan and maintenance, brand choice, and how Equipd helps you buy with a clearer process from first search through to confirmed handover.'
 
-export const COMMERCIAL_GUIDE_SECTIONS = Object.freeze([
+export const COMMERCIAL_GUIDE_SECTIONS = enrichGuideSections([
   {
     id: 'why-buy',
     heading: 'Why buy commercial gym equipment?',
     paragraphs: [
       'Commercial gym equipment is designed for higher usage than most home machines. Buying used commercial fitness equipment can reduce capital cost while still delivering the durability clubs expect from brands such as Technogym, Life Fitness, Matrix and Precor.',
-      'Many facilities refresh floors every few years. That creates a steady supply of used commercial gym machines with remaining life — treadmills, bikes, cross trainers, rowers, stair climbers and strength stations that can be redeployed elsewhere.',
+      'Many facilities refresh floors every few years. That creates a steady supply of used commercial gym machines with remaining life — commercial treadmills, commercial exercise bikes, commercial cross trainers, commercial rowing machines, stair climbers and strength stations that can be redeployed elsewhere.',
       'For independent gyms, boutique studios, hotels and workplace wellness rooms, second-hand commercial kit is often the practical way to open or expand without paying full new list prices. The key is matching the machine to your duty cycle, not chasing the lowest headline number.',
       'Used commercial gym equipment can also shorten lead times. Instead of waiting on factory orders, you can secure machines that are already in the UK and ready to move once inspection and payment are complete.',
       'On Equipd you can browse commercial gym equipment for sale across the UK, compare models in Equipment Values, and pay securely with Buyer Protection on eligible purchases.',
@@ -255,32 +258,52 @@ export const COMMERCIAL_GUIDE_SECTIONS = Object.freeze([
   },
   {
     id: 'refurbished-vs-used',
-    heading: 'Refurbished vs used equipment',
+    heading: 'New vs used vs refurbished commercial equipment',
     paragraphs: [
-      'Used commercial gym equipment varies widely. Some listings are well maintained ex-club machines; others need servicing before they are floor-ready. Ask for photos of wear points, error codes and any recent work.',
-      'Refurbished commercial gym equipment typically implies parts replacement, cosmetic refresh or technician sign-off. Confirm what “refurbished” means for that seller — which parts were replaced, and whether any private warranty is offered outside Equipd.',
-      'A fair price should reflect condition honestly. A cheaper “as seen” treadmill may still be the right buy if you have an in-house technician. A higher-priced refurbished unit may suit a hotel or studio that needs plug-and-play reliability.',
-      'Ask for invoices or service notes where possible. Documentation does not replace inspection, but it helps you judge whether the asking price matches the work already completed.',
-      'Whether you buy refurbished or used, keep negotiation and paperwork in Equipd messages so the conversation stays with the listing.',
+      'New commercial gym equipment suits projects that need manufacturer warranty, matched aesthetics across a whole floor and predictable lead times. You pay list price and wait for supply, but specification and support are clear from day one.',
+      'Used as-seen commercial gym equipment is usually the lowest capital cost. It suits operators with a technician available who can inspect carefully and price a first service into the deal. Listings vary widely — some are well maintained ex-club machines; others need work before they are floor-ready.',
+      'Refurbished commercial gym equipment typically implies parts replacement, cosmetic refresh or technician sign-off. Confirm what “refurbished” means for that seller — which parts were replaced, what was tested, and whether any private warranty is offered outside Equipd. Documentation does not replace inspection, but it helps you judge whether the asking price matches the work already completed.',
+      'A cheaper as-seen treadmill may still be the right buy if you have in-house engineers. A higher-priced refurbished unit may suit a hotel or boutique studio that needs plug-and-play reliability. Buy new when the specification must match an existing brand standard, or when used supply cannot meet the deadline.',
+      'Whether you buy new, refurbished or used, keep negotiation and paperwork in Equipd messages so the conversation stays with the listing.',
+    ],
+  },
+  {
+    id: 'market-prices',
+    heading: 'What affects used commercial equipment prices',
+    paragraphs: [
+      'Used commercial prices track remaining useful life and demand, not original list price. Age only helps when you also know hours, environment and service history. A quiet corporate gym machine can outvalue a younger unit from a high-throughput budget club.',
+      'Condition and completeness move offers quickly. Missing shrouds, selector pins, attachments, frayed cables, glazed belts and damaged upholstery all reduce what a serious buyer will pay. Cosmetic paint wear matters less than mechanical soundness — unless you are fitting a design-led boutique floor.',
+      'Brand and generation affect both demand and ownership cost. Machines that dominate UK commercial floors usually sell faster when parts remain available. Discontinued consoles or scarce control boards suppress value even on strong frames.',
+      'Refurbishment quality, any seller warranty, and how easy the machine is to collect also change the range. Documented consumable replacement supports a firmer ask. Awkward access, missing power details or vague fault descriptions usually mean a wider negotiation gap. Use Instant Valuation and similar live listings as a range, then adjust for the specific unit.',
     ],
   },
   {
     id: 'inspect',
-    heading: 'What to inspect before buying',
+    heading: 'Commercial equipment inspection checklist',
     paragraphs: [
-      'For cardio: listen for unusual noise, check emergency stops, incline/resistance response, belt tracking and console boot behaviour. Ask about operating hours where available.',
-      'For strength: inspect cables, pulleys, guide rods, upholstery tears, frame welds and missing selector pins. Test the full weight stack or plate path if you can inspect on collection.',
-      'Always review listing photos carefully and request extras for serial labels, power sockets and any damage. On collection or seller delivery, inspect before confirming handover.',
-      'Bring a simple checklist: power-on test, safety stops, unusual vibration, missing bolts, cracked plastics and evidence of water or corrosion around bases. Photograph the machine as received so you have a clear record.',
-      'If a seller cannot provide basic evidence of condition, treat that as a risk signal. Serious commercial sellers usually expect detailed questions and can answer them.',
+      'Use one checklist for every viewing so you compare machines fairly. Photograph serial labels, wear points and the machine as received before you confirm handover.',
+      'Frame and structure: look for rust at bases and fixings, cracked or amateur weld repairs, bent uprights, missing bolt covers and paint damage that hides corrosion. Surface scratches are cosmetic; structural damage is not.',
+      'Moving parts and soft goods: check bearings for grind or play, cable and pulley condition end to end, guide rods and stack travel, upholstery tears at seams, and that every selector pin, attachment and safety catch is present and works.',
+      'Cardio-specific checks: belt or rail surface, tracking under load, motor or flywheel noise, incline or resistance through full range, console boot and buttons, emergency stop or safety key, and hours where the console stores them. Strength-specific checks: full plate or stack path, sticky adjustments, and any lateral movement in pivots under load.',
+      'If a seller cannot provide basic evidence of condition, treat that as a risk signal. Serious commercial sellers usually expect detailed questions and can answer them in Equipd messages.',
+    ],
+  },
+  {
+    id: 'lifespan',
+    heading: 'Commercial lifespan and what shortens it',
+    paragraphs: [
+      'Commercial gym equipment is designed so major structures outlast several sets of consumables. Frames, stacks and many drive systems can serve for many years when belts, decks, cables, rollers and upholstery are replaced on schedule.',
+      'Typical remaining life depends on duty cycle and environment more than the year stamped on the serial plate. Hotels, schools and corporate gyms are usually gentler than 24-hour clubs and busy university sites. Damp basements, sweat corrosion around electronics and deferred servicing shorten life faster than calendar age alone.',
+      'A competent refurbishment can restore reliable day-to-day use by renewing wear parts and correcting faults, but it does not reset ownership forever. Plan maintenance after installation: the first planned service is often when hidden issues surface while you still have options.',
+      'Keep an asset log — serial number, purchase date, hours if known, service dates and known issues. That record protects resale value when you refresh the floor again and helps staff order the right parts.',
     ],
   },
   {
     id: 'delivery',
-    heading: 'Delivery & installation',
+    heading: 'Delivery, access and installation',
     paragraphs: [
       'Equipd sellers may offer buyer collection, seller delivery or a buyer-arranged courier. Equipd does not operate a nationwide delivery fleet — logistics stay between buyer and seller.',
-      'Budget for specialist movers on large commercial machines. Confirm floor loading, power supply (including dedicated circuits), and whether the seller can disconnect and palletise equipment.',
+      'Budget for specialist movers on large commercial machines. Confirm floor loading, power supply (including dedicated circuits for treadmill banks), and whether the seller can disconnect and palletise equipment. Measure doorways, corridor turns, stairs and lifts before you offer.',
       'Collection and seller delivery use Equipd’s QR confirmation after inspection. Courier flows use evidence and delivery confirmation instead. Choose the fulfilment method that matches your site access.',
       'Plan installation slots with your electrician or facilities team before the machine arrives. Waiting for power works or doorway alterations after purchase is one of the most common delays for commercial kit.',
       'For multi-site operators, standardise how machines are collected and booked in. A repeatable process reduces downtime when you buy commercial gym equipment regularly.',
@@ -288,13 +311,22 @@ export const COMMERCIAL_GUIDE_SECTIONS = Object.freeze([
   },
   {
     id: 'maintenance',
-    heading: 'Maintenance & servicing',
+    heading: 'Maintenance, cleaning and parts',
     paragraphs: [
       'Commercial fitness equipment lasts longer with scheduled servicing. Ask sellers for maintenance history, and plan onboarding with your usual technician after purchase.',
-      'Keep consumables in mind: treadmill belts and decks, bike pedals and seats, cable assemblies and console batteries. Factor parts availability for older model years.',
-      'Equipd Equipment Values pages can help you verify model identity and typical production years so you order the right parts later.',
-      'Build a simple asset log for each machine — serial number, purchase date, service dates and known issues. That record protects resale value when you refresh the floor again.',
-      'Preventive maintenance is usually cheaper than emergency call-outs. Schedule the first service soon after installation, especially on high-hour cardio.',
+      'Routine ownership is mostly unglamorous: wipe sweat and dust, keep motor compartments and stack towers clear of debris, lubricate only where the manufacturer specification requires it, and inspect cables, belts and upholstery on a planned cycle.',
+      'Keep consumables in mind: treadmill belts and decks, bike pedals and seats, cable assemblies, roller bearings and console batteries. Factor parts availability for older model years before you buy, not after the first failure.',
+      'Equipd Equipment Values pages can help you verify model identity and typical production years so you order the right parts later. Preventive maintenance is usually cheaper than emergency call-outs during peak member hours.',
+    ],
+  },
+  {
+    id: 'brand-advice',
+    heading: 'Brand advice for commercial buyers',
+    paragraphs: [
+      'Brands that dominate UK commercial floors — Technogym, Life Fitness, Matrix, Precor, Concept2, Cybex and Hammer Strength among them — are popular on the used market because engineers and parts suppliers already know them. That support often matters more than small differences in headline build quality.',
+      'Equipment quality still varies by generation. A current console platform with good parts supply is a different ownership experience from an older entertainment system the manufacturer has retired. Confirm the exact model and year from the serial plate.',
+      'Match brand choice to your service reality. Prefer manufacturers your local engineers already carry parts for when uptime is critical. A slightly less prestigious line that can be repaired the same week usually beats a premium machine waiting on an overseas board.',
+      'If you are mixing cardio and strength, consistency across a floor simplifies staff training and spare parts. It is not mandatory — but it is a practical reason many operators stay within one or two ecosystems when they buy commercial gym equipment.',
     ],
   },
   {
@@ -317,7 +349,7 @@ export const COMMERCIAL_GUIDE_SECTIONS = Object.freeze([
       'Pair browsing with Instant Valuation and brand Equipment Values pages to buy used commercial gym equipment with clearer market context.',
       'Whether you are equipping a new studio floor or replacing a single commercial treadmill, Equipd helps you buy commercial gym equipment with a clearer process from search to handover.',
       'Sellers benefit too: facilities can list surplus commercial machines, reach serious buyers and complete payment without chasing informal transfers. That keeps both sides in one accountable workflow.',
-      'If you are new to the marketplace, start with the Buy Gym Equipment guide, then return here when you are ready to focus on commercial gym machines specifically.',
+      'If you are new to the marketplace, start with the Buy Used Gym Equipment guide, then return here when you are ready to focus on commercial gym machines specifically.',
     ],
   },
   {
@@ -331,13 +363,13 @@ export const COMMERCIAL_GUIDE_SECTIONS = Object.freeze([
       'When in doubt, value the machine first, message the seller with a short inspection list, and only then make an offer. That sequence keeps commercial buying decisions calm, comparable and easier to justify to owners or finance teams.',
     ],
   },
-])
+], LINK_RULES.commercialGym)
 
 export const COMMERCIAL_FAQ_NOTE = 'Common questions'
 export const COMMERCIAL_FAQ_INTRO =
   'Answers on buying and selling used commercial gym equipment, Buyer Protection, delivery and valuations on Equipd.'
 
-export const COMMERCIAL_FAQ_ITEMS = Object.freeze([
+export const COMMERCIAL_FAQ_ITEMS = enrichFaqItems([
   {
     question: 'What counts as commercial gym equipment on Equipd?',
     answer:
@@ -408,7 +440,7 @@ export const COMMERCIAL_FAQ_ITEMS = Object.freeze([
     answer:
       'Yes. Equipd lists commercial cardio and strength categories side by side. Use category filters or the browse cards on this page to jump into treadmills, bikes, rowers, cable machines and more.',
   },
-])
+], LINK_RULES.commercialGym)
 
 export const COMMERCIAL_EXPLORE_NOTE = 'Keep exploring'
 export const COMMERCIAL_EXPLORE_HEADING = 'Explore more'
@@ -560,7 +592,7 @@ export function buildCommercialGymEquipmentCollectionSchema() {
 }
 
 export function buildCommercialGymEquipmentFaqSchema() {
-  return buildFaqPageSchemaNode([...COMMERCIAL_FAQ_ITEMS], {
+  return buildFaqPageSchemaNode(faqItemsForSchema([...COMMERCIAL_FAQ_ITEMS]), {
     canonicalUrl: COMMERCIAL_GYM_EQUIPMENT_PATH,
   })
 }
@@ -590,7 +622,7 @@ function renderFaqSectionHtml(faqs = []) {
 function renderGuideSectionHtml() {
   const sections = COMMERCIAL_GUIDE_SECTIONS.map((section) => {
     const paragraphs = section.paragraphs
-      .map((text) => `<p>${escapeHtml(text)}</p>`)
+      .map((text) => `<p>${linkedCopyToHtml(text)}</p>`)
       .join('\n      ')
     return `<section aria-labelledby="seo-commercial-guide-${escapeHtml(section.id)}">
       <h3 id="seo-commercial-guide-${escapeHtml(section.id)}">${escapeHtml(section.heading)}</h3>
@@ -630,8 +662,8 @@ export function buildCommercialGymEquipmentSeoDocument() {
     (item) => `<li><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p></li>`,
   ).join('')
 
-  const faqHtml = renderFaqSectionHtml(COMMERCIAL_FAQ_ITEMS)
-  const { items: faqItems } = normalizeFaqItems([...COMMERCIAL_FAQ_ITEMS])
+  const faqHtml = renderFaqSectionHtml(faqItemsForSchema(COMMERCIAL_FAQ_ITEMS))
+  const { items: faqItems } = normalizeFaqItems(faqItemsForSchema([...COMMERCIAL_FAQ_ITEMS]))
 
   const bodyHtml = `
 <article class="seo-prerender commercial-gym-equipment-seo" data-equipd-seo-prerender="commercial-gym-equipment">
@@ -706,7 +738,7 @@ export function buildCommercialGymEquipmentSeoDocument() {
 }
 
 export function renderCommercialGymEquipmentFaqScriptTag() {
-  return renderFaqPageScriptTag(COMMERCIAL_FAQ_ITEMS, {
+  return renderFaqPageScriptTag(faqItemsForSchema(COMMERCIAL_FAQ_ITEMS), {
     canonicalUrl: COMMERCIAL_GYM_EQUIPMENT_PATH,
   })
 }

@@ -9,6 +9,7 @@ import { BUY_USED_GYM_EQUIPMENT_PATH, BUY_USED_GYM_EQUIPMENT_OG_IMAGE } from './
 import { LANDING_PATHS } from './landingPagePaths.js'
 import { HOME_STRENGTH_CATEGORY_SLUGS } from './landingCategorySlugs.js'
 import { buildCategoryLandingSeoDocument } from './categoryLandingSeo.js'
+import { enrichLandingContentLinks, LINK_RULES } from './landingContextualLinks.js'
 
 export const HOME_STRENGTH_EQUIPMENT_PATH = LANDING_PATHS.homeStrength
 
@@ -19,7 +20,7 @@ export const HOME_STRENGTH_BROWSE_PATH = buildBrowseNavPath({
 
 export { HOME_STRENGTH_CATEGORY_SLUGS }
 
-export const HOME_STRENGTH_CONTENT = Object.freeze({
+export const HOME_STRENGTH_CONTENT = Object.freeze(enrichLandingContentLinks({
   idPrefix: 'home-strength',
   prerenderId: 'home-strength-equipment',
   path: HOME_STRENGTH_EQUIPMENT_PATH,
@@ -172,8 +173,8 @@ export const HOME_STRENGTH_CONTENT = Object.freeze({
       id: 'choosing-setup',
       heading: 'Choosing your home strength setup',
       paragraphs: [
-        'Decide whether you want an all-in-one multi gym or a free-weight zone. Multi gyms suit beginners and small spaces — one footprint covers several movements without loading plates. Racks, bars and dumbbells suit progressive lifters who want flexibility and room to grow.',
-        'Hybrid setups are common: a rack and bench for barbell work plus a cable station or adjustable dumbbells for accessories. Plan the whole room before buying piecemeal; otherwise you end up with a bench that does not fit inside your rack.',
+        'Decide whether you want an all-in-one multi gym or a free-weight zone. Multi gyms suit beginners and small spaces — one footprint covers several movements without loading plates. Home Power Racks, bars and Home Dumbbells suit progressive lifters who want flexibility and room to grow.',
+        'Hybrid setups are common: a Home Power Rack and Home Weight Benches for barbell work plus a cable station or adjustable dumbbells for accessories. Plan the whole room before buying piecemeal; otherwise you end up with a bench that does not fit inside your rack.',
         'Selectorised home machines — lat pulldowns, leg extensions and similar — fill gaps when you do not want plates swinging in a spare room. They are heavier than they look and need stable flooring.',
         'Match kit to your programme. Powerlifting needs a solid rack and bar; general fitness may be fine with dumbbells and a bench; bodybuilding often wants more angles and isolation options.',
         'Start with what you will use weekly. A perfect rack nobody squats in is wasted space; a modest setup you train in four times a week is a good buy at any budget.',
@@ -382,7 +383,7 @@ export const HOME_STRENGTH_CONTENT = Object.freeze({
       to: SELL_GYM_EQUIPMENT_PATH,
     },
   ],
-})
+}, LINK_RULES.homeStrength))
 
 export function buildHomeStrengthEquipmentSeoDocument() {
   return buildCategoryLandingSeoDocument(HOME_STRENGTH_CONTENT)

@@ -24,6 +24,8 @@ import {
   BUY_USED_GYM_EQUIPMENT_PATH,
   BUY_USED_GYM_EQUIPMENT_OG_IMAGE,
 } from './buyUsedGymEquipmentPage.js'
+import { enrichFaqItems, enrichGuideSections, LINK_RULES } from './landingContextualLinks.js'
+import { faqItemsForSchema, linkedCopyToHtml } from './linkedCopy.js'
 
 export const COMMERCIAL_CARDIO_EQUIPMENT_PATH = '/commercial-cardio-equipment'
 
@@ -240,15 +242,15 @@ export const COMMERCIAL_CARDIO_GUIDE_HEADING = 'Commercial cardio buying guide'
 export const COMMERCIAL_CARDIO_GUIDE_INTRO =
   'Cardio is the hardest-working equipment on most gym floors, and it is also where used buying gets you the most machine for your money. It is where the most can go wrong, too: a treadmill with a worn deck, a console nobody can source parts for, or a stepmill that cannot reach the first floor are all expensive lessons. This guide covers choosing the right mix of machines, judging age and usage honestly, checking consoles and wear parts, planning power and access, moving and installing kit, and using Equipd valuations to work out whether an asking price makes sense for your facility.'
 
-export const COMMERCIAL_CARDIO_GUIDE_SECTIONS = Object.freeze([
+export const COMMERCIAL_CARDIO_GUIDE_SECTIONS = enrichGuideSections([
   {
     id: 'choosing-type',
     heading: 'Choosing the right type of cardio equipment',
     paragraphs: [
-      'Start with how the floor is actually used rather than what looks impressive. Treadmills draw the most traffic in most gyms and are the first thing members complain about when one is out of service, so they usually justify the largest share of a cardio budget and the highest specification you can afford.',
-      'Bikes are the low-maintenance workhorses. Upright and recumbent bikes have fewer wear parts than treadmills, cost less to run, and suit older members, rehab clients and anyone who wants a quieter session. Recumbents in particular earn their space in facilities with an older membership or a physiotherapy relationship.',
-      'Cross trainers sit between the two. They are popular with members who want low-impact work, they are heavier to move than bikes, and their wear points are the ramps, rollers and pivots rather than a belt and deck. Rowers, ski ergs and air bikes cover conditioning and class use, take up less permanent space, and are usually the cheapest way to add stations.',
-      'Stair climbers and stepmills are the specialist buy. They are popular where they exist, but they are tall, heavy and demanding to service, so most facilities run one or two rather than a bank of them. Upper body ergometers are similarly niche but valuable if you run rehab, accessible or seated programming.',
+      'Start with how the floor is actually used rather than what looks impressive. Commercial treadmills draw the most traffic in most gyms and are the first thing members complain about when one is out of service, so they usually justify the largest share of a cardio budget and the highest specification you can afford.',
+      'Commercial exercise bikes are the low-maintenance workhorses. Upright and recumbent bikes have fewer wear parts than treadmills, cost less to run, and suit older members, rehab clients and anyone who wants a quieter session. Recumbents in particular earn their space in facilities with an older membership or a physiotherapy relationship.',
+      'Commercial cross trainers sit between the two. They are popular with members who want low-impact work, they are heavier to move than bikes, and their wear points are the ramps, rollers and pivots rather than a belt and deck. Commercial rowing machines, ski ergs and air bikes cover conditioning and class use, take up less permanent space, and are usually the cheapest way to add stations.',
+      'Stair climbers and stepmills are the specialist buy. They are popular where they exist, but they are tall, heavy and demanding to service, so most facilities run one or two rather than a bank of them. Indoor cycles fill boutique studios and spinning classes, while upper body ergometers are similarly niche but valuable if you run rehab, accessible or seated programming.',
       'A reasonable starting mix for a general gym is a block of treadmills, a slightly smaller block of bikes split between upright and recumbent, a few cross trainers and a couple of rowers, then specialist pieces once the basics are covered. Adjust from your own usage data if you have it — that will beat any generic ratio.',
     ],
   },
@@ -342,44 +344,74 @@ export const COMMERCIAL_CARDIO_GUIDE_SECTIONS = Object.freeze([
   },
   {
     id: 'refurbished-vs-used',
-    heading: 'Refurbished versus as-seen used cardio',
+    heading: 'New vs used vs refurbished commercial cardio',
     paragraphs: [
-      'Refurbished usually means a technician has been through the machine: consumables replaced, mechanical faults fixed, the unit cleaned and tested, and often new upholstery or shrouds. As-seen means you are buying it as it stands, working or otherwise.',
-      'Ask exactly what a refurbishment included, because the word is not regulated. A list of replaced parts and a test report is meaningful; "fully refurbished" on its own is marketing. Get the detail in Equipd messages so the description sits with the listing.',
-      'Refurbished kit costs more and should. You are paying for parts, labour and reduced risk, which is usually the right trade for a hotel, a small studio or any site without in-house maintenance where downtime is disproportionately painful.',
-      'As-seen suits buyers with technical capability. If you have an engineer on call or on staff, buying a machine that needs a belt and a bearing can be significantly cheaper overall — provided you have priced the work honestly rather than optimistically.',
-      'Whichever route you take, confirm whether any warranty is offered directly by the seller. Private warranties are agreements between you and that seller, so get the terms in writing before you pay.',
+      'New commercial cardio suits full floor launches that need matched consoles, manufacturer warranty and a single specification across a bank of machines. You pay list price and accept lead times, but support and aesthetics are predictable.',
+      'Refurbished usually means a technician has been through the machine: consumables replaced, mechanical faults fixed, the unit cleaned and tested, and often new upholstery or shrouds. Ask exactly what a refurbishment included, because the word is not regulated. A list of replaced parts and a test report is meaningful; “fully refurbished” on its own is marketing.',
+      'As-seen used cardio is usually the lowest purchase price. It suits buyers with an engineer available who can price a belt, deck or bearing honestly. If you lack in-house maintenance, downtime on a busy treadmill line often costs more than the saving versus refurbished.',
+      'Hotels, boutique studios and sites without technicians usually prefer refurbished or carefully inspected used with a first service booked. Operators with strong maintenance teams can buy as-seen confidently. Buy new when you must match an existing connected platform or when used supply cannot meet the opening date.',
+      'Whichever route you take, confirm whether any warranty is offered directly by the seller. Private warranties are agreements between you and that seller, so get the terms in writing in Equipd messages before you pay.',
+    ],
+  },
+  {
+    id: 'market-prices',
+    heading: 'What affects used commercial cardio prices',
+    paragraphs: [
+      'Cardio values move with hours, consumable condition and console generation more than with the year on the serial plate. A high-hour treadmill with a fresh belt and deck can outvalue a low-hour unit with a failing entertainment console.',
+      'Brand and parts support set the demand floor. Machines that UK engineers already service tend to clear faster. Obscure generations with scarce control boards suppress offers even when the frame is sound.',
+      'Refurbishment quality, seller warranty, and how quickly the seller needs the floor cleared also change asking prices. Matched banks from one facility often attract operators who want consistency; mixed orphan machines usually need more flexible pricing.',
+      'Always include landed cost: transport, installation, first service and known parts. Use Instant Valuation on the specific model, then adjust for the faults and access realities you have actually confirmed.',
     ],
   },
   {
     id: 'inspect',
-    heading: 'Inspect before you pay',
+    heading: 'Commercial cardio inspection checklist',
     paragraphs: [
-      'Inspect in person wherever the value justifies the trip. Photographs will not tell you about a bearing rumble, a slipping belt or a console that resets under load, and those are exactly the faults that cost money after the sale.',
-      'Run every machine properly. Take treadmills through their speed and incline range with someone on the belt, cycle bikes and cross trainers through full resistance, pull rowers hard enough to load the damper, and let each unit run for a few minutes rather than a token ten seconds.',
-      'Work through a consistent checklist: power-on and console function, emergency stop and safety key, belt tracking and tension, unusual noise or vibration, resistance and incline response, frame condition and corrosion, upholstery, missing bolts or covers, and the serial label. Photograph each machine as you find it.',
-      'If you cannot attend, ask for a video of the machine running rather than more still photos, with the console visible and the serial number in shot. A seller who is confident in the equipment will not object.',
-      'Only confirm handover once you are satisfied. Confirmation is what starts the post-handover Buyer Protection window on eligible purchases, so inspect first and confirm second — never the other way round because someone is in a hurry.',
+      'Inspect in person wherever the value justifies the trip. Photographs will not reveal a bearing rumble, a slipping belt or a console that resets under load.',
+      'Run every machine properly. Take commercial treadmills through speed and incline with someone on the belt, cycle commercial exercise bikes and commercial cross trainers through full resistance, pull commercial rowing machines hard enough to load the damper, and let stair climbers and indoor cycles run for several minutes.',
+      'Work a fixed checklist: power-on and console function, emergency stop and safety key, belt or rail surface and tracking, unusual noise or vibration, resistance and incline response, frame corrosion, upholstery, missing bolts or covers, and the serial label. Photograph each machine as you find it.',
+      'Ask about hours, deck flip status on treadmills, recent consumable replacement and any error codes. If you cannot attend, request a video of the machine running with the console and serial number visible.',
+      'Only confirm handover once you are satisfied. Confirmation starts the post-handover Buyer Protection window on eligible purchases — inspect first, confirm second.',
+    ],
+  },
+  {
+    id: 'lifespan',
+    heading: 'Cardio lifespan and ownership costs',
+    paragraphs: [
+      'Commercial cardio frames and drive systems are built to outlast several sets of belts, decks, rollers and console batteries. Remaining life is mostly about how those consumables have been managed and where the machine lived.',
+      'A documented service history with recent belt or deck work can make a high-hour machine the safer buy. Deferred maintenance, damp storage and sweat corrosion around electronics shorten life faster than calendar age alone.',
+      'Refurbished cardio can return reliable daily use when wear parts and bearings are renewed, but ownership still needs a plan: cleaning under motor covers, tracking checks, lubrication only where specified, and a technician who can source parts for that generation.',
+      'Budget the first service after installation. It is the cheapest way to find problems while you still have leverage, and it sets the baseline for the rest of the machine’s life on your floor.',
+    ],
+  },
+  {
+    id: 'brand-advice',
+    heading: 'Brand advice for commercial cardio',
+    paragraphs: [
+      'Life Fitness, Technogym, Matrix, Precor, Cybex, StairMaster, Concept2 and Wattbike appear regularly in UK facilities because parts and engineers follow the installed base. That ecosystem effect often matters more than small differences between well-built commercial lines.',
+      'Quality still varies by generation. Entertainment consoles and connected platforms age differently from mechanical frames. Confirm what still works today — streaming, TV, asset management — before you pay a premium for a screen.',
+      'Choose brands your local service partner already supports when uptime is critical. A deck they can repair the same week usually beats a rarer premium machine waiting on an overseas board, especially if it is one of only a few treadmills on the floor.',
+      'For deeper model research, open Equipment Values pages for the exact badge on the serial plate, then compare live listings of Used Commercial Treadmills and related cardio categories.',
     ],
   },
   {
     id: 'valuation',
     heading: 'Using valuation to price a deal',
     paragraphs: [
-      'Before you offer, run the model through Equipd\'s free valuation tool. It gives you a market range based on the model, year and condition, which is a far better reference point than the original list price of a machine that has since done thousands of hours.',
+      'Before you offer, run the model through Equipd\'s free Instant Valuation. It gives you a market range based on the model, year and condition, which is a far better reference point than the original list price of a machine that has since done thousands of hours.',
       'Compare the asking price against that range and against similar live listings. Commercial cardio prices vary widely with condition, hours and how quickly the seller needs the floor cleared, so a single listing tells you much less than a handful.',
       'Adjust for what you have found. A worn deck, a failing console or a missing safety key are all costs you will carry, and quantifying them turns a vague sense that something is overpriced into a specific, defensible offer.',
       'Include the full landed cost in your comparison: transport, installation, first service and any parts. A cheaper machine two hundred miles away with a console fault can easily end up costing more than the local unit that is ready to run.',
       'Valuation helps on the way out as well. If you are clearing a floor, valuing equipment before listing sets a realistic asking price, and listing on Equipd puts it in front of buyers who are specifically looking for commercial cardio rather than passing classifieds traffic.',
     ],
   },
-])
+], LINK_RULES.commercialCardio)
 
 export const COMMERCIAL_CARDIO_FAQ_NOTE = 'Common questions'
 export const COMMERCIAL_CARDIO_FAQ_INTRO =
   'Answers on buying used commercial cardio equipment, condition checks, delivery, valuations and Buyer Protection on Equipd.'
 
-export const COMMERCIAL_CARDIO_FAQ_ITEMS = Object.freeze([
+export const COMMERCIAL_CARDIO_FAQ_ITEMS = enrichFaqItems([
   {
     question: 'What counts as commercial cardio equipment?',
     answer:
@@ -440,7 +472,7 @@ export const COMMERCIAL_CARDIO_FAQ_ITEMS = Object.freeze([
     answer:
       'Yes. Gyms, dealers and refurbishers can list used commercial cardio, message buyers and take payment through Equipd. Value the equipment first with the free valuation tool to set a realistic asking price, then list from Sell Gym Equipment or your seller hub.',
   },
-])
+], LINK_RULES.commercialCardio)
 
 export const COMMERCIAL_CARDIO_EXPLORE_NOTE = 'Keep exploring'
 export const COMMERCIAL_CARDIO_EXPLORE_HEADING = 'Explore more'
@@ -603,7 +635,7 @@ export function buildCommercialCardioEquipmentCollectionSchema() {
 }
 
 export function buildCommercialCardioEquipmentFaqSchema() {
-  return buildFaqPageSchemaNode([...COMMERCIAL_CARDIO_FAQ_ITEMS], {
+  return buildFaqPageSchemaNode(faqItemsForSchema([...COMMERCIAL_CARDIO_FAQ_ITEMS]), {
     canonicalUrl: COMMERCIAL_CARDIO_EQUIPMENT_PATH,
   })
 }
@@ -633,7 +665,7 @@ function renderFaqSectionHtml(faqs = []) {
 function renderGuideSectionHtml() {
   const sections = COMMERCIAL_CARDIO_GUIDE_SECTIONS.map((section) => {
     const paragraphs = section.paragraphs
-      .map((text) => `<p>${escapeHtml(text)}</p>`)
+      .map((text) => `<p>${linkedCopyToHtml(text)}</p>`)
       .join('\n      ')
     return `<section aria-labelledby="seo-commercial-cardio-guide-${escapeHtml(section.id)}">
       <h3 id="seo-commercial-cardio-guide-${escapeHtml(section.id)}">${escapeHtml(section.heading)}</h3>
@@ -673,8 +705,8 @@ export function buildCommercialCardioEquipmentSeoDocument() {
     (item) => `<li><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p></li>`,
   ).join('')
 
-  const faqHtml = renderFaqSectionHtml(COMMERCIAL_CARDIO_FAQ_ITEMS)
-  const { items: faqItems } = normalizeFaqItems([...COMMERCIAL_CARDIO_FAQ_ITEMS])
+  const faqHtml = renderFaqSectionHtml(faqItemsForSchema(COMMERCIAL_CARDIO_FAQ_ITEMS))
+  const { items: faqItems } = normalizeFaqItems(faqItemsForSchema([...COMMERCIAL_CARDIO_FAQ_ITEMS]))
 
   const bodyHtml = `
 <article class="seo-prerender commercial-cardio-equipment-seo" data-equipd-seo-prerender="commercial-cardio-equipment">
@@ -750,7 +782,7 @@ export function buildCommercialCardioEquipmentSeoDocument() {
 }
 
 export function renderCommercialCardioEquipmentFaqScriptTag() {
-  return renderFaqPageScriptTag(COMMERCIAL_CARDIO_FAQ_ITEMS, {
+  return renderFaqPageScriptTag(faqItemsForSchema(COMMERCIAL_CARDIO_FAQ_ITEMS), {
     canonicalUrl: COMMERCIAL_CARDIO_EQUIPMENT_PATH,
   })
 }

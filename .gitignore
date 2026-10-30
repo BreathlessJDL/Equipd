@@ -40,6 +40,17 @@ node_modules
 !/public/design-reference/New main hero banner main.webp
 !/public/design-reference/second-hero-banner-mobile.avif
 !/public/design-reference/second-hero-banner-mobile.webp
+!/public/design-reference/Your Gym, Not a Coat Rack 2.png
+!/public/design-reference/Turn Your Gym Into Cash mobile 3.png
+!/public/design-reference/build your home gym banner 8.png
+!/public/design-reference/Build Your Home Gym for Less Mobile.png
+!/public/design-reference/Gym Equipment Valuation Landing Page 4.png
+!/public/design-reference/Gym Equipment Valuation Hero Banner Mobile.png
+!/public/design-reference/find your next cardio 3.png
+!/public/design-reference/Find Your Next Cardio Setup Mobile.png
+!/public/design-reference/Equipment Valuations Hero Banner Desktop.png
+!/public/design-reference/Equipment Valuations Hero Banner Mobile.png
+!/public/design-reference/Soft Peach Abstract Hero Background.png
 *-type-audit.csv
 canonical-audit-*.json
 equipment-product-image-audit.csv
@@ -62,5 +73,8 @@ technogym-model-variant-report.md
 # Build-generated IndexNow verification key file (from INDEXNOW_KEY; never commit)
 /public/*.txt
 !/public/robots.txt
+
+# Staging project pointer (no production secrets)
+.env.staging
 
 .vercel

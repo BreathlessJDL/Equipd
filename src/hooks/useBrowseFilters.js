@@ -40,6 +40,7 @@ function filtersEqual(left, right) {
     arraysEqual(left.categoryIds ?? [], right.categoryIds ?? []) &&
     left.categoryId === right.categoryId &&
     left.categorySlug === right.categorySlug &&
+    arraysEqual(left.categorySlugs ?? [], right.categorySlugs ?? []) &&
     left.sort === right.sort &&
     left.locationSearch === right.locationSearch &&
     left.radiusMiles === right.radiusMiles &&
@@ -61,10 +62,11 @@ export function useBrowseFilters(
 ) {
   const searchParamsKey = searchParams.toString()
   const urlSyncGenerationRef = useRef(0)
+  const skipUrlWriteRef = useRef(false)
 
   const urlFilters = useMemo(
-    () => parseBrowseFiltersFromSearchParams(searchParams, categories),
-    [searchParams, categories],
+    () => parseBrowseFiltersFromSearchParams(new URLSearchParams(searchParamsKey), categories),
+    [searchParamsKey, categories],
   )
 
   const [draft, setDraft] = useState(urlFilters)
@@ -76,6 +78,7 @@ export function useBrowseFilters(
     if (!categoriesReady) return
 
     urlSyncGenerationRef.current += 1
+    skipUrlWriteRef.current = true
     const parsed = parseBrowseFiltersFromSearchParams(searchParams, categories)
 
     setDraft((current) => (filtersEqual(parsed, current) ? current : parsed))
@@ -117,13 +120,18 @@ export function useBrowseFilters(
 
   useEffect(() => {
     if (!categoriesReady) return
+    if (skipUrlWriteRef.current) {
+      skipUrlWriteRef.current = false
+      return
+    }
     if (filtersEqual(urlDraft, urlFilters)) return
 
     setSearchParams(
       (params) => {
+        const current = params.toString()
         const next = new URLSearchParams(params)
         applyBrowseFiltersToSearchParams(next, urlDraft, categories, { profileCoordinates })
-        return next
+        return next.toString() === current ? params : next
       },
       { preventScrollReset: true },
     )

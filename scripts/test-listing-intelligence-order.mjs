@@ -64,8 +64,8 @@ assert.doesNotMatch(
   'description must not rely on CSS order',
 )
 
-assert.match(intelligenceSrc, /About this equipment/, 'intelligence heading preserved')
-assert.match(intelligenceSrc, /Equipd Intelligence/, 'intelligence eyebrow preserved')
+assert.match(intelligenceSrc, /Equipd Intelligence/, 'intelligence heading preserved')
+assert.doesNotMatch(intelligenceSrc, /About this equipment/, 'compact intelligence heading only')
 
 async function dismissCookies(page) {
   const accept = page.getByRole('button', { name: /Accept all|Accept necessary/i }).first()
@@ -205,7 +205,7 @@ function assertSellerBeforeIntelligence(state, label) {
   if (tops.description != null) {
     assert.ok(tops.description < tops.intelligence, `${label}: description before intelligence`)
   }
-  assert.equal(state.aboutHeading, 'About this equipment', `${label}: heading preserved`)
+  assert.equal(state.aboutHeading, 'Equipd Intelligence', `${label}: heading preserved`)
 }
 
 function documentDescriptionCount(state) {

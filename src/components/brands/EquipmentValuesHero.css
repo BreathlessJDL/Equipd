@@ -1,0 +1,190 @@
+.equipment-values-hero {
+  --equipment-values-hero-cream: #faf4ec;
+  position: relative;
+  margin: 0.35rem 0 1.35rem;
+  overflow: visible;
+  border-radius: 1.15rem;
+  background: var(--equipment-values-hero-cream);
+}
+
+.equipment-values-hero__art {
+  overflow: hidden;
+  border-radius: 1.15rem 1.15rem 0 0;
+  background: var(--equipment-values-hero-cream);
+  line-height: 0;
+}
+
+.equipment-values-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.equipment-values-hero .equipment-values-hero__search.home-valuator--contained {
+  padding: 0.625rem 1.15rem 1.1rem;
+}
+
+.equipment-values-hero .home-valuator__card {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.equipment-values-hero .home-valuator__main {
+  max-width: 38rem;
+  gap: 1.15rem;
+}
+
+.equipment-values-hero .home-valuator__search {
+  background: #fff;
+}
+
+.equipment-values-hero .home-valuator__popular {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.equipment-values-hero .home-valuator__popular-label {
+  margin-right: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-muted) 80%, var(--color-navy));
+}
+
+.equipment-values-hero .home-valuator__popular-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, #fff);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-navy);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.equipment-values-hero .home-valuator__popular-chip:hover {
+  border-color: color-mix(in srgb, var(--color-orange) 45%, var(--color-border));
+  color: var(--color-orange);
+}
+
+.equipment-values-hero .home-valuator__popular-chip:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+@media (min-width: 1024px) {
+  .equipment-values-hero__art {
+    border-radius: 1.15rem;
+  }
+
+  .equipment-values-hero .equipment-values-hero__search.home-valuator--contained {
+    position: absolute;
+    left: 4.6%;
+    bottom: 4.75%;
+    z-index: 8;
+    width: min(36.5rem, 48%);
+    padding: 0;
+  }
+
+  .equipment-values-hero .home-valuator__main {
+    max-width: none;
+    gap: 1.15rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .equipment-values-hero .equipment-values-hero__search.home-valuator--contained {
+    padding: 0.625rem 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .equipment-values-hero {
+    margin: 0.2rem 0 1rem;
+    border-radius: 1rem;
+  }
+
+  .equipment-values-hero__art {
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .equipment-values-hero .equipment-values-hero__search.home-valuator--contained {
+    padding: 0.625rem 0.85rem 1.5rem;
+  }
+
+  .equipment-values-hero .home-valuator__card {
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .equipment-values-hero .home-valuator__search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.4rem;
+    height: auto;
+    min-height: 2.75rem;
+    padding: 0.22rem 0.22rem 0.22rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 33, 55, 0.03);
+  }
+
+  .equipment-values-hero .home-valuator__search:focus-within {
+    border-color: color-mix(in srgb, var(--color-orange) 55%, var(--color-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-orange) 18%, transparent);
+  }
+
+  .equipment-values-hero .home-valuator__search-field {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .equipment-values-hero .home-valuator__search-icon {
+    position: static;
+    transform: none;
+  }
+
+  .equipment-values-hero .home-valuator__submit {
+    width: auto;
+    min-height: 2.35rem;
+    height: 2.35rem;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+  }
+
+  .equipment-values-hero .home-valuator__input {
+    min-height: 2.35rem;
+    height: 2.35rem;
+    font-size: 1rem;
+  }
+
+  .equipment-values-hero .home-valuator__popular {
+    display: none;
+  }
+}

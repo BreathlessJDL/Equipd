@@ -13,6 +13,7 @@ import { HubItemThumbnail } from './HubItemRow'
 import {
   HUB_ATTENTION_DISPLAY,
   HubAttentionChevron,
+  getHubAttentionTone,
 } from './HubSummaryShared'
 import './HubMobileSummary.css'
 
@@ -124,18 +125,25 @@ function HubMobileSummary({
   return (
     <div className={`hub-mobile-summary${className ? ` ${className}` : ''}`}>
       {needsAttention.length > 0 ? (
-        <section className="hub-attention hub-mobile-summary__attention" aria-labelledby="hub-mobile-attention-title">
-          <h2 id="hub-mobile-attention-title" className="hub-attention__title">
-            Needs your attention
-          </h2>
-          <ul className="hub-attention__list">
+        <section
+          className="hub-mobile-attention"
+          aria-labelledby="hub-mobile-attention-title"
+        >
+          <header className="hub-mobile-attention__header">
+            <h2 id="hub-mobile-attention-title" className="hub-mobile-attention__title">
+              Needs your attention
+            </h2>
+            <p className="hub-mobile-attention__subtitle">Your next steps on Equipd</p>
+          </header>
+          <ul className="hub-mobile-attention__list">
             {needsAttention.map((item) => {
               const display = HUB_ATTENTION_DISPLAY[item.id] ?? {}
               const description =
                 typeof display.description === 'function'
                   ? display.description(item.count)
                   : item.label
-              const urgent = Boolean(display.urgent)
+              const title = display.compactTitle || item.label
+              const tone = getHubAttentionTone(display)
               const iconVariant =
                 HUB_ATTENTION_ICON_VARIANT[item.id] ?? EQUIPD_ICON_VARIANT.SUPPORT_DISPUTE
 
@@ -143,23 +151,22 @@ function HubMobileSummary({
                 <li key={item.id}>
                   <button
                     type="button"
-                    className={`hub-attention__row hub-attention__row--mobile-summary${
-                      urgent ? ' hub-attention__row--urgent' : ''
-                    }`}
+                    className={`hub-mobile-attention__row hub-mobile-attention__row--${tone}`}
                     onClick={() => onNavigate(item.section, item.tab, item.offerId)}
                   >
-                    <EquipdTypeIcon variant={iconVariant} />
-
-                    <span className="hub-attention__content">
-                      <span className="hub-attention__header">
-                        <span className="hub-attention__label">{item.label}</span>
+                    <EquipdTypeIcon
+                      variant={iconVariant}
+                      className="hub-mobile-attention__icon"
+                    />
+                    <span className="hub-mobile-attention__body">
+                      <span className="hub-mobile-attention__title-row">
+                        <span className="hub-mobile-attention__label">{title}</span>
                         {item.count > 0 ? (
-                          <span className="hub-attention__count">{item.count}</span>
+                          <span className="hub-mobile-attention__count">{item.count}</span>
                         ) : null}
                       </span>
-                      <span className="hub-attention__description">{description}</span>
+                      <span className="hub-mobile-attention__description">{description}</span>
                     </span>
-
                     <HubAttentionChevron />
                   </button>
                 </li>

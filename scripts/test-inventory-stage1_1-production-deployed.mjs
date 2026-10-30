@@ -8,6 +8,7 @@
  * listing and resolves the deliberately-created test exception.
  */
 
+import { assertServiceRoleTestNotProduction } from './lib/supabaseProjectSafety.mjs'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -30,6 +31,7 @@ function loadEnvFile(path) {
 
 loadEnvFile('.env.local')
 loadEnvFile('.env')
+assertServiceRoleTestNotProduction()
 
 const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY

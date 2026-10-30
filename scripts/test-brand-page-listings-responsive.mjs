@@ -22,6 +22,17 @@ assert.match(page, /brand-page__listings-cta/)
 assert.match(page, /listings--one-row/)
 assert.doesNotMatch(page, /View all listings →/)
 assert.doesNotMatch(page, /slice\(0,\s*6\)/)
+assert.match(page, /Used \$\{brand\.displayName\} equipment for sale/)
+assert.match(
+  page,
+  /<BrandPageHero[\s\S]*\{marketplaceSection\}[\s\S]*\{wantedSection\}/,
+  'listings render immediately after the shared hero, before wanted and discovery',
+)
+assert.doesNotMatch(
+  page,
+  /buyerIntent \? \(\s*<>\s*\{marketplaceSection\}/,
+  'marketplace is not gated behind buyer-intent so every brand shows listings first',
+)
 
 const css = readFileSync(join(root, 'src/pages/BrandPage.css'), 'utf8')
 assert.match(css, /listings--one-row/)
