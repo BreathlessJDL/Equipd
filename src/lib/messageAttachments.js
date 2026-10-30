@@ -290,6 +290,7 @@ export async function sendMessageWithAttachments({
   body = '',
   attachments = [],
   recentMessages = [],
+  allowPhoneNumbers = false,
 }) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
@@ -339,6 +340,7 @@ export async function sendMessageWithAttachments({
   if (trimmedBody) {
     const validation = validateMarketplaceMessageWithContext(body, recentMessages, {
       senderId,
+      allowPhoneNumbers,
     })
 
     if (!validation.allowed) {

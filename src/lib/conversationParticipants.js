@@ -3,7 +3,12 @@
  * Kept free of Supabase imports so Node unit tests can load this module.
  */
 
-import { getPublicUserName, PUBLIC_USER_NAME_FALLBACK } from './publicUserName.js'
+import {
+  DELETED_ACCOUNT_DISPLAY_NAME,
+  getPublicUserName,
+  isAnonymisedPublicIdentity,
+  PUBLIC_USER_NAME_FALLBACK,
+} from './publicUserName.js'
 
 function normalizeEmbeddedRow(row) {
   if (!row) return null
@@ -47,7 +52,12 @@ export function getConversationOtherPartyProfile(conversation, userId) {
 
 export function getConversationOtherPartyName(conversation, userId) {
   const otherParty = getConversationOtherPartyProfile(conversation, userId)
-  if (!otherParty) return 'Unknown user'
+  if (!otherParty) {
+    return getConversationOtherPartyId(conversation, userId)
+      ? DELETED_ACCOUNT_DISPLAY_NAME
+      : 'Unknown user'
+  }
+  if (isAnonymisedPublicIdentity(otherParty)) return DELETED_ACCOUNT_DISPLAY_NAME
   return getConversationParticipantLabel(otherParty) || PUBLIC_USER_NAME_FALLBACK
 }
 

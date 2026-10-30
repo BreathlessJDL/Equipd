@@ -1,6 +1,7 @@
 import { getListingPrimaryImageUrl } from './listingImages'
 import { formatOrderReference, ORDER_FULFILMENT_STATUSES } from './orders'
 import { getProfileDisplayName, fetchPublicProfilesByIds } from './profiles'
+import { buildDeletedAccountProfile } from './publicUserName'
 import { supabase } from './supabase'
 
 export const REVIEW_MIN_RATING = 1
@@ -240,9 +241,12 @@ function normalizeRelation(value) {
 function normalizeReviewer(review) {
   if (!review) return review
 
+  const reviewer = normalizeRelation(review.reviewer)
+  const reviewerId = review.reviewer_user_id ?? review.reviewer_id ?? reviewer?.id ?? null
+
   return {
     ...review,
-    reviewer: normalizeRelation(review.reviewer),
+    reviewer: reviewer ?? (reviewerId ? buildDeletedAccountProfile(reviewerId) : null),
   }
 }
 

@@ -37,3 +37,30 @@
   line-height: 1.35;
   color: var(--color-muted);
 }
+
+.message-thread-safety-banner__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.25rem -0.35rem 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.message-thread-safety-banner__close:hover,
+.message-thread-safety-banner__close:focus-visible {
+  color: var(--color-navy, #12263a);
+  background: color-mix(in srgb, var(--color-navy) 6%, transparent);
+}
+
+.message-thread-safety-banner__close:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline-offset: 1px;
+}

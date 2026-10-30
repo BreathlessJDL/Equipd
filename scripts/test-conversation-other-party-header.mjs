@@ -128,8 +128,8 @@ logPass('legacy email-seeded display_name suppressed')
 assert(getConversationOtherPartyName(conversation, null) === 'Unknown user', 'missing viewer → Unknown user')
 assert(
   getConversationOtherPartyName({ ...conversation, buyer: null, seller: null }, buyerId) ===
-    'Unknown user',
-  'missing other profile → Unknown user',
+    'Deleted account',
+  'missing other profile → Deleted account',
 )
 assert(
   !String(getConversationOtherPartyName({ ...conversation, buyer: null, seller: null }, buyerId))

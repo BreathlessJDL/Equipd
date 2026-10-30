@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import '../components/Messages.css'
 import '../components/messages/MessageOfferCard.css'
 import ConversationListItem from '../components/messages/ConversationListItem'
@@ -23,12 +23,14 @@ import {
 } from '../lib/messageAttachments'
 import {
   MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
+  isPhoneExchangeBlockReason,
   validateMarketplaceMessageWithContext,
 } from '../lib/marketplaceMessageValidation'
 import {
   ensureConversationForListing,
   fetchConversationById,
   fetchConversationMessages,
+  fetchConversationPhoneExchangeAllowed,
   fetchDraftConversationContext,
   fetchMyConversations,
   getConversationOtherPartyAvatarProfile,
@@ -41,6 +43,10 @@ import {
   sendMessage,
   withConversationReadCleared,
 } from '../lib/messages'
+import {
+  getConversationOrderForViewer,
+  isOfferAcceptedSystemMessage,
+} from '../lib/offerAcceptedSystemMessage'
 import { canReportConversation, REPORT_TYPES } from '../lib/reports'
 import { fetchOffersForListing, hasPendingOffer } from '../lib/offers'
 
@@ -95,6 +101,7 @@ function MessagesPage() {
   const [listError, setListError] = useState('')
   const [threadError, setThreadError] = useState('')
   const [sendError, setSendError] = useState('')
+  const [phoneExchangeAllowed, setPhoneExchangeAllowed] = useState(false)
   const threadBodyRef = useRef(null)
   const messagesEndRef = useRef(null)
   const isNearBottomRef = useRef(true)
@@ -177,8 +184,10 @@ function MessagesPage() {
       return
     }
 
+    const phoneResult = await fetchConversationPhoneExchangeAllowed(activeConversationId)
     setSelectedConversation(conversationResult.data)
     setMessages(messagesResult.data ?? [])
+    setPhoneExchangeAllowed(Boolean(phoneResult.allowed))
     setConversations((current) =>
       [...current]
         .map((conversation) =>
@@ -200,6 +209,7 @@ function MessagesPage() {
     setSelectionError('')
     setAttachmentLightbox(null)
     setOfferModalOpen(false)
+    setPhoneExchangeAllowed(false)
   }, [threadRouteKey])
 
   useLayoutEffect(() => {
@@ -280,6 +290,10 @@ function MessagesPage() {
         return
       }
 
+      const phoneResult = await fetchConversationPhoneExchangeAllowed(conversationId)
+
+      if (!active) return
+
       const { data: readState, error: readError } = await markConversationRead(conversationId)
 
       if (!active) return
@@ -291,6 +305,7 @@ function MessagesPage() {
 
       setSelectedConversation(conversationWithReadState)
       setMessages(messagesResult.data ?? [])
+      setPhoneExchangeAllowed(Boolean(phoneResult.allowed))
       setConversations((current) =>
         current.map((conversation) =>
           conversation.id === conversationId
@@ -425,6 +440,14 @@ function MessagesPage() {
 
   const safetyBannerKey =
     selectedConversation?.id ?? (draftListingId ? `draft:${draftListingId}` : null)
+  const conversationOrder = getConversationOrderForViewer(
+    [
+      ...listingOffers,
+      ...messages.map((message) => message.offer).filter(Boolean),
+    ],
+    selectedConversation,
+    user?.id,
+  )
 
   async function ensureActiveConversation() {
     if (selectedConversation?.id) {
@@ -494,9 +517,12 @@ function MessagesPage() {
     if (!hasImages) {
       const validation = validateMarketplaceMessageWithContext(messageBody, messages, {
         senderId: user.id,
+        allowPhoneNumbers: phoneExchangeAllowed,
       })
+      const deferPhoneToServer =
+        !validation.allowed && isPhoneExchangeBlockReason(validation.reason)
 
-      if (!validation.allowed) {
+      if (!validation.allowed && !deferPhoneToServer) {
         setSendError(validation.error ?? MARKETPLACE_MESSAGE_BLOCK_MESSAGE)
         return
       }
@@ -508,6 +534,7 @@ function MessagesPage() {
         conversationId: activeConversationId,
         senderId: user.id,
         body: messageBody,
+        allowPhoneNumbers: phoneExchangeAllowed || deferPhoneToServer,
       })
 
       setSending(false)
@@ -521,12 +548,16 @@ function MessagesPage() {
       return
     }
 
+    let deferPhoneToServer = false
     if (trimmedBody) {
       const validation = validateMarketplaceMessageWithContext(messageBody, messages, {
         senderId: user.id,
+        allowPhoneNumbers: phoneExchangeAllowed,
       })
+      deferPhoneToServer =
+        !validation.allowed && isPhoneExchangeBlockReason(validation.reason)
 
-      if (!validation.allowed) {
+      if (!validation.allowed && !deferPhoneToServer) {
         setSendError(validation.error ?? MARKETPLACE_MESSAGE_BLOCK_MESSAGE)
         return
       }
@@ -559,6 +590,7 @@ function MessagesPage() {
       body: messageBody,
       attachments: uploadedAttachments,
       recentMessages: recentTextMessages,
+      allowPhoneNumbers: phoneExchangeAllowed || deferPhoneToServer,
     })
 
     if (error) {
@@ -659,9 +691,17 @@ function MessagesPage() {
 
   function renderMessage(message, index) {
     if (isSystemMessage(message)) {
+      const showOrderLink =
+        isOfferAcceptedSystemMessage(message) && Boolean(conversationOrder?.id)
+
       return (
         <div key={message.id} className="messages-page__system-message" role="status">
-          {message.body}
+          <span>{message.body}</span>
+          {showOrderLink ? (
+            <Link className="messages-page__system-message-link" to={`/orders/${conversationOrder.id}`}>
+              View order
+            </Link>
+          ) : null}
         </div>
       )
     }
@@ -777,7 +817,16 @@ function MessagesPage() {
               </div>
 
               <div className="messages-page__composer-dock">
-                <MessageThreadSafetyBanner conversationId={safetyBannerKey} />
+                <MessageThreadSafetyBanner
+                  key={safetyBannerKey}
+                  conversationId={safetyBannerKey}
+                  userId={user?.id}
+                  onDismissed={() => {
+                    if (isNearBottomRef.current) {
+                      scrollThreadToBottom('auto')
+                    }
+                  }}
+                />
 
                 <MessageThreadComposer
                   messageBody={messageBody}

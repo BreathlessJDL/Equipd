@@ -374,7 +374,7 @@ begin
     select 1 from public.messages
     where conversation_id = v_offer.conversation_id
       and message_type = 'system'::public.message_type
-      and body = 'Counter-offer accepted for 4 items: £2280.00 total (£570.00 per item).'
+      and body = 'Counter-offer accepted! Complete your payment to secure the equipment. Once payment is confirmed, you can find contact details and collection or delivery information in your Order Details.'
   ) then
     raise exception 'FAIL: quantity-aware acceptance message missing';
   end if;

@@ -5,7 +5,7 @@ import {
   RESERVED_EQUIPD_IDENTITY_ERROR,
   isReservedEquipdIdentity,
 } from './reservedEquipdIdentity'
-import { getPublicUserName } from './publicUserName'
+import { buildDeletedAccountProfile, getPublicUserName } from './publicUserName'
 
 const PROFILE_FIELDS_BASE =
   'id, display_name, location, latitude, longitude, avatar_url, stripe_onboarding_complete, is_admin, is_official_equipd, is_suspended, suspended_at, suspension_reason'
@@ -569,12 +569,20 @@ export async function fetchPublicProfilesByIds(userIds) {
     return new Map()
   }
 
-  return new Map(
+  const profiles = new Map(
     (data ?? []).map((profile) => [
       profile.id,
       withUsernameField(profile, usernameColumnAvailable),
     ]),
   )
+
+  for (const id of ids) {
+    if (!profiles.has(id)) {
+      profiles.set(id, buildDeletedAccountProfile(id))
+    }
+  }
+
+  return profiles
 }
 
 export async function fetchPublicProfile(userId) {
@@ -616,6 +624,14 @@ export async function fetchPublicProfile(userId) {
     data: withUsernameField(data, usernameColumnAvailable),
     error: null,
   }
+}
+
+export async function fetchHistoricPublicProfile(userId) {
+  const result = await fetchPublicProfile(userId)
+  if (result.error) return result
+  if (result.data) return result
+  if (!userId) return { data: null, error: null }
+  return { data: buildDeletedAccountProfile(userId), error: null }
 }
 
 export async function fetchPublicProfileByUsername(username) {

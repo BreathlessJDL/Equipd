@@ -1,8 +1,13 @@
+import { DELETED_ACCOUNT_DISPLAY_NAME, isAnonymisedPublicIdentity } from './publicUserName.js'
+
 export const ADMIN_CONVERSATION_PAGE_SIZE = 40
 export const ADMIN_CONVERSATION_MESSAGE_PAGE_SIZE = 80
 
 export function formatAdminConversationParticipantName(participant) {
-  if (!participant || participant.deleted) return 'Deleted user'
+  if (!participant) return 'Unknown user'
+  if (isAnonymisedPublicIdentity(participant) || participant.deleted) {
+    return DELETED_ACCOUNT_DISPLAY_NAME
+  }
   const username = participant.username?.trim()
   if (username) return username
   const displayName = participant.displayName?.trim() || participant.display_name?.trim()
@@ -77,13 +82,16 @@ export function getAdminConversationAuditHasMessageContent(entry) {
 
 function parseParticipant(raw) {
   if (!raw) return null
-  return {
+  const parsed = {
     id: raw.id ?? null,
     deleted: Boolean(raw.deleted),
     username: raw.username ?? null,
     displayName: raw.displayName ?? raw.display_name ?? null,
+    display_name: raw.display_name ?? raw.displayName ?? null,
     avatarUrl: raw.avatarUrl ?? raw.avatar_url ?? null,
   }
+  parsed.deleted = parsed.deleted || isAnonymisedPublicIdentity(parsed)
+  return parsed
 }
 
 function parseListing(raw) {

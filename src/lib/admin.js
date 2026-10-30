@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { DELETED_ACCOUNT_DISPLAY_NAME, isAnonymisedPublicIdentity } from './publicUserName'
 import { parseAdminUserStatistics } from './adminUserStatistics'
 import { enrichOrderDetail, formatOrderFulfilmentStatus, formatOrderTimestamp, formatPayoutStatus } from './orders'
 import { formatPaymentStatus } from './payments'
@@ -84,6 +85,14 @@ export function getAdminErrorMessage(error) {
 }
 
 export function formatAdminUserLabel(userId, displayName) {
+  if (
+    isAnonymisedPublicIdentity({
+      display_name: displayName,
+      username: displayName,
+    })
+  ) {
+    return DELETED_ACCOUNT_DISPLAY_NAME
+  }
   if (displayName?.trim()) return displayName.trim()
   if (!userId) return 'Unknown user'
   return `${userId.slice(0, 8)}…`

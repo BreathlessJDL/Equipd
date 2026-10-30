@@ -8,8 +8,11 @@
 
 import {
   MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
+  MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE,
+  isPhoneExchangeBlockReason,
   validateMarketplaceMessage,
   validateMarketplaceMessageWithContext,
+  validateOptionalMarketplaceMessage,
 } from '../src/lib/marketplaceMessageValidation.js'
 
 function assert(condition, message) {
@@ -156,9 +159,12 @@ const ALLOWED_PRICE_SEQUENCES = [
 function expectBlocked(text) {
   const result = validateMarketplaceMessage(text)
   assert(!result.allowed, `Expected blocked: "${text}"`)
+  const expectedError = isPhoneExchangeBlockReason(result.reason)
+    ? MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE
+    : MARKETPLACE_MESSAGE_BLOCK_MESSAGE
   assert(
-    result.error === MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
-    `Expected safety warning for: "${text}"`,
+    result.error === expectedError,
+    `Expected safety warning for: "${text}" (reason=${result.reason})`,
   )
   assert(result.reason, `Expected reason for: "${text}"`)
 }
@@ -268,5 +274,73 @@ assert(splitBlocked.context === 'sequence', 'Split address block should report s
 logPass('Empty message rejected')
 logPass('Blocked messages are not saved')
 logPass('Split address/postcode bypass blocked with recent context')
+
+const phoneAllowed = validateMarketplaceMessage('Call me on 07712345678', {
+  allowPhoneNumbers: true,
+})
+assert(phoneAllowed.allowed, 'Paid-order conversations should allow a phone number')
+
+const phoneRequestAllowed = validateMarketplaceMessage('My number is 07712345678', {
+  allowPhoneNumbers: true,
+})
+assert(phoneRequestAllowed.allowed, 'Paid-order conversations should allow phone-number wording')
+
+const stillBlockedOffPlatform = validateMarketplaceMessage('WhatsApp me on 07712345678', {
+  allowPhoneNumbers: true,
+})
+assert(!stillBlockedOffPlatform.allowed, 'WhatsApp must stay blocked after payment')
+
+const stillBlockedEmail = validateMarketplaceMessage('email me at test@gmail.com', {
+  allowPhoneNumbers: true,
+})
+assert(!stillBlockedEmail.allowed, 'Email must stay blocked after payment')
+
+const stillBlockedCash = validateMarketplaceMessage('pay cash on collection', {
+  allowPhoneNumbers: true,
+})
+assert(!stillBlockedCash.allowed, 'Off-platform payment must stay blocked after payment')
+
+const stillBlockedAddress = validateMarketplaceMessage('182 rooks nest road', {
+  allowPhoneNumbers: true,
+})
+assert(!stillBlockedAddress.allowed, 'Addresses must stay blocked after payment')
+
+const unpaidPhone = validateMarketplaceMessage('07712345678')
+assert(!unpaidPhone.allowed, 'Phone numbers stay blocked before payment')
+assert(unpaidPhone.error === MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE, 'Pre-payment phone block should be friendly')
+
+const forgedClientFlagSequence = validateMarketplaceMessageWithContext(
+  '07712345678',
+  [],
+  { senderId: 'user-1', allowPhoneNumbers: false },
+)
+assert(!forgedClientFlagSequence.allowed, 'Client cannot unlock phones without the paid-order flag')
+
+logPass('Post-payment phone exchange allowed without unlocking other contact or payment rules')
+logPass('Pre-payment phone numbers remain blocked with a clear warning')
+
+const optionalEmpty = validateOptionalMarketplaceMessage('  ')
+assert(optionalEmpty.allowed, 'Offer notes may be empty')
+
+const offerNotePhone = validateOptionalMarketplaceMessage('Call me on 07712345678')
+assert(!offerNotePhone.allowed, 'Offer notes must not accept phone numbers even if chat later unlocks them')
+assert(
+  offerNotePhone.error === MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE,
+  'Offer-note phone blocks should use the phone safety copy',
+)
+
+const offerNoteEmail = validateOptionalMarketplaceMessage('email me at test@gmail.com')
+assert(!offerNoteEmail.allowed, 'Offer notes must not accept emails')
+
+const offerNoteUrl = validateOptionalMarketplaceMessage('https://example.com/deal')
+assert(!offerNoteUrl.allowed, 'Offer notes must not accept URLs')
+
+const offerNoteCash = validateOptionalMarketplaceMessage('Can I pay cash?')
+assert(!offerNoteCash.allowed, 'Offer notes must not accept off-platform payment requests')
+
+const offerNoteOk = validateOptionalMarketplaceMessage('Would you take £200 if I collect Saturday?')
+assert(offerNoteOk.allowed, 'Ordinary commercial offer notes should remain allowed')
+
+logPass('Offer notes reuse message filters and never unlock phones')
 
 console.log('\nAll marketplace message validation checks passed.')

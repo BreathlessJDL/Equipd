@@ -160,6 +160,8 @@ function HubOfferCard({
       : partyRole === 'buyer'
         ? (Array.isArray(offer.buyer) ? offer.buyer[0] : offer.buyer)
         : null
+  const partyUserId =
+    partyRole === 'seller' ? offer.seller_id : partyRole === 'buyer' ? offer.buyer_id : null
   const partyLabel =
     partyRole === 'seller' ? 'Seller' : partyRole === 'buyer' ? 'Buyer' : null
   const thumbnailUrl = listing?.listing_images?.[0]?.url
@@ -182,7 +184,11 @@ function HubOfferCard({
     showPaymentStatus,
     disputes: getDisputesForOrderFromMap(order?.id, disputesByOrderId),
   })
-  const partyDisplayName = partyProfile ? getProfileDisplayName(partyProfile) : null
+  const partyDisplayName = partyProfile
+    ? getProfileDisplayName(partyProfile)
+    : partyUserId
+      ? 'Deleted account'
+      : null
   const partyIsOfficial = partyProfile?.is_official_equipd === true
   const metadataItems = getHubOfferMetadataItems({
     partyLabel,

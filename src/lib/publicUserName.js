@@ -4,6 +4,34 @@
  */
 
 export const PUBLIC_USER_NAME_FALLBACK = 'Equipd user'
+export const DELETED_ACCOUNT_DISPLAY_NAME = 'Deleted account'
+
+const ANONYMISED_USERNAME_PATTERN = /^gone_[a-f0-9]{8}$/i
+
+export function isAnonymisedPublicIdentity(profile) {
+  if (!profile) return false
+  if (profile.deleted === true) return true
+
+  const displayName = String(profile.display_name ?? profile.displayName ?? '').trim()
+  const username = String(profile.username ?? '').trim()
+
+  if (displayName.toLowerCase() === DELETED_ACCOUNT_DISPLAY_NAME.toLowerCase()) return true
+  if (ANONYMISED_USERNAME_PATTERN.test(username) || ANONYMISED_USERNAME_PATTERN.test(displayName)) {
+    return true
+  }
+
+  return false
+}
+
+export function buildDeletedAccountProfile(userId = null) {
+  return {
+    id: userId,
+    username: null,
+    display_name: DELETED_ACCOUNT_DISPLAY_NAME,
+    avatar_url: null,
+    deleted: true,
+  }
+}
 
 export function getEmailLocalPart(email) {
   const value = String(email ?? '').trim()
@@ -53,6 +81,10 @@ export function getPublicUserName(profile, {
   fallback = PUBLIC_USER_NAME_FALLBACK,
   allowEmailSeededDisplayName = false,
 } = {}) {
+  if (isAnonymisedPublicIdentity(profile)) {
+    return DELETED_ACCOUNT_DISPLAY_NAME
+  }
+
   const username = profile?.username?.trim()
   if (username) return username
 

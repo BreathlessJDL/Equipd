@@ -115,13 +115,9 @@
   }
 
   .messages-page--thread-open .messages-page__composer-dock {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
     flex-shrink: 0;
     margin-top: 0;
-    z-index: 20;
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
     box-shadow: 0 -1px 8px color-mix(in srgb, var(--color-navy) 4%, transparent);
@@ -133,12 +129,11 @@
     min-height: 0;
     max-height: none;
     overflow-y: auto;
-    padding: 0.75rem max(var(--space-md), env(safe-area-inset-right, 0px))
-      calc(6.5rem + env(safe-area-inset-bottom, 0px))
+    padding: 0.75rem max(var(--space-md), env(safe-area-inset-right, 0px)) 0.75rem
       max(var(--space-md), env(safe-area-inset-left, 0px));
     gap: 0.45rem;
     -webkit-overflow-scrolling: touch;
-    scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: 0.75rem;
   }
 
   .messages-page__thread-body {
@@ -304,6 +299,13 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.messages-page__composer-dock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .messages-page__thread {

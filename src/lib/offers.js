@@ -5,6 +5,7 @@ import { enrichOfferWithOrder, fetchOrdersByOfferIds, getOfferOrder } from './or
 import { enrichOfferWithPayment, getOfferPayment, isPaymentComplete, paymentFields } from './payments'
 import { fetchPublicProfilesByIds } from './profiles'
 import { supabase } from './supabase'
+import { validateOptionalMarketplaceMessage } from './marketplaceMessageValidation'
 import { validateBuyerOfferAmount } from './offerQuantity'
 
 export {
@@ -540,12 +541,17 @@ export async function createOffer({
     return { data: null, error: new Error('New offers must be buyer-to-seller.') }
   }
 
+  const noteValidation = validateOptionalMarketplaceMessage(message)
+  if (!noteValidation.allowed) {
+    return { data: null, error: new Error(noteValidation.error) }
+  }
+
   const { data, error } = await supabase.rpc('create_buyer_offer', {
     p_listing_id: listingId,
     p_conversation_id: conversationId,
     p_quantity: quantity,
     p_total_amount_pence: amountPence,
-    p_message: message?.trim() || null,
+    p_message: noteValidation.sanitizedBody || null,
   })
 
   return { data: withDefaultOfferDirection(data), error }

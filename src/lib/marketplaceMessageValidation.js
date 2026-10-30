@@ -1,8 +1,11 @@
 export const MARKETPLACE_MESSAGE_BLOCK_MESSAGE =
   "For everyone's safety, please keep communication and payments on Equipd. Collection details are shared securely after payment."
 
+export const MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE =
+  'Please keep phone numbers on Equipd until payment is confirmed. Once this order is paid, you can share a contact number in this conversation. Collection and delivery details stay in Order Details after payment.'
+
 export const MARKETPLACE_MESSAGE_SAFETY_NOTE =
-  'Stay safe on Equipd. Equipd will never contact you through a standard user conversation asking you to scan a QR code, make a bank transfer, or pay a fee to verify your account.'
+  'Stay safe on Equipd. Keep payments on Equipd. Equipd will never contact you through a standard user conversation asking you to scan a QR code, make a bank transfer, or pay a fee to verify your account.'
 
 export const MESSAGE_CONTEXT_MAX_RECENT_MESSAGES = 5
 export const MESSAGE_CONTEXT_WINDOW_MINUTES = 10
@@ -58,11 +61,11 @@ const BLOCK_RULES = [
   {
     type: 'contact_request',
     pattern:
-      /\b(?:call me|text me|email me|message me on|contact me on|add me on|dm me|reach me on)\b/i,
+      /\b(?:email me|message me on|contact me on|add me on|dm me|reach me on)\b/i,
   },
   {
-    type: 'contact_request',
-    pattern: /\b(?:my number is|phone number|mobile number|send me your number)\b/i,
+    type: 'phone_request',
+    pattern: /\b(?:call me|text me|my number is|phone number|mobile number|send me your number)\b/i,
   },
   {
     type: 'off_platform_payment',
@@ -106,13 +109,21 @@ const BLOCK_RULES = [
   { type: 'collection_location', pattern: /\b(?:my\s+)?address\s+is\b/i },
 ]
 
-function findBlockedMatch(value, { allowPriceNegotiation = true } = {}) {
+const PHONE_EXCHANGE_RULE_TYPES = new Set(['phone', 'phone_request'])
+
+export function isPhoneExchangeBlockReason(reason) {
+  return PHONE_EXCHANGE_RULE_TYPES.has(reason)
+}
+
+function findBlockedMatch(value, { allowPriceNegotiation = true, allowPhoneNumbers = false } = {}) {
   const text = value?.trim() ?? ''
   const priceContext = allowPriceNegotiation && hasPriceNegotiationContext(text)
   const hasStreetTerms = containsStreetAddressKeyword(text)
   const suspiciousAddressIntent = hasSuspiciousAddressIntent(text)
 
   for (const rule of BLOCK_RULES) {
+    if (allowPhoneNumbers && PHONE_EXCHANGE_RULE_TYPES.has(rule.type)) continue
+
     if (priceContext && !hasStreetTerms && !suspiciousAddressIntent) {
       if (rule.type === 'street_address' || rule.type === 'uk_postcode') continue
       if (rule.type === 'collection_location') continue
@@ -137,7 +148,9 @@ function buildBlockedResult(blocked, context = 'single') {
     ok: false,
     reason: blocked.type,
     matchedPattern: blocked.matchedPattern,
-    error: MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
+    error: isPhoneExchangeBlockReason(blocked.type)
+      ? MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE
+      : MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
     context,
   }
 }
@@ -264,14 +277,14 @@ function buildContextCombinations(recentBodies, currentBody) {
   return combinations
 }
 
-function validateMessageSequence(recentBodies, currentBody) {
+function validateMessageSequence(recentBodies, currentBody, { allowPhoneNumbers = false } = {}) {
   const combinations = buildContextCombinations(recentBodies, currentBody)
 
   for (const combined of combinations) {
     if (isMeasurementText(combined)) continue
     if (shouldAllowPriceNegotiationSequence(recentBodies, currentBody, combined)) continue
 
-    const blocked = findBlockedMatch(combined)
+    const blocked = findBlockedMatch(combined, { allowPhoneNumbers })
     if (blocked) {
       return buildBlockedResult(blocked, 'sequence')
     }
@@ -318,7 +331,7 @@ function validateMessageSequence(recentBodies, currentBody) {
         (isAddressNumberFragment(currentBody) || isStreetSuffixFragment(currentBody)))
     ) {
       const combined = `${previousBody.trim()} ${currentBody.trim()}`
-      const blocked = findBlockedMatch(combined)
+      const blocked = findBlockedMatch(combined, { allowPhoneNumbers })
 
       if (blocked) {
         return buildBlockedResult(blocked, 'sequence')
@@ -329,7 +342,7 @@ function validateMessageSequence(recentBodies, currentBody) {
   return null
 }
 
-export function validateMarketplaceMessage(body) {
+export function validateMarketplaceMessage(body, { allowPhoneNumbers = false } = {}) {
   const trimmed = body?.trim() ?? ''
 
   if (!trimmed) {
@@ -344,7 +357,10 @@ export function validateMarketplaceMessage(body) {
   }
 
   if (isMeasurementText(trimmed) || hasPriceNegotiationContext(trimmed)) {
-    const blockedWithoutPriceBypass = findBlockedMatch(trimmed, { allowPriceNegotiation: false })
+    const blockedWithoutPriceBypass = findBlockedMatch(trimmed, {
+      allowPriceNegotiation: false,
+      allowPhoneNumbers,
+    })
 
     if (blockedWithoutPriceBypass) {
       return buildBlockedResult(blockedWithoutPriceBypass, 'single')
@@ -360,7 +376,7 @@ export function validateMarketplaceMessage(body) {
     }
   }
 
-  const blocked = findBlockedMatch(trimmed)
+  const blocked = findBlockedMatch(trimmed, { allowPhoneNumbers })
 
   if (blocked) {
     return buildBlockedResult(blocked, 'single')
@@ -384,9 +400,10 @@ export function validateMarketplaceMessageWithContext(
     maxMessages = MESSAGE_CONTEXT_MAX_RECENT_MESSAGES,
     withinMinutes = MESSAGE_CONTEXT_WINDOW_MINUTES,
     now = new Date(),
+    allowPhoneNumbers = false,
   } = {},
 ) {
-  const singleResult = validateMarketplaceMessage(body)
+  const singleResult = validateMarketplaceMessage(body, { allowPhoneNumbers })
 
   if (!singleResult.allowed) {
     return singleResult
@@ -399,7 +416,7 @@ export function validateMarketplaceMessageWithContext(
     now,
   })
   const recentBodies = recent.map((message) => message.body.trim())
-  const sequenceResult = validateMessageSequence(recentBodies, trimmed)
+  const sequenceResult = validateMessageSequence(recentBodies, trimmed, { allowPhoneNumbers })
 
   if (sequenceResult) {
     return sequenceResult
@@ -425,7 +442,7 @@ export function validateOptionalMarketplaceMessage(body) {
     }
   }
 
-  return validateMarketplaceMessage(trimmed)
+  return validateMarketplaceMessage(trimmed, { allowPhoneNumbers: false })
 }
 
 export function logBlockedMarketplaceMessage(details = {}) {

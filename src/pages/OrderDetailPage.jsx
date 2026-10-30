@@ -82,7 +82,8 @@ import {
   isOrderReviewable,
 } from '../lib/reviews'
 import { getOrderStatusBadge } from '../lib/orderStatusBadge'
-import { fetchPublicProfile, getProfileDisplayName } from '../lib/profiles'
+import { fetchHistoricPublicProfile, getProfileDisplayName } from '../lib/profiles'
+import { DELETED_ACCOUNT_DISPLAY_NAME, isAnonymisedPublicIdentity } from '../lib/publicUserName'
 import { OfficialEquipdName } from '../components/OfficialEquipdBadge'
 import { getSellerShopPath } from '../lib/sellerShopUrls'
 
@@ -150,19 +151,28 @@ function OrderReferenceRow({ orderReference }) {
 function OrderParticipantProfileLink({ label, userId, profile }) {
   if (!userId) return null
 
-  const username = profile?.username?.trim()
-  const linkLabel = username ? `@${username}` : getProfileDisplayName(profile)
-  const isOfficial = profile?.is_official_equipd === true
+  const deleted = isAnonymisedPublicIdentity(profile)
+  const username = deleted ? '' : profile?.username?.trim()
+  const linkLabel = deleted
+    ? DELETED_ACCOUNT_DISPLAY_NAME
+    : username
+      ? `@${username}`
+      : getProfileDisplayName(profile)
+  const isOfficial = !deleted && profile?.is_official_equipd === true
 
   return (
     <p className="order-detail__overview-meta">
       {label}:{' '}
-      <Link
-        to={getSellerShopPath({ id: userId, username: profile?.username })}
-        className="order-detail__participant-link"
-      >
-        <OfficialEquipdName name={linkLabel} isOfficial={isOfficial} />
-      </Link>
+      {deleted ? (
+        <OfficialEquipdName name={linkLabel} isOfficial={false} />
+      ) : (
+        <Link
+          to={getSellerShopPath({ id: userId, username: profile?.username })}
+          className="order-detail__participant-link"
+        >
+          <OfficialEquipdName name={linkLabel} isOfficial={isOfficial} />
+        </Link>
+      )}
     </p>
   )
 }
@@ -281,8 +291,8 @@ function OrderDetailPage() {
     }
 
     const [buyerProfileResult, sellerProfileResult] = await Promise.all([
-      data.buyer_id ? fetchPublicProfile(data.buyer_id) : Promise.resolve({ data: null }),
-      data.seller_id ? fetchPublicProfile(data.seller_id) : Promise.resolve({ data: null }),
+      data.buyer_id ? fetchHistoricPublicProfile(data.buyer_id) : Promise.resolve({ data: null }),
+      data.seller_id ? fetchHistoricPublicProfile(data.seller_id) : Promise.resolve({ data: null }),
     ])
 
     setOrder(data)

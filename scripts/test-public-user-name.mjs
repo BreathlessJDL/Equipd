@@ -8,9 +8,11 @@
 
 import assert from 'node:assert/strict'
 import {
+  DELETED_ACCOUNT_DISPLAY_NAME,
   getEmailLocalPart,
   getPublicUserName,
   getSafePublicDisplayName,
+  isAnonymisedPublicIdentity,
   isEmailSeededDisplayName,
   PUBLIC_USER_NAME_FALLBACK,
 } from '../src/lib/publicUserName.js'
@@ -146,6 +148,23 @@ assert.equal(
     'b1',
   ),
   'rower-sellpoint',
+)
+
+assert.equal(
+  getPublicUserName({ username: 'gone_a1b2c3d4', display_name: 'Deleted account' }),
+  DELETED_ACCOUNT_DISPLAY_NAME,
+)
+assert.equal(isAnonymisedPublicIdentity({ username: 'gone_a1b2c3d4' }), true)
+assert.equal(
+  getConversationOtherPartyName(
+    {
+      buyer_id: 'b1',
+      seller_id: 's1',
+      seller: null,
+    },
+    'b1',
+  ),
+  DELETED_ACCOUNT_DISPLAY_NAME,
 )
 
 console.log('test-public-user-name: ok')

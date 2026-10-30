@@ -1,3 +1,9 @@
+import { useState } from 'react'
+import { ModalCloseIcon } from '../icons/ModalCloseIcon'
+import {
+  dismissConversationSafetyBanner,
+  isConversationSafetyBannerDismissed,
+} from '../../lib/conversationSafetyBannerPreference'
 import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../../lib/marketplaceMessageValidation'
 import './MessageThreadSafetyBanner.css'
 
@@ -21,14 +27,36 @@ function SafetyShieldIcon() {
   )
 }
 
-function MessageThreadSafetyBanner() {
+function MessageThreadSafetyBanner({ conversationId = null, userId = null, onDismissed }) {
+  const [dismissed, setDismissed] = useState(() =>
+    isConversationSafetyBannerDismissed(userId, conversationId),
+  )
+
+  if (!conversationId || dismissed) {
+    return null
+  }
+
+  function handleDismiss() {
+    dismissConversationSafetyBanner(userId, conversationId)
+    setDismissed(true)
+    onDismissed?.()
+  }
+
   return (
     <div className="message-thread-safety-banner" role="note">
       <SafetyShieldIcon />
       <div className="message-thread-safety-banner__copy">
-        <p className="message-thread-safety-banner__title">Stay safe on Equipd</p>
+        <p className="message-thread-safety-banner__title">Keep payments on Equipd</p>
         <p className="message-thread-safety-banner__text">{MARKETPLACE_MESSAGE_SAFETY_NOTE}</p>
       </div>
+      <button
+        type="button"
+        className="message-thread-safety-banner__close"
+        onClick={handleDismiss}
+        aria-label="Dismiss safety reminder for this conversation"
+      >
+        <ModalCloseIcon size={14} />
+      </button>
     </div>
   )
 }

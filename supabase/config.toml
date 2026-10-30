@@ -48,3 +48,7 @@ verify_jwt = false
 [functions.admin-moderate-user]
 # Auth enforced in-function via requireAdmin; revokes sessions on suspend.
 verify_jwt = false
+
+[functions.request-account-deletion]
+# Auth, password re-check, and service-role anonymisation enforced in-function.
+verify_jwt = false

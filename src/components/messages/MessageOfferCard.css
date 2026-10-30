@@ -270,12 +270,26 @@
 .messages-page__system-message {
   max-width: 28rem;
   margin: 0 auto var(--space-md);
-  padding: 0.5rem 0.75rem;
-  border-radius: 999px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 1rem;
   background: color-mix(in srgb, var(--color-border) 35%, var(--color-bg));
   color: var(--color-muted);
   font-size: 0.8125rem;
+  line-height: 1.4;
   text-align: center;
+}
+
+.messages-page__system-message-link {
+  display: inline-flex;
+  margin-top: 0.35rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.messages-page__system-message-link:hover,
+.messages-page__system-message-link:focus-visible {
+  text-decoration: underline;
 }
 
 .messages-page__safety-note {

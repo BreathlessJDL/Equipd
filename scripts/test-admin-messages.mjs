@@ -44,8 +44,8 @@ assert.doesNotMatch(sql, /create policy .* on public\.conversations/i)
 assert.doesNotMatch(sql, /create policy .* on public\.messages/i)
 assert.match(sql, /revoke all on table public\.admin_conversation_access_log/)
 
-assert.equal(formatAdminConversationParticipantName({ deleted: true, username: 'old' }), 'Deleted user')
-assert.equal(formatAdminConversationParticipantName(null), 'Deleted user')
+assert.equal(formatAdminConversationParticipantName({ deleted: true, username: 'old' }), 'Deleted account')
+assert.equal(formatAdminConversationParticipantName(null), 'Unknown user')
 assert.equal(formatAdminConversationParticipantName({ username: 'jordan', displayName: 'Jordan' }), 'jordan')
 assert.equal(formatAdminConversationParticipantName({ username: '', displayName: 'Jordan' }), 'Jordan')
 assert.equal(formatAdminConversationPreview({ messageType: 'offer' }), 'Offer update')
@@ -69,7 +69,7 @@ const parsed = parseAdminConversationList({
   offset: 0,
 })
 assert.equal(parsed.items[0].seller.deleted, true)
-assert.equal(formatAdminConversationParticipantName(parsed.items[0].seller), 'Deleted user')
+assert.equal(formatAdminConversationParticipantName(parsed.items[0].seller), 'Deleted account')
 
 const detail = parseAdminConversationDetail({
   conversation: {

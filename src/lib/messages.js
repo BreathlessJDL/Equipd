@@ -365,13 +365,15 @@ export function getConversationOtherPartyAvatarProfile(conversation, userId) {
   const otherPartyId = getConversationOtherPartyId(conversation, userId)
   if (!otherPartyId) return null
 
-  return buildAvatarProfile({ id: otherPartyId, display_name: 'Unknown user' })
+  return buildAvatarProfile({ id: otherPartyId, display_name: 'Deleted account' })
 }
 
 export function getConversationParticipantLine(conversation, userId) {
   const otherParty = getConversationOtherPartyProfile(conversation, userId)
 
-  if (!otherParty) return ''
+  if (!otherParty) {
+    return getConversationOtherPartyId(conversation, userId) ? 'Deleted account' : ''
+  }
 
   const name = getConversationParticipantLabel(otherParty) || getProfileDisplayName(otherParty)
 
@@ -877,7 +879,27 @@ export async function fetchRecentSenderTextMessages({
   return { data: (data ?? []).reverse(), error: null }
 }
 
-export async function sendMessage({ conversationId, senderId, body }) {
+export async function fetchConversationPhoneExchangeAllowed(conversationId) {
+  if (!supabase) {
+    return { allowed: false, error: new Error('Supabase is not configured.') }
+  }
+
+  if (!conversationId) {
+    return { allowed: false, error: null }
+  }
+
+  const { data, error } = await supabase.rpc('conversation_allows_phone_exchange', {
+    p_conversation_id: conversationId,
+  })
+
+  if (error) {
+    return { allowed: false, error }
+  }
+
+  return { allowed: Boolean(data), error: null }
+}
+
+export async function sendMessage({ conversationId, senderId, body, allowPhoneNumbers = false }) {
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured.') }
   }
@@ -893,6 +915,7 @@ export async function sendMessage({ conversationId, senderId, body }) {
 
   const validation = validateMarketplaceMessageWithContext(body, recentMessages, {
     senderId,
+    allowPhoneNumbers,
   })
 
   if (!validation.allowed) {
