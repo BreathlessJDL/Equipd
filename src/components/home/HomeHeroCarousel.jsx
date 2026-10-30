@@ -2,11 +2,115 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import HomeHero from './HomeHero'
 import HomeHeroImageSlide from './HomeHeroImageSlide'
 import {
+  HOME_HERO_MOBILE_MEDIA,
   HOME_HERO_ROTATE_MS,
   HOME_HERO_TRANSITION_MS,
   getHomeHeroSlides,
 } from '../../lib/homeHeroCarousel'
 import './HomeHeroCarousel.css'
+
+const HOME_HERO_SWIPE_LOCK_PX = 10
+const HOME_HERO_SWIPE_COMMIT_PX = 44
+const HOME_HERO_SWIPE_CLICK_GUARD_MS = 450
+
+function getTouchPoint(event) {
+  const touch = event.changedTouches?.[0] || event.touches?.[0]
+  if (!touch) return null
+  return { x: touch.clientX, y: touch.clientY }
+}
+
+function useHomeHeroSwipe({ enabled, slideCount, goBy, pause, resume }) {
+  const stageRef = useRef(null)
+  const gestureRef = useRef(null)
+  const ignoreClickUntilRef = useRef(0)
+  const actionsRef = useRef({ goBy, pause, resume })
+  actionsRef.current = { goBy, pause, resume }
+
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage || !enabled || slideCount < 2) return undefined
+
+    const finishGesture = (event, commit) => {
+      const gesture = gestureRef.current
+      if (!gesture) return
+
+      const point = getTouchPoint(event)
+      const dx = point ? point.x - gesture.x : 0
+      if (commit && gesture.locked && Math.abs(dx) >= HOME_HERO_SWIPE_COMMIT_PX) {
+        ignoreClickUntilRef.current = performance.now() + HOME_HERO_SWIPE_CLICK_GUARD_MS
+        actionsRef.current.goBy(dx < 0 ? 1 : -1)
+      }
+
+      actionsRef.current.resume('swipe')
+      gestureRef.current = null
+    }
+
+    const onTouchStart = (event) => {
+      if (event.touches.length !== 1) {
+        gestureRef.current = null
+        actionsRef.current.resume('swipe')
+        return
+      }
+      const point = getTouchPoint(event)
+      if (!point) return
+      gestureRef.current = { x: point.x, y: point.y, locked: false }
+    }
+
+    const onTouchMove = (event) => {
+      const gesture = gestureRef.current
+      if (!gesture) return
+
+      const point = getTouchPoint(event)
+      if (!point) return
+
+      const dx = point.x - gesture.x
+      const dy = point.y - gesture.y
+
+      if (!gesture.locked) {
+        if (Math.abs(dx) < HOME_HERO_SWIPE_LOCK_PX && Math.abs(dy) < HOME_HERO_SWIPE_LOCK_PX) {
+          return
+        }
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          gesture.locked = true
+          actionsRef.current.pause('swipe')
+        } else {
+          gestureRef.current = null
+          return
+        }
+      }
+
+      if (gesture.locked && event.cancelable) {
+        event.preventDefault()
+      }
+    }
+
+    const onTouchEnd = (event) => finishGesture(event, true)
+    const onTouchCancel = (event) => finishGesture(event, false)
+
+    const onClickCapture = (event) => {
+      if (performance.now() < ignoreClickUntilRef.current) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+
+    stage.addEventListener('touchstart', onTouchStart, { passive: true })
+    stage.addEventListener('touchmove', onTouchMove, { passive: false })
+    stage.addEventListener('touchend', onTouchEnd)
+    stage.addEventListener('touchcancel', onTouchCancel)
+    stage.addEventListener('click', onClickCapture, true)
+
+    return () => {
+      stage.removeEventListener('touchstart', onTouchStart)
+      stage.removeEventListener('touchmove', onTouchMove)
+      stage.removeEventListener('touchend', onTouchEnd)
+      stage.removeEventListener('touchcancel', onTouchCancel)
+      stage.removeEventListener('click', onClickCapture, true)
+    }
+  }, [enabled, slideCount])
+
+  return stageRef
+}
 
 function CarouselArrow({ direction, onClick }) {
   const label = direction === 'prev' ? 'Previous hero slide' : 'Next hero slide'
@@ -45,10 +149,24 @@ function HomeHeroCarousel({ isLoggedIn = false }) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
+  const [isMobileHero, setIsMobileHero] = useState(false)
 
   useEffect(() => {
     setIndex(0)
   }, [isLoggedIn])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
+    const media = window.matchMedia(HOME_HERO_MOBILE_MEDIA)
+    const sync = () => setIsMobileHero(media.matches)
+    sync()
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync)
+      return () => media.removeEventListener('change', sync)
+    }
+    media.addListener(sync)
+    return () => media.removeListener(sync)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
@@ -82,13 +200,28 @@ function HomeHeroCarousel({ isLoggedIn = false }) {
     setIndex(wrapped)
   }, [slides.length])
 
+  const goBy = useCallback((delta) => {
+    setIndex((current) => {
+      if (slideCount <= 0) return current
+      return ((current + delta) % slideCount + slideCount) % slideCount
+    })
+  }, [slideCount])
+
   const goNext = useCallback(() => {
-    goTo(index + 1)
-  }, [goTo, index])
+    goBy(1)
+  }, [goBy])
 
   const goPrev = useCallback(() => {
-    goTo(index - 1)
-  }, [goTo, index])
+    goBy(-1)
+  }, [goBy])
+
+  const stageRef = useHomeHeroSwipe({
+    enabled: isMobileHero,
+    slideCount,
+    goBy,
+    pause,
+    resume,
+  })
 
   useEffect(() => {
     if (paused || reduceMotion || slideCount < 2) return undefined
@@ -138,7 +271,7 @@ function HomeHeroCarousel({ isLoggedIn = false }) {
         }}
         onKeyDown={handleKeyDown}
       >
-        <div className="home-hero-carousel__stage">
+        <div ref={stageRef} className="home-hero-carousel__stage" data-home-hero-swipe={isMobileHero ? 'true' : 'false'}>
           {slides.map((slide, slideIndex) => {
             const active = slideIndex === index
             const priority = slideIndex === 0
@@ -166,7 +299,7 @@ function HomeHeroCarousel({ isLoggedIn = false }) {
             )
           })}
 
-          {slideCount > 1 ? (
+          {slideCount > 1 && !isMobileHero ? (
             <>
               <CarouselArrow direction="prev" onClick={goPrev} />
               <CarouselArrow direction="next" onClick={goNext} />

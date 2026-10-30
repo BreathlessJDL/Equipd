@@ -15,6 +15,8 @@
   aspect-ratio: var(--home-hero-desktop-ratio);
   background: var(--home-hero-cream);
   overflow: hidden;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
 
 .home-hero-carousel__slide {
@@ -241,17 +243,6 @@
   }
 
   .home-hero-carousel__arrow {
-    top: 0.55rem;
-    width: 2rem;
-    height: 2rem;
-    transform: none;
-  }
-
-  .home-hero-carousel__arrow--prev {
-    left: 0.35rem;
-  }
-
-  .home-hero-carousel__arrow--next {
-    right: 0.35rem;
+    display: none;
   }
 }

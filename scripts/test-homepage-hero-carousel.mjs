@@ -74,7 +74,19 @@ assert.match(carousel, /pause\('hover'\)/, 'pauses on hover')
 assert.match(carousel, /pause\('focus'\)/, 'pauses on focus')
 assert.match(carousel, /Previous hero slide/, 'previous control is labelled')
 assert.match(carousel, /Next hero slide/, 'next control is labelled')
+assert.match(carousel, /slideCount > 1 && !isMobileHero/, 'desktop keeps arrow controls')
+assert.match(carousel, /HOME_HERO_MOBILE_MEDIA/, 'mobile arrow hiding uses the shared breakpoint')
+assert.match(carousel, /addEventListener\('touchmove', onTouchMove, \{ passive: false \}\)/, 'mobile swipe can prevent page scroll')
+assert.match(carousel, /HOME_HERO_SWIPE_COMMIT_PX/, 'swipe commits after a horizontal threshold')
+assert.match(carousel, /onClickCapture/, 'swipe does not activate the banner CTA')
 assert.match(carousel, /role="tablist"/, 'pagination indicators are present')
+assert.match(css, /touch-action: pan-y/, 'vertical page scrolling remains available outside a horizontal swipe')
+assert.match(css, /overscroll-behavior-x: none/, 'horizontal page scrolling is contained')
+assert.match(
+  css,
+  /@media \(max-width:\s*767px\)[\s\S]*\.home-hero-carousel__arrow \{\s*display: none;/,
+  'mobile CSS removes carousel arrows before hydration',
+)
 assert.doesNotMatch(carousel, /HomeHeroValuationSlide|DeferredEquipmentAutocomplete/, 'carousel does not mount a search overlay')
 
 assert.match(lib, /Your Gym, Not a Coat Rack 2\.png/, 'uses supplied coat-rack banner')
