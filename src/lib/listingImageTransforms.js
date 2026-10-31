@@ -12,8 +12,11 @@ const RENDER_SEGMENT = '/storage/v1/render/image/public/'
 
 const DEFAULT_QUALITY = 70
 
-/** Card widths cover 1x through 3x device pixel ratios. */
-export const LISTING_CARD_IMAGE_WIDTHS = [300, 450, 600, 900]
+/**
+ * Card widths cover typical 1x–2x densities and mobile 3x at ~50vw.
+ * 900px variants were rarely chosen and competed with gallery requests.
+ */
+export const LISTING_CARD_IMAGE_WIDTHS = [300, 450, 600]
 
 /** Row thumbnails render far smaller than grid cards. */
 export const LISTING_ROW_IMAGE_WIDTHS = [150, 240, 360]
@@ -24,8 +27,11 @@ export const LISTING_THUMB_IMAGE_WIDTHS = [96, 160, 240]
 /** Gallery filmstrip thumbs (~6.25rem). */
 export const LISTING_GALLERY_THUMB_WIDTHS = [160, 240, 320]
 
-/** Main gallery image: sharp on 2x displays without the original upload. */
-export const LISTING_GALLERY_MAIN_WIDTHS = [800, 1200, 1600]
+/**
+ * Main gallery image. 1280px covers 2x of the 720px desktop stage and 3x
+ * of a typical mobile viewport without waiting on a 1600px transform.
+ */
+export const LISTING_GALLERY_MAIN_WIDTHS = [640, 960, 1280]
 
 export const LISTING_GALLERY_MAIN_QUALITY = 75
 

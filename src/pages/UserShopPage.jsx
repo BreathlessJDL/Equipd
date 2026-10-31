@@ -386,8 +386,13 @@ function UserShopPage({ shopParam }) {
           </p>
         ) : (
           <div className="listing-browse__grid">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} variant="home" />
+            {listings.map((listing, index) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                variant="home"
+                imagePriority={index < 4}
+              />
             ))}
           </div>
         )}

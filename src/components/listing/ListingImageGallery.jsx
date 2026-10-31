@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ListingPhoto from '../ListingPhoto'
 import {
   LISTING_GALLERY_MAIN_QUALITY,
@@ -7,6 +7,15 @@ import {
   LISTING_GALLERY_THUMB_SIZES,
   LISTING_GALLERY_THUMB_WIDTHS,
 } from '../../lib/listingImageTransforms'
+import {
+  LISTING_GALLERY_PRELOAD_CONCURRENCY,
+  LISTING_GALLERY_THUMB_EAGER_COUNT,
+  createListingGalleryImageLoader,
+  getAdjacentGalleryIndexes,
+  getProgressiveGalleryIndexes,
+  shouldPreloadRemainingGalleryImages,
+  wrapGalleryIndex,
+} from '../../lib/listingGalleryPreload'
 import './ListingImageGallery.css'
 
 const SWIPE_THRESHOLD_PX = 40
@@ -26,6 +35,10 @@ function CameraIcon({ className = '' }) {
   )
 }
 
+function galleryImagesKey(images) {
+  return images.map((image) => image.id || image.url).join('|')
+}
+
 function ListingImageGallery({
   images = [],
   title = 'Listing photo',
@@ -34,20 +47,114 @@ function ListingImageGallery({
   savedCountOverlay = null,
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [displayedIndex, setDisplayedIndex] = useState(0)
+  const [currentImageReady, setCurrentImageReady] = useState(false)
   const mainWrapRef = useRef(null)
   const touchStartRef = useRef(null)
+  const loadedUrlsRef = useRef(new Set())
+  const inflightUrlsRef = useRef(new Set())
+  const requestIdRef = useRef(0)
+  const imagesKeyRef = useRef('')
   const hasImages = images.length > 0
   const hasMultiple = images.length > 1
-  const safeIndex = hasImages ? Math.min(selectedIndex, images.length - 1) : 0
-  const currentImage = hasImages ? images[safeIndex] : null
+  const safeIndex = hasImages ? wrapGalleryIndex(selectedIndex, images.length) : 0
+  const safeDisplayedIndex = hasImages ? wrapGalleryIndex(displayedIndex, images.length) : 0
+  const displayedImage = hasImages ? images[safeDisplayedIndex] : null
+  const pending = hasImages && safeIndex !== safeDisplayedIndex
   const mainAlt = imageAlt || title
   const thumbAltBase = imageAlt || title
+  const loadGalleryImage = useRef(createListingGalleryImageLoader()).current
+
+  const showPrevious = useCallback(() => {
+    if (images.length < 2) return
+    setSelectedIndex((index) => wrapGalleryIndex(index - 1, images.length))
+  }, [images.length])
+
+  const showNext = useCallback(() => {
+    if (images.length < 2) return
+    setSelectedIndex((index) => wrapGalleryIndex(index + 1, images.length))
+  }, [images.length])
 
   useEffect(() => {
-    if (selectedIndex >= images.length) {
-      setSelectedIndex(0)
+    const key = galleryImagesKey(images)
+    if (key === imagesKeyRef.current) return
+    imagesKeyRef.current = key
+    loadedUrlsRef.current = new Set()
+    inflightUrlsRef.current = new Set()
+    requestIdRef.current += 1
+    setSelectedIndex(0)
+    setDisplayedIndex(0)
+    setCurrentImageReady(false)
+  }, [images])
+
+  useEffect(() => {
+    if (!hasImages) return undefined
+
+    const url = images[safeIndex]?.url
+    if (!url) return undefined
+
+    if (loadedUrlsRef.current.has(url)) {
+      setDisplayedIndex(safeIndex)
+      return undefined
     }
-  }, [images.length, selectedIndex])
+
+    if (safeIndex === safeDisplayedIndex) return undefined
+
+    const requestId = ++requestIdRef.current
+    let cancelled = false
+
+    loadGalleryImage(url, { fetchPriority: 'high' }).then((ok) => {
+      if (ok) loadedUrlsRef.current.add(url)
+      if (cancelled || requestId !== requestIdRef.current) return
+      loadedUrlsRef.current.add(url)
+      setDisplayedIndex(safeIndex)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [hasImages, images, loadGalleryImage, safeDisplayedIndex, safeIndex])
+
+  useEffect(() => {
+    if (!hasImages || !currentImageReady) return undefined
+
+    let cancelled = false
+    const adjacent = getAdjacentGalleryIndexes(safeIndex, images.length)
+    const remaining = shouldPreloadRemainingGalleryImages()
+      ? getProgressiveGalleryIndexes(safeIndex, images.length, adjacent)
+      : []
+
+    async function preload(url) {
+      if (!url || cancelled) return
+      if (loadedUrlsRef.current.has(url) || inflightUrlsRef.current.has(url)) return
+
+      inflightUrlsRef.current.add(url)
+      const ok = await loadGalleryImage(url, { fetchPriority: 'low' })
+      inflightUrlsRef.current.delete(url)
+      if (ok) loadedUrlsRef.current.add(url)
+    }
+
+    async function run() {
+      await Promise.all(adjacent.map((index) => preload(images[index]?.url)))
+      if (cancelled) return
+
+      const queue = [...remaining]
+      async function worker() {
+        while (queue.length && !cancelled) {
+          const index = queue.shift()
+          await preload(images[index]?.url)
+        }
+      }
+
+      const workers = Math.min(LISTING_GALLERY_PRELOAD_CONCURRENCY, queue.length)
+      await Promise.all(Array.from({ length: workers }, () => worker()))
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [currentImageReady, hasImages, images, loadGalleryImage, safeIndex])
 
   useEffect(() => {
     const element = mainWrapRef.current
@@ -92,11 +199,8 @@ function ListingImageGallery({
       if (Math.abs(deltaY) > SWIPE_MAX_VERTICAL_DRIFT_PX) return
       if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return
 
-      if (deltaX < 0) {
-        setSelectedIndex((index) => (index === images.length - 1 ? 0 : index + 1))
-      } else {
-        setSelectedIndex((index) => (index === 0 ? images.length - 1 : index - 1))
-      }
+      if (deltaX < 0) showNext()
+      else showPrevious()
     }
 
     function handleTouchCancel() {
@@ -114,17 +218,29 @@ function ListingImageGallery({
       element.removeEventListener('touchend', handleTouchEnd)
       element.removeEventListener('touchcancel', handleTouchCancel)
     }
-  }, [hasMultiple, images.length])
+  }, [hasMultiple, showNext, showPrevious])
 
-  function showPrevious() {
-    if (!hasMultiple) return
-    setSelectedIndex((index) => (index === 0 ? images.length - 1 : index - 1))
-  }
+  useEffect(() => {
+    if (!hasMultiple) return undefined
 
-  function showNext() {
-    if (!hasMultiple) return
-    setSelectedIndex((index) => (index === images.length - 1 ? 0 : index + 1))
-  }
+    function handleKeyDown(event) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
+      const tag = event.target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target?.isContentEditable) {
+        return
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        showNext()
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        showPrevious()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [hasMultiple, showNext, showPrevious])
 
   return (
     <section className="listing-gallery" aria-label="Listing photos">
@@ -153,6 +269,7 @@ function ListingImageGallery({
                   className="listing-gallery__thumb-image"
                   widths={LISTING_GALLERY_THUMB_WIDTHS}
                   sizes={LISTING_GALLERY_THUMB_SIZES}
+                  priority={index < LISTING_GALLERY_THUMB_EAGER_COUNT}
                   draggable={false}
                 />
               </button>
@@ -160,7 +277,11 @@ function ListingImageGallery({
           </div>
         ) : null}
 
-        <div ref={mainWrapRef} className="listing-gallery__main-wrap">
+        <div
+          ref={mainWrapRef}
+          className={`listing-gallery__main-wrap${pending ? ' listing-gallery__main-wrap--pending' : ''}`}
+          aria-busy={pending || undefined}
+        >
           {saveButton || savedCountOverlay ? (
             <div className="listing-gallery__main-overlays">
               {saveButton ? <div className="listing-gallery__save">{saveButton}</div> : null}
@@ -171,16 +292,26 @@ function ListingImageGallery({
           {hasImages ? (
             <>
               <ListingPhoto
-                url={currentImage.url}
+                url={displayedImage.url}
                 alt={mainAlt}
                 className="listing-gallery__main-image"
                 widths={LISTING_GALLERY_MAIN_WIDTHS}
                 sizes={LISTING_GALLERY_MAIN_SIZES}
                 quality={LISTING_GALLERY_MAIN_QUALITY}
-                priority={safeIndex === 0}
-                loading={safeIndex === 0 ? 'eager' : 'lazy'}
+                priority
+                loading="eager"
+                fetchPriority="high"
                 draggable={false}
+                onLoad={() => {
+                  if (displayedImage?.url) loadedUrlsRef.current.add(displayedImage.url)
+                  setCurrentImageReady(true)
+                }}
               />
+              {pending ? (
+                <div className="listing-gallery__pending" aria-hidden="true">
+                  <span className="listing-gallery__pending-bar" />
+                </div>
+              ) : null}
               {hasMultiple ? (
                 <>
                   <button

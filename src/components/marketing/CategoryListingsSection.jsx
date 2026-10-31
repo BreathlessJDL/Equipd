@@ -58,12 +58,13 @@ function CategoryListingsSection({
         }
         aria-hidden={hasListings ? undefined : true}
       >
-        {visibleListings.map((listing) => (
+        {visibleListings.map((listing, index) => (
           <ListingCard
             key={listing.id}
             listing={listing}
             variant="home"
             showNewBadge
+            imagePriority={index < 4}
           />
         ))}
       </div>

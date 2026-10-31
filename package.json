@@ -64,6 +64,7 @@
     "test:homepage-hero-carousel": "node scripts/test-homepage-hero-carousel.mjs",
     "test:hub-needs-attention": "node scripts/test-hub-needs-attention.mjs",
     "test:listing-image-transforms": "node scripts/test-listing-image-transforms.mjs",
+    "test:listing-image-gallery": "node scripts/test-listing-image-gallery.mjs",
     "report:homepage-bundle": "node scripts/report-homepage-bundle.mjs",
     "dry-run:delete-zero-image-imports": "node scripts/dry-run-delete-zero-image-import-listings.mjs",
     "email:build-master": "node scripts/build-email-master.mjs",

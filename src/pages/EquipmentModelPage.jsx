@@ -668,9 +668,9 @@ function EquipmentModelPage() {
               Active Equipd marketplace listings mapped to this equipment.
             </p>
             <ul className="equipment-model-page__marketplace-grid">
-              {marketplaceListings.map((listing) => (
+              {marketplaceListings.map((listing, index) => (
                 <li key={listing.id}>
-                  <ListingCard listing={listing} variant="home" />
+                  <ListingCard listing={listing} variant="home" imagePriority={index < 4} />
                 </li>
               ))}
             </ul>

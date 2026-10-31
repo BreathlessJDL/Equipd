@@ -37,11 +37,12 @@ assert.equal(isListingImageTransformUrl(publicUrl), false)
 
 const sources = buildListingImageSources(publicUrl, { widths: LISTING_CARD_IMAGE_WIDTHS })
 assert.ok(sources.srcSet.includes('300w'))
-assert.ok(sources.srcSet.includes('900w'))
+assert.ok(sources.srcSet.includes('600w'))
+assert.doesNotMatch(sources.srcSet, /900w/, 'card variants stay at marketplace card size')
 assert.equal(buildListingImageSources(externalUrl).srcSet, undefined)
 assert.equal(buildListingImageSources(externalUrl).src, externalUrl)
 
-assert.deepEqual(LISTING_GALLERY_MAIN_WIDTHS, [800, 1200, 1600])
+assert.deepEqual(LISTING_GALLERY_MAIN_WIDTHS, [640, 960, 1280])
 assert.ok(LISTING_GALLERY_THUMB_WIDTHS[0] <= 160)
 assert.ok(LISTING_THUMB_IMAGE_WIDTHS[0] <= 96)
 
@@ -53,7 +54,8 @@ assert.match(card, /loading=\{priority \? 'eager' : 'lazy'\}|priority=\{priority
 const gallery = read('src/components/listing/ListingImageGallery.jsx')
 assert.match(gallery, /LISTING_GALLERY_MAIN_WIDTHS/, 'gallery main image is resized')
 assert.match(gallery, /LISTING_GALLERY_THUMB_WIDTHS/, 'gallery thumbs are resized')
-assert.match(gallery, /priority=\{safeIndex === 0\}/, 'first gallery image is prioritised')
+assert.match(gallery, /loading="eager"/, 'the main gallery image is always eager')
+assert.match(gallery, /getAdjacentGalleryIndexes/, 'gallery preloads neighbouring photos')
 assert.doesNotMatch(
   gallery,
   /<img[\s\S]*src=\{currentImage\.url\}/,
