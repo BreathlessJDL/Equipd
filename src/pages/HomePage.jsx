@@ -4,7 +4,6 @@ import BrowseActiveFilterChips from '../components/browse/BrowseActiveFilterChip
 import ListingBrowseFilters from '../components/ListingBrowseFilters'
 import ListingBrowseResults from '../components/ListingBrowseResults'
 import HomeHeroCarousel from '../components/home/HomeHeroCarousel'
-import HomeEquipmentValuator from '../components/home/HomeEquipmentValuator'
 import HomeDiscoverySection from '../components/home/HomeDiscoverySection'
 import HomeRecentListings from '../components/home/HomeRecentListings'
 import HomepageWantedRequestFloatingTrigger from '../components/wanted/HomepageWantedRequestFloatingTrigger'
@@ -73,7 +72,7 @@ function HomePage() {
   const { requestBrowseScroll, cancelBrowseScrollRequest } =
     useBrowseScrollAfterFilterChange(searchParams.toString())
 
-  // Logged-out visitors see the hero, recent listings and valuator first, so the
+  // Logged-out visitors see the hero and recent listings first, so the
   // 24-card browse query can wait until they scroll toward it. Deep links that
   // already carry filters, and the signed-in feed, still load straight away.
   const browseEnabled =
@@ -223,10 +222,6 @@ function HomePage() {
           loading={recentLoading}
           error={recentError}
         />
-      ) : null}
-
-      {!isLoggedIn ? (
-        <HomeEquipmentValuator className="home-valuator--compact-mobile" />
       ) : null}
 
       <section

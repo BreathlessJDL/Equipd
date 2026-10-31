@@ -752,12 +752,6 @@
   order: 0;
 }
 
-.home-page--feed .home-valuator--signed-in {
-  padding-top: var(--space-md);
-  order: 1;
-}
-
-/* Logged-out mobile: surface listings before the valuator utility. */
 @media (max-width: 767px) {
   .home-page:not(.home-page--feed) {
     display: flex;
@@ -772,21 +766,17 @@
     order: 2;
   }
 
-  .home-page:not(.home-page--feed) .home-valuator {
+  .home-page:not(.home-page--feed) .home-browse {
     order: 3;
   }
 
-  .home-page:not(.home-page--feed) .home-browse {
-    order: 4;
-  }
-
   .home-page:not(.home-page--feed) .home-discovery {
-    order: 5;
+    order: 4;
   }
 
   .home-page:not(.home-page--feed) .home-reviews,
   .home-page:not(.home-page--feed) .home-reviews-slot {
-    order: 6;
+    order: 5;
   }
 }
 
@@ -800,17 +790,13 @@
     order: 0;
   }
 
-  .home-page--feed .home-valuator--signed-in {
-    order: 1;
-  }
-
   .home-page--feed .home-browse--feed {
-    order: 2;
+    order: 1;
     padding-bottom: 0;
   }
 
   .home-page--feed .home-discovery {
-    order: 3;
+    order: 2;
     padding-block: var(--space-lg);
   }
 }
@@ -825,18 +811,14 @@
     order: 0;
   }
 
-  .home-page--feed .home-valuator--signed-in {
-    order: 1;
-  }
-
   .home-page--feed .home-browse--feed {
-    order: 2;
+    order: 1;
     padding-top: var(--space-lg);
     padding-bottom: 0;
   }
 
   .home-page--feed .home-discovery {
-    order: 3;
+    order: 2;
     padding-block: var(--space-lg);
   }
 }

@@ -55,11 +55,7 @@ assert.equal(
 
 assert.match(homePage, /<HomeHeroCarousel isLoggedIn=\{isLoggedIn\} \/>/, 'homepage mounts carousel for both auth states')
 assert.doesNotMatch(homePage, /\{!\s*isLoggedIn\s*\?\s*<HomeHero/, 'logged-in homepage is no longer hero-less')
-assert.match(
-  homePage,
-  /\{!\s*isLoggedIn\s*\?\s*\(\s*<HomeEquipmentValuator/,
-  'standalone valuator hero is logged-out only',
-)
+assert.doesNotMatch(homePage, /HomeEquipmentValuator/, 'homepage no longer mounts the standalone valuator section')
 assert.doesNotMatch(
   homePage,
   /home-valuator--signed-in/,

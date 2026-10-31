@@ -1,5 +1,5 @@
 /**
- * Guards shared HomeEquipmentValuator usage on Homepage + Equipment Values.
+ * Guards shared HomeEquipmentValuator usage on Equipment Values.
  * Run: node scripts/test-equipment-values-valuator-placement.mjs
  */
 import assert from 'node:assert/strict'
@@ -15,13 +15,7 @@ const brandsPage = read('src/pages/BrandsPage.jsx')
 const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
 const valuatorCss = read('src/components/home/HomeEquipmentValuator.css')
 
-assert.match(homePage, /import HomeEquipmentValuator from/, 'homepage imports shared valuator')
-assert.match(homePage, /<HomeEquipmentValuator/, 'logged-out homepage still renders shared valuator')
-assert.match(
-  homePage,
-  /\{!\s*isLoggedIn\s*\?\s*\(\s*<HomeEquipmentValuator/,
-  'homepage search valuator is logged-out only so it does not duplicate the carousel',
-)
+assert.doesNotMatch(homePage, /HomeEquipmentValuator/, 'homepage no longer mounts the standalone valuator section')
 assert.doesNotMatch(
   homePage,
   /idPrefix=["']brands-valuator["']/,
@@ -80,7 +74,7 @@ const featuredIdx = brandsPage.indexOf('featured-brands-title')
 assert.ok(breadcrumbIdx > -1 && valuatorIdx > breadcrumbIdx, 'artwork hero after breadcrumb')
 assert.ok(featuredIdx > valuatorIdx, 'featured brands follow the artwork hero')
 
-assert.match(valuator, /idPrefix = 'home-valuator'/, 'default idPrefix preserves homepage ids')
+assert.match(valuator, /idPrefix = 'home-valuator'/, 'default idPrefix stays unique per mount')
 assert.match(valuator, /const inputId = `\$\{idPrefix\}-search`/, 'input ids derive from idPrefix')
 assert.match(valuator, /const titleId = `\$\{idPrefix\}-title`/, 'title ids derive from idPrefix')
 assert.match(valuator, /buildValuationHref/, 'shared routing helper')
@@ -95,27 +89,15 @@ assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
 assert.doesNotMatch(valuator, /module-level selectedProduct|let selectedProduct/, 'no module shared selection')
 
 assert.match(valuatorCss, /\.home-valuator--contained/, 'contained layout CSS present')
-assert.match(valuatorCss, /\.home-valuator--compact-mobile/, 'homepage compact mobile modifier present')
-assert.match(
-  valuatorCss,
-  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator--compact-mobile[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto/,
-  'compact mobile valuator keeps input + CTA on one row',
-)
-assert.match(
-  valuatorCss,
-  /@media \(max-width:\s*767px\)[\s\S]*\.home-valuator--compact-mobile[\s\S]*\.home-valuator__submit-label--mobile[\s\S]*display:\s*inline-flex/,
-  'compact mobile valuator uses icon CTA label',
-)
 assert.match(valuator, /home-valuator__title-text--mobile/, 'responsive title spans present')
 assert.match(valuator, /Value your equipment/, 'mobile title present')
 assert.match(valuator, /home-valuator__submit-label--mobile/, 'mobile CTA label present')
 assert.doesNotMatch(valuatorCss, /brand-logo--bg-dark/, 'valuator CSS unrelated to logo plates')
 
-// Ensure there is only one valuator implementation module referenced.
 assert.equal(
-  (homePage.match(/HomeEquipmentValuator/g) || []).filter((token) => token === 'HomeEquipmentValuator').length >= 2,
+  (hero.match(/HomeEquipmentValuator/g) || []).filter((token) => token === 'HomeEquipmentValuator').length >= 2,
   true,
-  'homepage references shared component',
+  'Equipment Values hero references the shared valuator',
 )
 assert.doesNotMatch(
   brandsPage,

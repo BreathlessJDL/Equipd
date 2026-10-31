@@ -54,20 +54,27 @@ check('hero keeps fetchPriority high', hero?.fetchPriority === 'high', hero?.fet
 const heroError = await page.locator('.home-hero__error').count()
 check('hero has no load error', heroError === 0)
 
+const valuatorCount = await page.locator('.home-valuator').count()
+check('homepage does not render the standalone valuator', valuatorCount === 0)
+
 const belowFold = await page.evaluate(() => ({
   reviewsMounted: Boolean(document.querySelector('.home-reviews')),
   browseCards: document.querySelectorAll('.home-browse .listing-card').length,
 }))
 check('reviews section is deferred', !belowFold.reviewsMounted)
 
-console.log('\nSearch interaction loads the catalogue on demand')
-await page.click('#home-valuator-search')
-await page.fill('#home-valuator-search', 'treadmill')
+console.log('\nEquipment Values search still loads the catalogue on demand')
+await page.goto(`${baseUrl}/brands`, { waitUntil: 'networkidle', timeout: 45000 })
+const brandsRequests = []
+page.on('request', (request) => brandsRequests.push(request.url()))
+await page.click('#brands-valuator-search')
+await page.fill('#brands-valuator-search', 'treadmill')
 
 await page.waitForSelector('.canonical-autocomplete__dropdown [role="option"]', { timeout: 25000 })
 check(
-  'valuation index loads after interaction',
-  requests.some((url) => url.includes('valuation-search-index.json')),
+  'valuation index loads after Equipment Values interaction',
+  brandsRequests.some((url) => url.includes('valuation-search-index.json'))
+    || requests.some((url) => url.includes('valuation-search-index.json')),
 )
 
 const suggestions = await page.evaluate(
@@ -75,8 +82,10 @@ const suggestions = await page.evaluate(
 )
 check('autocomplete returns suggestions', suggestions > 0, `count=${suggestions}`)
 
-const typedValue = await page.inputValue('#home-valuator-search')
+const typedValue = await page.inputValue('#brands-valuator-search')
 check('typed query survives the swap', typedValue === 'treadmill', typedValue)
+
+await page.goto(`${baseUrl}/`, { waitUntil: 'networkidle', timeout: 45000 })
 
 console.log('\nScrolling loads deferred sections')
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))

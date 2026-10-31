@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Validate logged-out homepage section order:
- * mobile  → Hero → Recently Added → Equipment Valuator → …
- * desktop → Hero → Recently Added → Equipment Valuator → … (document order)
+ * mobile  → Hero → Recently Added → Browse → …
+ * desktop → Hero → Recently Added → Browse → … (document order)
  *
  *   node scripts/test-homepage-mobile-section-order.mjs [baseUrl]
  */
@@ -19,7 +19,7 @@ const css = readFileSync('src/components/home/HomePage.css', 'utf8')
 assert.match(
   css,
   /@media \(max-width:\s*767px\)[\s\S]*\.home-page:not\(\.home-page--feed\)[\s\S]*\.home-recent[\s\S]*order:\s*2/,
-  'mobile CSS reorders Recently Added before valuator',
+  'mobile CSS keeps Recently Added after the hero',
 )
 
 const browser = await chromium.launch({ headless: true, channel: 'msedge' })
@@ -36,16 +36,14 @@ async function measureOrder(page) {
     const recent = document.querySelector('.home-recent')
     const valuator = document.querySelector('.home-valuator')
     const browse = document.querySelector('.home-browse')
-    const tops = [hero, recent, valuator, browse]
+    const tops = [hero, recent, browse]
       .filter(Boolean)
       .map((el) => ({
         name: el.classList.contains('home-hero')
           ? 'hero'
           : el.classList.contains('home-recent')
             ? 'recent'
-            : el.classList.contains('home-valuator')
-              ? 'valuator'
-              : 'browse',
+            : 'browse',
         top: Math.round(el.getBoundingClientRect().top + window.scrollY),
       }))
       .sort((a, b) => a.top - b.top || a.name.localeCompare(b.name))
@@ -53,6 +51,7 @@ async function measureOrder(page) {
     return {
       order: tops.map((item) => item.name),
       tops,
+      hasValuator: Boolean(valuator),
       overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       hasFeedClass: document.querySelector('.home-page')?.classList.contains('home-page--feed') || false,
     }
@@ -60,16 +59,16 @@ async function measureOrder(page) {
 }
 
 for (const viewport of [
-  { name: 'mobile-390', width: 390, height: 844, expect: ['hero', 'recent', 'valuator', 'browse'] },
-  { name: 'mobile-375', width: 375, height: 812, expect: ['hero', 'recent', 'valuator', 'browse'] },
-  { name: 'desktop-1280', width: 1280, height: 900, expect: ['hero', 'recent', 'valuator', 'browse'] },
+  { name: 'mobile-390', width: 390, height: 844, expect: ['hero', 'recent', 'browse'] },
+  { name: 'mobile-375', width: 375, height: 812, expect: ['hero', 'recent', 'browse'] },
+  { name: 'desktop-1280', width: 1280, height: 900, expect: ['hero', 'recent', 'browse'] },
 ]) {
   const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } })
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 90000 })
   await dismissCookies(page)
   await page.waitForSelector('.home-hero', { timeout: 45000 })
   await page.waitForSelector('.home-recent', { timeout: 45000 })
-  await page.waitForSelector('.home-valuator', { timeout: 45000 })
+  await page.waitForSelector('.home-browse', { timeout: 45000 })
 
   const metrics = await measureOrder(page)
   results[viewport.name] = metrics
@@ -80,6 +79,7 @@ for (const viewport of [
   })
 
   assert.equal(metrics.hasFeedClass, false, `${viewport.name}: logged-out home`)
+  assert.equal(metrics.hasValuator, false, `${viewport.name}: standalone valuator is gone`)
   assert.equal(metrics.overflow, false, `${viewport.name}: no horizontal overflow`)
   assert.deepEqual(metrics.order, viewport.expect, `${viewport.name}: section order`)
 

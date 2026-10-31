@@ -280,7 +280,7 @@ function ShowcaseVisual({ chart, imageUrl }) {
 }
 
 /**
- * Shared equipment valuation search used on the homepage and Equipment Values.
+ * Shared equipment valuation search used on Equipment Values.
  * Instance-specific ids/copy are passed via props so multiple mounts cannot collide.
  */
 export default function HomeEquipmentValuator({

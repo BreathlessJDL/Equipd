@@ -1,5 +1,6 @@
 /**
- * Guards homepage valuator visibility for logged-out and logged-in users.
+ * Guards that the homepage no longer mounts the standalone Equipment Valuator
+ * section for logged-out or logged-in users.
  * Run: node scripts/test-homepage-valuator-auth-visibility.mjs
  */
 import assert from 'node:assert/strict'
@@ -13,32 +14,14 @@ function read(rel) {
 const homePage = read('src/pages/HomePage.jsx')
 const app = read('src/App.jsx')
 const valuator = read('src/components/home/HomeEquipmentValuator.jsx')
-const valuatorCss = read('src/components/home/HomeEquipmentValuator.css')
 
-assert.match(homePage, /import HomeEquipmentValuator from/, 'homepage imports shared valuator')
-assert.match(homePage, /<HomeEquipmentValuator/, 'logged-out homepage still renders the search valuator')
-assert.match(
-  homePage,
-  /\{!\s*isLoggedIn\s*\?\s*\(\s*<HomeEquipmentValuator/,
-  'standalone valuator is gated to logged-out homepage only',
-)
+assert.doesNotMatch(homePage, /HomeEquipmentValuator/, 'homepage does not import or render the standalone valuator')
+assert.doesNotMatch(homePage, /home-valuator--compact-mobile/, 'homepage does not apply the compact valuator class')
+assert.doesNotMatch(homePage, /home-valuator--signed-in/, 'logged-in homepage does not mount a valuator')
 assert.doesNotMatch(
-  homePage,
-  /home-valuator--signed-in/,
-  'logged-in homepage no longer mounts the duplicate valuation hero',
-)
-
-const valuatorRender = homePage.match(/<HomeEquipmentValuator[\s\S]*?\/>/)
-assert.ok(valuatorRender, 'valuator self-closes as a single shared instance')
-assert.match(
-  valuatorRender[0],
-  /home-valuator--compact-mobile/,
-  'homepage uses compact mobile valuator class',
-)
-assert.doesNotMatch(
-  valuatorRender[0],
-  /idPrefix=["']brands-valuator["']/,
-  'homepage keeps default home-valuator ids',
+  read('src/components/home/HomePage.css'),
+  /\.home-page[^{]*\.home-valuator/,
+  'homepage layout CSS no longer positions a valuator section',
 )
 
 assert.match(homePage, /<HomeHeroCarousel/, 'homepage uses the rotating hero carousel')
@@ -69,22 +52,21 @@ assert.doesNotMatch(
   'browse route is not a Navigate away from listings',
 )
 
-assert.match(valuator, /idPrefix = 'home-valuator'/, 'shared defaults preserve homepage ids')
-assert.match(valuator, /DeferredEquipmentAutocomplete/, 'shared autocomplete')
-assert.match(valuator, /buildValuationHref/, 'shared valuation routing')
-assert.match(valuator, /useState\(''\)/, 'instance-local query state')
-assert.match(valuator, /useState\(null\)/, 'instance-local selection state')
+assert.match(valuator, /DeferredEquipmentAutocomplete/, 'shared autocomplete remains for Equipment Values')
+assert.match(valuator, /buildValuationHref/, 'shared valuation routing remains')
 assert.match(
   valuator,
   /Instant market valuations based on thousands of listings/,
   'shared default lede is not commercial-only',
 )
 assert.doesNotMatch(valuator, /commercial fitness products/, 'no commercial-only valuator lede')
-assert.match(homePage, /home-valuator--compact-mobile/, 'logged-out homepage uses compact mobile valuator layout')
 
 const hero = read('src/components/home/HomeHero.jsx')
 assert.doesNotMatch(hero, /home-hero__copy/, 'homepage does not render duplicate marketplace intro block')
 assert.doesNotMatch(hero, /EQUIPD MARKETPLACE|Equipd Marketplace/, 'no marketplace eyebrow under hero')
 assert.match(homePage, /<HomeHeroCarousel/, 'homepage still uses the hero carousel')
+
+const brandsHero = read('src/components/brands/EquipmentValuesHero.jsx')
+assert.match(brandsHero, /HomeEquipmentValuator/, 'Equipment Values still uses the shared valuator search')
 
 console.log('homepage-valuator-auth-visibility: ok')
