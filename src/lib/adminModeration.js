@@ -18,7 +18,12 @@ export async function suspendUser(userId, reason = '') {
     return { data: null, error: new Error(message) }
   }
   if (data?.error) return { data: null, error: new Error(String(data.error)) }
-  return { data, error: null, warning: data?.warning || null }
+  return {
+    data,
+    error: null,
+    warning: moderationAuthWarning(data, 'suspend'),
+    partial: isModerationPartial(data),
+  }
 }
 
 export async function unsuspendUser(userId, reason = '') {
@@ -39,7 +44,24 @@ export async function unsuspendUser(userId, reason = '') {
     return { data: null, error: new Error(message) }
   }
   if (data?.error) return { data: null, error: new Error(String(data.error)) }
-  return { data, error: null, warning: data?.warning || null }
+  return {
+    data,
+    error: null,
+    warning: moderationAuthWarning(data, 'unsuspend'),
+    partial: isModerationPartial(data),
+  }
+}
+
+function isModerationPartial(data) {
+  return Boolean(data?.warning) || data?.ok === false || data?.authBanApplied === false
+}
+
+function moderationAuthWarning(data, action) {
+  if (data?.warning) return String(data.warning)
+  if (!isModerationPartial(data)) return null
+  return action === 'unsuspend'
+    ? 'Incomplete: the Equipd profile is unsuspended, but clearing the Auth ban failed. Retry Unsuspend to finish Auth.'
+    : 'Incomplete: the Equipd profile is suspended, but the Auth ban failed. Retry Suspend to finish the Auth ban.'
 }
 
 export async function fetchAdminUserModerationSummary(userId) {

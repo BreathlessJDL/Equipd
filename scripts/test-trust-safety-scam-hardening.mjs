@@ -19,6 +19,10 @@ const adminModerate = readFileSync(
   join(root, 'supabase/functions/admin-moderate-user/index.ts'),
   'utf8',
 )
+const suspendFix = readFileSync(
+  join(root, 'supabase/migrations/20261102140000_fix_admin_suspend_trusted_path.sql'),
+  'utf8',
+)
 
 assert.equal(normalizeEquipdIdentity(' Equipd_Support '), 'equipdsupport')
 assert.equal(normalizeEquipdIdentity('EQUlPD'), 'equlpd')
@@ -80,6 +84,9 @@ assert.match(migration, /is_official_equipd/)
 assert.match(migration, /is_suspended/)
 assert.match(migration, /start_listing_conversation/)
 assert.match(migration, /admin_suspend_user/)
+assert.match(suspendFix, /p_admin_id uuid default null/)
+assert.match(adminModerate, /p_admin_id:\s*adminGate\.user\.id/)
+assert.doesNotMatch(adminModerate, /createClient\(url, anonKey/)
 assert.match(migration, /suspicious_message_flags/)
 assert.match(migration, /listing_is_publicly_visible/)
 assert.match(migration, /Users can upload profile images to own folder/)

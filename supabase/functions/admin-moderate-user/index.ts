@@ -13,6 +13,18 @@ const AUTH_BAN_DURATION = '876000h'
 /** Official value to clear ban_duration / banned_until. */
 const AUTH_UNBAN_DURATION = 'none'
 
+function rpcStatus(message: string): number {
+  const lowered = message.toLowerCase()
+  if (
+    lowered.includes('admin access required') ||
+    lowered.includes('authentication required') ||
+    lowered.includes('only be performed by the server')
+  ) {
+    return 403
+  }
+  return 400
+}
+
 Deno.serve(async (req) => {
   const cors = handleCors(req)
   if (cors) return cors
@@ -37,32 +49,28 @@ Deno.serve(async (req) => {
 
   if (!userId) return errorResponse('userId is required', 400)
 
-  const { authHeader } = adminGate
-  const url = Deno.env.get('SUPABASE_URL')
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  if (!url || !anonKey) return errorResponse('Supabase auth credentials are not configured', 500)
-
-  // Application suspension/unsuspension via SECURITY DEFINER RPCs as the admin caller.
-  const userClient = (await import('npm:@supabase/supabase-js@2')).createClient(url, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  })
-
+  // Application suspension must use the service-role client so the profile
+  // privilege trigger recognises a trusted server write. The caller's JWT is
+  // only used in requireAdmin above; never forwarded into the RPC.
+  const admin = getSupabaseAdmin()
   const rpcName = action === 'unsuspend' ? 'admin_unsuspend_user' : 'admin_suspend_user'
-  const { data, error } = await userClient.rpc(rpcName, {
+  const { data, error } = await admin.rpc(rpcName, {
     p_user_id: userId,
     p_reason: reason || null,
+    p_admin_id: adminGate.user.id,
   })
 
   if (error) {
-    return errorResponse(error.message || `Could not ${action} user`, 400)
+    const message = error.message || `Could not ${action} user`
+    return errorResponse(message, rpcStatus(message))
   }
 
-  // Defence-in-depth Auth ban/unban. Must not roll back application suspension state.
-  // Already-issued access JWTs remain cryptographically valid until expiry; marketplace
-  // mutations are still blocked by DB triggers / Edge checks on is_suspended.
+  // Defence-in-depth Auth ban/unban after a successful profile write.
+  // Already-issued access JWTs remain cryptographically valid until expiry;
+  // marketplace mutations are still blocked by DB triggers / Edge checks on
+  // is_suspended. Auth failures must not roll back application state.
   let authBanWarning: string | null = null
   try {
-    const admin = getSupabaseAdmin()
     const { error: authError } = await admin.auth.admin.updateUserById(userId, {
       ban_duration: action === 'suspend' ? AUTH_BAN_DURATION : AUTH_UNBAN_DURATION,
     })
@@ -70,8 +78,8 @@ Deno.serve(async (req) => {
     if (authError) {
       authBanWarning =
         action === 'suspend'
-          ? `User is application-suspended, but Auth ban failed: ${authError.message}`
-          : `User is application-unsuspended, but clearing Auth ban failed: ${authError.message}`
+          ? `Incomplete: the Equipd profile is suspended, but the Auth ban failed (${authError.message}). Retry Suspend to finish the Auth ban; the profile and audit record will not be duplicated.`
+          : `Incomplete: the Equipd profile is unsuspended, but clearing the Auth ban failed (${authError.message}). Retry Unsuspend to finish Auth; the profile and audit record will not be duplicated.`
       console.error(authBanWarning)
     }
   } catch (authException) {
@@ -79,15 +87,20 @@ Deno.serve(async (req) => {
       authException instanceof Error ? authException.message : String(authException)
     authBanWarning =
       action === 'suspend'
-        ? `User is application-suspended, but Auth ban failed: ${message}`
-        : `User is application-unsuspended, but clearing Auth ban failed: ${message}`
+        ? `Incomplete: the Equipd profile is suspended, but the Auth ban failed (${message}). Retry Suspend to finish the Auth ban; the profile and audit record will not be duplicated.`
+        : `Incomplete: the Equipd profile is unsuspended, but clearing the Auth ban failed (${message}). Retry Unsuspend to finish Auth; the profile and audit record will not be duplicated.`
     console.error(authBanWarning)
   }
 
+  const rpcResult =
+    data && typeof data === 'object' ? (data as { alreadyApplied?: boolean }) : null
+
   return jsonResponse({
-    ok: true,
+    ok: !authBanWarning,
+    partial: Boolean(authBanWarning),
     action,
     result: data,
+    alreadyApplied: rpcResult?.alreadyApplied === true,
     authBanApplied: !authBanWarning,
     warning: authBanWarning,
   })

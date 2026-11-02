@@ -30,6 +30,10 @@ const adminModerate = readFileSync(
   join(root, 'supabase/functions/admin-moderate-user/index.ts'),
   'utf8',
 )
+const suspendFix = readFileSync(
+  join(root, 'supabase/migrations/20261102140000_fix_admin_suspend_trusted_path.sql'),
+  'utf8',
+)
 
 const cases = [
   ['A Equipd username', () => assert.equal(isReservedEquipdIdentity('Equipd'), true)],
@@ -58,6 +62,13 @@ const cases = [
   ['No direct auth.sessions deletes', () =>
     assert.equal(migration.includes('delete from auth.sessions'), false)],
   ['Auth ban via Admin API', () => assert.match(adminModerate, /ban_duration:\s*action === 'suspend'/)],
+  ['Suspend RPC is service-role only', () =>
+    assert.match(suspendFix, /grant execute on function public\.admin_suspend_user\(uuid, text, uuid\) to service_role/)],
+  ['Suspend edge uses service-role client', () => {
+    assert.match(adminModerate, /getSupabaseAdmin\(\)/)
+    assert.match(adminModerate, /p_admin_id:\s*adminGate\.user\.id/)
+    assert.doesNotMatch(adminModerate, /createClient\(url, anonKey/)
+  }],
 ]
 
 for (const [label, fn] of cases) {
