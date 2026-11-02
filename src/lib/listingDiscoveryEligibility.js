@@ -33,12 +33,24 @@ function hasValidListingSlug(listing) {
   return true
 }
 
+export function isSellerHiddenFromPublicMarketplace(listing) {
+  if (!listing || typeof listing !== 'object') return false
+  if (listing.seller_is_hidden_from_marketplace === true) return true
+  if (listing.seller_is_suspended === true) return true
+  if (listing.seller_deleted_at) return true
+  const seller = listing.seller && typeof listing.seller === 'object' ? listing.seller : null
+  if (seller?.is_suspended === true) return true
+  if (seller?.deleted_at) return true
+  return false
+}
+
 /**
  * Active marketplace visibility (mirrors listings_public_browse intent for JS helpers).
  * Does not replace SQL listing_is_publicly_visible — used for sitemap/prerender routing.
  */
 export function isActivePublicListingCandidate(listing) {
   if (!listing || typeof listing !== 'object') return false
+  if (isSellerHiddenFromPublicMarketplace(listing)) return false
   if (listing.is_test_data === true) return false
   if (String(listing.status ?? '').trim().toLowerCase() !== 'active') return false
   if (!hasValidListingSlug(listing)) return false
@@ -65,6 +77,10 @@ export function classifyListingDiscoveryState(listing, { now = new Date() } = {}
   }
 
   if (listing.is_test_data === true) {
+    return LISTING_DISCOVERY_STATES.UNREADABLE
+  }
+
+  if (isSellerHiddenFromPublicMarketplace(listing)) {
     return LISTING_DISCOVERY_STATES.UNREADABLE
   }
 

@@ -34,6 +34,10 @@ const suspendFix = readFileSync(
   join(root, 'supabase/migrations/20261102140000_fix_admin_suspend_trusted_path.sql'),
   'utf8',
 )
+const listingVisibilityFix = readFileSync(
+  join(root, 'supabase/migrations/20261102150000_hide_suspended_seller_listings_from_anon.sql'),
+  'utf8',
+)
 
 const cases = [
   ['A Equipd username', () => assert.equal(isReservedEquipdIdentity('Equipd'), true)],
@@ -68,6 +72,21 @@ const cases = [
     assert.match(adminModerate, /getSupabaseAdmin\(\)/)
     assert.match(adminModerate, /p_admin_id:\s*adminGate\.user\.id/)
     assert.doesNotMatch(adminModerate, /createClient\(url, anonKey/)
+  }],
+  ['Suspended seller listings hidden for anon', () => {
+    assert.match(listingVisibilityFix, /seller_is_hidden_from_public_marketplace/)
+    assert.match(
+      listingVisibilityFix,
+      /create or replace function public\.listing_is_publicly_visible\([\s\S]*security definer/,
+    )
+    assert.match(
+      listingVisibilityFix,
+      /revoke all on function public\.seller_is_hidden_from_public_marketplace\(uuid\)\s+from public, anon, authenticated/,
+    )
+    assert.doesNotMatch(
+      listingVisibilityFix,
+      /grant execute on function public\.seller_is_hidden_from_public_marketplace\(uuid\)\s+to anon/,
+    )
   }],
 ]
 

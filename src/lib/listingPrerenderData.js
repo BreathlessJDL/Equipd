@@ -78,6 +78,34 @@ export function enrichListingForPrerender(listing, supabaseUrl) {
   }, supabaseUrl)
 }
 
+export async function attachSellerMarketplaceHiddenFlags(supabase, listings = []) {
+  if (!supabase || !Array.isArray(listings) || listings.length === 0) return listings
+
+  const sellerIds = [...new Set(listings.map((listing) => listing?.seller_id).filter(Boolean))]
+  if (sellerIds.length === 0) return listings
+
+  const hiddenIds = new Set()
+  const pageSize = 200
+  for (let index = 0; index < sellerIds.length; index += pageSize) {
+    const chunk = sellerIds.slice(index, index + pageSize)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, is_suspended, deleted_at')
+      .in('id', chunk)
+    if (error) throw error
+    for (const profile of data ?? []) {
+      if (profile?.is_suspended === true || profile?.deleted_at) {
+        hiddenIds.add(profile.id)
+      }
+    }
+  }
+
+  return listings.map((listing) => ({
+    ...listing,
+    seller_is_hidden_from_marketplace: hiddenIds.has(listing?.seller_id),
+  }))
+}
+
 export async function fetchPublicReadableListingBySlug(supabase, slug, { supabaseUrl } = {}) {
   const { data, error } = await supabase
     .from('listings')
@@ -87,7 +115,8 @@ export async function fetchPublicReadableListingBySlug(supabase, slug, { supabas
 
   if (error) throw error
   if (!data) return null
-  return enrichListingForPrerender(data, supabaseUrl)
+  const [marked] = await attachSellerMarketplaceHiddenFlags(supabase, [data])
+  return enrichListingForPrerender(marked, supabaseUrl)
 }
 
 export async function fetchPublicReadableListings(supabase, { supabaseUrl, statuses = ['active', 'sold'] } = {}) {
@@ -99,7 +128,8 @@ export async function fetchPublicReadableListings(supabase, { supabaseUrl, statu
       .order('created_at', { ascending: false })
       .range(from, to),
   )
-  return rows.map((row) => enrichListingForPrerender(row, supabaseUrl))
+  const marked = await attachSellerMarketplaceHiddenFlags(supabase, rows)
+  return marked.map((row) => enrichListingForPrerender(row, supabaseUrl))
 }
 
 export async function fetchApprovedEquipmentProductsForListings(supabase, listings = []) {

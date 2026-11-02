@@ -26,6 +26,7 @@ import {
 } from '../src/lib/listingSitemap.js'
 import { LOCATION_SLUGS, buildLocationPagePath } from '../src/lib/locations.js'
 import { EQUIPMENT_LANDING_PATHS } from '../src/lib/equipmentLandingDefs.js'
+import { attachSellerMarketplaceHiddenFlags } from '../src/lib/listingPrerenderData.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 function xmlEscape(value) {
@@ -112,7 +113,7 @@ async function fetchEligibleSoldListingsForSitemap(supabase) {
   while (true) {
     const { data, error } = await supabase
       .from('listings')
-      .select('id, slug, status, updated_at, published_at, created_at, sold_at, is_test_data, source')
+      .select('id, slug, status, updated_at, published_at, created_at, sold_at, is_test_data, source, seller_id')
       .eq('status', 'sold')
       .eq('is_test_data', false)
       .not('published_at', 'is', null)
@@ -146,7 +147,10 @@ async function main() {
   const publicProducts = products.filter(isPublicBrandCatalogueProduct)
   const directory = buildBrandDirectoryFromProducts(publicProducts)
   const publicListings = await fetchPublicActiveListingsForSitemap(supabase)
-  const soldListings = await fetchEligibleSoldListingsForSitemap(supabase)
+  const soldListings = await attachSellerMarketplaceHiddenFlags(
+    supabase,
+    await fetchEligibleSoldListingsForSitemap(supabase),
+  )
   const listingEntries = buildListingSitemapEntries([...publicListings, ...soldListings])
   const activeListingCount = buildListingSitemapEntries(publicListings).length
   const soldListingCount = listingEntries.length - activeListingCount

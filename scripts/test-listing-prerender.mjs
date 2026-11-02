@@ -139,6 +139,13 @@ assert(isListingEligibleForPrerender(recentSold, { now }), 'recent sold included
 assert(!isListingEligibleForPrerender(oldSold, { now }), 'old sold excluded from prerender')
 assert(!isListingEligibleForPrerender(testListing, { now }), 'test excluded from prerender')
 assert(
+  !isListingEligibleForPrerender(
+    { ...activeListing, seller_is_hidden_from_marketplace: true },
+    { now },
+  ),
+  'suspended seller excluded from prerender',
+)
+assert(
   isListingEligibleForPrerender(recentSold, { now }) === isListingEligibleForSitemapInclusion(recentSold, { now }),
   'prerender and sitemap rules align',
 )
