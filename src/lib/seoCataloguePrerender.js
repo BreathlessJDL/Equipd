@@ -578,7 +578,7 @@ export function injectSeoIntoHtml(templateHtml, document) {
 
   const emptyRoot = '<div id="root"></div>'
   const rootReplacement = document.crawlerOnlyBody
-    ? `<div id="equipd-home-crawler-listings" class="seo-prerender seo-prerender--crawler" data-equipd-seo-prerender="home" aria-hidden="true">${document.bodyHtml}</div>${emptyRoot}`
+    ? `<div id="equipd-home-crawler-listings" class="seo-prerender seo-prerender--crawler" data-equipd-seo-prerender="home" aria-hidden="true" inert>${document.bodyHtml}</div>${emptyRoot}`
     : `<div id="root">${document.bodyHtml}</div>`
   if (/<div id="root"><\/div>/i.test(html)) {
     html = html.replace(/<div id="root"><\/div>/i, rootReplacement)
