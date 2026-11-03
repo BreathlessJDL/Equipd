@@ -18,6 +18,7 @@ import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterF
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
+import { trackEquipmentSearch } from '../lib/buyerConversionAnalytics'
 import { buildLocationPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { fetchCategories } from '../lib/listings'
 import {
@@ -149,6 +150,7 @@ function LocationListingsPage({ locationSlug }) {
   )
 
   const handleSearchSubmit = useCallback(() => {
+    trackEquipmentSearch(browse.search)
     navigate(buildBrowseSearchPath(browse.search))
   }, [browse.search, navigate])
 

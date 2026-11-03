@@ -13,6 +13,7 @@ import {
   withdrawOffer,
 } from '../lib/offers'
 import { startConversationForListing } from '../lib/messages'
+import { trackContactSeller, trackSubmitOffer } from '../lib/buyerConversionAnalytics'
 import {
   canPayNow,
   formatPaymentStatus,
@@ -68,7 +69,7 @@ function ListingOffersSection({
       return
     }
 
-    const { data: conversation } = await startConversationForListing({
+    const { data: conversation, created: conversationCreated } = await startConversationForListing({
       listingId: listing.id,
       buyerId: user.id,
       sellerId: listing.seller_id,
@@ -94,6 +95,10 @@ function ListingOffersSection({
     setOfferAmount('')
     setOfferMessage('')
     setOfferFormSuccess('Offer submitted.')
+    if (conversationCreated) {
+      trackContactSeller(listing, { isBuyer: true })
+    }
+    trackSubmitOffer(listing, { amountPence: data?.amount_pence ?? amountPence, isBuyer: true })
     onOffersChange([data, ...offers])
   }
 

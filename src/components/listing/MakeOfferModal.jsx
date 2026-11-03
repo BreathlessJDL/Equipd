@@ -10,6 +10,7 @@ import {
   validateBuyerUnitOfferAmount,
 } from '../../lib/offers'
 import { submitListingOffer } from '../../lib/offerMessaging'
+import { trackContactSeller, trackSubmitOffer } from '../../lib/buyerConversionAnalytics'
 import BuyerProtectionOfferSummary from '../BuyerProtectionOfferSummary'
 import '../auth/AuthModal.css'
 import './MakeOfferModal.css'
@@ -143,7 +144,6 @@ function MakeOfferModal({
       listingPricePence: listing.price_pence,
       quantity,
     })
-
     setSubmitting(false)
 
     if (submitError) {
@@ -157,6 +157,14 @@ function MakeOfferModal({
       setError(getOfferErrorMessage(submitError))
       return
     }
+
+    if (data?.conversationCreated) {
+      trackContactSeller(listing, { isBuyer: true })
+    }
+    trackSubmitOffer(listing, {
+      amountPence: data?.offer?.amount_pence ?? totalOfferPence,
+      isBuyer: true,
+    })
 
     resetOfferFields()
     onSubmitted(data)

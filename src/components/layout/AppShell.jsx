@@ -2,6 +2,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCategories } from '../../lib/listings'
 import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
+import { trackEquipmentSearch } from '../../lib/buyerConversionAnalytics'
 import { isBrowseShellRoute, isMarketingLandingRoute, isMessagesThreadRoute } from '../../lib/siteHeaderRoutes'
 import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
 import SiteStructuredData from '../seo/SiteStructuredData'
@@ -61,6 +62,7 @@ function AppShell() {
       search: fallbackSearch,
       onSearchChange: setFallbackSearch,
       onSearchSubmit: () => {
+        trackEquipmentSearch(fallbackSearch)
         navigate(buildBrowseSearchPath(fallbackSearch))
       },
       categories,

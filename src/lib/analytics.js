@@ -199,11 +199,15 @@ export function trackPageView(pagePath) {
  */
 export function trackEvent(eventName, params = {}) {
   if (!eventName || !isGoogleAnalyticsReady()) return false
-  window.gtag('event', eventName, {
-    ...params,
-    send_to: getGa4MeasurementId(),
-  })
-  return true
+  try {
+    window.gtag('event', eventName, {
+      ...params,
+      send_to: getGa4MeasurementId(),
+    })
+    return true
+  } catch {
+    return false
+  }
 }
 
 const ANALYTICS_PROVIDERS = {

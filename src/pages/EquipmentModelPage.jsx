@@ -28,6 +28,7 @@ import { getBrandPagePath, getBrandSlug } from '../lib/brandCatalogueCore'
 import EquipmentConsoleVariantCards from '../components/equipment/EquipmentConsoleVariantCards'
 import RelatedEquipmentCard from '../components/equipment/RelatedEquipmentCard'
 import ListingCard from '../components/ListingCard'
+import ListingAnalyticsList from '../components/analytics/ListingAnalyticsList'
 import {
   WantedRequestCard,
   WantedRequestSecondaryCta,
@@ -667,13 +668,19 @@ function EquipmentModelPage() {
             <p className="equipment-model-page__marketplace-intro">
               Active Equipd marketplace listings mapped to this equipment.
             </p>
-            <ul className="equipment-model-page__marketplace-grid">
-              {marketplaceListings.map((listing, index) => (
-                <li key={listing.id}>
-                  <ListingCard listing={listing} variant="home" imagePriority={index < 4} />
-                </li>
-              ))}
-            </ul>
+            <ListingAnalyticsList
+              itemListId="equipment_marketplace"
+              itemListName="Currently for sale"
+              listings={marketplaceListings}
+            >
+              <ul className="equipment-model-page__marketplace-grid">
+                {marketplaceListings.map((listing, index) => (
+                  <li key={listing.id}>
+                    <ListingCard listing={listing} variant="home" imagePriority={index < 4} />
+                  </li>
+                ))}
+              </ul>
+            </ListingAnalyticsList>
             {isWantedRequestLowStockCount(marketplaceListings.length) ? (
               <WantedRequestSecondaryCta
                 product={toWantedRequestProductSummary(product, {

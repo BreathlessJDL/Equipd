@@ -39,6 +39,7 @@
     "test:cookie-consent": "node scripts/test-cookie-consent.mjs",
     "test:cookie-consent-links": "node scripts/test-cookie-consent-links.mjs",
     "test:analytics-ga4": "node scripts/test-analytics-ga4.mjs",
+    "test:buyer-conversion-analytics": "node scripts/test-buyer-conversion-analytics.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:dev": "node scripts/seed-dev.mjs",

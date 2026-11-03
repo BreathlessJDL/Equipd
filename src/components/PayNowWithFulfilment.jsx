@@ -7,6 +7,7 @@ import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { getCheckoutErrorMessage, startCheckoutForAcceptedOffer } from '../lib/checkout'
 import { getFulfilmentMethodErrorMessage } from '../lib/fulfilmentMethods'
 import { getOfferOrder } from '../lib/orders'
+import { trackBeginCheckout } from '../lib/buyerConversionAnalytics'
 import './PayNowWithFulfilment.css'
 
 function PayNowWithFulfilment({
@@ -77,6 +78,7 @@ function PayNowWithFulfilment({
       return
     }
 
+    trackBeginCheckout({ listing, payment, isBuyer: true })
     globalThis.location.assign(url)
   }
 

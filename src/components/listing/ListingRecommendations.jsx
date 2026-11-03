@@ -1,4 +1,5 @@
 import ListingCard from '../ListingCard'
+import ListingAnalyticsList from '../analytics/ListingAnalyticsList'
 
 function ListingRecommendations({
   recommendations = [],
@@ -29,11 +30,17 @@ function ListingRecommendations({
       ) : isEmpty ? (
         <p className="listing-detail__recommendations-empty">{emptyMessage}</p>
       ) : (
-        <div className="listing-detail__recommendations-track">
-          {recommendations.map((item) => (
-            <ListingCard key={item.id} listing={item} variant="grid" showNewBadge />
-          ))}
-        </div>
+        <ListingAnalyticsList
+          itemListId="listing_similar"
+          itemListName="You might also like"
+          listings={recommendations}
+        >
+          <div className="listing-detail__recommendations-track">
+            {recommendations.map((item) => (
+              <ListingCard key={item.id} listing={item} variant="grid" showNewBadge />
+            ))}
+          </div>
+        </ListingAnalyticsList>
       )}
     </section>
   )

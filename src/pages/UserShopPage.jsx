@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ListingCard from '../components/ListingCard'
+import ListingAnalyticsList from '../components/analytics/ListingAnalyticsList'
 import SellerReviewsSummary from '../components/SellerReviewsSummary'
 import UserAvatar from '../components/UserAvatar'
 import '../components/ListingBrowse.css'
@@ -385,16 +386,23 @@ function UserShopPage({ shopParam }) {
               : 'This seller has no active listings right now.'}
           </p>
         ) : (
-          <div className="listing-browse__grid">
-            {listings.map((listing, index) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                variant="home"
-                imagePriority={index < 4}
-              />
-            ))}
-          </div>
+          <ListingAnalyticsList
+            itemListId="seller_shop"
+            itemListName="Seller listings"
+            listings={listings}
+            enabled={!isOwnShop}
+          >
+            <div className="listing-browse__grid">
+              {listings.map((listing, index) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  variant="home"
+                  imagePriority={index < 4}
+                />
+              ))}
+            </div>
+          </ListingAnalyticsList>
         )}
       </div>
 

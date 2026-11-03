@@ -18,7 +18,11 @@ export async function submitListingOffer({
     return { data: null, error: new Error(messageValidation.error) }
   }
 
-  const { data: conversation, error: conversationError } = await startConversationForListing({
+  const {
+    data: conversation,
+    error: conversationError,
+    created: conversationCreated,
+  } = await startConversationForListing({
     listingId,
     buyerId,
     sellerId,
@@ -55,7 +59,7 @@ export async function submitListingOffer({
 
   if (messageError) {
     return {
-      data: { offer, conversation },
+      data: { offer, conversation, conversationCreated: Boolean(conversationCreated) },
       error: messageError,
     }
   }
@@ -64,6 +68,7 @@ export async function submitListingOffer({
     data: {
       offer,
       conversation,
+      conversationCreated: Boolean(conversationCreated),
       message: offerMessage,
     },
     error: null,

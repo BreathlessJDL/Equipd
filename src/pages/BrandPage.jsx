@@ -7,6 +7,7 @@ import BrandValueResearchCard from '../components/BrandValueResearchCard'
 import EquipmentValueGuideCard from '../components/EquipmentValueGuideCard'
 import JsonLd from '../components/JsonLd'
 import ListingCard from '../components/ListingCard'
+import ListingAnalyticsList from '../components/analytics/ListingAnalyticsList'
 import { BrandWantedRequestCard } from '../components/wanted/WantedRequestSurfaces'
 import PageBreadcrumbs from '../components/PageBreadcrumbs'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
@@ -82,19 +83,25 @@ function BrandMarketplaceSection({
       </div>
 
       {hasListings ? (
-        <div
-          ref={gridRef}
-          className="brand-page__listings listing-card-grid brand-page__listings--one-row"
+        <ListingAnalyticsList
+          itemListId={`brand_${brand.slug || brand.id || 'listings'}`}
+          itemListName={heading}
+          listings={visibleListings}
         >
-          {visibleListings.map((listing, index) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              variant="home"
-              imagePriority={index < 4}
-            />
-          ))}
-        </div>
+          <div
+            ref={gridRef}
+            className="brand-page__listings listing-card-grid brand-page__listings--one-row"
+          >
+            {visibleListings.map((listing, index) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                variant="home"
+                imagePriority={index < 4}
+              />
+            ))}
+          </div>
+        </ListingAnalyticsList>
       ) : (
         <>
           <div

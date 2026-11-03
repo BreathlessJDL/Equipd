@@ -36,6 +36,7 @@ import {
   logSupabaseError,
 } from '../lib/offers'
 import { isAcceptedOfferAwaitingPayment, isPaymentComplete } from '../lib/payments'
+import { trackPurchase } from '../lib/buyerConversionAnalytics'
 import { fetchDisputesForOrders } from '../lib/orderDisputes'
 import {
   canBuyerConfirmOrder,
@@ -491,6 +492,18 @@ function HubPage() {
     () => acceptedOffersMade.filter(isHubCompletedOffer),
     [acceptedOffersMade],
   )
+
+  useEffect(() => {
+    acceptedOffersMade.forEach((offer) => {
+      if (!isPaymentComplete(offer.payment)) return
+      trackPurchase({
+        payment: offer.payment,
+        order: getOfferOrder(offer),
+        listing: offer.listing,
+        viewerRole: 'buyer',
+      })
+    })
+  }, [acceptedOffersMade])
 
   const completedSalesOrders = useMemo(
     () => acceptedOffersReceived.filter(isHubCompletedOffer),

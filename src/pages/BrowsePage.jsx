@@ -20,6 +20,7 @@ import {
   BROWSE_PAGE_META_TITLE,
   BROWSE_PATH,
 } from '../lib/browsePageSeo'
+import { trackEquipmentSearch } from '../lib/buyerConversionAnalytics'
 import { fetchCategories } from '../lib/listings'
 
 function BrowsePage() {
@@ -105,6 +106,7 @@ function BrowsePage() {
   )
 
   const handleSearchSubmit = useCallback(() => {
+    trackEquipmentSearch(browse.search)
     browse.flushFilters()
     requestBrowseScroll()
   }, [browse, requestBrowseScroll])
@@ -186,6 +188,8 @@ function BrowsePage() {
               brand={browse.brands?.[0] || browse.brand || ''}
               locationLabel={browse.locationSearch || ''}
               onClearFilters={browse.resetFilters}
+              itemListId="browse"
+              itemListName="Browse listings"
             />
           </div>
 

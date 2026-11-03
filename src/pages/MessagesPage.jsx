@@ -49,6 +49,7 @@ import {
 } from '../lib/offerAcceptedSystemMessage'
 import { canReportConversation, REPORT_TYPES } from '../lib/reports'
 import { fetchOffersForListing, hasPendingOffer } from '../lib/offers'
+import { trackContactSeller } from '../lib/buyerConversionAnalytics'
 
 const THREAD_NEAR_BOTTOM_THRESHOLD_PX = 80
 
@@ -466,7 +467,7 @@ function MessagesPage() {
       }
     }
 
-    const { data, error } = await ensureConversationForListing({
+    const { data, error, created } = await ensureConversationForListing({
       listingId: selectedConversation.listing_id,
       buyerId: selectedConversation.buyer_id,
       sellerId: selectedConversation.seller_id,
@@ -474,6 +475,12 @@ function MessagesPage() {
 
     if (error || !data) {
       return { conversation: null, conversationId: null, error }
+    }
+
+    if (created && user?.id === selectedConversation.buyer_id) {
+      trackContactSeller(data.listing || selectedConversation.listing || {
+        id: selectedConversation.listing_id,
+      }, { isBuyer: true })
     }
 
     const normalized = normalizeConversationDetail({

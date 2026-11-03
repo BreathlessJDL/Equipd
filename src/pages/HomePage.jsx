@@ -20,6 +20,7 @@ import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { useAuth } from '../hooks/useAuth'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
+import { trackEquipmentSearch } from '../lib/buyerConversionAnalytics'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
 import { DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '../lib/pageTitles'
@@ -158,6 +159,7 @@ function HomePage() {
   }, [isLoggedIn, reviewsNearViewport])
 
   const handleSearchSubmit = useCallback(() => {
+    trackEquipmentSearch(browse.search)
     navigate(buildBrowseSearchPath(browse.search))
   }, [browse.search, navigate])
 
@@ -294,6 +296,8 @@ function HomePage() {
               brand={browse.brands?.[0] || browse.brand || ''}
               locationLabel={browse.locationSearch || ''}
               onClearFilters={browse.resetFilters}
+              itemListId="home_browse"
+              itemListName="Homepage listings"
             />
           </div>
         </div>

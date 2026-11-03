@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import ListingCard from '../ListingCard'
+import ListingAnalyticsList from '../analytics/ListingAnalyticsList'
 import HomeRecentListingsSkeleton from './HomeRecentListingsSkeleton'
 import { EmptyState, ErrorState } from '../ui/UiState'
 
@@ -34,17 +35,23 @@ function HomeRecentListings({ listings, loading, error }) {
         ) : null}
 
         {listings.length > 0 ? (
-          <div className="home-listing-grid">
-            {listings.map((listing, index) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                variant="home"
-                showNewBadge
-                imagePriority={index < ABOVE_FOLD_CARD_COUNT}
-              />
-            ))}
-          </div>
+          <ListingAnalyticsList
+            itemListId="home_recent"
+            itemListName="Recently Added"
+            listings={listings}
+          >
+            <div className="home-listing-grid">
+              {listings.map((listing, index) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  variant="home"
+                  showNewBadge
+                  imagePriority={index < ABOVE_FOLD_CARD_COUNT}
+                />
+              ))}
+            </div>
+          </ListingAnalyticsList>
         ) : null}
       </div>
     </section>

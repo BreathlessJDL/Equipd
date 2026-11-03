@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import ListingCard from '../ListingCard'
+import ListingAnalyticsList from '../analytics/ListingAnalyticsList'
 import LocationAreaFilterBanner from './LocationAreaFilterBanner'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../../lib/browseFilters'
 
@@ -93,20 +94,26 @@ function LocationListingsResults({
             : `${listings.length} listings in and around ${locationView.name}`}
         </h2>
       </header>
-      <div
-        className={`location-page__grid listing-browse__grid${
-          fewListings ? ' location-page__grid--few' : ''
-        }`}
+      <ListingAnalyticsList
+        itemListId={`location_${locationView?.slug || 'city'}`}
+        itemListName={locationView?.name ? `Listings in ${locationView.name}` : 'Location listings'}
+        listings={listings}
       >
-        {listings.map((listing, index) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            variant="home"
-            imagePriority={index < 4}
-          />
-        ))}
-      </div>
+        <div
+          className={`location-page__grid listing-browse__grid${
+            fewListings ? ' location-page__grid--few' : ''
+          }`}
+        >
+          {listings.map((listing, index) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="home"
+              imagePriority={index < 4}
+            />
+          ))}
+        </div>
+      </ListingAnalyticsList>
       {hasMore || loadingMore ? (
         <div className="listing-browse__load-more">
           {error ? (

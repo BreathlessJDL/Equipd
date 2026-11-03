@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useListingAnalyticsList } from './analytics/ListingAnalyticsList'
+import { trackSelectItem } from '../lib/buyerConversionAnalytics'
 import BuyerProtectionPriceDisplay from './BuyerProtectionPriceDisplay'
 import { normalizeListingPricePence } from '../lib/buyerProtection'
 import {
@@ -95,23 +97,32 @@ function ConditionPill({ condition }) {
   )
 }
 
+function useListingSelectHandler(listing) {
+  const list = useListingAnalyticsList()
+  return function handleSelect() {
+    if (!list || !listing?.id) return
+    trackSelectItem(listing, list)
+  }
+}
+
 function ListingCardGrid({ listing, showStatus = false, showNewBadge = false, primaryLinkTo = null, onSavedChange, imagePriority = false }) {
   const showBadge = showNewBadge && isRecentListing(listing)
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
   const listingHref = primaryLinkTo ?? `/listings/${listing.slug}`
+  const handleSelect = useListingSelectHandler(listing)
 
   return (
     <article className="listing-card listing-card--grid">
       <div className="listing-card__media">
-        <Link to={listingHref} className="listing-card__image-link" tabIndex={-1}>
+        <Link to={listingHref} className="listing-card__image-link" tabIndex={-1} onClick={handleSelect}>
           <ListingCardImage listing={listing} priority={imagePriority} />
         </Link>
         {showBadge ? <span className="listing-card__badge">New</span> : null}
         <ListingSaveButton listing={listing} onSavedChange={onSavedChange} />
       </div>
 
-      <Link to={listingHref} className="listing-card__body">
+      <Link to={listingHref} className="listing-card__body" onClick={handleSelect}>
         <ConditionPill condition={listing.condition} />
 
         <h3 className="listing-card__title" title={listing.title}>
@@ -173,18 +184,19 @@ function ListingCardRow({ listing, showStatus = false, primaryLinkTo = null, onS
   const locationLabel = formatListingLocationCard(listing)
   const distanceLabel = formatListingDistanceLabel(listing)
   const listingHref = primaryLinkTo ?? `/listings/${listing.slug}`
+  const handleSelect = useListingSelectHandler(listing)
 
   return (
     <article className="listing-row">
       <div className="listing-row__media">
-        <Link to={listingHref} className="listing-row__image-link" tabIndex={-1}>
+        <Link to={listingHref} className="listing-row__image-link" tabIndex={-1} onClick={handleSelect}>
           <ListingCardImage listing={listing} priority={imagePriority} variant="row" />
         </Link>
         <ListingSaveButton listing={listing} onSavedChange={onSavedChange} />
       </div>
 
       <div className="listing-row__content">
-        <Link to={listingHref} className="listing-row__title">
+        <Link to={listingHref} className="listing-row__title" onClick={handleSelect}>
           {listing.title}
         </Link>
 

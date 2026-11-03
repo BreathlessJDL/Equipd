@@ -48,6 +48,7 @@ import { isSoldListingStatus } from '../lib/listingSoldLifecycle'
 import { fetchApprovedEquipmentProductForListing } from '../lib/equipmentProducts'
 import { fetchPublicProfile } from '../lib/profiles'
 import { fetchListingSavedCount } from '../lib/savedListings'
+import { trackViewItem } from '../lib/buyerConversionAnalytics'
 import { canReportListing, REPORT_TYPES } from '../lib/reports'
 
 function ListingDetailPage() {
@@ -252,6 +253,12 @@ function ListingDetailPage() {
       active = false
     }
   }, [listing?.id, listing?.saved_count])
+
+  useEffect(() => {
+    if (!listing?.id) return
+    if (isListingOwner(listing, user?.id)) return
+    trackViewItem(listing)
+  }, [listing, user?.id])
 
   useEffect(() => {
     if (loading || !slug || !listing || listing.status !== 'active') return undefined

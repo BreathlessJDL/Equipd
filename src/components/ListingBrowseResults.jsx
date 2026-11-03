@@ -1,4 +1,5 @@
 import ListingCard from './ListingCard'
+import ListingAnalyticsList from './analytics/ListingAnalyticsList'
 import {
   WantedRequestEmptyState,
   WantedRequestLowStockBanner,
@@ -26,6 +27,8 @@ function ListingBrowseResults({
   locationLabel = '',
   onClearFilters = null,
   showWantedRequestCtas = true,
+  itemListId = 'browse',
+  itemListName = 'Browse listings',
 }) {
   if (loading && listings.length === 0) {
     return (
@@ -103,16 +106,18 @@ function ListingBrowseResults({
             <h2 className="listing-browse__results-title">{sectionTitle}</h2>
           </header>
         ) : null}
-        <div className="listing-browse__grid">
-          {listings.map((listing, index) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              variant="home"
-              imagePriority={index < ABOVE_FOLD_CARD_COUNT}
-            />
-          ))}
-        </div>
+        <ListingAnalyticsList itemListId={itemListId} itemListName={itemListName} listings={listings}>
+          <div className="listing-browse__grid">
+            {listings.map((listing, index) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                variant="home"
+                imagePriority={index < ABOVE_FOLD_CARD_COUNT}
+              />
+            ))}
+          </div>
+        </ListingAnalyticsList>
         {lowStockBanner}
         {loadMoreFooter}
       </div>
@@ -126,16 +131,18 @@ function ListingBrowseResults({
           <h2 className="listing-browse__results-title">{sectionTitle}</h2>
         </header>
       ) : null}
-      <div className="listing-browse__list">
-        {listings.map((listing, index) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            variant="row"
-            imagePriority={index < ABOVE_FOLD_CARD_COUNT}
-          />
-        ))}
-      </div>
+      <ListingAnalyticsList itemListId={itemListId} itemListName={itemListName} listings={listings}>
+        <div className="listing-browse__list">
+          {listings.map((listing, index) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="row"
+              imagePriority={index < ABOVE_FOLD_CARD_COUNT}
+            />
+          ))}
+        </div>
+      </ListingAnalyticsList>
       {lowStockBanner}
       {loadMoreFooter}
     </div>

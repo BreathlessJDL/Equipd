@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo'
 import ListingCard from '../components/ListingCard'
+import ListingAnalyticsList from '../components/analytics/ListingAnalyticsList'
 import JsonLd from '../components/JsonLd'
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema'
 import FaqPageSchema from '../components/seo/FaqPageSchema'
@@ -455,17 +456,23 @@ export default function BuyUsedGymEquipmentPage() {
           ) : null}
 
           {listings.length > 0 ? (
-            <div className="listing-card-grid buy-page__listing-grid">
-              {listings.map((listing, index) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  variant="home"
-                  showNewBadge
-                  imagePriority={index < 4}
-                />
-              ))}
-            </div>
+            <ListingAnalyticsList
+              itemListId="buy_used"
+              itemListName="Buy used gym equipment"
+              listings={listings}
+            >
+              <div className="listing-card-grid buy-page__listing-grid">
+                {listings.map((listing, index) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    variant="home"
+                    showNewBadge
+                    imagePriority={index < 4}
+                  />
+                ))}
+              </div>
+            </ListingAnalyticsList>
           ) : null}
 
           {listings.length > 0 ? (

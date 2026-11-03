@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from '../components/ListingCard'
+import ListingAnalyticsList from '../components/analytics/ListingAnalyticsList'
 import '../components/ListingBrowse.css'
 import { useAuth } from '../hooks/useAuth'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -126,16 +127,22 @@ function SavedListingsPage() {
       ) : null}
 
       {!loading && !error && activeListings.length > 0 ? (
-        <div className="listing-browse__grid">
-          {activeListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              variant="home"
-              onSavedChange={(saved) => handleActiveListingUnsaved(listing.id, saved)}
-            />
-          ))}
-        </div>
+        <ListingAnalyticsList
+          itemListId="saved_listings"
+          itemListName="Saved listings"
+          listings={activeListings}
+        >
+          <div className="listing-browse__grid">
+            {activeListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                variant="home"
+                onSavedChange={(saved) => handleActiveListingUnsaved(listing.id, saved)}
+              />
+            ))}
+          </div>
+        </ListingAnalyticsList>
       ) : null}
 
       {!loading && !error && activeListings.length === 0 && unavailableSaved.length > 0 ? (

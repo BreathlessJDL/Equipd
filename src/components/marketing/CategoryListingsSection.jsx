@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import ListingCard from '../ListingCard'
+import ListingAnalyticsList from '../analytics/ListingAnalyticsList'
 import { EmptyState, ErrorState, LoadingState } from '../ui/UiState'
 import { useOneRowListingCapacity } from '../../hooks/useOneRowListingCapacity'
 
@@ -20,6 +21,8 @@ function CategoryListingsSection({
   error = '',
   emptyMessage,
   loadingLabel = 'Loading listings…',
+  itemListId,
+  itemListName,
 }) {
   const gridRef = useRef(null)
   const hasListings = listings.length > 0
@@ -49,25 +52,32 @@ function CategoryListingsSection({
       ) : null}
 
       {/* Always mount the measure/grid node so capacity tracks the rail width. */}
-      <div
-        ref={gridRef}
-        className={
-          hasListings
-            ? 'listing-card-grid commercial-page__listing-grid commercial-page__listing-grid--one-row'
-            : 'commercial-page__listing-grid-measure'
-        }
-        aria-hidden={hasListings ? undefined : true}
+      <ListingAnalyticsList
+        itemListId={itemListId || headingId || 'category_listings'}
+        itemListName={itemListName || heading || 'Category listings'}
+        listings={visibleListings}
+        enabled={hasListings}
       >
-        {visibleListings.map((listing, index) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            variant="home"
-            showNewBadge
-            imagePriority={index < 4}
-          />
-        ))}
-      </div>
+        <div
+          ref={gridRef}
+          className={
+            hasListings
+              ? 'listing-card-grid commercial-page__listing-grid commercial-page__listing-grid--one-row'
+              : 'commercial-page__listing-grid-measure'
+          }
+          aria-hidden={hasListings ? undefined : true}
+        >
+          {visibleListings.map((listing, index) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              variant="home"
+              showNewBadge
+              imagePriority={index < 4}
+            />
+          ))}
+        </div>
+      </ListingAnalyticsList>
 
       {hasListings && browsePath && ctaLabel ? (
         <div className="commercial-page__listings-footer">

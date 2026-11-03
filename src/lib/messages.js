@@ -567,7 +567,7 @@ export async function ensureConversationForListing({ listingId, buyerId, sellerI
   }
 
   if (existing) {
-    return { data: existing, error: null }
+    return { data: existing, error: null, created: false }
   }
 
   const { data: listingRow, error: listingError } = await supabase
@@ -592,13 +592,13 @@ export async function ensureConversationForListing({ listingId, buyerId, sellerI
   })
 
   if (error || !data) {
-    return { data: null, error }
+    return { data: null, error, created: false }
   }
 
   const normalized = normalizeConversationDetail(data)
   const withProfiles = await withParticipantPublicProfiles(normalized)
 
-  return { data: withProfiles, error: null }
+  return { data: withProfiles, error: null, created: true }
 }
 
 export async function startConversationForListing(args) {

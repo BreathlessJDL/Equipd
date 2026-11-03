@@ -43,6 +43,7 @@ import {
 } from '../lib/offers'
 import { buildOrderTimeline } from '../lib/orderTimeline'
 import { formatPaymentStatus, isPaymentComplete } from '../lib/payments'
+import { trackPurchase } from '../lib/buyerConversionAnalytics'
 import {
   canBuyerConfirmCourierDelivery,
   canBuyerConfirmOrder,
@@ -411,6 +412,17 @@ function OrderDetailPage() {
 
   const participantRole = order ? getOrderViewerRole(order, user?.id) : null
   const viewerRole = participantRole ?? (isAdmin ? 'admin' : null)
+
+  useEffect(() => {
+    if (viewerRole !== 'buyer' || !order) return
+    if (!isPaymentComplete(order.payment)) return
+    trackPurchase({
+      payment: order.payment,
+      order,
+      listing: order.listing,
+      viewerRole: 'buyer',
+    })
+  }, [order, viewerRole])
 
   const timeline = useMemo(() => {
     if (!order) return null
