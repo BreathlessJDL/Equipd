@@ -6,47 +6,59 @@
     },
     {
       "source": "/listings/leeds",
-      "destination": "/index.html"
+      "destination": "/listings/leeds/index.html"
     },
     {
       "source": "/listings/manchester",
-      "destination": "/index.html"
+      "destination": "/listings/manchester/index.html"
     },
     {
       "source": "/listings/birmingham",
-      "destination": "/index.html"
+      "destination": "/listings/birmingham/index.html"
     },
     {
       "source": "/listings/london",
-      "destination": "/index.html"
+      "destination": "/listings/london/index.html"
     },
     {
       "source": "/listings/sheffield",
-      "destination": "/index.html"
+      "destination": "/listings/sheffield/index.html"
     },
     {
       "source": "/listings/bristol",
-      "destination": "/index.html"
+      "destination": "/listings/bristol/index.html"
     },
     {
       "source": "/listings/liverpool",
-      "destination": "/index.html"
+      "destination": "/listings/liverpool/index.html"
     },
     {
       "source": "/listings/newcastle",
-      "destination": "/index.html"
+      "destination": "/listings/newcastle/index.html"
     },
     {
       "source": "/listings/glasgow",
-      "destination": "/index.html"
+      "destination": "/listings/glasgow/index.html"
     },
     {
       "source": "/listings/cardiff",
+      "destination": "/listings/cardiff/index.html"
+    },
+    {
+      "source": "/listings/:slug/edit",
       "destination": "/index.html"
     },
     {
       "source": "/listings/:slug",
       "destination": "/api/public-listing-page?slug=:slug"
+    },
+    {
+      "source": "/edit-listing",
+      "destination": "/api/private-page-noindex"
+    },
+    {
+      "source": "/edit-listing/:path*",
+      "destination": "/api/private-page-noindex"
     },
     {
       "source": "/feeds/google-merchant.xml",
@@ -84,6 +96,27 @@
       "source": "/listings/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/listings/(.*)/edit",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "private, no-store" }
+      ]
+    },
+    {
+      "source": "/edit-listing",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "private, no-store" }
+      ]
+    },
+    {
+      "source": "/edit-listing/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "private, no-store" }
       ]
     }
   ],

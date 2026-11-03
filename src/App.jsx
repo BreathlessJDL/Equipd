@@ -47,6 +47,7 @@ const BrowsePage = lazy(() => import('./pages/BrowsePage'))
 const BrandsPage = lazy(() => import('./pages/BrandsPage'))
 const BrandPage = lazy(() => import('./pages/BrandPage'))
 const EditListingPage = lazy(() => import('./pages/EditListingPage'))
+const PrivateEditListingGonePage = lazy(() => import('./pages/PrivateEditListingGonePage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const EquipmentModelPage = lazy(() => import('./pages/EquipmentModelPage'))
 const HelpCentrePage = lazy(() => import('./pages/HelpCentrePage'))
@@ -117,6 +118,8 @@ function App() {
             <Route path="valuation" element={<ValuationPage />} />
             <Route path="sell-gym-equipment" element={<SellGymEquipmentPage />} />
             <Route path="buy-used-gym-equipment" element={<BuyUsedGymEquipmentPage />} />
+            <Route path="edit-listing" element={<PrivateEditListingGonePage />} />
+            <Route path="edit-listing/:legacyId" element={<PrivateEditListingGonePage />} />
             <Route path="commercial-gym-equipment" element={<CommercialGymEquipmentPage />} />
             <Route path="commercial-cardio-equipment" element={<CommercialCardioEquipmentPage />} />
             <Route path="commercial-strength-equipment" element={<CommercialStrengthEquipmentPage />} />

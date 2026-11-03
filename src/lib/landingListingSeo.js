@@ -141,6 +141,7 @@ export function mapLandingListingsForSeo(listings = [], { limit = LANDING_LISTIN
 export function renderLandingListingsHtml({
   listings = [],
   emptyMessage = 'No matching listings are live right now. Browse all equipment or check back soon.',
+  textOnly = false,
 } = {}) {
   const summaries = mapLandingListingsForSeo(listings)
   if (!summaries.length) {
@@ -149,7 +150,7 @@ export function renderLandingListingsHtml({
 
   const items = summaries.map((listing) => {
     const meta = [listing.priceLabel, listing.locationLabel].filter(Boolean).join(' · ')
-    const image = listing.imageSrc
+    const image = !textOnly && listing.imageSrc
       ? `<img src="${escapeHtml(listing.imageSrc)}"${listing.imageSrcSet ? ` srcset="${escapeHtml(listing.imageSrcSet)}"` : ''}${listing.imageSizes ? ` sizes="${escapeHtml(listing.imageSizes)}"` : ''} alt="" width="300" height="300" loading="lazy" decoding="async" />`
       : ''
     return `<li>

@@ -26,6 +26,8 @@ export const PUBLIC_LISTING_RENDER_SELECT = `
   city,
   county,
   postcode,
+  latitude,
+  longitude,
   created_at,
   updated_at,
   published_at,

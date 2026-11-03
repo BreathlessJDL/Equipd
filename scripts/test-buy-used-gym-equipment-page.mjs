@@ -17,6 +17,7 @@ import {
   BUY_HERO_TRUST_ITEMS,
   BUY_JOURNEY_STEPS,
   BUY_LISTINGS_HEADING,
+  BUY_LOCATION_HUBS,
   BUY_LISTINGS_LIMIT,
   BUY_USED_GYM_EQUIPMENT_H1,
   BUY_USED_GYM_EQUIPMENT_LEAD,
@@ -93,13 +94,23 @@ assert(doc.bodyHtml.includes('/listings/life-fitness-treadmill-demo-1'), 'second
 assert(!doc.bodyHtml.includes('/listings/should-not-appear'), 'draft listings excluded')
 assert(!doc.bodyHtml.includes('/listings/test-should-not-appear'), 'test listings excluded')
 assert(
-  (doc.bodyHtml.match(/href="\/listings\//g) || []).length === 2,
+  (doc.bodyHtml.match(/href="\/listings\/(?:concept2-rower-demo-2|life-fitness-treadmill-demo-1)"/g) || []).length === 2,
   'exactly two active listing links prerendered from sample',
+)
+assert(
+  (doc.bodyHtml.match(/href="\/listings\/(birmingham|leeds|manchester|london)"/g) || []).length === 4,
+  'four city hub links prerendered',
 )
 assert(doc.bodyHtml.includes('/used-commercial-treadmills'), 'equipment type SEO link')
 assert(doc.bodyHtml.includes('/brands/life-fitness'), 'brand SEO link')
 assert(doc.bodyHtml.includes('/commercial-gym-equipment'), 'commercial hub link')
 assert(doc.bodyHtml.includes('/home-gym-equipment'), 'home hub link')
+assert(doc.bodyHtml.includes('/listings/birmingham'), 'birmingham city hub link')
+assert(doc.bodyHtml.includes('/listings/leeds'), 'leeds city hub link')
+assert(doc.bodyHtml.includes('/listings/manchester'), 'manchester city hub link')
+assert(doc.bodyHtml.includes('/listings/london'), 'london city hub link')
+assert(doc.bodyHtml.includes('Used gym equipment near you'), 'city section heading')
+assert(BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION.startsWith('Buy used gym equipment'), 'meta starts with buy intent')
 assert(!doc.bodyHtml.includes('/browse?category=treadmill'), 'no browse category filter cannibalisation')
 assert(!doc.bodyHtml.includes('/browse?rating=full_commercial'), 'no browse rating filter cannibalisation')
 assert(!/thousands of listings/i.test(doc.bodyHtml), 'no unsupported inventory claim in body')
@@ -142,6 +153,7 @@ assert(BUY_EQUIPMENT_TYPES.length >= 8 && BUY_EQUIPMENT_TYPES.length <= 12, 'cur
 assert(BUY_FEATURED_BRAND_SLUGS.includes('life-fitness'), 'Life Fitness brand included')
 assert(BUY_FEATURED_BRAND_SLUGS.includes('concept2'), 'Concept2 brand included')
 assert(BUY_CONTEXT_HUBS.length === 2, 'commercial + home context hubs')
+assert(BUY_LOCATION_HUBS.length === 4, 'four existing city hubs linked from buy page')
 
 assert(
   BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION.length >= 140
@@ -174,6 +186,7 @@ assert(pageJsx.includes('listing-card-grid'), 'homepage-style listing grid')
 assert(pageJsx.includes('BUY_EQUIPMENT_TYPES'), 'equipment type destinations')
 assert(pageJsx.includes('BUY_FEATURED_BRAND_SLUGS'), 'brand destinations')
 assert(pageJsx.includes('BUY_CONTEXT_HUBS'), 'commercial/home discovery')
+assert(pageJsx.includes('BUY_LOCATION_HUBS'), 'city hubs rendered on buy page')
 assert(pageJsx.includes('WANTED_REQUEST_SOURCES.BUY_PAGE'), 'wanted flow reused')
 assert(pageJsx.includes('buildBuyUsedGymEquipmentCollectionSchema'), 'CollectionPage schema wired')
 assert(pageJsx.includes('<picture>'), 'journey images use picture element')

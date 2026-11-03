@@ -1,6 +1,15 @@
 import { EQUIPD_SITE_ORIGIN } from './brandCatalogueCore.js'
+import { BUY_USED_GYM_EQUIPMENT_PATH } from './buyUsedGymEquipmentPage.js'
 import { BUYER_PROTECTION_HELP_PATH } from './trustMessaging.js'
 import { buildLocationPageBreadcrumbSchema } from './breadcrumbStructuredData.js'
+import { isActivePublicListingCandidate } from './listingDiscoveryEligibility.js'
+import { getListingCoordinates, safeDistanceMiles } from './listingDistance.js'
+import {
+  LANDING_LISTINGS_SEO_LIMIT,
+  buildListingItemListElement,
+  renderLandingListingsHtml,
+} from './landingListingSeo.js'
+import { BROWSE_PATH } from './sellGymEquipmentPage.js'
 
 /**
  * Local marketplace hubs.
@@ -181,6 +190,36 @@ export function getLocationPage(slug) {
  * Hub search centre + 40-mile radius for eligible local listings.
  * Throws if centre coordinates are missing (do not silently fall back to text matching).
  */
+function listingPublishedTs(listing) {
+  return Date.parse(listing?.published_at || listing?.created_at || 0) || 0
+}
+
+export function selectPublicLocationListings(
+  listings = [],
+  region,
+  { limit = LANDING_LISTINGS_SEO_LIMIT } = {},
+) {
+  if (!region) return []
+  const hub = getLocationHubSearch(region)
+
+  return (Array.isArray(listings) ? listings : [])
+    .filter(isActivePublicListingCandidate)
+    .filter((listing) => {
+      const coords = getListingCoordinates(listing)
+      if (coords.latitude == null || coords.longitude == null) return false
+      const miles = safeDistanceMiles(
+        hub.latitude,
+        hub.longitude,
+        coords.latitude,
+        coords.longitude,
+      )
+      return miles != null && miles <= hub.radiusMiles
+    })
+    .slice()
+    .sort((a, b) => listingPublishedTs(b) - listingPublishedTs(a))
+    .slice(0, Math.max(0, limit))
+}
+
 export function getLocationHubSearch(region) {
   if (!region) return null
   const latitude = Number(region.centre?.latitude)
@@ -261,7 +300,7 @@ export function buildLocationPageMeta(region, selectedArea = null) {
   if (!region) return null
   const displayName = selectedArea ?? region.name
   return {
-    title: `${displayName} Gym Equipment | Equipd`,
+    title: `Used Gym Equipment in ${displayName} | Equipd`,
     description: selectedArea
       ? `Browse used commercial and home gym equipment for sale near ${selectedArea} in the ${region.name} area. Search local listings and buy with confidence on Equipd.`
       : region.metaDescription,
@@ -364,15 +403,19 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
+const LOCATION_LISTINGS_EMPTY =
+  'No matching listings are live near this city right now. Browse used gym equipment across the UK or check back soon.'
+
 /**
- * Lightweight crawlable shell for location hubs (listings remain client-fetched).
+ * Crawlable location hub HTML, including eligible public listings within the hub radius.
  */
-export function buildLocationPageSeoDocument(region) {
+export function buildLocationPageSeoDocument(region, { listings = [] } = {}) {
   if (!region) return null
   const view = resolveLocationView(region)
   const meta = buildLocationPageMeta(region)
   const path = buildLocationPagePath(region.slug)
   const pageUrl = `${EQUIPD_SITE_ORIGIN}${path}`
+  const selected = selectPublicLocationListings(listings, region)
 
   const nearbyLinks = view.nearbyAreas
     .map((area) => {
@@ -395,11 +438,12 @@ export function buildLocationPageSeoDocument(region) {
     <p>Gym equipment near you</p>
     <h1>${escapeHtml(view.heading)}</h1>
     <p>${escapeHtml(view.heroIntro)}</p>
-    <p><a href="#location-listings">${escapeHtml(view.browseCtaLabel)}</a> · <a href="/valuation">Get a free valuation</a></p>
+    <p><a href="${escapeHtml(path)}">${escapeHtml(view.browseCtaLabel)}</a> · <a href="${BUY_USED_GYM_EQUIPMENT_PATH}">Buy used gym equipment</a></p>
   </header>
   <section id="location-listings" aria-labelledby="seo-location-listings-heading">
     <h2 id="seo-location-listings-heading">Listings in ${escapeHtml(region.name)}</h2>
-    <p>Live local listings load on this page. Browse filters and sorting are available in the Equipd marketplace.</p>
+    ${renderLandingListingsHtml({ listings: selected, emptyMessage: LOCATION_LISTINGS_EMPTY })}
+    <p><a href="${BROWSE_PATH}">Browse all equipment</a></p>
   </section>
   <aside aria-labelledby="seo-location-guide-heading">
     <h2 id="seo-location-guide-heading">${escapeHtml(view.guideHeading)}</h2>
@@ -434,13 +478,27 @@ export function buildLocationPageSeoDocument(region) {
         description: meta.description,
         isPartOf: { '@id': `${EQUIPD_SITE_ORIGIN}/#website` },
       },
+      selected.length
+        ? {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            '@id': `${pageUrl}#collection`,
+            url: pageUrl,
+            name: view.heading,
+            isPartOf: { '@id': `${pageUrl}#webpage` },
+            mainEntity: {
+              '@type': 'ItemList',
+              itemListElement: buildListingItemListElement(selected),
+            },
+          }
+        : null,
       buildLocationPageBreadcrumbSchema(region),
     ].filter(Boolean),
   }
 }
 
-export function buildAllLocationPageSeoDocuments() {
-  return LOCATION_SLUGS.map((slug) => buildLocationPageSeoDocument(LOCATION_PAGES[slug])).filter(
-    Boolean,
-  )
+export function buildAllLocationPageSeoDocuments({ listings = [] } = {}) {
+  return LOCATION_SLUGS.map((slug) =>
+    buildLocationPageSeoDocument(LOCATION_PAGES[slug], { listings }),
+  ).filter(Boolean)
 }

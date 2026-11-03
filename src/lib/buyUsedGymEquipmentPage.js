@@ -3,7 +3,7 @@
  * Node-safe (no DOM). Shared by the React page and build-time prerender.
  */
 
-import { mapBrandListingsForSeo } from './brandBuyerSeo.js'
+import { mapLandingListingsForSeo, renderLandingListingsHtml } from './landingListingSeo.js'
 import { EQUIPD_SITE_ORIGIN, getBrandLogoMeta, getBrandPagePath } from './brandCatalogueCore.js'
 import { buildBreadcrumbSchema } from './breadcrumbStructuredData.js'
 import {
@@ -45,7 +45,7 @@ export const BUY_USED_GYM_EQUIPMENT_PAGE_TITLE =
 
 /** Unique buyer-intent snippet — no unsupported inventory quantities. */
 export const BUY_USED_GYM_EQUIPMENT_META_DESCRIPTION =
-  'Browse used gym equipment from sellers across the UK. Find commercial and home gym machines for sale, make offers and buy securely through Equipd.'
+  'Buy used gym equipment from sellers across the UK. Browse live commercial and home listings, compare prices and complete purchases securely on Equipd.'
 
 export const BUY_USED_GYM_EQUIPMENT_H1 = 'Buy Used Gym Equipment'
 
@@ -170,6 +170,18 @@ export const BUY_CONTEXT_NOTE = 'Commercial or home'
 export const BUY_CONTEXT_HEADING = 'Shop commercial or home gym equipment'
 export const BUY_CONTEXT_LEAD =
   'Start with the right buyer context, then refine by cardio, strength, type or brand.'
+
+export const BUY_LOCATION_NOTE = 'Shop by location'
+export const BUY_LOCATION_HEADING = 'Used gym equipment near you'
+export const BUY_LOCATION_LEAD =
+  'Browse live listings in major UK cities, then collect locally or arrange delivery with the seller.'
+
+export const BUY_LOCATION_HUBS = Object.freeze([
+  { id: 'birmingham', label: 'Birmingham', description: 'West Midlands listings', to: '/listings/birmingham' },
+  { id: 'leeds', label: 'Leeds', description: 'West Yorkshire listings', to: '/listings/leeds' },
+  { id: 'manchester', label: 'Manchester', description: 'Greater Manchester listings', to: '/listings/manchester' },
+  { id: 'london', label: 'London', description: 'London and nearby towns', to: '/listings/london' },
+])
 
 export const BUY_CONTEXT_HUBS = Object.freeze([
   {
@@ -540,6 +552,7 @@ export function buildBuyUsedGymEquipmentWebPageSchema() {
       `${EQUIPD_SITE_ORIGIN}${BROWSE_PATH}`,
       `${EQUIPD_SITE_ORIGIN}/commercial-gym-equipment`,
       `${EQUIPD_SITE_ORIGIN}/home-gym-equipment`,
+      ...BUY_LOCATION_HUBS.map((hub) => `${EQUIPD_SITE_ORIGIN}${hub.to}`),
       `${EQUIPD_SITE_ORIGIN}/commercial-cardio-equipment`,
       `${EQUIPD_SITE_ORIGIN}/commercial-strength-equipment`,
       `${EQUIPD_SITE_ORIGIN}${BRANDS_PATH}`,
@@ -588,7 +601,7 @@ export function selectBuyHubListings(listings = [], { limit = BUY_LISTINGS_LIMIT
  * @param {{ limit?: number }} [options]
  */
 export function mapBuyHubListingsForSeo(listings = [], { limit = BUY_LISTINGS_LIMIT } = {}) {
-  return mapBrandListingsForSeo(selectBuyHubListings(listings, { limit }), { limit })
+  return mapLandingListingsForSeo(selectBuyHubListings(listings, { limit }), { limit })
 }
 
 export function buildBuyUsedGymEquipmentCollectionSchema(listings = []) {
@@ -685,13 +698,10 @@ function renderGuideSectionHtml() {
  * @param {{ listings?: Array<object> }} [options]
  */
 export function buildBuyUsedGymEquipmentSeoDocument({ listings = [] } = {}) {
-  const listingSummaries = mapBuyHubListingsForSeo(listings)
-  const listingItems = listingSummaries
-    .map(
-      (listing) =>
-        `<li><a href="${escapeHtml(listing.href)}">${escapeHtml(listing.title)}</a></li>`,
-    )
-    .join('')
+  const listingHtml = renderLandingListingsHtml({
+    listings: selectBuyHubListings(listings),
+    emptyMessage: BUY_LISTINGS_EMPTY,
+  })
 
   const equipmentTypeItems = BUY_EQUIPMENT_TYPES.map(
     (category) =>
@@ -703,6 +713,11 @@ export function buildBuyUsedGymEquipmentSeoDocument({ listings = [] } = {}) {
     const name = meta?.displayName || slug
     return `<li><a href="${escapeHtml(getBrandPagePath(slug))}">${escapeHtml(name)}</a></li>`
   }).join('')
+
+  const locationItems = BUY_LOCATION_HUBS.map(
+    (hub) =>
+      `<li><a href="${escapeHtml(hub.to)}">${escapeHtml(hub.label)}</a> — ${escapeHtml(hub.description)}</li>`,
+  ).join('')
 
   const contextItems = BUY_CONTEXT_HUBS.map((hub) => {
     const children = (hub.children || [])
@@ -757,9 +772,7 @@ export function buildBuyUsedGymEquipmentSeoDocument({ listings = [] } = {}) {
     <p>${escapeHtml(BUY_LISTINGS_NOTE)}</p>
     <h2 id="seo-buy-listings-heading">${escapeHtml(BUY_LISTINGS_HEADING)}</h2>
     <p>${escapeHtml(BUY_LISTINGS_LEAD)}</p>
-    ${listingSummaries.length
-      ? `<ul>${listingItems}</ul>`
-      : `<p>${escapeHtml(BUY_LISTINGS_EMPTY)}</p>`}
+    ${listingHtml}
     <p><a href="${BROWSE_PATH}">${escapeHtml(BUY_LISTINGS_CTA)}</a></p>
   </section>
   <section aria-labelledby="seo-buy-journey-heading">
@@ -778,6 +791,12 @@ export function buildBuyUsedGymEquipmentSeoDocument({ listings = [] } = {}) {
     <h2 id="seo-buy-brands-heading">${escapeHtml(BUY_BRAND_HEADING)}</h2>
     <p>${escapeHtml(BUY_BRAND_LEAD)}</p>
     <ul>${brandItems}</ul>
+  </section>
+  <section aria-labelledby="seo-buy-locations-heading">
+    <p>${escapeHtml(BUY_LOCATION_NOTE)}</p>
+    <h2 id="seo-buy-locations-heading">${escapeHtml(BUY_LOCATION_HEADING)}</h2>
+    <p>${escapeHtml(BUY_LOCATION_LEAD)}</p>
+    <ul>${locationItems}</ul>
   </section>
   <section aria-labelledby="seo-buy-context-heading">
     <p>${escapeHtml(BUY_CONTEXT_NOTE)}</p>

@@ -52,6 +52,10 @@ import {
   BUY_LISTINGS_LIMIT,
   BUY_LISTINGS_LOADING_LABEL,
   BUY_LISTINGS_NOTE,
+  BUY_LOCATION_HEADING,
+  BUY_LOCATION_HUBS,
+  BUY_LOCATION_LEAD,
+  BUY_LOCATION_NOTE,
   BUY_USED_GYM_EQUIPMENT_EYEBROW,
   BUY_USED_GYM_EQUIPMENT_H1,
   BUY_USED_GYM_EQUIPMENT_LEAD,
@@ -579,6 +583,32 @@ export default function BuyUsedGymEquipmentPage() {
                     </span>
                   ))}
                 </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section
+        className="commercial-page__categories-section"
+        aria-labelledby="buy-locations-heading"
+      >
+        <div className="buy-page__visual-rail">
+          <header className="buy-page__intro">
+            <span className="buy-page__handwritten-note">{BUY_LOCATION_NOTE}</span>
+            <h2 id="buy-locations-heading" className="buy-page__h2">
+              {BUY_LOCATION_HEADING}
+            </h2>
+            <p className="buy-page__intro-lead">{BUY_LOCATION_LEAD}</p>
+          </header>
+          <ul className="commercial-page__category-grid">
+            {BUY_LOCATION_HUBS.map((hub) => (
+              <li key={hub.id}>
+                <Link to={hub.to} className="commercial-page__category-card">
+                  <p className="commercial-page__category-label">{hub.label}</p>
+                  <p className="commercial-page__category-copy">{hub.description}</p>
+                  <span className="commercial-page__category-cta">Browse →</span>
+                </Link>
               </li>
             ))}
           </ul>

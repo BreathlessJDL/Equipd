@@ -5,7 +5,7 @@ import ListingManageSection from '../components/listing/ListingManageSection'
 import SellerInventoryEditor from '../components/listing/SellerInventoryEditor'
 import '../components/ListingForm.css'
 import '../components/PageStub.css'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageMeta } from '../hooks/usePageMeta'
 import {
   getListingFulfilmentPrivateErrorMessage,
   fetchListingFulfilmentPrivate,
@@ -31,7 +31,12 @@ import {
 import { useAuth } from '../hooks/useAuth'
 
 function EditListingPage() {
-  usePageTitle('Edit Listing')
+  usePageMeta({
+    title: 'Edit Listing',
+    description: 'Edit your Equipd listing. This page is private to the seller.',
+    robotsContent: 'noindex, nofollow',
+    noIndex: true,
+  })
   const navigate = useNavigate()
   const { slug } = useParams()
   const { user } = useAuth()
@@ -49,7 +54,7 @@ function EditListingPage() {
   const [deletingListing, setDeletingListing] = useState(false)
 
   useEffect(() => {
-    if (!slug) return undefined
+    if (!slug || !user?.id) return undefined
 
     let active = true
 
@@ -113,7 +118,7 @@ function EditListingPage() {
     return () => {
       active = false
     }
-  }, [slug])
+  }, [slug, user?.id])
 
   function updateField(field, value) {
     if (field && typeof field === 'object' && !Array.isArray(field)) {

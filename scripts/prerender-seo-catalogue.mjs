@@ -50,6 +50,7 @@ import { buildAllEquipmentLandingSeoDocuments } from '../src/lib/equipmentLandin
 import { buildAllLocationPageSeoDocuments } from '../src/lib/locations.js'
 import { buildValuationSeoDocument } from '../src/lib/valuationPageSeo.js'
 import { buildBrowsePageSeoDocument } from '../src/lib/browsePageSeo.js'
+import { buildHomePageSeoDocument } from '../src/lib/homePageSeo.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 const PRODUCT_SELECT = [
@@ -387,7 +388,7 @@ async function main() {
     ...buildAllEquipmentLandingSeoDocuments({ listings: activeListings }),
     buildBrowsePageSeoDocument({ listings: activeListings }),
     buildValuationSeoDocument(),
-    ...buildAllLocationPageSeoDocuments(),
+    ...buildAllLocationPageSeoDocuments({ listings: activeListings }),
   ]
   console.log(`[prerender] Rendering ${staticMarketingPages.length} static marketing page(s)…`)
 
@@ -411,6 +412,24 @@ async function main() {
       errors.push({ path: document.path, message: error.message })
       console.error(`[prerender] Failed ${document.path}:`, error.message)
     }
+  }
+
+  const homeDocument = buildHomePageSeoDocument({ listings: activeListings })
+  try {
+    const html = injectSeoIntoHtml(templateHtml, homeDocument)
+    const outPath = join(distDir, 'index.html')
+    if (!args.dryRun) {
+      writeHtmlFile(outPath, html)
+    }
+    written.push({
+      path: '/',
+      type: 'marketing',
+      file: outPath,
+      title: homeDocument.title,
+    })
+  } catch (error) {
+    errors.push({ path: '/', message: error.message })
+    console.error('[prerender] Failed /:', error.message)
   }
 
   const manifest = {

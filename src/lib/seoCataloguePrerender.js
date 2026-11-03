@@ -565,7 +565,9 @@ export function injectSeoIntoHtml(templateHtml, document) {
     renderHeadLinks(document.headLinks),
     renderOpenGraphTags(document.openGraph || {}),
     renderJsonLd(document.jsonLd),
-    `<style id="equipd-seo-prerender-style">.seo-prerender{max-width:48rem;margin:1.5rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5;color:#111}.seo-prerender a{color:#0b57d0}.seo-prerender ul{padding-left:1.25rem}</style>`,
+    `<style id="equipd-seo-prerender-style">${document.crawlerOnlyBody
+      ? '.seo-prerender--crawler{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0;pointer-events:none}'
+      : '.seo-prerender{max-width:48rem;margin:1.5rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5;color:#111}.seo-prerender a{color:#0b57d0}.seo-prerender ul{padding-left:1.25rem}'}</style>`,
   ].filter(Boolean).join('\n    ')
 
   if (/<\/head>/i.test(html)) {
@@ -574,11 +576,14 @@ export function injectSeoIntoHtml(templateHtml, document) {
     html = `${headExtras}\n${html}`
   }
 
-  const rootWithBody = `<div id="root">${document.bodyHtml}</div>`
+  const emptyRoot = '<div id="root"></div>'
+  const rootReplacement = document.crawlerOnlyBody
+    ? `<div id="equipd-home-crawler-listings" class="seo-prerender seo-prerender--crawler" data-equipd-seo-prerender="home" aria-hidden="true">${document.bodyHtml}</div>${emptyRoot}`
+    : `<div id="root">${document.bodyHtml}</div>`
   if (/<div id="root"><\/div>/i.test(html)) {
-    html = html.replace(/<div id="root"><\/div>/i, rootWithBody)
+    html = html.replace(/<div id="root"><\/div>/i, rootReplacement)
   } else if (/<div id="root">[\s\S]*?<\/div>/i.test(html)) {
-    html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, rootWithBody)
+    html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, rootReplacement)
   } else {
     throw new Error('Could not find #root in index.html template')
   }

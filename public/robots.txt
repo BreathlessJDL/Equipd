@@ -53,6 +53,8 @@ Disallow: /my-listings
 Disallow: /saved-listings
 Disallow: /listings/new
 Disallow: /listings/*/edit
+Disallow: /edit-listing
+Disallow: /edit-listing/
 Disallow: /orders/
 Disallow: /login
 Disallow: /signup
