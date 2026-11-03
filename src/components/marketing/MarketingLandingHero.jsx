@@ -65,9 +65,11 @@ export default function MarketingLandingHero({
           <Link to={primaryCta.to} className="buy-page__btn buy-page__btn--primary">
             {primaryCta.label}
           </Link>
-          <Link to={secondaryCta.to} className="buy-page__btn buy-page__btn--secondary">
-            {secondaryCta.label}
-          </Link>
+          {secondaryCta?.to ? (
+            <Link to={secondaryCta.to} className="buy-page__btn buy-page__btn--secondary">
+              {secondaryCta.label}
+            </Link>
+          ) : null}
         </div>
 
         <div className="marketing-landing-hero__search">

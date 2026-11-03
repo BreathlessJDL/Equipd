@@ -203,6 +203,8 @@ const RAW_DEFS = [
     parentName: 'Commercial Strength Equipment',
     rating: C,
     categorySlugs: ['functional'],
+    // The `functional` category is broader than trainers (e.g. plyo boxes).
+    excludeTitleIncludes: ['plyo', 'plyometric', 'jump box', 'plyo box'],
     featuredBrandSlugs: brands(
       'life-fitness',
       'technogym',

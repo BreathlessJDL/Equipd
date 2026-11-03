@@ -53,7 +53,8 @@ export const COMMERCIAL_STRENGTH_CONTENT = Object.freeze(enrichLandingContentLin
   lead:
     'Buy and sell used commercial strength equipment across the UK through Equipd — plate-loaded and pin-loaded machines, racks, functional trainers, benches and free weights from gyms, dealers and refurbishers, with free valuation and Buyer Protection on eligible purchases.',
   primaryCta: { to: COMMERCIAL_STRENGTH_BROWSE_PATH, label: 'Browse Commercial Strength' },
-  secondaryCta: { to: VALUATION_PATH, label: 'Value Your Equipment' },
+  secondaryCta: { to: BUY_USED_GYM_EQUIPMENT_PATH, label: 'How buying works' },
+  valuationCta: { to: VALUATION_PATH, label: 'Get a Free Valuation' },
   searchLabel: 'Search commercial strength equipment',
   heroTrustItems: ['Buyer Protection', 'Secure payments', 'Commercial specialists'],
   listingFilter: { rating: 'full_commercial', categorySlugs: STRENGTH_CATEGORY_SLUGS },
@@ -385,6 +386,6 @@ export const COMMERCIAL_STRENGTH_CONTENT = Object.freeze(enrichLandingContentLin
   ],
 }, LINK_RULES.commercialStrength))
 
-export function buildCommercialStrengthEquipmentSeoDocument() {
-  return buildCategoryLandingSeoDocument(COMMERCIAL_STRENGTH_CONTENT)
+export function buildCommercialStrengthEquipmentSeoDocument({ listings = [] } = {}) {
+  return buildCategoryLandingSeoDocument(COMMERCIAL_STRENGTH_CONTENT, { listings })
 }

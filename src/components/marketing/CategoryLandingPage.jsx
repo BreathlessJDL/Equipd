@@ -11,6 +11,7 @@ import JsonLd from '../JsonLd'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { fetchBrandDirectory } from '../../lib/brandCatalogue'
 import { fetchActiveListings, fetchCategories } from '../../lib/listings'
+import { filterListingsForIntent } from '../../lib/landingListingSeo'
 import { faqItemsForSchema } from '../../lib/linkedCopy.js'
 import { CATEGORY_LISTINGS_FETCH_LIMIT } from '../../lib/oneRowListingCapacity'
 import {
@@ -25,48 +26,6 @@ import '../../pages/BuyUsedGymEquipmentPage.css'
 import '../../pages/CommercialGymEquipmentPage.css'
 
 const LISTINGS_LIMIT = CATEGORY_LISTINGS_FETCH_LIMIT
-
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-/**
- * Narrow marketplace rows for search-intent landings (e.g. Smith / Leg Press).
- * When searchIn is set, require the query to match title/brand/model (not description-only).
- */
-function filterListingsForIntent(rows, listingFilter = {}) {
-  let next = Array.isArray(rows) ? rows : []
-  const search = String(listingFilter.search || '').trim().toLowerCase()
-  const searchIn = listingFilter.searchIn
-
-  if (search && Array.isArray(searchIn) && searchIn.length > 0) {
-    const compact = search.replace(/\s+/g, '')
-    const wordBoundary =
-      !search.includes(' ') && compact === search
-        ? new RegExp(`\\b${escapeRegExp(search)}\\b`, 'i')
-        : null
-
-    next = next.filter((row) => {
-      const haystack = searchIn
-        .map((field) => String(row?.[field] || ''))
-        .join(' ')
-        .toLowerCase()
-      if (!haystack) return false
-      if (wordBoundary) return wordBoundary.test(haystack)
-      return haystack.includes(search) || haystack.replace(/\s+/g, '').includes(compact)
-    })
-  }
-
-  const excludeTitleIncludes = listingFilter.excludeTitleIncludes
-  if (Array.isArray(excludeTitleIncludes) && excludeTitleIncludes.length > 0) {
-    next = next.filter((row) => {
-      const title = String(row?.title || '').toLowerCase()
-      return !excludeTitleIncludes.some((needle) => title.includes(String(needle).toLowerCase()))
-    })
-  }
-
-  return next
-}
 
 function ValuationJourney({ steps }) {
   return (
@@ -123,7 +82,10 @@ export default function CategoryLandingPage({ content }) {
 
   const breadcrumbSchema = useMemo(() => buildCategoryLandingBreadcrumbSchema(content), [content])
   const webPageSchema = useMemo(() => buildCategoryLandingWebPageSchema(content), [content])
-  const collectionSchema = useMemo(() => buildCategoryLandingCollectionSchema(content), [content])
+  const collectionSchema = useMemo(
+    () => buildCategoryLandingCollectionSchema(content, listings),
+    [content, listings],
+  )
   const faqSchema = useMemo(
     () => buildCategoryLandingFaqSchema({
       ...content,
@@ -323,8 +285,11 @@ export default function CategoryLandingPage({ content }) {
               </h2>
               <LinkedCopy value={content.valuationCopy} className="buy-page__optional-copy" />
               <div className="buy-page__optional-actions buy-page__optional-actions--row">
-                <Link to={content.secondaryCta.to} className="buy-page__btn buy-page__btn--primary">
-                  Get a Free Valuation
+                <Link
+                  to={content.valuationCta?.to || '/valuation'}
+                  className="buy-page__btn buy-page__btn--primary"
+                >
+                  {content.valuationCta?.label || 'Get a Free Valuation'}
                 </Link>
                 <Link to={content.browsePath} className="buy-page__btn buy-page__btn--secondary">
                   {content.valuationSecondaryCtaLabel || content.listingsCta}

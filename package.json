@@ -16,6 +16,8 @@
     "prerender:seo": "node scripts/prerender-seo-catalogue.mjs",
     "inject:site-schema": "node scripts/inject-site-structured-data.mjs",
     "test:seo-prerender": "node scripts/test-seo-catalogue-prerender.mjs",
+    "test:browse-page-seo": "node scripts/test-browse-page-seo.mjs",
+    "test:landing-listing-seo": "node scripts/test-landing-listing-seo.mjs",
     "test:sell-gym-equipment-page": "node scripts/test-sell-gym-equipment-page.mjs",
     "test:buy-used-gym-equipment-page": "node scripts/test-buy-used-gym-equipment-page.mjs",
     "generate:buy-used-gym-equipment-assets": "node scripts/generate-buy-used-gym-equipment-assets.mjs",

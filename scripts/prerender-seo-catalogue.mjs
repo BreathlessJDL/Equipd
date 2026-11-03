@@ -49,6 +49,7 @@ import { buildRefurbishedHomeGymEquipmentSeoDocument } from '../src/lib/refurbis
 import { buildAllEquipmentLandingSeoDocuments } from '../src/lib/equipmentLandingPages.js'
 import { buildAllLocationPageSeoDocuments } from '../src/lib/locations.js'
 import { buildValuationSeoDocument } from '../src/lib/valuationPageSeo.js'
+import { buildBrowsePageSeoDocument } from '../src/lib/browsePageSeo.js'
 import { getSupabaseEnv, loadLocalEnv } from './lib/loadLocalEnv.mjs'
 
 const PRODUCT_SELECT = [
@@ -377,13 +378,14 @@ async function main() {
     buildBuyUsedGymEquipmentSeoDocument({ listings: activeListings }),
     buildCommercialGymEquipmentSeoDocument(),
     buildCommercialCardioEquipmentSeoDocument(),
-    buildCommercialStrengthEquipmentSeoDocument(),
+    buildCommercialStrengthEquipmentSeoDocument({ listings: activeListings }),
     buildHomeGymEquipmentSeoDocument(),
-    buildHomeCardioEquipmentSeoDocument(),
-    buildHomeStrengthEquipmentSeoDocument(),
+    buildHomeCardioEquipmentSeoDocument({ listings: activeListings }),
+    buildHomeStrengthEquipmentSeoDocument({ listings: activeListings }),
     buildRefurbishedCommercialGymEquipmentSeoDocument(),
     buildRefurbishedHomeGymEquipmentSeoDocument(),
-    ...buildAllEquipmentLandingSeoDocuments(),
+    ...buildAllEquipmentLandingSeoDocuments({ listings: activeListings }),
+    buildBrowsePageSeoDocument({ listings: activeListings }),
     buildValuationSeoDocument(),
     ...buildAllLocationPageSeoDocuments(),
   ]

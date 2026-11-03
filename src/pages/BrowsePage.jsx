@@ -15,15 +15,19 @@ import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
-import { DEFAULT_PAGE_DESCRIPTION } from '../lib/pageTitles'
+import {
+  BROWSE_PAGE_META_DESCRIPTION,
+  BROWSE_PAGE_META_TITLE,
+  BROWSE_PATH,
+} from '../lib/browsePageSeo'
 import { fetchCategories } from '../lib/listings'
 
 function BrowsePage() {
   usePageMeta({
-    title: 'Browse Used Gym Equipment for Sale',
-    description:
-      'Browse used gym equipment listed for sale across the UK on Equipd. Filter by brand, location and category to find home and commercial kit.',
-    canonicalPath: '/browse',
+    title: BROWSE_PAGE_META_TITLE,
+    description: BROWSE_PAGE_META_DESCRIPTION,
+    canonicalPath: BROWSE_PATH,
+    robotsContent: 'index, follow, max-image-preview:large',
   })
   const [searchParams, setSearchParams] = useSearchParams()
   const resultsRef = useRef(null)

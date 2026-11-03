@@ -146,8 +146,12 @@ export function buildEquipmentLandingContent(def) {
       label: copy.midCtaLabel || `Browse ${copy.h1}`,
     }),
     secondaryCta: Object.freeze({
+      to: BUY_USED_GYM_EQUIPMENT_PATH,
+      label: 'How buying works',
+    }),
+    valuationCta: Object.freeze({
       to: VALUATION_PATH,
-      label: 'Value Your Equipment',
+      label: 'Get a Free Valuation',
     }),
     searchLabel: copy.searchLabel,
     heroTrustItems: copy.heroTrustItems,
@@ -213,9 +217,9 @@ export function getEquipmentLandingContent(idOrPath) {
   return def ? EQUIPMENT_LANDING_CONTENTS[def.id] : null
 }
 
-export function buildAllEquipmentLandingSeoDocuments() {
+export function buildAllEquipmentLandingSeoDocuments({ listings = [] } = {}) {
   return EQUIPMENT_LANDING_CONTENT_LIST.map((content) =>
-    buildCategoryLandingSeoDocument(content),
+    buildCategoryLandingSeoDocument(content, { listings }),
   )
 }
 

@@ -53,7 +53,8 @@ export const HOME_CARDIO_CONTENT = Object.freeze(enrichLandingContentLinks({
   lead:
     'Buy and sell used home cardio equipment across the UK on Equipd — folding treadmills, exercise bikes, cross trainers and rowers from private sellers and home gym upgraders, with free valuation and Buyer Protection on eligible purchases.',
   primaryCta: { to: HOME_CARDIO_BROWSE_PATH, label: 'Browse Home Cardio' },
-  secondaryCta: { to: VALUATION_PATH, label: 'Value Your Equipment' },
+  secondaryCta: { to: BUY_USED_GYM_EQUIPMENT_PATH, label: 'How buying works' },
+  valuationCta: { to: VALUATION_PATH, label: 'Get a Free Valuation' },
   searchLabel: 'Search home cardio equipment',
   heroTrustItems: ['Buyer Protection', 'Secure payments', 'Home gym specialists'],
   listingFilter: { rating: 'home_use', categorySlugs: HOME_CARDIO_CATEGORY_SLUGS },
@@ -385,6 +386,6 @@ export const HOME_CARDIO_CONTENT = Object.freeze(enrichLandingContentLinks({
   ],
 }, LINK_RULES.homeCardio))
 
-export function buildHomeCardioEquipmentSeoDocument() {
-  return buildCategoryLandingSeoDocument(HOME_CARDIO_CONTENT)
+export function buildHomeCardioEquipmentSeoDocument({ listings = [] } = {}) {
+  return buildCategoryLandingSeoDocument(HOME_CARDIO_CONTENT, { listings })
 }

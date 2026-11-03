@@ -11,6 +11,12 @@ import {
 } from './faqPageStructuredData.js'
 import { EQUIPD_ORGANIZATION_ID } from './siteStructuredData.js'
 import { BUY_USED_GYM_EQUIPMENT_OG_IMAGE } from './buyUsedGymEquipmentPage.js'
+import {
+  buildListingItemListElement,
+  renderLandingListingsHtml,
+  selectPublicLandingListings,
+} from './landingListingSeo.js'
+import { VALUATION_PATH } from './sellGymEquipmentPage.js'
 import { faqItemsForSchema, linkedCopyToHtml } from './linkedCopy.js'
 
 export function buildFeaturedBrands(slugs = [], directoryBrands = []) {
@@ -120,8 +126,19 @@ export function buildCategoryLandingWebPageSchema(content) {
   }
 }
 
-export function buildCategoryLandingCollectionSchema(content) {
+export function buildCategoryLandingCollectionSchema(content, listings = []) {
   const pageUrl = `${EQUIPD_SITE_ORIGIN}${content.path}`
+  const selected = selectPublicLandingListings(listings, content.listingFilter || {})
+  const listingItems = buildListingItemListElement(selected)
+  const itemListElement = listingItems.length
+    ? listingItems
+    : (content.categories || []).map((category, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: category.label,
+        url: `${EQUIPD_SITE_ORIGIN}${category.to}`,
+      }))
+
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -136,12 +153,7 @@ export function buildCategoryLandingCollectionSchema(content) {
     },
     mainEntity: {
       '@type': 'ItemList',
-      itemListElement: (content.categories || []).map((category, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: category.label,
-        url: `${EQUIPD_SITE_ORIGIN}${category.to}`,
-      })),
+      itemListElement,
     },
   }
 }
@@ -152,7 +164,7 @@ export function buildCategoryLandingFaqSchema(content) {
   })
 }
 
-export function buildCategoryLandingSeoDocument(content) {
+export function buildCategoryLandingSeoDocument(content, { listings = [] } = {}) {
   const categoryLinks = (content.categories || [])
     .map(
       (category) =>
@@ -194,6 +206,11 @@ export function buildCategoryLandingSeoDocument(content) {
   const faqHtml = renderFaqSectionHtml(content.faqItems || [])
   const { items: faqItems } = normalizeFaqItems(faqItemsForSchema(content.faqItems || []))
   const prerenderId = content.prerenderId || content.path.replace(/^\//, '')
+  const selectedListings = selectPublicLandingListings(listings, content.listingFilter || {})
+  const valuationHref = content.valuationCta?.to || VALUATION_PATH
+  const valuationLabel = content.valuationCta?.label || 'Get a free valuation'
+  const emptyMessage = content.listingsEmpty
+    || 'No matching listings are live right now. Browse all equipment or check back soon.'
 
   const crumbTrail = (content.breadcrumbs || [{ name: content.h1, item: content.path }])
     .map((crumb) => `<li><a href="${escapeHtml(crumb.item)}">${escapeHtml(crumb.name)}</a></li>`)
@@ -213,12 +230,15 @@ export function buildCategoryLandingSeoDocument(content) {
     <p>${linkedCopyToHtml(content.lead)}</p>
     <p>
       <a href="${escapeHtml(content.primaryCta.to)}">${escapeHtml(content.primaryCta.label)}</a>
-      · <a href="${escapeHtml(content.secondaryCta.to)}">${escapeHtml(content.secondaryCta.label)}</a>
+      ${content.secondaryCta?.to
+        ? ` · <a href="${escapeHtml(content.secondaryCta.to)}">${escapeHtml(content.secondaryCta.label)}</a>`
+        : ''}
     </p>
   </header>
   <section aria-labelledby="seo-listings-heading">
     <h2 id="seo-listings-heading">${escapeHtml(content.listingsHeading)}</h2>
     <p>${linkedCopyToHtml(content.listingsLead)}</p>
+    ${renderLandingListingsHtml({ listings: selectedListings, emptyMessage })}
     <p><a href="${escapeHtml(content.browsePath)}">${escapeHtml(content.listingsCta)}</a></p>
   </section>
   <section aria-labelledby="seo-categories-heading">
@@ -238,7 +258,7 @@ export function buildCategoryLandingSeoDocument(content) {
   <section aria-labelledby="seo-valuation-heading">
     <h2 id="seo-valuation-heading">${escapeHtml(content.valuationHeading)}</h2>
     <p>${linkedCopyToHtml(content.valuationCopy)}</p>
-    <p><a href="${escapeHtml(content.secondaryCta.to)}">Get a free valuation</a></p>
+    <p><a href="${escapeHtml(valuationHref)}">${escapeHtml(valuationLabel)}</a></p>
   </section>
   <section aria-labelledby="seo-guide-heading">
     <p>${escapeHtml(content.guideNote)}</p>
@@ -267,7 +287,7 @@ export function buildCategoryLandingSeoDocument(content) {
     jsonLd: [
       buildCategoryLandingBreadcrumbSchema(content),
       buildCategoryLandingWebPageSchema(content),
-      buildCategoryLandingCollectionSchema(content),
+      buildCategoryLandingCollectionSchema(content, listings),
       buildFaqPageSchemaNode(faqItems, {
         canonicalUrl: `${EQUIPD_SITE_ORIGIN}${content.path}`,
       }),

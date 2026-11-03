@@ -53,7 +53,8 @@ export const HOME_STRENGTH_CONTENT = Object.freeze(enrichLandingContentLinks({
   lead:
     'Buy and sell used home strength equipment across the UK on Equipd — dumbbells, benches, multi gyms, power racks and adjustable weights from home gym owners and upgraders, with free valuation and Buyer Protection on eligible purchases.',
   primaryCta: { to: HOME_STRENGTH_BROWSE_PATH, label: 'Browse Home Strength' },
-  secondaryCta: { to: VALUATION_PATH, label: 'Value Your Equipment' },
+  secondaryCta: { to: BUY_USED_GYM_EQUIPMENT_PATH, label: 'How buying works' },
+  valuationCta: { to: VALUATION_PATH, label: 'Get a Free Valuation' },
   searchLabel: 'Search home strength equipment',
   heroTrustItems: ['Buyer Protection', 'Secure payments', 'Home gym specialists'],
   listingFilter: { rating: 'home_use', categorySlugs: HOME_STRENGTH_CATEGORY_SLUGS },
@@ -385,6 +386,6 @@ export const HOME_STRENGTH_CONTENT = Object.freeze(enrichLandingContentLinks({
   ],
 }, LINK_RULES.homeStrength))
 
-export function buildHomeStrengthEquipmentSeoDocument() {
-  return buildCategoryLandingSeoDocument(HOME_STRENGTH_CONTENT)
+export function buildHomeStrengthEquipmentSeoDocument({ listings = [] } = {}) {
+  return buildCategoryLandingSeoDocument(HOME_STRENGTH_CONTENT, { listings })
 }
