@@ -16,10 +16,21 @@ const outDir = join(process.cwd(), 'reports', 'home-mobile-section-order')
 mkdirSync(outDir, { recursive: true })
 
 const css = readFileSync('src/components/home/HomePage.css', 'utf8')
+const homepageSource = readFileSync('src/pages/HomePage.jsx', 'utf8')
 assert.match(
   css,
   /@media \(max-width:\s*767px\)[\s\S]*\.home-page:not\(\.home-page--feed\)[\s\S]*\.home-recent[\s\S]*order:\s*2/,
   'mobile CSS keeps Recently Added after the hero',
+)
+assert.match(
+  homepageSource,
+  /Buy used commercial and home gym equipment from sellers across the UK/,
+  'browse lead remains in homepage markup for SEO',
+)
+assert.match(
+  css,
+  /\.home-browse__lead\s*\{[^}]*display:\s*none/,
+  'CSS hides the browse lead paragraph visually',
 )
 
 const browser = await chromium.launch({ headless: true, channel: 'msedge' })
@@ -36,6 +47,11 @@ async function measureOrder(page) {
     const recent = document.querySelector('.home-recent')
     const valuator = document.querySelector('.home-valuator')
     const browse = document.querySelector('.home-browse')
+    const lead = document.querySelector('.home-browse__lead')
+    const title = document.querySelector('.home-browse__title')
+    const filters = document.querySelector('.home-browse .listing-browse__filters')
+    const titleRect = title?.getBoundingClientRect()
+    const filtersRect = filters?.getBoundingClientRect()
     const tops = [hero, recent, browse]
       .filter(Boolean)
       .map((el) => ({
@@ -54,6 +70,12 @@ async function measureOrder(page) {
       hasValuator: Boolean(valuator),
       overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       hasFeedClass: document.querySelector('.home-page')?.classList.contains('home-page--feed') || false,
+      leadInDom: Boolean(lead),
+      leadDisplay: lead ? getComputedStyle(lead).display : null,
+      titleToFiltersGap:
+        titleRect && filtersRect
+          ? Math.round(filtersRect.top - titleRect.bottom)
+          : null,
     }
   })
 }
@@ -82,6 +104,12 @@ for (const viewport of [
   assert.equal(metrics.hasValuator, false, `${viewport.name}: standalone valuator is gone`)
   assert.equal(metrics.overflow, false, `${viewport.name}: no horizontal overflow`)
   assert.deepEqual(metrics.order, viewport.expect, `${viewport.name}: section order`)
+  assert.equal(metrics.leadInDom, true, `${viewport.name}: browse lead stays in the DOM`)
+  assert.equal(metrics.leadDisplay, 'none', `${viewport.name}: browse lead is hidden`)
+  assert.ok(
+    metrics.titleToFiltersGap >= 8 && metrics.titleToFiltersGap <= 32,
+    `${viewport.name}: filters sit close under the heading (gap ${metrics.titleToFiltersGap}px)`,
+  )
 
   await page.close()
 }
