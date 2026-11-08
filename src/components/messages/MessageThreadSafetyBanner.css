@@ -2,9 +2,10 @@
   flex-shrink: 0;
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 0.45rem;
   margin: 0;
-  padding: 0.55rem max(var(--space-md), env(safe-area-inset-right, 0px)) 0.55rem
+  max-height: 5.5rem;
+  padding: 0.45rem max(var(--space-md), env(safe-area-inset-right, 0px)) 0.45rem
     max(var(--space-md), env(safe-area-inset-left, 0px));
   border-top: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-bg) 72%, var(--color-surface));
@@ -33,9 +34,13 @@
 
 .message-thread-safety-banner__text {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.35;
   color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .message-thread-safety-banner__close {

@@ -3,14 +3,98 @@
  */
 
 export const BROWSE_RADIUS_UK_WIDE = 'uk'
+export const BROWSE_CURRENT_LOCATION_LABEL = 'Current location'
+export const BROWSE_LOCATION_SOURCE_BROWSER = 'browser'
+export const BROWSE_LOCATION_SOURCE_PLACE = 'place'
+
+export function isBrowserLocationLabel(label) {
+  return String(label ?? '').trim().toLowerCase() === 'current location'
+}
+
+export function isPrivateBrowserOrigin(place, locationSearch = '') {
+  if (place?.source === BROWSE_LOCATION_SOURCE_BROWSER) return true
+  return isBrowserLocationLabel(locationSearch || place?.displayLabel)
+}
+
+export function buildNamedLocationPlace(latitude, longitude, label, {
+  source = BROWSE_LOCATION_SOURCE_PLACE,
+} = {}) {
+  return {
+    displayLabel: label,
+    locationName: label,
+    city: null,
+    county: null,
+    postcode: null,
+    latitude,
+    longitude,
+    source,
+  }
+}
 
 export const BROWSE_RADIUS_OPTIONS = [
-  { value: BROWSE_RADIUS_UK_WIDE, label: 'UK wide' },
+  { value: BROWSE_RADIUS_UK_WIDE, label: 'Nationwide' },
+  { value: '5', label: '5 miles' },
   { value: '10', label: '10 miles' },
   { value: '25', label: '25 miles' },
   { value: '50', label: '50 miles' },
   { value: '100', label: '100 miles' },
+  { value: '200', label: '200 miles' },
 ]
+
+export const BROWSE_RADIUS_PRESETS = BROWSE_RADIUS_OPTIONS.filter(
+  (entry) => entry.value !== BROWSE_RADIUS_UK_WIDE,
+)
+
+export const BROWSE_RADIUS_SLIDER_MIN = 5
+export const BROWSE_RADIUS_SLIDER_MAX = 200
+export const BROWSE_RADIUS_SLIDER_STEP = 5
+export const BROWSE_RADIUS_SLIDER_PREVIEW_MILES = 25
+
+export function snapBrowseRadiusMiles(value) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return null
+
+  const snapped =
+    Math.round(parsed / BROWSE_RADIUS_SLIDER_STEP) * BROWSE_RADIUS_SLIDER_STEP
+
+  return Math.min(
+    BROWSE_RADIUS_SLIDER_MAX,
+    Math.max(BROWSE_RADIUS_SLIDER_MIN, snapped),
+  )
+}
+
+export function getBrowseRadiusSliderDisplayMiles(radiusMiles) {
+  const snapped = snapBrowseRadiusMiles(parseBrowseRadiusMiles(radiusMiles))
+  return snapped ?? BROWSE_RADIUS_SLIDER_PREVIEW_MILES
+}
+
+export function getBrowseRadiusSliderProgress(miles) {
+  const value = snapBrowseRadiusMiles(miles) ?? BROWSE_RADIUS_SLIDER_PREVIEW_MILES
+  return (
+    ((value - BROWSE_RADIUS_SLIDER_MIN) /
+      (BROWSE_RADIUS_SLIDER_MAX - BROWSE_RADIUS_SLIDER_MIN)) *
+    100
+  )
+}
+
+export function getBrowseRadiusLabel(radiusMiles, { nationwideLabel = 'Nationwide' } = {}) {
+  if (radiusMiles == null || radiusMiles === '' || radiusMiles === BROWSE_RADIUS_UK_WIDE) {
+    return nationwideLabel
+  }
+
+  const option = BROWSE_RADIUS_OPTIONS.find((entry) => entry.value === String(radiusMiles))
+  if (option) return option.label
+
+  const parsed = parseBrowseRadiusMiles(radiusMiles)
+  if (parsed == null) return nationwideLabel
+  return `${parsed} mile${parsed === 1 ? '' : 's'}`
+}
+
+export function getBrowseRadiusSliderIndex(radiusMiles) {
+  const value = radiusMiles == null || radiusMiles === '' ? BROWSE_RADIUS_UK_WIDE : String(radiusMiles)
+  const index = BROWSE_RADIUS_OPTIONS.findIndex((entry) => entry.value === value)
+  return index >= 0 ? index : 0
+}
 
 const EARTH_RADIUS_MILES = 3958.7613
 
@@ -134,16 +218,28 @@ export function parseBrowseLocationFromSearchParams(searchParams) {
     radiusMilesValue == null ? BROWSE_RADIUS_UK_WIDE : String(radiusMilesValue)
 
   const hasCoordinates = Number.isFinite(lat) && Number.isFinite(lng)
+  const browserLabel = isBrowserLocationLabel(locationSearch)
+
+  let locationPlace = null
+  if (hasCoordinates) {
+    locationPlace = {
+      displayLabel: locationSearch || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+      latitude: lat,
+      longitude: lng,
+      source: browserLabel ? BROWSE_LOCATION_SOURCE_BROWSER : BROWSE_LOCATION_SOURCE_PLACE,
+    }
+  } else if (browserLabel) {
+    locationPlace = {
+      displayLabel: locationSearch,
+      latitude: null,
+      longitude: null,
+      source: BROWSE_LOCATION_SOURCE_BROWSER,
+    }
+  }
 
   return {
     locationSearch,
-    locationPlace: hasCoordinates
-      ? {
-          displayLabel: locationSearch || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-          latitude: lat,
-          longitude: lng,
-        }
-      : null,
+    locationPlace,
     radiusMiles,
     radiusMilesValue,
     buyerLatitude: hasCoordinates ? lat : null,
@@ -161,16 +257,22 @@ export function applyBrowseLocationToSearchParams(searchParams, {
   searchParams.delete('lng')
   searchParams.delete('radius')
 
-  if (locationPlace?.latitude != null && locationPlace?.longitude != null) {
-    const label = locationSearch || locationPlace.displayLabel
-    if (label) searchParams.set('location', label)
-    searchParams.set('lat', String(locationPlace.latitude))
-    searchParams.set('lng', String(locationPlace.longitude))
+  const label = locationSearch || locationPlace?.displayLabel
+  const hasCoordinates = locationPlace?.latitude != null && locationPlace?.longitude != null
 
-    const parsedRadius = parseBrowseRadiusMiles(radiusMiles)
-    if (parsedRadius != null) {
-      searchParams.set('radius', String(parsedRadius))
+  if (hasCoordinates) {
+    if (label) searchParams.set('location', label)
+    if (!isPrivateBrowserOrigin(locationPlace, locationSearch)) {
+      searchParams.set('lat', String(locationPlace.latitude))
+      searchParams.set('lng', String(locationPlace.longitude))
     }
+  } else if (isPrivateBrowserOrigin(locationPlace, locationSearch) && label) {
+    searchParams.set('location', label)
+  }
+
+  const parsedRadius = parseBrowseRadiusMiles(radiusMiles)
+  if (parsedRadius != null) {
+    searchParams.set('radius', String(parsedRadius))
   }
 
   return searchParams

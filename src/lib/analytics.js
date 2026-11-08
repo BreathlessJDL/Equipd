@@ -12,6 +12,10 @@
  * with the G- ID (that URL 404s).
  */
 
+import { sanitizeAnalyticsPagePath } from './analyticsPagePath.js'
+
+export { sanitizeAnalyticsPagePath }
+
 const viteEnv = import.meta.env ?? {}
 
 const initializedProviders = new Set()
@@ -180,7 +184,9 @@ function initGoogleAnalytics() {
 export function trackPageView(pagePath) {
   if (!isGoogleAnalyticsReady()) return false
 
-  const path = pagePath || `${window.location.pathname}${window.location.search}`
+  const path = sanitizeAnalyticsPagePath(
+    pagePath || `${window.location.pathname}${window.location.search}`,
+  )
   const ga4MeasurementId = getGa4MeasurementId()
   window.gtag('event', 'page_view', {
     send_to: ga4MeasurementId,

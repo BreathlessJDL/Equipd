@@ -8,7 +8,11 @@ import {
   RESERVED_EQUIPD_IDENTITY_ERROR,
   validatePublicIdentityName,
 } from '../src/lib/reservedEquipdIdentity.js'
-import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../src/lib/marketplaceMessageValidation.js'
+import {
+  MARKETPLACE_CONVERSATION_SAFETY_NOTE,
+  MARKETPLACE_CONVERSATION_SAFETY_TITLE,
+  MARKETPLACE_MESSAGE_SAFETY_NOTE,
+} from '../src/lib/marketplaceMessageValidation.js'
 
 const root = process.cwd()
 const migration = readFileSync(
@@ -94,6 +98,9 @@ assert.match(migration, /admin_list_reserved_equipd_identity_conflicts/)
 assert.match(migration, /wanted_requests/)
 assert.match(migration, /You''ve started several new conversations recently/)
 assert.match(MARKETPLACE_MESSAGE_SAFETY_NOTE, /QR code/)
+assert.equal(MARKETPLACE_CONVERSATION_SAFETY_TITLE, 'Stay safe on Equipd')
+assert.match(MARKETPLACE_CONVERSATION_SAFETY_NOTE, /suspicious messages/)
+assert.match(MARKETPLACE_CONVERSATION_SAFETY_NOTE, /never ask you to make payments through messages/)
 
 assert.ok(existsSync(join(root, 'supabase/functions/upload-profile-image/index.ts')))
 assert.ok(existsSync(join(root, 'supabase/functions/admin-moderate-user/index.ts')))

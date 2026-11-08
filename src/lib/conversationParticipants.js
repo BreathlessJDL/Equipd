@@ -61,6 +61,18 @@ export function getConversationOtherPartyName(conversation, userId) {
   return getConversationParticipantLabel(otherParty) || PUBLIC_USER_NAME_FALLBACK
 }
 
+export function getConversationParticipantLine(conversation, userId) {
+  const otherParty = getConversationOtherPartyProfile(conversation, userId)
+
+  if (!otherParty) {
+    return getConversationOtherPartyId(conversation, userId) ? DELETED_ACCOUNT_DISPLAY_NAME : ''
+  }
+
+  if (isAnonymisedPublicIdentity(otherParty)) return DELETED_ACCOUNT_DISPLAY_NAME
+
+  return getConversationParticipantLabel(otherParty) || PUBLIC_USER_NAME_FALLBACK
+}
+
 export function getConversationViewerRoleLabel(conversation, userId) {
   if (!conversation || !userId) return ''
 

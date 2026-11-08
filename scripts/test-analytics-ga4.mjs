@@ -11,6 +11,7 @@ import assert from 'node:assert/strict'
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { sanitizeAnalyticsPagePath } from '../src/lib/analyticsPagePath.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const analyticsSource = readFileSync(join(root, 'src/lib/analytics.js'), 'utf8')
@@ -73,6 +74,19 @@ check('separates script loader ID from GA4 destination ID', () => {
 check('send_page_view disabled on config', () => {
   if (!/send_page_view:\s*false/.test(analyticsSource)) {
     throw new Error('GA config must set send_page_view: false')
+  }
+})
+
+check('strips lat/lng from GA4 page paths', () => {
+  if (!analyticsSource.includes('sanitizeAnalyticsPagePath')) {
+    throw new Error('trackPageView must sanitize page paths before sending to GA4')
+  }
+  const stripped = sanitizeAnalyticsPagePath('/browse?location=Current+location&lat=53.8&lng=-1.5&radius=25')
+  if (stripped !== '/browse?location=Current+location&radius=25') {
+    throw new Error(`Expected stripped browse path, got ${stripped}`)
+  }
+  if (sanitizeAnalyticsPagePath('/browse?search=rower') !== '/browse?search=rower') {
+    throw new Error('Non-coordinate query params must be preserved')
   }
 })
 
@@ -150,6 +164,10 @@ function installDomStub() {
 
 async function loadAnalyticsModule({ prod = true, enableAnalytics = false } = {}) {
   mkdirSync(tmpDir, { recursive: true })
+  writeFileSync(
+    join(tmpDir, 'analyticsPagePath.js'),
+    readFileSync(join(root, 'src', 'lib', 'analyticsPagePath.js'), 'utf8'),
+  )
   const outfile = join(tmpDir, `analytics-${prod ? 'prod' : 'dev'}-${enableAnalytics}.mjs`)
 
   const envLiteral = JSON.stringify({

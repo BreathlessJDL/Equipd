@@ -8,8 +8,10 @@
 
 import {
   applyBrowseFiltersToSearchParams,
+  BROWSE_RADIUS_EMPTY_MESSAGE,
   buildBrowseActiveFilterChips,
   buildBrowseQueryOptions,
+  getBrowseFilterEmptyMessage,
   hasActiveBrowseFilters,
   parseBrowseFiltersFromSearchParams,
   removeBrowseFilterKey,
@@ -87,6 +89,16 @@ const ukWide = filterListingsByRadius([withCoords, withoutCoords], 53.8, -1.55, 
 const radiusOnly = filterListingsByRadius([withCoords, withoutCoords], 53.8, -1.55, 25)
 assert(ukWide.length === 2, 'UK wide keeps listings without coordinates')
 assert(radiusOnly.length === 1, 'Radius search excludes listings without coordinates')
+
+assert(
+  getBrowseFilterEmptyMessage(parsed) === BROWSE_RADIUS_EMPTY_MESSAGE,
+  'Radius search uses a distance empty state',
+)
+assert(
+  getBrowseFilterEmptyMessage(parseBrowseFiltersFromSearchParams(new URLSearchParams(), categories))
+    !== BROWSE_RADIUS_EMPTY_MESSAGE,
+  'Nationwide empty state is not the radius empty state',
+)
 
 logPass('Coordinate fallback rules preserved')
 

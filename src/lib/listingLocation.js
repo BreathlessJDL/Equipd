@@ -407,6 +407,44 @@ export function loadGoogleMapsPlaces() {
 }
 
 export const GOOGLE_PLACES_PAC_HIDDEN_CLASS = 'equipd-pac-hidden'
+export const GOOGLE_PLACES_PAC_CONTAINER_SELECTOR = '.pac-container'
+
+function getEventPath(event) {
+  if (!event) return []
+
+  if (typeof event.composedPath === 'function') {
+    try {
+      const path = event.composedPath()
+      if (Array.isArray(path) && path.length > 0) return path
+    } catch {
+      // Some synthetic events throw or return an empty path.
+    }
+  }
+
+  const path = []
+  let node = event.target
+  while (node) {
+    path.push(node)
+    node = node.parentElement || node.parentNode
+  }
+  return path
+}
+
+/**
+ * Google Places Autocomplete appends `.pac-container` to document.body.
+ * Parent popovers must treat interaction with that dropdown as inside the
+ * location field, or mousedown-outside handlers unmount the input before
+ * `place_changed` can fire.
+ */
+export function isEventFromGooglePlacesAutocomplete(event) {
+  return getEventPath(event).some((node) => {
+    if (!node) return false
+    if (typeof node.closest === 'function' && node.closest(GOOGLE_PLACES_PAC_CONTAINER_SELECTOR)) {
+      return true
+    }
+    return node.classList?.contains?.('pac-container') === true
+  })
+}
 
 const PAC_INPUT_PROXIMITY_THRESHOLD_PX = 240
 

@@ -4,7 +4,10 @@ import {
   dismissConversationSafetyBanner,
   isConversationSafetyBannerDismissed,
 } from '../../lib/conversationSafetyBannerPreference'
-import { MARKETPLACE_MESSAGE_SAFETY_NOTE } from '../../lib/marketplaceMessageValidation'
+import {
+  MARKETPLACE_CONVERSATION_SAFETY_NOTE,
+  MARKETPLACE_CONVERSATION_SAFETY_TITLE,
+} from '../../lib/marketplaceMessageValidation'
 import './MessageThreadSafetyBanner.css'
 
 function SafetyShieldIcon() {
@@ -46,8 +49,8 @@ function MessageThreadSafetyBanner({ conversationId = null, userId = null, onDis
     <div className="message-thread-safety-banner" role="note">
       <SafetyShieldIcon />
       <div className="message-thread-safety-banner__copy">
-        <p className="message-thread-safety-banner__title">Keep payments on Equipd</p>
-        <p className="message-thread-safety-banner__text">{MARKETPLACE_MESSAGE_SAFETY_NOTE}</p>
+        <p className="message-thread-safety-banner__title">{MARKETPLACE_CONVERSATION_SAFETY_TITLE}</p>
+        <p className="message-thread-safety-banner__text">{MARKETPLACE_CONVERSATION_SAFETY_NOTE}</p>
       </div>
       <button
         type="button"

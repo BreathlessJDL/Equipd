@@ -12,10 +12,18 @@ import {
 import {
   BROWSE_GEO_STATUS,
   buildCurrentLocationPlace,
+  clearStoredBrowseBrowserOrigin,
   setBrowseGeolocationStatus,
-  shouldAutoPromptBrowseGeolocation,
+  setStoredBrowseBrowserOrigin,
 } from '../lib/browseGeolocation'
-import { BROWSE_RADIUS_UK_WIDE, parseBrowseRadiusMiles } from '../lib/listingDistance'
+import {
+  BROWSE_LOCATION_SOURCE_BROWSER,
+  BROWSE_LOCATION_SOURCE_PLACE,
+  BROWSE_RADIUS_UK_WIDE,
+  isBrowseRadiusSearchActive,
+  isValidCoordinate,
+  parseBrowseRadiusMiles,
+} from '../lib/listingDistance'
 import { DEFAULT_LISTING_SORT } from '../lib/listingSort'
 
 function arraysEqual(left = [], right = []) {
@@ -72,7 +80,8 @@ export function useBrowseFilters(
   const [draft, setDraft] = useState(urlFilters)
   const [debouncedDraft, setDebouncedDraft] = useState(urlFilters)
   const [geolocationMessage, setGeolocationMessage] = useState('')
-  const geolocationPromptStartedRef = useRef(false)
+  const [locationPromptOpen, setLocationPromptOpen] = useState(false)
+  const [locatingCurrent, setLocatingCurrent] = useState(false)
 
   useEffect(() => {
     if (!categoriesReady) return
@@ -145,49 +154,70 @@ export function useBrowseFilters(
   }, [])
 
   const applyCurrentLocation = useCallback(
-    (latitude, longitude) => {
-      syncDraft((current) => {
-        const useDefaultRadius = current.radiusMiles === BROWSE_RADIUS_UK_WIDE
-        const nextRadiusMiles = useDefaultRadius ? '25' : current.radiusMiles
-
-        return {
-          ...current,
-          locationSearch: 'Current location',
-          locationPlace: buildCurrentLocationPlace(latitude, longitude),
-          buyerLatitude: latitude,
-          buyerLongitude: longitude,
-          radiusMiles: nextRadiusMiles,
-          radiusMilesValue: parseBrowseRadiusMiles(nextRadiusMiles),
-        }
-      })
+    (latitude, longitude, { label = 'Current location' } = {}) => {
+      setStoredBrowseBrowserOrigin(latitude, longitude)
+      syncDraft((current) => ({
+        ...current,
+        locationSearch: label,
+        locationPlace: {
+          ...buildCurrentLocationPlace(latitude, longitude),
+          displayLabel: label,
+          locationName: label,
+        },
+        buyerLatitude: latitude,
+        buyerLongitude: longitude,
+      }))
     },
     [syncDraft],
   )
 
-  useEffect(() => {
-    if (!categoriesReady) return
-    if (geolocationPromptStartedRef.current) return
-    if (!shouldAutoPromptBrowseGeolocation(searchParams)) return
-    if (!navigator.geolocation) return
+  const hasDraftOrigin = useCallback((current) => {
+    return isValidCoordinate(current?.buyerLatitude) && isValidCoordinate(current?.buyerLongitude)
+  }, [])
 
-    geolocationPromptStartedRef.current = true
-    setBrowseGeolocationStatus(BROWSE_GEO_STATUS.PROMPTED)
+  const requestCurrentLocation = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGeolocationMessage('Location is unavailable. Enter a town or postcode instead.')
+      return
+    }
+
+    setLocatingCurrent(true)
+    setGeolocationMessage('')
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setBrowseGeolocationStatus(BROWSE_GEO_STATUS.GRANTED)
         setGeolocationMessage('')
+        setLocatingCurrent(false)
         applyCurrentLocation(position.coords.latitude, position.coords.longitude)
+        setLocationPromptOpen(false)
       },
       () => {
         setBrowseGeolocationStatus(BROWSE_GEO_STATUS.DENIED)
+        setLocatingCurrent(false)
         setGeolocationMessage(
-          'Location access was denied. You can search by town or postcode instead.',
+          'Location access was denied. Enter a town or postcode instead.',
         )
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     )
-  }, [applyCurrentLocation, categoriesReady, searchParams])
+  }, [applyCurrentLocation])
+
+  const dismissLocationPrompt = useCallback(
+    ({ keepNationwide = true } = {}) => {
+      setLocationPromptOpen(false)
+      if (!keepNationwide) return
+      syncDraft((current) => {
+        if (hasDraftOrigin(current)) return current
+        return {
+          ...current,
+          radiusMiles: BROWSE_RADIUS_UK_WIDE,
+          radiusMilesValue: null,
+        }
+      })
+    },
+    [hasDraftOrigin, syncDraft],
+  )
 
   const updateField = useCallback(
     (field, value) => {
@@ -199,14 +229,13 @@ export function useBrowseFilters(
   const handleLocationSearchChange = useCallback(
     (value) => {
       setGeolocationMessage('')
+      clearStoredBrowseBrowserOrigin()
       syncDraft((current) => ({
         ...current,
         locationSearch: value,
         locationPlace: null,
         buyerLatitude: null,
         buyerLongitude: null,
-        radiusMiles: BROWSE_RADIUS_UK_WIDE,
-        radiusMilesValue: null,
       }))
     },
     [syncDraft],
@@ -215,9 +244,17 @@ export function useBrowseFilters(
   const handleLocationPlaceSelected = useCallback(
     (place) => {
       setGeolocationMessage('')
+      if (place?.latitude != null && place?.longitude != null) {
+        setLocationPromptOpen(false)
+      }
+      if (place?.source !== BROWSE_LOCATION_SOURCE_BROWSER) {
+        clearStoredBrowseBrowserOrigin()
+      }
       syncDraft((current) => ({
         ...current,
-        locationPlace: place,
+        locationPlace: place
+          ? { ...place, source: place.source || BROWSE_LOCATION_SOURCE_PLACE }
+          : null,
         locationSearch: place?.displayLabel ?? current.locationSearch,
         buyerLatitude: place?.latitude ?? null,
         buyerLongitude: place?.longitude ?? null,
@@ -229,12 +266,32 @@ export function useBrowseFilters(
 
   const handleRadiusChange = useCallback(
     (value) => {
-      syncDraft({
-        radiusMiles: value,
-        radiusMilesValue: parseBrowseRadiusMiles(value),
+      const parsed = parseBrowseRadiusMiles(value)
+
+      syncDraft((current) => {
+        const next = {
+          ...current,
+          radiusMiles: value,
+          radiusMilesValue: parsed,
+        }
+
+        if (!isBrowseRadiusSearchActive(parsed) && hubSearch) {
+          clearStoredBrowseBrowserOrigin()
+          return {
+            ...next,
+            locationSearch: '',
+            locationPlace: null,
+            buyerLatitude: null,
+            buyerLongitude: null,
+          }
+        }
+
+        return next
       })
+
+      setLocationPromptOpen(false)
     },
-    [syncDraft],
+    [hubSearch, syncDraft],
   )
 
   const handleSortChange = useCallback(
@@ -245,6 +302,7 @@ export function useBrowseFilters(
   )
 
   const resetFilters = useCallback(() => {
+    clearStoredBrowseBrowserOrigin()
     const cleared = parseBrowseFiltersFromSearchParams(new URLSearchParams(), categories)
     setDraft(cleared)
     setDebouncedDraft(cleared)
@@ -417,9 +475,24 @@ export function useBrowseFilters(
 
   const removeFilterChip = useCallback(
     (removeKey, removeValue) => {
-      flushDraftUpdate((current) => removeBrowseFilterKey(current, removeKey, removeValue))
+      if (removeKey === 'location' || (removeKey === 'radius' && hubSearch)) {
+        clearStoredBrowseBrowserOrigin()
+      }
+      flushDraftUpdate((current) => {
+        const next = removeBrowseFilterKey(current, removeKey, removeValue)
+        if (removeKey === 'radius' && hubSearch) {
+          return {
+            ...next,
+            locationSearch: '',
+            locationPlace: null,
+            buyerLatitude: null,
+            buyerLongitude: null,
+          }
+        }
+        return next
+      })
     },
-    [flushDraftUpdate],
+    [flushDraftUpdate, hubSearch],
   )
 
   const applyNavSelection = useCallback(
@@ -475,10 +548,14 @@ export function useBrowseFilters(
     sortNotice,
     panelFilterCount,
     geolocationMessage,
+    locatingCurrent,
+    locationPromptOpen,
     updateField,
     handleLocationSearchChange,
     handleLocationPlaceSelected,
     handleRadiusChange,
+    requestCurrentLocation,
+    dismissLocationPrompt,
     handleSortChange,
     resetFilters,
     removeFilterChip,

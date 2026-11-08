@@ -6,23 +6,24 @@ import { enrichOfferWithOrder, fetchOrdersByOfferIds } from './orders'
 import {
   buildAvatarProfile,
   fetchPublicProfilesByIds,
-  getProfileDisplayName,
 } from './profiles'
 import {
   getConversationOtherPartyId,
   getConversationOtherPartyName,
   getConversationOtherPartyProfile,
-  getConversationParticipantLabel,
+  getConversationParticipantLine,
   getConversationViewerRoleLabel,
   sameParticipantId,
 } from './conversationParticipants'
-import { formatNotificationRelativeTime } from './notificationPresentation'
+import { formatConversationListTime } from './conversationListPresentation'
 import { normalizeMessageAttachments } from './messageAttachments'
 
 export {
+  formatConversationListTime,
   getConversationOtherPartyId,
   getConversationOtherPartyName,
   getConversationOtherPartyProfile,
+  getConversationParticipantLine,
   getConversationViewerRoleLabel,
 }
 
@@ -368,28 +369,6 @@ export function getConversationOtherPartyAvatarProfile(conversation, userId) {
   return buildAvatarProfile({ id: otherPartyId, display_name: 'Deleted account' })
 }
 
-export function getConversationParticipantLine(conversation, userId) {
-  const otherParty = getConversationOtherPartyProfile(conversation, userId)
-
-  if (!otherParty) {
-    return getConversationOtherPartyId(conversation, userId) ? 'Deleted account' : ''
-  }
-
-  const name = getConversationParticipantLabel(otherParty) || getProfileDisplayName(otherParty)
-
-  if (!name) return ''
-
-  if (sameParticipantId(conversation.buyer_id, userId)) {
-    return `Seller · ${name}`
-  }
-
-  if (sameParticipantId(conversation.seller_id, userId)) {
-    return `Buyer · ${name}`
-  }
-
-  return name
-}
-
 export function getConversationMessagePreview(message) {
   if (!message) return ''
 
@@ -408,7 +387,7 @@ export function getConversationMessagePreview(message) {
     const photoLabel = attachmentCount === 1 ? 'Photo' : `${attachmentCount} photos`
 
     if (body) {
-      return body
+      return body.replace(/\s+/g, ' ')
     }
 
     return photoLabel
@@ -416,11 +395,7 @@ export function getConversationMessagePreview(message) {
 
   if (!body) return ''
 
-  return body
-}
-
-export function formatConversationListTime(value) {
-  return formatNotificationRelativeTime(value)
+  return body.replace(/\s+/g, ' ')
 }
 
 async function enrichMessagesWithOfferListings(messages, conversation) {

@@ -1,0 +1,294 @@
+.browse-distance-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  min-width: 16.5rem;
+  padding: 0.15rem 0.1rem 0.25rem;
+}
+
+.browse-distance-filter--compact {
+  min-width: 0;
+  padding: 1rem 1rem 1.25rem;
+  gap: 1.5rem;
+}
+
+.browse-distance-filter__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.browse-distance-filter__heading {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--color-navy);
+}
+
+.browse-distance-filter__copy {
+  margin: -0.2rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.browse-distance-filter__location-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.browse-distance-filter__choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.browse-distance-filter__choice:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.browse-distance-filter__choice:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.browse-distance-filter__choice--current {
+  border: none;
+  background: var(--color-orange);
+  color: #fff;
+}
+
+.browse-distance-filter__choice--current:hover {
+  background: var(--color-orange-hover);
+}
+
+.browse-distance-filter__choice--town {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-navy);
+}
+
+.browse-distance-filter__choice-icon,
+.browse-distance-filter__town-icon,
+.browse-distance-filter__selected-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: inherit;
+}
+
+.browse-distance-filter__choice-icon svg,
+.browse-distance-filter__town-icon svg,
+.browse-distance-filter__selected-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.browse-distance-filter__town-field {
+  position: relative;
+}
+
+.browse-distance-filter__town-icon {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.95rem;
+  z-index: 1;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+.browse-distance-filter__town-field .browse-location-search__input {
+  min-height: 3rem;
+  padding-left: 2.5rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+}
+
+.browse-distance-filter__status {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.browse-distance-filter__selected {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 3.35rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.15rem;
+  background: var(--color-surface);
+}
+
+.browse-distance-filter__selected-icon {
+  color: var(--color-orange);
+}
+
+.browse-distance-filter__selected-name {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--color-navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.browse-distance-filter__change {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-navy);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.browse-distance-filter__change:hover,
+.browse-distance-filter__change:focus-visible {
+  color: var(--color-orange);
+}
+
+.browse-distance-filter__section--slider {
+  gap: 0.55rem;
+}
+
+.browse-distance-filter__slider-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.browse-distance-filter__slider-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.browse-distance-filter__slider-prefix {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.browse-distance-filter__slider-amount {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+}
+
+.browse-distance-filter__slider-amount strong {
+  margin-right: 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-navy);
+}
+
+.browse-distance-filter__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 0.28rem;
+  margin: 0.45rem 0 0.15rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--color-orange) 0 var(--slider-progress, 10.3%),
+    #d8dee6 var(--slider-progress, 10.3%) 100%
+  );
+  outline: none;
+}
+
+.browse-distance-filter__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--color-orange);
+  box-shadow: 0 1px 5px color-mix(in srgb, var(--color-navy) 22%, transparent);
+  cursor: pointer;
+}
+
+.browse-distance-filter__slider::-moz-range-thumb {
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--color-orange);
+  box-shadow: 0 1px 5px color-mix(in srgb, var(--color-navy) 22%, transparent);
+  cursor: pointer;
+}
+
+.browse-distance-filter__slider::-moz-range-track {
+  height: 0.28rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.browse-distance-filter__slider:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 45%, transparent);
+  outline-offset: 4px;
+}
+
+.browse-distance-filter__slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.browse-distance-filter__section--slider-disabled {
+  opacity: 0.48;
+}
+
+.browse-distance-filter__section--slider-disabled .browse-distance-filter__slider {
+  cursor: not-allowed;
+}
+
+@media (max-width: 374px) {
+  .browse-distance-filter--compact {
+    padding-inline: 0.85rem;
+  }
+
+  .browse-distance-filter__choice {
+    min-height: 2.85rem;
+    font-size: 0.875rem;
+  }
+
+  .browse-distance-filter__slider::-webkit-slider-thumb {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .browse-distance-filter__slider::-moz-range-thumb {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}

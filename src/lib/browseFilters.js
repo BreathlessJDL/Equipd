@@ -4,17 +4,101 @@
 
 import {
   applyBrowseLocationToSearchParams,
-  BROWSE_RADIUS_OPTIONS,
   BROWSE_RADIUS_UK_WIDE,
+  getBrowseRadiusLabel,
+  isBrowseRadiusSearchActive,
   isValidCoordinate,
   normalizeBuyerCoordinates,
   parseBrowseLocationFromSearchParams,
   parseBrowseRadiusMiles,
 } from './listingDistance.js'
+import { isEventFromGooglePlacesAutocomplete } from './listingLocation.js'
+import { hydrateBrowseLocationOrigin } from './browseGeolocation.js'
 import { BROWSE_SORT_OPTIONS, DEFAULT_LISTING_SORT, parseListingSort } from './listingSort.js'
 
 export const BROWSE_FILTER_EMPTY_MESSAGE =
   'No listings found. Try increasing your radius or clearing filters.'
+
+export const BROWSE_RADIUS_EMPTY_MESSAGE =
+  'No listings within this distance. Try a larger radius or search nationwide.'
+
+const BROWSE_FILTER_PORTAL_MENU_SELECTOR = '.browse-filter-pill__menu--portal'
+
+function eventPathIncludesRoot(event, rootElement) {
+  if (!rootElement) return false
+  if (typeof rootElement.contains === 'function' && event?.target && rootElement.contains(event.target)) {
+    return true
+  }
+
+  if (typeof event?.composedPath === 'function') {
+    try {
+      return event.composedPath().includes(rootElement)
+    } catch {
+      return false
+    }
+  }
+
+  return false
+}
+
+function eventPathMatchesSelector(event, selector) {
+  const className = selector.startsWith('.') ? selector.slice(1) : selector
+  const target = event?.target
+
+  if (typeof target?.closest === 'function' && target.closest(selector)) {
+    return true
+  }
+
+  if (typeof event?.composedPath === 'function') {
+    try {
+      return event.composedPath().some((node) => node?.classList?.contains?.(className))
+    } catch {
+      return false
+    }
+  }
+
+  return false
+}
+
+/**
+ * Desktop Distance (and other) filter pills close on document mousedown.
+ * Ignore the click when it is still inside the filter, a portaled menu, or
+ * Google's Places suggestion list (which is also portaled to document.body).
+ */
+export function shouldDismissBrowseFilterOnOutsidePointer(event, { rootElement } = {}) {
+  if (!event) return false
+  if (isEventFromGooglePlacesAutocomplete(event)) return false
+  if (eventPathIncludesRoot(event, rootElement)) return false
+  if (eventPathMatchesSelector(event, BROWSE_FILTER_PORTAL_MENU_SELECTOR)) return false
+  return true
+}
+
+export function getBrowseDistanceFilterProps(browse, { idleSummary = '', originFallbackLabel = '' } = {}) {
+  return {
+    locationSearch: browse.locationSearch,
+    locationPlace: browse.locationPlace,
+    onLocationSearchChange: browse.handleLocationSearchChange,
+    onLocationPlaceSelected: browse.handleLocationPlaceSelected,
+    radiusMiles: browse.radiusMiles,
+    onRadiusChange: browse.handleRadiusChange,
+    geolocationMessage: browse.geolocationMessage,
+    locatingCurrent: browse.locatingCurrent,
+    onRequestCurrentLocation: browse.requestCurrentLocation,
+    locationPromptOpen: browse.locationPromptOpen,
+    onDismissLocationPrompt: browse.dismissLocationPrompt,
+    idleSummary,
+    originFallbackLabel,
+  }
+}
+
+export function getBrowseFilterEmptyMessage(filters) {
+  const radiusMiles = filters?.radiusMilesValue ?? parseBrowseRadiusMiles(filters?.radiusMiles)
+  if (isBrowseRadiusSearchActive(radiusMiles)) {
+    return BROWSE_RADIUS_EMPTY_MESSAGE
+  }
+
+  return BROWSE_FILTER_EMPTY_MESSAGE
+}
 
 const BROWSE_PARAM_KEYS = [
   'search',
@@ -84,7 +168,7 @@ export function summarizeBrowseFilterValues(labels, { maxShown = 2, emptyLabel =
 }
 
 export function parseBrowseFiltersFromSearchParams(searchParams, categories = []) {
-  const location = parseBrowseLocationFromSearchParams(searchParams)
+  const location = hydrateBrowseLocationOrigin(parseBrowseLocationFromSearchParams(searchParams))
   const categorySlugs = parseRepeatedParam(searchParams, 'category')
   const categoryIds = categorySlugs
     .map((slug) => categories.find((category) => category.slug === slug)?.id)
@@ -196,6 +280,9 @@ export function buildBrowseQueryOptions(
   const conditions = normalizeStringArray(filters.conditions, filters.condition)
 
   let buyerCoordinates = resolveBrowseBuyerCoordinates(filters, profileCoordinates)
+  const userRadiusActive = isBrowseRadiusSearchActive(radiusMiles)
+  const userHasOrigin =
+    isValidCoordinate(buyerCoordinates.latitude) && isValidCoordinate(buyerCoordinates.longitude)
 
   if (hubSearch?.latitude != null && hubSearch?.longitude != null) {
     const hub = normalizeBuyerCoordinates({
@@ -203,10 +290,14 @@ export function buildBrowseQueryOptions(
       longitude: hubSearch.longitude,
     })
     if (hub) {
-      buyerCoordinates = hub
-      const hubRadius = Number(hubSearch.radiusMiles)
-      if (Number.isFinite(hubRadius) && hubRadius > 0) {
-        radiusMiles = hubRadius
+      if (!userRadiusActive) {
+        buyerCoordinates = hub
+        const hubRadius = Number(hubSearch.radiusMiles)
+        if (Number.isFinite(hubRadius) && hubRadius > 0) {
+          radiusMiles = hubRadius
+        }
+      } else if (!userHasOrigin) {
+        buyerCoordinates = hub
       }
     }
   }
@@ -239,9 +330,10 @@ export function resolveBrowseBuyerCoordinates(filters, profileCoordinates = null
     if (buyer) return buyer
   }
 
-  if (filters?.sort === 'nearest') {
-    const profileBuyer = normalizeBuyerCoordinates(profileCoordinates)
-    if (profileBuyer) return profileBuyer
+  const profileBuyer = normalizeBuyerCoordinates(profileCoordinates)
+
+  if (filters?.sort === 'nearest' && profileBuyer) {
+    return profileBuyer
   }
 
   return { latitude: null, longitude: null }
@@ -272,6 +364,7 @@ export function hasActiveBrowseFilters(filters) {
       filters.minPrice?.trim() ||
       filters.maxPrice?.trim() ||
       filters.buyerLatitude != null ||
+      isBrowseRadiusSearchActive(filters.radiusMilesValue ?? parseBrowseRadiusMiles(filters.radiusMiles)) ||
       (filters.sort && filters.sort !== DEFAULT_LISTING_SORT),
   )
 }
@@ -285,8 +378,7 @@ function getRatingLabel(value) {
 }
 
 function getRadiusLabel(radiusMiles) {
-  const option = BROWSE_RADIUS_OPTIONS.find((entry) => entry.value === radiusMiles)
-  return option?.label ?? radiusMiles
+  return getBrowseRadiusLabel(radiusMiles)
 }
 
 function getSortLabel(sort) {
@@ -473,6 +565,10 @@ export function countBrowsePanelFilters(filters) {
   count += normalizeStringArray(filters.brands, filters.brand).length
   if (filters.minPrice?.trim()) count += 1
   if (filters.maxPrice?.trim()) count += 1
+  if (filters.buyerLatitude != null && filters.buyerLongitude != null) count += 1
+  if (isBrowseRadiusSearchActive(filters.radiusMilesValue ?? parseBrowseRadiusMiles(filters.radiusMiles))) {
+    count += 1
+  }
 
   return count
 }

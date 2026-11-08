@@ -7,6 +7,11 @@ export const MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE =
 export const MARKETPLACE_MESSAGE_SAFETY_NOTE =
   'Stay safe on Equipd. Keep payments on Equipd. Equipd will never contact you through a standard user conversation asking you to scan a QR code, make a bank transfer, or pay a fee to verify your account.'
 
+export const MARKETPLACE_CONVERSATION_SAFETY_TITLE = 'Stay safe on Equipd'
+
+export const MARKETPLACE_CONVERSATION_SAFETY_NOTE =
+  'Be cautious of suspicious messages, links or requests for personal information. Equipd will never ask you to make payments through messages. Report anything suspicious and keep transactions within Equipd.'
+
 export const MESSAGE_CONTEXT_MAX_RECENT_MESSAGES = 5
 export const MESSAGE_CONTEXT_WINDOW_MINUTES = 10
 

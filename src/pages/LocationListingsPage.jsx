@@ -20,12 +20,14 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { trackEquipmentSearch } from '../lib/buyerConversionAnalytics'
 import { buildLocationPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
+import { getBrowseDistanceFilterProps } from '../lib/browseFilters'
 import { fetchCategories } from '../lib/listings'
 import {
   buildLocationPageMeta,
   getLocationHubSearch,
   getLocationPage,
   LOCATION_AREA_PARAM,
+  LOCATION_HUB_RADIUS_MILES,
   parseLocationAreaParam,
   resolveLocationView,
 } from '../lib/locations'
@@ -229,6 +231,10 @@ function LocationListingsPage({ locationSlug }) {
                   sortNotice={browse.sortNotice}
                   onApply={requestBrowseScroll}
                   onReset={handleResetFilters}
+                  {...getBrowseDistanceFilterProps(browse, {
+                    idleSummary: `Within ${LOCATION_HUB_RADIUS_MILES} miles of ${region.name}`,
+                    originFallbackLabel: region.name,
+                  })}
                 />
 
                 <BrowseActiveFilterChips

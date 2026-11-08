@@ -7,9 +7,19 @@
  */
 
 import {
+  applyBrowseLocationToSearchParams,
+  BROWSE_LOCATION_SOURCE_BROWSER,
+  BROWSE_RADIUS_OPTIONS,
+  BROWSE_RADIUS_PRESETS,
+  BROWSE_RADIUS_SLIDER_MAX,
+  BROWSE_RADIUS_SLIDER_MIN,
+  BROWSE_RADIUS_SLIDER_STEP,
   BROWSE_RADIUS_UK_WIDE,
+  getBrowseRadiusSliderDisplayMiles,
+  snapBrowseRadiusMiles,
   filterListingsByRadius,
   formatListingDistanceLabel,
+  getBrowseRadiusLabel,
   haversineDistanceMiles,
   isBrowseRadiusSearchActive,
   listingMatchesRadiusSearch,
@@ -39,8 +49,28 @@ logPass('Haversine distance between Leeds and Wakefield is about 10 miles')
 
 assert(parseBrowseRadiusMiles(BROWSE_RADIUS_UK_WIDE) === null, 'UK wide radius parses to null')
 assert(parseBrowseRadiusMiles('25') === 25, 'Numeric radius parses correctly')
+assert(parseBrowseRadiusMiles('5') === 5, '5 miles parses correctly')
+assert(parseBrowseRadiusMiles('200') === 200, '200 miles parses correctly')
 assert(isBrowseRadiusSearchActive(25), '25 miles is an active radius search')
 assert(!isBrowseRadiusSearchActive(null), 'UK wide is not a radius search')
+assert(getBrowseRadiusLabel(BROWSE_RADIUS_UK_WIDE) === 'Nationwide', 'Nationwide label')
+assert(
+  BROWSE_RADIUS_OPTIONS.map((entry) => entry.value).join(',') === 'uk,5,10,25,50,100,200',
+  'Radius options include 5–200 miles and nationwide',
+)
+assert(
+  BROWSE_RADIUS_PRESETS.map((entry) => entry.value).join(',') === '5,10,25,50,100,200',
+  'Distance presets are six explicit mile values with no nationwide default',
+)
+assert(BROWSE_RADIUS_SLIDER_MIN === 5, 'Slider minimum is 5 miles')
+assert(BROWSE_RADIUS_SLIDER_MAX === 200, 'Slider maximum is 200 miles')
+assert(BROWSE_RADIUS_SLIDER_STEP === 5, 'Slider steps in 5-mile increments')
+assert(snapBrowseRadiusMiles(23) === 25, 'Slider snaps 23 miles to 25')
+assert(snapBrowseRadiusMiles(7) === 5, 'Slider snaps 7 miles to 5')
+assert(snapBrowseRadiusMiles(198) === 200, 'Slider snaps 198 miles to 200')
+assert(getBrowseRadiusSliderDisplayMiles(BROWSE_RADIUS_UK_WIDE) === 25, 'Nationwide preview sits at 25 miles visually')
+assert(getBrowseRadiusSliderDisplayMiles('40') === 40, 'Committed 40-mile radius is shown on the slider')
+assert(getBrowseRadiusSliderDisplayMiles('12') === 10, 'Odd radius values snap to 5-mile increments')
 
 const withCoords = {
   id: 'a',
@@ -119,5 +149,37 @@ assert(
 )
 
 logPass('URL parsing and distance labels behave as expected')
+
+const townParams = applyBrowseLocationToSearchParams(new URLSearchParams(), {
+  locationSearch: 'Wakefield',
+  locationPlace: {
+    displayLabel: 'Wakefield',
+    latitude: wakefieldLat,
+    longitude: wakefieldLng,
+    source: 'place',
+  },
+  radiusMiles: '25',
+})
+assert(townParams.get('location') === 'Wakefield', 'Town search keeps the location label')
+assert(townParams.get('lat') === String(wakefieldLat), 'Town search keeps latitude in the URL')
+assert(townParams.get('lng') === String(wakefieldLng), 'Town search keeps longitude in the URL')
+assert(townParams.get('radius') === '25', 'Town search keeps the selected radius')
+
+const browserParams = applyBrowseLocationToSearchParams(new URLSearchParams(), {
+  locationSearch: 'Current location',
+  locationPlace: {
+    displayLabel: 'Current location',
+    latitude: leedsLat,
+    longitude: leedsLng,
+    source: BROWSE_LOCATION_SOURCE_BROWSER,
+  },
+  radiusMiles: '10',
+})
+assert(browserParams.get('location') === 'Current location', 'Browser origin keeps a coarse location label')
+assert(!browserParams.has('lat'), 'Browser origin does not write latitude to the URL')
+assert(!browserParams.has('lng'), 'Browser origin does not write longitude to the URL')
+assert(browserParams.get('radius') === '10', 'Browser origin still writes the selected radius')
+
+logPass('URL location privacy keeps town coordinates and omits precise browser coordinates')
 
 console.log('\nAll listing distance search checks passed.')

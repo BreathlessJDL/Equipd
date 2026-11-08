@@ -1,6 +1,13 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import BrowseDistanceFilter from './BrowseDistanceFilter'
 import { summarizeBrowseFilterValues } from '../../lib/browseFilters'
+import {
+  BROWSE_RADIUS_UK_WIDE,
+  getBrowseRadiusLabel,
+  isBrowseRadiusSearchActive,
+  parseBrowseRadiusMiles,
+} from '../../lib/listingDistance'
 
 const SORT_DISPLAY_LABELS = {
   newest: 'Newest first',
@@ -51,6 +58,17 @@ function BrowseMobileFilterDrawer({
   maxPrice,
   onMinPriceChange,
   onMaxPriceChange,
+  locationSearch = '',
+  locationPlace = null,
+  onLocationSearchChange,
+  onLocationPlaceSelected,
+  radiusMiles = BROWSE_RADIUS_UK_WIDE,
+  onRadiusChange,
+  geolocationMessage = '',
+  locatingCurrent = false,
+  onRequestCurrentLocation,
+  idleSummary = '',
+  originFallbackLabel = '',
 }) {
   const [screen, setScreen] = useState(null)
   const [brandSearch, setBrandSearch] = useState('')
@@ -58,6 +76,14 @@ function BrowseMobileFilterDrawer({
 
   const selectedSort = sortOptions.find((entry) => entry.value === sort) ?? sortOptions[0]
   const hasPriceFilter = Boolean(minPrice?.trim() || maxPrice?.trim())
+  const radiusValue = parseBrowseRadiusMiles(radiusMiles)
+  const hasRadiusFilter = isBrowseRadiusSearchActive(radiusValue)
+  const locationLabel = locationPlace?.displayLabel || locationSearch?.trim() || originFallbackLabel
+  const distanceSummary = hasRadiusFilter
+    ? locationLabel
+      ? `${getBrowseRadiusLabel(radiusMiles)} · ${locationLabel}`
+      : getBrowseRadiusLabel(radiusMiles)
+    : idleSummary || locationLabel || 'Nationwide'
 
   const sortSummary =
     SORT_DISPLAY_LABELS[selectedSort?.value] ?? selectedSort?.label ?? 'Newest first'
@@ -165,6 +191,11 @@ function BrowseMobileFilterDrawer({
         onMinPriceChange('')
         onMaxPriceChange('')
         break
+      case 'distance':
+        onRadiusChange?.(BROWSE_RADIUS_UK_WIDE)
+        onLocationSearchChange?.('')
+        onLocationPlaceSelected?.(null)
+        break
       default:
         break
     }
@@ -177,6 +208,12 @@ function BrowseMobileFilterDrawer({
       { id: 'brand', label: 'Brand', value: brandSummary, active: brands.length > 0 },
       { id: 'condition', label: 'Condition', value: conditionSummary, active: conditions.length > 0 },
       { id: 'price', label: 'Price', value: priceSummary, active: hasPriceFilter },
+      {
+        id: 'distance',
+        label: 'Distance',
+        value: distanceSummary,
+        active: hasRadiusFilter || Boolean(locationLabel),
+      },
     ]
 
     return (
@@ -338,6 +375,24 @@ function BrowseMobileFilterDrawer({
           </div>
         )
       }
+      case 'distance':
+        return (
+          <BrowseDistanceFilter
+            inputId={`${idPrefix}-distance`}
+            compact
+            locationSearch={locationSearch}
+            locationPlace={locationPlace}
+            onLocationSearchChange={onLocationSearchChange}
+            onLocationPlaceSelected={onLocationPlaceSelected}
+            radiusMiles={radiusMiles}
+            onRadiusChange={onRadiusChange}
+            geolocationMessage={geolocationMessage}
+            locatingCurrent={locatingCurrent}
+            onRequestCurrentLocation={onRequestCurrentLocation}
+            idleSummary={idleSummary}
+            originFallbackLabel={originFallbackLabel}
+          />
+        )
       default:
         return renderOverviewRows()
     }
@@ -349,6 +404,7 @@ function BrowseMobileFilterDrawer({
     brand: 'Brand',
     condition: 'Condition',
     price: 'Price',
+    distance: 'Distance',
   }
 
   const isOverview = !screen

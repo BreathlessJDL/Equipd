@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom'
 import EquipdTypeIcon from '../icons/EquipdTypeIcon'
 import '../icons/EquipdTypeIcon.css'
 import { EQUIPD_ICON_VARIANT } from '../../lib/equipdIconVariants'
-import ProfileAvatarLink from './ProfileAvatarLink'
-import UserAvatar from '../UserAvatar'
 import { OfficialEquipdName } from '../OfficialEquipdBadge'
 import {
   formatConversationListTime,
@@ -21,12 +19,13 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
   const isUnread = unreadCount > 0
   const listingTitle = conversation.listing?.title?.trim() || 'Listing'
   const imageUrl = getConversationListingImageUrl(conversation)
-  const participantLine = getConversationParticipantLine(conversation, userId)
+  const participantName = getConversationParticipantLine(conversation, userId)
   const participantProfile = getConversationOtherPartyAvatarProfile(conversation, userId)
   const isOfficial = participantProfile?.is_official_equipd === true
   const preview = getConversationMessagePreview(conversation.last_message)
   const updatedAt = conversation.last_message?.created_at ?? conversation.updated_at
   const timeLabel = formatConversationListTime(updatedAt)
+  const conversationName = participantName || listingTitle
 
   return (
     <li className="conversation-list-item">
@@ -39,23 +38,27 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
           to={`/messages/${conversation.id}`}
           className="conversation-card__overlay-link"
           aria-current={isActive ? 'true' : undefined}
-          aria-label={`Open conversation about ${listingTitle}`}
+          aria-label={`Open conversation with ${conversationName} about ${listingTitle}`}
         />
 
-        <div className="conversation-card__thumb" aria-hidden="true">
-          {imageUrl ? (
-            <ListingPhoto className="conversation-card__thumb-image" url={imageUrl} alt="" />
-          ) : (
-            <EquipdTypeIcon
-              variant={EQUIPD_ICON_VARIANT.MESSAGES}
-              className="conversation-card__thumb-icon"
-            />
-          )}
+        <div className="conversation-card__media" aria-hidden="true">
+          <div className="conversation-card__thumb">
+            {imageUrl ? (
+              <ListingPhoto className="conversation-card__thumb-image" url={imageUrl} alt="" />
+            ) : (
+              <EquipdTypeIcon
+                variant={EQUIPD_ICON_VARIANT.MESSAGES}
+                className="conversation-card__thumb-icon"
+              />
+            )}
+          </div>
         </div>
 
         <div className="conversation-card__content">
           <div className="conversation-card__header">
-            <h4 className="conversation-card__title">{listingTitle}</h4>
+            <h4 className="conversation-card__title">
+              <OfficialEquipdName name={conversationName} isOfficial={isOfficial} />
+            </h4>
             {timeLabel ? (
               <time className="conversation-card__time" dateTime={updatedAt}>
                 {timeLabel}
@@ -63,26 +66,7 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
             ) : null}
           </div>
 
-          {participantLine ? (
-            <p className="conversation-card__participant">
-              {participantProfile ? (
-                participantProfile.id ? (
-                  <ProfileAvatarLink
-                    profile={participantProfile}
-                    size="sm"
-                    className="conversation-card__participant-avatar"
-                  />
-                ) : (
-                  <UserAvatar
-                    profile={participantProfile}
-                    size="sm"
-                    className="conversation-card__participant-avatar"
-                  />
-                )
-              ) : null}
-              <OfficialEquipdName name={participantLine} isOfficial={isOfficial} />
-            </p>
-          ) : null}
+          <p className="conversation-card__listing">{listingTitle}</p>
 
           {preview ? (
             <p className="conversation-card__preview">{preview}</p>
@@ -93,15 +77,13 @@ function ConversationListItem({ conversation, userId, isActive = false }) {
           )}
         </div>
 
-        <div className="conversation-card__aside" aria-hidden={!isUnread}>
-          {isUnread ? (
-            unreadCount > 1 ? (
-              <span className="conversation-card__badge">{unreadCount}</span>
-            ) : (
-              <span className="conversation-card__unread-dot" />
-            )
-          ) : null}
-        </div>
+        {isUnread ? (
+          unreadCount > 1 ? (
+            <span className="conversation-card__badge">{unreadCount}</span>
+          ) : (
+            <span className="conversation-card__unread-dot" aria-hidden="true" />
+          )
+        ) : null}
       </div>
     </li>
   )

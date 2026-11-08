@@ -2,9 +2,13 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import BrowseMobileFilterDrawer from './browse/BrowseMobileFilterDrawer'
+import BrowseDistanceFilter from './browse/BrowseDistanceFilter'
+import BrowseLocationPrompt from './browse/BrowseLocationPrompt'
 import { LISTING_CONDITIONS } from '../lib/constants'
+import { BROWSE_RADIUS_UK_WIDE, getBrowseRadiusLabel, isBrowseRadiusSearchActive, parseBrowseRadiusMiles } from '../lib/listingDistance'
 import { buildBrandSelectOptions, buildCategoryFilterOptions } from '../lib/listingOptions'
 import { BROWSE_SORT_OPTIONS } from '../lib/listingSort'
+import { shouldDismissBrowseFilterOnOutsidePointer } from '../lib/browseFilters'
 
 function FilterOptionList({
   options,
@@ -81,6 +85,7 @@ function FilterPill({
   children,
   className = '',
   align = 'left',
+  menuMinWidth = 224,
 }) {
   const menuId = `${id}-menu`
   const triggerRef = useRef(null)
@@ -101,7 +106,7 @@ function FilterPill({
         position: 'fixed',
         top: `${rect.bottom + 6}px`,
         zIndex: 1100,
-        minWidth: `${Math.max(rect.width, 224)}px`,
+        minWidth: `${Math.max(rect.width, menuMinWidth)}px`,
       }
 
       if (align === 'right') {
@@ -123,7 +128,7 @@ function FilterPill({
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
     }
-  }, [open, align])
+  }, [open, align, menuMinWidth])
 
   const menu =
     open && menuStyle
@@ -188,6 +193,19 @@ function ListingBrowseFilters({
   idPrefix = 'listing-browse',
   onReset,
   onApply,
+  locationSearch = '',
+  locationPlace = null,
+  onLocationSearchChange,
+  onLocationPlaceSelected,
+  radiusMiles = BROWSE_RADIUS_UK_WIDE,
+  onRadiusChange,
+  geolocationMessage = '',
+  locatingCurrent = false,
+  onRequestCurrentLocation,
+  locationPromptOpen = false,
+  onDismissLocationPrompt,
+  idleSummary = '',
+  originFallbackLabel = '',
 }) {
   const rootId = useId()
   const rootRef = useRef(null)
@@ -219,6 +237,10 @@ function ListingBrowseFilters({
   )
   const selectedSort = sortOptions.find((entry) => entry.value === sort) ?? sortOptions[0]
   const hasPriceFilter = Boolean(minPrice?.trim() || maxPrice?.trim())
+  const radiusValue = parseBrowseRadiusMiles(radiusMiles)
+  const hasRadiusFilter = isBrowseRadiusSearchActive(radiusValue)
+  const hasLocationFilter = Boolean(locationPlace?.latitude != null && locationPlace?.longitude != null)
+  const distanceLabel = hasRadiusFilter ? getBrowseRadiusLabel(radiusMiles) : 'Distance'
 
   const categoryLabel =
     categoryIds.length > 1
@@ -242,9 +264,9 @@ function ListingBrowseFilters({
     if (!openMenu && !mobileOpen) return undefined
 
     function handlePointerDown(event) {
-      const target = event.target
-      if (rootRef.current?.contains(target)) return
-      if (target instanceof Element && target.closest('.browse-filter-pill__menu--portal')) return
+      if (!shouldDismissBrowseFilterOnOutsidePointer(event, { rootElement: rootRef.current })) {
+        return
+      }
 
       setOpenMenu(null)
     }
@@ -380,6 +402,26 @@ function ListingBrowseFilters({
     )
   }
 
+  function renderDistanceMenu({ compact = false } = {}) {
+    return (
+      <BrowseDistanceFilter
+        inputId={`${idPrefix}-distance`}
+        compact={compact}
+        locationSearch={locationSearch}
+        locationPlace={locationPlace}
+        onLocationSearchChange={onLocationSearchChange}
+        onLocationPlaceSelected={onLocationPlaceSelected}
+        radiusMiles={radiusMiles}
+        onRadiusChange={onRadiusChange}
+        geolocationMessage={geolocationMessage}
+        locatingCurrent={locatingCurrent}
+        onRequestCurrentLocation={onRequestCurrentLocation}
+        idleSummary={idleSummary}
+        originFallbackLabel={originFallbackLabel}
+      />
+    )
+  }
+
   function renderSortMenu(onSelect) {
     return (
       <FilterOptionList
@@ -436,6 +478,17 @@ function ListingBrowseFilters({
             onToggle={() => toggleMenu('price')}
           >
             {renderPriceMenu({ showActions: true, onChoose: closeMenus })}
+          </FilterPill>
+
+          <FilterPill
+            id={`${rootId}-distance`}
+            label={distanceLabel}
+            active={hasRadiusFilter || hasLocationFilter}
+            open={openMenu === 'distance'}
+            onToggle={() => toggleMenu('distance')}
+            menuMinWidth={288}
+          >
+            {renderDistanceMenu()}
           </FilterPill>
         </div>
 
@@ -501,6 +554,17 @@ function ListingBrowseFilters({
         maxPrice={maxPrice}
         onMinPriceChange={onMinPriceChange}
         onMaxPriceChange={onMaxPriceChange}
+        locationSearch={locationSearch}
+        locationPlace={locationPlace}
+        onLocationSearchChange={onLocationSearchChange}
+        onLocationPlaceSelected={onLocationPlaceSelected}
+        radiusMiles={radiusMiles}
+        onRadiusChange={onRadiusChange}
+        geolocationMessage={geolocationMessage}
+        locatingCurrent={locatingCurrent}
+        onRequestCurrentLocation={onRequestCurrentLocation}
+        idleSummary={idleSummary}
+        originFallbackLabel={originFallbackLabel}
       />
     )
   }
@@ -514,6 +578,17 @@ function ListingBrowseFilters({
       {renderDesktopBar()}
       {renderMobileBar()}
       {renderMobileDrawer()}
+      <BrowseLocationPrompt
+        open={locationPromptOpen}
+        locationSearch={locationSearch}
+        locationPlace={locationPlace}
+        onLocationSearchChange={onLocationSearchChange}
+        onLocationPlaceSelected={onLocationPlaceSelected}
+        geolocationMessage={geolocationMessage}
+        locatingCurrent={locatingCurrent}
+        onRequestCurrentLocation={onRequestCurrentLocation}
+        onCancel={() => onDismissLocationPrompt?.({ keepNationwide: true })}
+      />
       {sortNotice ? (
         <p className="listing-browse__sort-notice" role="status">
           {sortNotice}{' '}

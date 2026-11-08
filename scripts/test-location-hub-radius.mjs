@@ -69,6 +69,55 @@ assert.equal(query.buyerLongitude, hub.longitude)
 assert.equal(query.radiusMiles, 40)
 assert.notEqual(query.buyerLatitude, 51.5, 'hub must override profile coordinates')
 
+const userRadiusQuery = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: '100',
+    radiusMilesValue: 100,
+    buyerLatitude: 53.48,
+    buyerLongitude: -2.24,
+    locationSearch: 'Manchester',
+  },
+  {
+    locationAreas: [],
+    profileCoordinates: { latitude: 51.5, longitude: -0.12 },
+    hubSearch: hub,
+  },
+)
+
+assert.equal(userRadiusQuery.radiusMiles, 100, 'explicit radius takes priority over hub 40 miles')
+assert.equal(userRadiusQuery.buyerLatitude, 53.48, 'explicit origin takes priority over hub centre')
+assert.equal(userRadiusQuery.buyerLongitude, -2.24)
+
+const userRadiusWithoutOrigin = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: '25',
+    radiusMilesValue: 25,
+  },
+  { locationAreas: [], hubSearch: hub },
+)
+
+assert.equal(userRadiusWithoutOrigin.radiusMiles, 25, 'user radius is kept when no origin is chosen')
+assert.equal(userRadiusWithoutOrigin.buyerLatitude, hub.latitude, 'hub centre is the origin until a location is chosen')
+
+const profileOnlyRadius = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: '25',
+    radiusMilesValue: 25,
+  },
+  {
+    locationAreas: [],
+    profileCoordinates: { latitude: 51.5, longitude: -0.12 },
+  },
+)
+assert.equal(profileOnlyRadius.buyerLatitude, null, 'saved profile location is not used as a distance origin')
+assert.equal(profileOnlyRadius.radiusMiles, 25)
+
 console.log(
   JSON.stringify(
     {

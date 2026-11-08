@@ -7,6 +7,12 @@
   overflow: hidden;
 }
 
+.user-avatar--xs {
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0.625rem;
+}
+
 .user-avatar--sm {
   width: 2rem;
   height: 2rem;
@@ -41,6 +47,10 @@
 
 .user-avatar--initial-duo {
   letter-spacing: -0.03em;
+}
+
+.user-avatar--xs.user-avatar--initial-duo {
+  font-size: 0.5rem;
 }
 
 .user-avatar--sm.user-avatar--initial-duo {

@@ -34,15 +34,23 @@
 
   .messages-page--list-only .messages-page__header {
     padding-inline: max(var(--space-md), env(safe-area-inset-left, 0px));
-    margin-bottom: var(--space-md);
+    margin-bottom: 0.9rem;
   }
 
   .messages-page--list-only .messages-page__title {
+    margin-bottom: 0;
     font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-navy);
   }
 
   .messages-page--list-only .messages-page__lead {
-    font-size: 0.875rem;
+    display: none;
+  }
+
+  .messages-page--list-only .messages-page__inbox-empty {
+    margin-inline: max(var(--space-md), env(safe-area-inset-left, 0px));
+    margin-inline-end: max(var(--space-md), env(safe-area-inset-right, 0px));
   }
 
   .messages-page--list-only .messages-page__layout {
@@ -55,6 +63,13 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    overflow: visible;
+  }
+
+  .messages-page--list-only .messages-page__conversation-list {
+    padding: 0 max(var(--space-md), env(safe-area-inset-right, 0px)) 1.25rem
+      max(var(--space-md), env(safe-area-inset-left, 0px));
+    overflow-x: hidden;
   }
 
   .messages-page--list-only .messages-page__panel-title {
@@ -299,6 +314,53 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.messages-page__inbox-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  margin: var(--space-md);
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  border: 1px dashed color-mix(in srgb, var(--color-navy) 12%, var(--color-border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-navy) 2%, var(--color-surface));
+}
+
+.messages-page__inbox-empty-icon.equipd-type-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.messages-page__inbox-empty-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.messages-page__inbox-empty-copy {
+  margin: 0;
+  max-width: 18rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.messages-page__inbox-empty-link {
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-orange);
+  text-decoration: none;
+}
+
+.messages-page__inbox-empty-link:hover,
+.messages-page__inbox-empty-link:focus-visible {
+  text-decoration: underline;
 }
 
 .messages-page__composer-dock {

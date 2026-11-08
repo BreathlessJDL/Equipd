@@ -11,6 +11,9 @@ import MakeOfferModal from '../components/listing/MakeOfferModal'
 import MessageThreadListingSummary from '../components/messages/MessageThreadListingSummary'
 import MessageThreadSafetyBanner from '../components/messages/MessageThreadSafetyBanner'
 import MessageThreadHeader from '../components/messages/MessageThreadHeader'
+import EquipdTypeIcon from '../components/icons/EquipdTypeIcon'
+import '../components/icons/EquipdTypeIcon.css'
+import { EQUIPD_ICON_VARIANT } from '../lib/equipdIconVariants'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { notifyUnreadMessagesChanged } from '../hooks/useUnreadMessageCount'
@@ -676,9 +679,19 @@ function MessagesPage() {
 
     if (conversations.length === 0) {
       return (
-        <EmptyState compact>
-          No conversations yet. Message a seller from a listing page to start.
-        </EmptyState>
+        <div className="messages-page__inbox-empty">
+          <EquipdTypeIcon
+            variant={EQUIPD_ICON_VARIANT.MESSAGES}
+            className="messages-page__inbox-empty-icon"
+          />
+          <h3 className="messages-page__inbox-empty-title">No conversations yet</h3>
+          <p className="messages-page__inbox-empty-copy">
+            Message a seller from a listing to start a conversation.
+          </p>
+          <Link className="messages-page__inbox-empty-link" to="/browse">
+            Browse listings
+          </Link>
+        </div>
       )
     }
 

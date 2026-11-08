@@ -19,7 +19,10 @@ import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { useAuth } from '../hooks/useAuth'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
+import {
+  getBrowseDistanceFilterProps,
+  getBrowseFilterEmptyMessage,
+} from '../lib/browseFilters'
 import { trackEquipmentSearch } from '../lib/buyerConversionAnalytics'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
@@ -270,6 +273,7 @@ function HomePage() {
             idPrefix="home-browse"
             onApply={requestBrowseScroll}
             onReset={browse.resetFilters}
+            {...getBrowseDistanceFilterProps(browse)}
           />
 
           <BrowseActiveFilterChips
@@ -289,7 +293,7 @@ function HomePage() {
               listings={listings}
               hasFilters={browse.hasFilters}
               emptyMessage="No active listings yet. Check back soon or list your own equipment."
-              emptyFilteredMessage={BROWSE_FILTER_EMPTY_MESSAGE}
+              emptyFilteredMessage={getBrowseFilterEmptyMessage(browse.committedFilters)}
               variant="home"
               showSectionHeader={false}
               searchTerm={browse.search}

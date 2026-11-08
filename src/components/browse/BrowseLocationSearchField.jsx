@@ -17,6 +17,8 @@ function BrowseLocationSearchField({
   onSearchChange,
   onPlaceSelected,
   geolocationMessage = '',
+  placeholder = 'Search town, city or postcode',
+  autoFocus = false,
 }) {
   const inputRef = useRef(null)
   const autocompleteRef = useRef(null)
@@ -41,6 +43,11 @@ function BrowseLocationSearchField({
       inputRef.current.value = nextValue
     }
   }, [value])
+
+  useEffect(() => {
+    if (!autoFocus || !inputRef.current) return
+    inputRef.current.focus()
+  }, [autoFocus])
 
   useEffect(() => {
     if (!isGoogleMapsConfigured()) {
@@ -147,7 +154,7 @@ function BrowseLocationSearchField({
         className="listing-browse__input browse-location-search__input"
         type="text"
         autoComplete="off"
-        placeholder="Search town, city or postcode"
+        placeholder={placeholder}
         defaultValue={value ?? ''}
         disabled={disabled}
         onChange={handleInputChange}

@@ -14,7 +14,10 @@ import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterF
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
 import { useRegisterSiteHeader } from '../hooks/useRegisterSiteHeader'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { BROWSE_FILTER_EMPTY_MESSAGE } from '../lib/browseFilters'
+import {
+  getBrowseDistanceFilterProps,
+  getBrowseFilterEmptyMessage,
+} from '../lib/browseFilters'
 import {
   BROWSE_PAGE_META_DESCRIPTION,
   BROWSE_PAGE_META_TITLE,
@@ -163,6 +166,7 @@ function BrowsePage() {
             sortNotice={browse.sortNotice}
             onApply={requestBrowseScroll}
             onReset={browse.resetFilters}
+            {...getBrowseDistanceFilterProps(browse)}
           />
 
           <BrowseActiveFilterChips
@@ -182,7 +186,7 @@ function BrowsePage() {
               listings={listings}
               hasFilters={browse.hasFilters}
               emptyMessage="No active listings yet. Check back soon or list your own equipment."
-              emptyFilteredMessage={BROWSE_FILTER_EMPTY_MESSAGE}
+              emptyFilteredMessage={getBrowseFilterEmptyMessage(browse.committedFilters)}
               variant="home"
               searchTerm={browse.search}
               brand={browse.brands?.[0] || browse.brand || ''}
