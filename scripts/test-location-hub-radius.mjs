@@ -90,6 +90,22 @@ assert.equal(userRadiusQuery.radiusMiles, 100, 'explicit radius takes priority o
 assert.equal(userRadiusQuery.buyerLatitude, 53.48, 'explicit origin takes priority over hub centre')
 assert.equal(userRadiusQuery.buyerLongitude, -2.24)
 
+const gpsWithoutRadius = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: 'uk',
+    radiusMilesValue: null,
+    buyerLatitude: 55.8642,
+    buyerLongitude: -4.2518,
+    locationSearch: 'Current location',
+  },
+  { locationAreas: [], hubSearch: hub },
+)
+assert.equal(gpsWithoutRadius.buyerLatitude, 55.8642, 'current location is not replaced by the hub centre')
+assert.equal(gpsWithoutRadius.buyerLongitude, -4.2518)
+assert.notEqual(gpsWithoutRadius.buyerLatitude, hub.latitude)
+
 const userRadiusWithoutOrigin = buildBrowseQueryOptions(
   {
     search: '',

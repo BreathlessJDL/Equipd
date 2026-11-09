@@ -53,6 +53,67 @@ export function shouldAutoPromptBrowseGeolocation(_searchParams) {
 export const BROWSE_LOCATION_PROMPT_COPY =
   'To search within a distance, use your current location or enter a town or postcode.'
 
+export const BROWSE_GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: true,
+  timeout: 15000,
+  maximumAge: 0,
+}
+
+export const BROWSE_GEOLOCATION_ERROR = {
+  UNSUPPORTED:
+    'Location is not supported in this browser. Enter a town or postcode instead.',
+  PERMISSION_DENIED:
+    'Location access was denied. Please allow location access in your browser settings or enter a town or postcode.',
+  POSITION_UNAVAILABLE:
+    "We couldn't determine your current location. Please try again or enter a town or postcode.",
+  TIMEOUT:
+    'Finding your location took too long. Please try again or enter a town or postcode.',
+}
+
+const GEO_PERMISSION_DENIED = 1
+const GEO_POSITION_UNAVAILABLE = 2
+const GEO_TIMEOUT = 3
+
+export function getBrowseGeolocationErrorMessage(error) {
+  const code = Number(error?.code)
+
+  if (code === GEO_PERMISSION_DENIED) return BROWSE_GEOLOCATION_ERROR.PERMISSION_DENIED
+  if (code === GEO_TIMEOUT) return BROWSE_GEOLOCATION_ERROR.TIMEOUT
+  if (code === GEO_POSITION_UNAVAILABLE) return BROWSE_GEOLOCATION_ERROR.POSITION_UNAVAILABLE
+  if (error?.code === 0 || error?.message === 'unsupported') {
+    return BROWSE_GEOLOCATION_ERROR.UNSUPPORTED
+  }
+
+  return BROWSE_GEOLOCATION_ERROR.POSITION_UNAVAILABLE
+}
+
+export function isBrowseGeolocationPermissionDenied(error) {
+  return Number(error?.code) === GEO_PERMISSION_DENIED
+}
+
+export function readBrowseCurrentPositionCoords(position) {
+  const latitude = position?.coords?.latitude
+  const longitude = position?.coords?.longitude
+  if (!isValidCoordinate(latitude) || !isValidCoordinate(longitude)) return null
+  return { latitude: Number(latitude), longitude: Number(longitude) }
+}
+
+export function requestBrowseCurrentPosition(
+  geolocation = typeof navigator !== 'undefined' ? navigator.geolocation : null,
+  options = BROWSE_GEOLOCATION_OPTIONS,
+) {
+  return new Promise((resolve, reject) => {
+    if (!geolocation?.getCurrentPosition) {
+      const error = new Error('unsupported')
+      error.code = 0
+      reject(error)
+      return
+    }
+
+    geolocation.getCurrentPosition(resolve, reject, options)
+  })
+}
+
 export function buildCurrentLocationPlace(latitude, longitude) {
   return {
     displayLabel: BROWSE_CURRENT_LOCATION_LABEL,

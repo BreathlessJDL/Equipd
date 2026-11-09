@@ -289,15 +289,13 @@ export function buildBrowseQueryOptions(
       latitude: hubSearch.latitude,
       longitude: hubSearch.longitude,
     })
-    if (hub) {
+    if (hub && !userHasOrigin) {
+      buyerCoordinates = hub
       if (!userRadiusActive) {
-        buyerCoordinates = hub
         const hubRadius = Number(hubSearch.radiusMiles)
         if (Number.isFinite(hubRadius) && hubRadius > 0) {
           radiusMiles = hubRadius
         }
-      } else if (!userHasOrigin) {
-        buyerCoordinates = hub
       }
     }
   }

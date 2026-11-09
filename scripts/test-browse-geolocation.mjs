@@ -7,13 +7,19 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import {
+  BROWSE_GEOLOCATION_ERROR,
+  BROWSE_GEOLOCATION_OPTIONS,
   BROWSE_LOCATION_PROMPT_COPY,
   buildCurrentLocationPlace,
+  getBrowseGeolocationErrorMessage,
   hydrateBrowseLocationOrigin,
+  readBrowseCurrentPositionCoords,
+  requestBrowseCurrentPosition,
   setStoredBrowseBrowserOrigin,
   shouldAutoPromptBrowseGeolocation,
 } from '../src/lib/browseGeolocation.js'
-import { applyBrowseFiltersToSearchParams } from '../src/lib/browseFilters.js'
+import { applyBrowseFiltersToSearchParams, buildBrowseQueryOptions } from '../src/lib/browseFilters.js'
+import { LOCATION_PAGES, getLocationHubSearch } from '../src/lib/locations.js'
 
 assert.equal(
   shouldAutoPromptBrowseGeolocation(new URLSearchParams()),
@@ -39,6 +45,74 @@ assert.doesNotMatch(
   /Saved location/,
   'distance filter does not auto-select the saved profile location',
 )
+assert.match(hookSource, /requestBrowseCurrentPosition/, 'current location uses the shared Geolocation helper')
+assert.match(hookSource, /getBrowseGeolocationErrorMessage/, 'geolocation errors are mapped by type')
+assert.match(
+  hookSource,
+  /BROWSE_RADIUS_SLIDER_PREVIEW_MILES/,
+  'current location applies the visible radius around the GPS origin',
+)
+assert.doesNotMatch(
+  hookSource,
+  /enableHighAccuracy:\s*false/,
+  'current location does not request a coarse network fallback',
+)
+assert.doesNotMatch(
+  hookSource,
+  /maximumAge:\s*300000/,
+  'current location does not reuse a five-minute cached position',
+)
+
+assert.equal(BROWSE_GEOLOCATION_OPTIONS.enableHighAccuracy, true)
+assert.equal(BROWSE_GEOLOCATION_OPTIONS.maximumAge, 0)
+assert.ok(BROWSE_GEOLOCATION_OPTIONS.timeout >= 10000)
+
+assert.equal(
+  getBrowseGeolocationErrorMessage({ code: 1 }),
+  BROWSE_GEOLOCATION_ERROR.PERMISSION_DENIED,
+)
+assert.equal(
+  getBrowseGeolocationErrorMessage({ code: 2 }),
+  BROWSE_GEOLOCATION_ERROR.POSITION_UNAVAILABLE,
+)
+assert.equal(
+  getBrowseGeolocationErrorMessage({ code: 3 }),
+  BROWSE_GEOLOCATION_ERROR.TIMEOUT,
+)
+assert.equal(
+  getBrowseGeolocationErrorMessage({ code: 0, message: 'unsupported' }),
+  BROWSE_GEOLOCATION_ERROR.UNSUPPORTED,
+)
+
+assert.deepEqual(
+  readBrowseCurrentPositionCoords({ coords: { latitude: 55.8642, longitude: -4.2518 } }),
+  { latitude: 55.8642, longitude: -4.2518 },
+)
+assert.equal(readBrowseCurrentPositionCoords({ coords: { latitude: null, longitude: -0.12 } }), null)
+
+let capturedOptions = null
+const fakeGeo = {
+  getCurrentPosition(success, _error, options) {
+    capturedOptions = options
+    success({ coords: { latitude: 55.8642, longitude: -4.2518, accuracy: 25 } })
+  },
+}
+const position = await requestBrowseCurrentPosition(fakeGeo)
+assert.equal(position.coords.latitude, 55.8642)
+assert.deepEqual(capturedOptions, BROWSE_GEOLOCATION_OPTIONS)
+
+const deniedGeo = {
+  getCurrentPosition(_success, error) {
+    error({ code: 1, message: 'denied' })
+  },
+}
+await assert.rejects(requestBrowseCurrentPosition(deniedGeo))
+
+const unsupported = await requestBrowseCurrentPosition(null).then(
+  () => null,
+  (error) => error,
+)
+assert.equal(unsupported.code, 0)
 
 const filterSource = readFileSync('src/components/browse/BrowseDistanceFilter.jsx', 'utf8')
 assert.match(filterSource, /type="range"/, 'distance filter uses a compact radius slider')
@@ -87,6 +161,58 @@ const hydrated = hydrateBrowseLocationOrigin({
 })
 assert.equal(hydrated.buyerLatitude, 53.8008)
 assert.equal(hydrated.buyerLongitude, -1.5491)
+
+const glasgow = { latitude: 55.8642, longitude: -4.2518 }
+const londonHub = getLocationHubSearch(LOCATION_PAGES.london)
+const gpsOnLondonHub = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: 'uk',
+    radiusMilesValue: null,
+    buyerLatitude: glasgow.latitude,
+    buyerLongitude: glasgow.longitude,
+    locationSearch: 'Current location',
+    locationPlace: buildCurrentLocationPlace(glasgow.latitude, glasgow.longitude),
+  },
+  { hubSearch: londonHub, profileCoordinates: { latitude: 51.5074, longitude: -0.1278 } },
+)
+assert.equal(gpsOnLondonHub.buyerLatitude, glasgow.latitude, 'GPS origin is not replaced by the London hub')
+assert.equal(gpsOnLondonHub.buyerLongitude, glasgow.longitude)
+assert.notEqual(gpsOnLondonHub.buyerLatitude, londonHub.latitude)
+assert.equal(gpsOnLondonHub.radiusMiles, null, 'uk-wide radius stays unset until a mile value is chosen')
+
+const gpsWithRadius = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: '25',
+    radiusMilesValue: 25,
+    buyerLatitude: glasgow.latitude,
+    buyerLongitude: glasgow.longitude,
+    locationSearch: 'Current location',
+    locationPlace: buildCurrentLocationPlace(glasgow.latitude, glasgow.longitude),
+  },
+  { hubSearch: londonHub, profileCoordinates: { latitude: 51.5074, longitude: -0.1278 } },
+)
+assert.equal(gpsWithRadius.buyerLatitude, glasgow.latitude)
+assert.equal(gpsWithRadius.buyerLongitude, glasgow.longitude)
+assert.equal(gpsWithRadius.radiusMiles, 25)
+
+const failedGeoKeepsPlace = buildBrowseQueryOptions(
+  {
+    search: '',
+    sort: 'newest',
+    radiusMiles: '40',
+    radiusMilesValue: 40,
+    buyerLatitude: 53.4808,
+    buyerLongitude: -2.2426,
+    locationSearch: 'Manchester',
+  },
+  { hubSearch: londonHub },
+)
+assert.equal(failedGeoKeepsPlace.buyerLatitude, 53.4808, 'a failed GPS request must not invent London coordinates')
+assert.equal(failedGeoKeepsPlace.buyerLongitude, -2.2426)
 
 const css = readFileSync('src/components/messages/ConversationListItem.css', 'utf8')
 assert.match(css, /white-space:\s*nowrap/, 'conversation previews truncate')

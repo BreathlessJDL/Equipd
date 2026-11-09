@@ -13,12 +13,18 @@ import {
   BROWSE_GEO_STATUS,
   buildCurrentLocationPlace,
   clearStoredBrowseBrowserOrigin,
+  getBrowseGeolocationErrorMessage,
+  isBrowseGeolocationPermissionDenied,
+  readBrowseCurrentPositionCoords,
+  requestBrowseCurrentPosition,
   setBrowseGeolocationStatus,
   setStoredBrowseBrowserOrigin,
 } from '../lib/browseGeolocation'
 import {
+  BROWSE_CURRENT_LOCATION_LABEL,
   BROWSE_LOCATION_SOURCE_BROWSER,
   BROWSE_LOCATION_SOURCE_PLACE,
+  BROWSE_RADIUS_SLIDER_PREVIEW_MILES,
   BROWSE_RADIUS_UK_WIDE,
   isBrowseRadiusSearchActive,
   isValidCoordinate,
@@ -82,6 +88,7 @@ export function useBrowseFilters(
   const [geolocationMessage, setGeolocationMessage] = useState('')
   const [locationPromptOpen, setLocationPromptOpen] = useState(false)
   const [locatingCurrent, setLocatingCurrent] = useState(false)
+  const geolocationRequestIdRef = useRef(0)
 
   useEffect(() => {
     if (!categoriesReady) return
@@ -154,19 +161,25 @@ export function useBrowseFilters(
   }, [])
 
   const applyCurrentLocation = useCallback(
-    (latitude, longitude, { label = 'Current location' } = {}) => {
+    (latitude, longitude, { label = BROWSE_CURRENT_LOCATION_LABEL } = {}) => {
       setStoredBrowseBrowserOrigin(latitude, longitude)
-      syncDraft((current) => ({
-        ...current,
-        locationSearch: label,
-        locationPlace: {
-          ...buildCurrentLocationPlace(latitude, longitude),
-          displayLabel: label,
-          locationName: label,
-        },
-        buyerLatitude: latitude,
-        buyerLongitude: longitude,
-      }))
+      syncDraft((current) => {
+        const existingRadius = parseBrowseRadiusMiles(current.radiusMiles)
+        const radiusMiles = existingRadius ?? BROWSE_RADIUS_SLIDER_PREVIEW_MILES
+        return {
+          ...current,
+          locationSearch: label,
+          locationPlace: {
+            ...buildCurrentLocationPlace(latitude, longitude),
+            displayLabel: label,
+            locationName: label,
+          },
+          buyerLatitude: latitude,
+          buyerLongitude: longitude,
+          radiusMiles: String(radiusMiles),
+          radiusMilesValue: radiusMiles,
+        }
+      })
     },
     [syncDraft],
   )
@@ -176,31 +189,38 @@ export function useBrowseFilters(
   }, [])
 
   const requestCurrentLocation = useCallback(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGeolocationMessage('Location is unavailable. Enter a town or postcode instead.')
-      return
-    }
+    const requestId = geolocationRequestIdRef.current + 1
+    geolocationRequestIdRef.current = requestId
 
     setLocatingCurrent(true)
     setGeolocationMessage('')
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    requestBrowseCurrentPosition()
+      .then((position) => {
+        if (requestId !== geolocationRequestIdRef.current) return
+
+        const coords = readBrowseCurrentPositionCoords(position)
+        if (!coords) {
+          setLocatingCurrent(false)
+          setGeolocationMessage(getBrowseGeolocationErrorMessage({ code: 2 }))
+          return
+        }
+
         setBrowseGeolocationStatus(BROWSE_GEO_STATUS.GRANTED)
         setGeolocationMessage('')
         setLocatingCurrent(false)
-        applyCurrentLocation(position.coords.latitude, position.coords.longitude)
+        applyCurrentLocation(coords.latitude, coords.longitude)
         setLocationPromptOpen(false)
-      },
-      () => {
-        setBrowseGeolocationStatus(BROWSE_GEO_STATUS.DENIED)
+      })
+      .catch((error) => {
+        if (requestId !== geolocationRequestIdRef.current) return
+
+        if (isBrowseGeolocationPermissionDenied(error)) {
+          setBrowseGeolocationStatus(BROWSE_GEO_STATUS.DENIED)
+        }
         setLocatingCurrent(false)
-        setGeolocationMessage(
-          'Location access was denied. Enter a town or postcode instead.',
-        )
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
-    )
+        setGeolocationMessage(getBrowseGeolocationErrorMessage(error))
+      })
   }, [applyCurrentLocation])
 
   const dismissLocationPrompt = useCallback(
