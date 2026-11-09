@@ -12,7 +12,7 @@ import '../components/ListingBrowse.css'
 import '../components/browse/BrowseActiveFilterChips.css'
 import { useBrowseFilters } from '../hooks/useBrowseFilters'
 import { useBrowseListings } from '../hooks/useBrowseListings'
-import { useBrowseScrollAfterFilterChange } from '../hooks/useBrowseScrollAfterFilterChange'
+import { revealBrowseAnchorIfOffscreen } from '../lib/scrollToBrowseAnchor'
 import { useHomeRecentListings } from '../hooks/useHomeRecentListings'
 import { useNearViewport } from '../hooks/useNearViewport'
 import { useProfileBrowseLocation } from '../hooks/useProfileBrowseLocation'
@@ -73,8 +73,9 @@ function HomePage() {
     profileCoordinates,
   })
 
-  const { requestBrowseScroll, cancelBrowseScrollRequest } =
-    useBrowseScrollAfterFilterChange(searchParams.toString())
+  const revealHomeBrowseIfNeeded = useCallback(() => {
+    revealBrowseAnchorIfOffscreen()
+  }, [])
 
   // Logged-out visitors see the hero and recent listings first, so the
   // 24-card browse query can wait until they scroll toward it. Deep links that
@@ -169,9 +170,9 @@ function HomePage() {
   const handleRemoveFilterChip = useCallback(
     (removeKey, removeValue) => {
       browse.removeFilterChip(removeKey, removeValue)
-      requestBrowseScroll()
+      revealHomeBrowseIfNeeded()
     },
-    [browse, requestBrowseScroll],
+    [browse, revealHomeBrowseIfNeeded],
   )
 
   const handleHomeBrandClick = useCallback(
@@ -179,7 +180,6 @@ function HomePage() {
       if (pathname !== '/') return
 
       event.preventDefault()
-      cancelBrowseScrollRequest()
 
       if (browse.hasFilters) {
         browse.resetFilters()
@@ -187,7 +187,7 @@ function HomePage() {
 
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     },
-    [browse, cancelBrowseScrollRequest, pathname],
+    [browse, pathname],
   )
 
   const siteHeaderConfig = useMemo(
@@ -271,7 +271,7 @@ function HomePage() {
             panelFilterCount={browse.panelFilterCount}
             sortNotice={browse.sortNotice}
             idPrefix="home-browse"
-            onApply={requestBrowseScroll}
+            onApply={revealHomeBrowseIfNeeded}
             onReset={browse.resetFilters}
             {...getBrowseDistanceFilterProps(browse)}
           />

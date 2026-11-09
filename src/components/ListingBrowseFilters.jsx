@@ -486,7 +486,7 @@ function ListingBrowseFilters({
             active={hasRadiusFilter || hasLocationFilter}
             open={openMenu === 'distance'}
             onToggle={() => toggleMenu('distance')}
-            menuMinWidth={288}
+            menuMinWidth={256}
           >
             {renderDistanceMenu()}
           </FilterPill>

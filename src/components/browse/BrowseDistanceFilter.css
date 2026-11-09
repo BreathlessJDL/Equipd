@@ -1,58 +1,61 @@
 .browse-distance-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 1.35rem;
-  min-width: 16.5rem;
-  padding: 0.15rem 0.1rem 0.25rem;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.1rem 0.15rem 0.15rem;
 }
 
 .browse-distance-filter--compact {
-  min-width: 0;
-  padding: 1rem 1rem 1.25rem;
-  gap: 1.5rem;
+  padding: 0.75rem 0 0.25rem;
+  gap: 1rem;
 }
 
 .browse-distance-filter__section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
+  display: grid;
+  gap: 0.45rem;
   min-width: 0;
 }
 
 .browse-distance-filter__heading {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.25;
-  color: var(--color-navy);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.browse-distance-filter--compact .browse-distance-filter__heading {
+  font-size: 0.75rem;
 }
 
 .browse-distance-filter__copy {
-  margin: -0.2rem 0 0;
-  font-size: 0.875rem;
+  margin: 0;
+  font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--color-muted);
 }
 
+.browse-distance-filter--compact .browse-distance-filter__copy {
+  font-size: 0.875rem;
+}
+
 .browse-distance-filter__location-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.browse-distance-filter--compact .browse-distance-filter__section {
+  padding-inline: 1rem;
 }
 
 .browse-distance-filter__choice {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  width: 100%;
-  min-height: 3rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  cursor: pointer;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  height: auto;
 }
 
 .browse-distance-filter__choice:disabled {
@@ -60,34 +63,13 @@
   cursor: wait;
 }
 
-.browse-distance-filter__choice:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-orange) 45%, transparent);
-  outline-offset: 2px;
-}
-
-.browse-distance-filter__choice--current {
-  border: none;
-  background: var(--color-orange);
-  color: #fff;
-}
-
-.browse-distance-filter__choice--current:hover {
-  background: var(--color-orange-hover);
-}
-
-.browse-distance-filter__choice--town {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-navy);
-}
-
 .browse-distance-filter__choice-icon,
 .browse-distance-filter__town-icon,
 .browse-distance-filter__selected-icon {
   display: inline-flex;
   flex-shrink: 0;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 0.95rem;
+  height: 0.95rem;
   color: inherit;
 }
 
@@ -104,18 +86,34 @@
 
 .browse-distance-filter__town-icon {
   position: absolute;
-  top: 0.9rem;
-  left: 0.95rem;
+  top: 50%;
+  left: 0.75rem;
   z-index: 1;
+  width: 0.9rem;
+  height: 0.9rem;
   color: var(--color-muted);
+  transform: translateY(-50%);
   pointer-events: none;
 }
 
 .browse-distance-filter__town-field .browse-location-search__input {
-  min-height: 3rem;
-  padding-left: 2.5rem;
+  min-height: 2.25rem;
+  padding: 0 0.75rem 0 2.15rem;
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  font-size: 0.9375rem;
+  background: var(--color-surface);
+  font-size: 0.8125rem;
+}
+
+.browse-distance-filter__town-field .browse-location-search__input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 35%, transparent);
+  outline-offset: 1px;
+  border-color: var(--color-orange);
+}
+
+.browse-distance-filter--compact .browse-distance-filter__town-field .browse-location-search__input {
+  min-height: 2.5rem;
+  font-size: 0.875rem;
 }
 
 .browse-distance-filter__status {
@@ -125,16 +123,25 @@
   color: var(--color-muted);
 }
 
+.browse-distance-filter--compact .browse-distance-filter__status {
+  padding-inline: 0;
+}
+
 .browse-distance-filter__selected {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.7rem;
-  min-height: 3.35rem;
-  padding: 0.7rem 0.9rem;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.65rem;
   border: 1px solid var(--color-border);
-  border-radius: 1.15rem;
-  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-orange) 6%, var(--color-surface));
+}
+
+.browse-distance-filter--compact .browse-distance-filter__selected {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.85rem;
 }
 
 .browse-distance-filter__selected-icon {
@@ -144,12 +151,16 @@
 .browse-distance-filter__selected-name {
   margin: 0;
   min-width: 0;
-  font-size: 0.9375rem;
-  font-weight: 800;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--color-navy);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.browse-distance-filter--compact .browse-distance-filter__selected-name {
+  font-size: 0.9375rem;
 }
 
 .browse-distance-filter__change {
@@ -161,7 +172,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: underline;
-  text-underline-offset: 0.15rem;
+  text-underline-offset: 0.12em;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -172,13 +183,16 @@
 }
 
 .browse-distance-filter__section--slider {
-  gap: 0.55rem;
+  gap: 0.4rem;
+}
+
+.browse-distance-filter--compact .browse-distance-filter__slider {
+  width: 100%;
 }
 
 .browse-distance-filter__slider-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  display: grid;
+  gap: 0.35rem;
 }
 
 .browse-distance-filter__slider-value {
@@ -189,21 +203,21 @@
   margin: 0;
 }
 
-.browse-distance-filter__slider-prefix {
-  font-size: 0.9375rem;
+.browse-distance-filter__slider-prefix,
+.browse-distance-filter__slider-amount {
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-navy);
 }
 
 .browse-distance-filter__slider-amount {
-  font-size: 0.9375rem;
   color: var(--color-muted);
+  font-weight: 600;
 }
 
 .browse-distance-filter__slider-amount strong {
-  margin-right: 0.2rem;
-  font-size: 1.05rem;
-  font-weight: 800;
+  margin-right: 0.15rem;
+  font-weight: 700;
   color: var(--color-navy);
 }
 
@@ -212,12 +226,12 @@
   appearance: none;
   width: 100%;
   height: 0.28rem;
-  margin: 0.45rem 0 0.15rem;
+  margin: 0.2rem 0 0.1rem;
   border-radius: 999px;
   background: linear-gradient(
     to right,
     var(--color-orange) 0 var(--slider-progress, 10.3%),
-    #d8dee6 var(--slider-progress, 10.3%) 100%
+    color-mix(in srgb, var(--color-navy) 12%, var(--color-border)) var(--slider-progress, 10.3%) 100%
   );
   outline: none;
 }
@@ -225,22 +239,22 @@
 .browse-distance-filter__slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 1.4rem;
-  height: 1.4rem;
-  border: 2px solid #fff;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--color-surface);
   border-radius: 50%;
   background: var(--color-orange);
-  box-shadow: 0 1px 5px color-mix(in srgb, var(--color-navy) 22%, transparent);
+  box-shadow: 0 1px 4px rgb(15 23 42 / 16%);
   cursor: pointer;
 }
 
 .browse-distance-filter__slider::-moz-range-thumb {
-  width: 1.4rem;
-  height: 1.4rem;
-  border: 2px solid #fff;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--color-surface);
   border-radius: 50%;
   background: var(--color-orange);
-  box-shadow: 0 1px 5px color-mix(in srgb, var(--color-navy) 22%, transparent);
+  box-shadow: 0 1px 4px rgb(15 23 42 / 16%);
   cursor: pointer;
 }
 
@@ -252,8 +266,8 @@
 }
 
 .browse-distance-filter__slider:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-orange) 45%, transparent);
-  outline-offset: 4px;
+  outline: 2px solid color-mix(in srgb, var(--color-orange) 35%, transparent);
+  outline-offset: 3px;
 }
 
 .browse-distance-filter__slider-ticks {
@@ -265,30 +279,9 @@
 }
 
 .browse-distance-filter__section--slider-disabled {
-  opacity: 0.48;
+  opacity: 0.55;
 }
 
 .browse-distance-filter__section--slider-disabled .browse-distance-filter__slider {
   cursor: not-allowed;
-}
-
-@media (max-width: 374px) {
-  .browse-distance-filter--compact {
-    padding-inline: 0.85rem;
-  }
-
-  .browse-distance-filter__choice {
-    min-height: 2.85rem;
-    font-size: 0.875rem;
-  }
-
-  .browse-distance-filter__slider::-webkit-slider-thumb {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .browse-distance-filter__slider::-moz-range-thumb {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
 }

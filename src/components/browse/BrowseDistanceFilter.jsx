@@ -134,7 +134,7 @@ function BrowseDistanceFilter({
           <div className="browse-distance-filter__location-actions">
             <button
               type="button"
-              className="browse-distance-filter__choice browse-distance-filter__choice--current"
+              className="listing-browse__button listing-browse__button--primary browse-distance-filter__choice browse-distance-filter__choice--current"
               onClick={onRequestCurrentLocation}
               disabled={locatingCurrent}
             >
@@ -162,7 +162,7 @@ function BrowseDistanceFilter({
             ) : (
               <button
                 type="button"
-                className="browse-distance-filter__choice browse-distance-filter__choice--town"
+                className="listing-browse__button listing-browse__button--secondary browse-distance-filter__choice browse-distance-filter__choice--town"
                 onClick={() => setShowTownSearch(true)}
               >
                 <span className="browse-distance-filter__choice-icon">

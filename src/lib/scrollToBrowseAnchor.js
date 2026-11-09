@@ -40,6 +40,34 @@ function scrollBrowseAnchorIntoView(element, { behavior, extraOffset }) {
 }
 
 /**
+ * Homepage filters should keep the current scroll position when the browse
+ * section is already on screen. Only move if it has left the viewport.
+ */
+export function revealBrowseAnchorIfOffscreen({
+  anchorId = BROWSE_FILTERS_ANCHOR_ID,
+  fallbackAnchorId = BROWSE_RESULTS_ANCHOR_ID,
+  extraOffset = 8,
+} = {}) {
+  const element = resolveBrowseAnchor(anchorId, fallbackAnchorId)
+  if (!element) return false
+
+  const headerHeight = getStickyHeaderHeight()
+  const rect = element.getBoundingClientRect()
+  const inView = rect.bottom > headerHeight + 24 && rect.top < window.innerHeight
+
+  if (inView) return false
+
+  scrollToBrowseAnchor({
+    anchorId,
+    fallbackAnchorId,
+    extraOffset,
+    behavior: 'auto',
+    retryAfterMs: 0,
+  })
+  return true
+}
+
+/**
  * Scroll so browse filters (or results fallback) sit just below the sticky site header.
  * Retries once after browse URL sync — filter changes debounce before updating search params,
  * which can otherwise reset scroll back to the top.
