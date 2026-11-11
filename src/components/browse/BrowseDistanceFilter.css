@@ -116,6 +116,13 @@
   font-size: 0.875rem;
 }
 
+@media (max-width: 767px) {
+  .browse-distance-filter__town-field .browse-location-search__input,
+  .browse-distance-filter--compact .browse-distance-filter__town-field .browse-location-search__input {
+    font-size: 16px;
+  }
+}
+
 .browse-distance-filter__status {
   margin: 0;
   font-size: 0.8125rem;

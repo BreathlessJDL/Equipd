@@ -83,6 +83,8 @@ assert.match(composerCss, /align-self:\s*flex-end/)
 const indexHtml = readFileSync('index.html', 'utf8')
 assert.match(indexHtml, /viewport-fit=cover/)
 assert.match(indexHtml, /interactive-widget=resizes-content/)
+assert.doesNotMatch(indexHtml, /user-scalable\s*=\s*no/)
+assert.doesNotMatch(indexHtml, /maximum-scale\s*=\s*1/)
 
 const appShell = readFileSync('src/components/layout/AppShell.jsx', 'utf8')
 assert.match(appShell, /subscribeVisualViewport/)

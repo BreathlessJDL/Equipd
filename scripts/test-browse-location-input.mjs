@@ -95,6 +95,28 @@ assert.doesNotMatch(
 assert.match(filterSource, /value=\{inputValue\}/)
 assert.doesNotMatch(filterSource, /value=\{locationSearch\}/)
 
+const fieldCss = readFileSync('src/components/browse/BrowseLocationSearchField.css', 'utf8')
+assert.match(
+  fieldCss,
+  /@media \(max-width: 767px\)[\s\S]*\.browse-location-search__input[\s\S]*font-size:\s*16px/,
+  'mobile location input is at least 16px to prevent iOS focus zoom',
+)
+assert.match(fieldCss, /font-size:\s*0\.875rem/, 'desktop location input keeps compact type')
+
+const distanceCss = readFileSync('src/components/browse/BrowseDistanceFilter.css', 'utf8')
+assert.match(
+  distanceCss,
+  /@media \(max-width: 767px\)[\s\S]*font-size:\s*16px/,
+  'Distance town field also uses 16px on mobile',
+)
+
+assert.match(fieldSource, /inputRef\.current\.blur\(\)/, 'selecting a Places result blurs the input')
+
+const indexHtml = readFileSync('index.html', 'utf8')
+assert.match(indexHtml, /name="viewport"/)
+assert.doesNotMatch(indexHtml, /user-scalable\s*=\s*no/)
+assert.doesNotMatch(indexHtml, /maximum-scale\s*=\s*1/)
+
 const hookSource = readFileSync('src/hooks/useBrowseFilters.js', 'utf8')
 assert.match(
   hookSource,

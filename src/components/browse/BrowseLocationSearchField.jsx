@@ -91,6 +91,7 @@ function BrowseLocationSearchField({
           const mapped = mapGooglePlaceToListingLocation(place)
           if (inputRef.current) {
             inputRef.current.value = mapped.displayLabel
+            inputRef.current.blur()
           }
           onPlaceSelectedRef.current(mapped)
           hideGooglePlacesAutocompleteDropdown(inputRef.current)
