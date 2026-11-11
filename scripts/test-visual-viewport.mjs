@@ -8,7 +8,6 @@ import { readFileSync } from 'node:fs'
 import {
   EQUIPD_KEYBOARD_INSET_VAR,
   EQUIPD_VISUAL_VIEWPORT_HEIGHT_VAR,
-  EQUIPD_VISUAL_VIEWPORT_OFFSET_VAR,
   applyVisualViewportCssVars,
   clearVisualViewportCssVars,
   readVisualViewportMetrics,
@@ -42,29 +41,40 @@ const openKeyboardWindow = {
   visualViewport: { height: 520, offsetTop: 0 },
 }
 
+const scrolledVisualViewportWindow = {
+  innerHeight: 844,
+  visualViewport: { height: 520, offsetTop: 180 },
+}
+
 const closed = readVisualViewportMetrics(closedKeyboardWindow)
 assert.equal(closed.height, 844)
-assert.equal(closed.offsetTop, 0)
 assert.equal(closed.keyboardInset, 0)
+assert.equal(closed.offsetTop, undefined)
 
 const open = readVisualViewportMetrics(openKeyboardWindow)
 assert.equal(open.height, 520)
 assert.equal(open.keyboardInset, 324)
 
+const scrolled = readVisualViewportMetrics(scrolledVisualViewportWindow)
+assert.equal(scrolled.height, 520)
+assert.equal(scrolled.keyboardInset, 144)
+
 const root = createRoot()
 applyVisualViewportCssVars(openKeyboardWindow, root)
 assert.equal(root.props.get(EQUIPD_VISUAL_VIEWPORT_HEIGHT_VAR), '520px')
-assert.equal(root.props.get(EQUIPD_VISUAL_VIEWPORT_OFFSET_VAR), '0px')
+assert.equal(root.props.get('--equipd-visual-viewport-offset'), undefined)
 assert.equal(root.props.get(EQUIPD_KEYBOARD_INSET_VAR), '324px')
 clearVisualViewportCssVars(root)
 assert.equal(root.props.size, 0)
 
 const appShellCss = readFileSync('src/components/layout/AppShell.css', 'utf8')
 assert.match(appShellCss, /--equipd-visual-viewport-height/)
-assert.match(appShellCss, /--equipd-visual-viewport-offset/)
-assert.doesNotMatch(
-  appShellCss.replace(/var\(--equipd-visual-viewport-height,\s*100dvh\)/g, ''),
-  /\.app-shell:has\(\.messages-page--thread-open\)\s*\{[^}]*height:\s*100dvh/,
+assert.doesNotMatch(appShellCss, /translateY/)
+assert.doesNotMatch(appShellCss, /--equipd-visual-viewport-offset/)
+assert.match(appShellCss, /html\.equipd-messages-thread-lock/)
+assert.match(
+  appShellCss,
+  /\.app-shell:has\(\.messages-page--thread-open\)\s*\{[^}]*min-height:\s*0/,
 )
 
 const messagesCss = readFileSync('src/components/Messages.css', 'utf8')
@@ -88,5 +98,6 @@ assert.doesNotMatch(indexHtml, /maximum-scale\s*=\s*1/)
 
 const appShell = readFileSync('src/components/layout/AppShell.jsx', 'utf8')
 assert.match(appShell, /subscribeVisualViewport/)
+assert.match(appShell, /equipd-messages-thread-lock/)
 
 console.log('PASS: visual viewport + mobile composer layout')

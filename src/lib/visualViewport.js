@@ -6,7 +6,6 @@
  */
 
 export const EQUIPD_VISUAL_VIEWPORT_HEIGHT_VAR = '--equipd-visual-viewport-height'
-export const EQUIPD_VISUAL_VIEWPORT_OFFSET_VAR = '--equipd-visual-viewport-offset'
 export const EQUIPD_KEYBOARD_INSET_VAR = '--equipd-keyboard-inset'
 
 export function readVisualViewportMetrics(targetWindow = window) {
@@ -16,16 +15,15 @@ export function readVisualViewportMetrics(targetWindow = window) {
   if (!viewport) {
     return {
       height: layoutHeight,
-      offsetTop: 0,
       keyboardInset: 0,
     }
   }
 
   const height = Math.max(0, Math.round(viewport.height))
-  const offsetTop = Math.max(0, Math.round(viewport.offsetTop || 0))
-  const keyboardInset = Math.max(0, Math.round(layoutHeight - viewport.height - (viewport.offsetTop || 0)))
+  const offsetTop = Math.max(0, viewport.offsetTop || 0)
+  const keyboardInset = Math.max(0, Math.round(layoutHeight - viewport.height - offsetTop))
 
-  return { height, offsetTop, keyboardInset }
+  return { height, keyboardInset }
 }
 
 export function applyVisualViewportCssVars(
@@ -36,7 +34,6 @@ export function applyVisualViewportCssVars(
 
   const metrics = readVisualViewportMetrics(targetWindow)
   root.style.setProperty(EQUIPD_VISUAL_VIEWPORT_HEIGHT_VAR, `${metrics.height}px`)
-  root.style.setProperty(EQUIPD_VISUAL_VIEWPORT_OFFSET_VAR, `${metrics.offsetTop}px`)
   root.style.setProperty(EQUIPD_KEYBOARD_INSET_VAR, `${metrics.keyboardInset}px`)
   return metrics
 }
@@ -44,7 +41,6 @@ export function applyVisualViewportCssVars(
 export function clearVisualViewportCssVars(root = document.documentElement) {
   if (!root?.style) return
   root.style.removeProperty(EQUIPD_VISUAL_VIEWPORT_HEIGHT_VAR)
-  root.style.removeProperty(EQUIPD_VISUAL_VIEWPORT_OFFSET_VAR)
   root.style.removeProperty(EQUIPD_KEYBOARD_INSET_VAR)
 }
 

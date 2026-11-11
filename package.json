@@ -24,6 +24,7 @@
     "test:homepage-social-preview": "node scripts/test-homepage-social-preview.mjs",
     "generate:homepage-og": "node scripts/generate-homepage-og.mjs",
     "test:visual-viewport": "node scripts/test-visual-viewport.mjs",
+    "test:message-thread-layout": "node scripts/test-message-thread-layout.mjs",
     "test:browse-location-input": "node scripts/test-browse-location-input.mjs",
     "generate:buy-used-gym-equipment-assets": "node scripts/generate-buy-used-gym-equipment-assets.mjs",
     "generate:sell-equipment-header-transparent": "node scripts/generate-sell-equipment-header-transparent.mjs",

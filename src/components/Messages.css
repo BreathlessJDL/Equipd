@@ -114,6 +114,7 @@
     flex-direction: column;
     gap: 0;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
   }
 
@@ -510,4 +511,22 @@
   color: var(--color-muted);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+}
+
+@media (max-width: 767px) {
+  .messages-page--thread-open .messages-page__thread {
+    min-height: 0;
+  }
+
+  .messages-page--thread-open .messages-page__thread-body {
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .messages-page--thread-open .messages-page__composer-dock,
+  .messages-page--thread-open .messages-page__composer {
+    flex-shrink: 0;
+  }
 }

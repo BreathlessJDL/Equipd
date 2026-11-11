@@ -44,14 +44,19 @@ function AppShell() {
   }, [location.pathname])
 
   useEffect(() => {
+    const root = document.documentElement
+
     if (!hideSiteFooter) {
+      root.classList.remove('equipd-messages-thread-lock')
       clearVisualViewportCssVars()
       return undefined
     }
 
+    root.classList.add('equipd-messages-thread-lock')
     const unsubscribe = subscribeVisualViewport()
     return () => {
       unsubscribe()
+      root.classList.remove('equipd-messages-thread-lock')
       clearVisualViewportCssVars()
     }
   }, [hideSiteFooter])

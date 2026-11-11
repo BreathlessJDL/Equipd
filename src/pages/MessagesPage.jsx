@@ -16,7 +16,6 @@ import '../components/icons/EquipdTypeIcon.css'
 import { EQUIPD_ICON_VARIANT } from '../lib/equipdIconVariants'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { subscribeVisualViewport } from '../lib/visualViewport'
 import { notifyUnreadMessagesChanged } from '../hooks/useUnreadMessageCount'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -114,7 +113,13 @@ function MessagesPage() {
 
   const scrollThreadToBottom = useCallback((behavior = 'auto') => {
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ block: 'end', behavior })
+      const container = threadBodyRef.current
+      if (!container) return
+      if (behavior === 'smooth' && typeof container.scrollTo === 'function') {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+        return
+      }
+      container.scrollTop = container.scrollHeight
     })
   }, [])
 
@@ -134,13 +139,17 @@ function MessagesPage() {
 
   useEffect(() => {
     if (!isThreadOpen) return undefined
+    const container = threadBodyRef.current
+    if (!container || typeof ResizeObserver === 'undefined') return undefined
 
-    return subscribeVisualViewport(() => {
+    const observer = new ResizeObserver(() => {
       if (isNearBottomRef.current) {
         scrollThreadToBottom('auto')
       }
     })
-  }, [isThreadOpen, scrollThreadToBottom])
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [isThreadOpen, loadingThread, selectedConversation, scrollThreadToBottom])
 
   useEffect(() => {
     if (!user?.id) return undefined

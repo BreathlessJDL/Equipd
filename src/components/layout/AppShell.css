@@ -98,13 +98,28 @@
 }
 
 @media (max-width: 767px) {
+  html.equipd-messages-thread-lock,
+  html.equipd-messages-thread-lock body,
+  html.equipd-messages-thread-lock #root {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   .app-shell:has(.messages-page--thread-open) {
     height: var(--equipd-visual-viewport-height, 100dvh);
     max-height: var(--equipd-visual-viewport-height, 100dvh);
-    transform: translateY(var(--equipd-visual-viewport-offset, 0px));
+    min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+
+  .app-shell:has(.messages-page--thread-open) .home-header,
+  .app-shell:has(.messages-page--thread-open) .global-site-header {
+    flex-shrink: 0;
   }
 
   .app-shell:has(.messages-page--thread-open) .app-shell__main--messages {
@@ -113,7 +128,16 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding-bottom: 0;
+    padding: 0;
+  }
+
+  .app-shell:has(.messages-page--thread-open) .app-shell__main--messages > .messages-page--thread-open {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 }
 
