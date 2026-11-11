@@ -38,6 +38,7 @@ import {
 } from '../lib/brandPageCurated'
 import { buildBrandPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { BRAND_LISTINGS_FETCH_LIMIT } from '../lib/oneRowListingCapacity'
+import { getEquipdDefaultSocialImageUrl } from '../lib/socialPreview'
 import './BrandPage.css'
 
 const PAGE_SIZE = 24
@@ -214,11 +215,11 @@ export default function BrandPage() {
           'og:title': `${buildBrandPageMetaTitle(brand.displayName, { slug: brand.slug })} | Equipd`,
           'og:description': buildBrandPageMetaDescription(brand.displayName, { slug: brand.slug }),
           'og:url': getBrandAbsoluteUrl(brand.slug),
-          'og:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+          'og:image': getEquipdDefaultSocialImageUrl(),
           'twitter:card': 'summary_large_image',
           'twitter:title': `${buildBrandPageMetaTitle(brand.displayName, { slug: brand.slug })} | Equipd`,
           'twitter:description': buildBrandPageMetaDescription(brand.displayName, { slug: brand.slug }),
-          'twitter:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+          'twitter:image': getEquipdDefaultSocialImageUrl(),
         }
       : null,
   })

@@ -26,8 +26,8 @@ import {
 import { trackEquipmentSearch } from '../lib/buyerConversionAnalytics'
 import { buildBrowseSearchPath } from '../lib/browseSearchNavigation'
 import { fetchCategories } from '../lib/listings'
-import { DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from '../lib/pageTitles'
-import { buildSocialOpenGraph } from '../lib/socialPreview'
+import { buildHomePageOpenGraph } from '../lib/homePageSeo'
+import { DEFAULT_PAGE_DESCRIPTION } from '../lib/pageTitles'
 
 // Bottom-of-page section: keep its carousel out of the initial download.
 const HomeReviewsSection = lazy(() => import('../components/home/HomeReviewsSection'))
@@ -36,12 +36,7 @@ function HomePage() {
   usePageMeta({
     description: DEFAULT_PAGE_DESCRIPTION,
     canonicalPath: '/',
-    openGraph: buildSocialOpenGraph({
-      title: DEFAULT_PAGE_TITLE,
-      description: DEFAULT_PAGE_DESCRIPTION,
-      url: 'https://www.equipd.co.uk/',
-      fallbackImage: true,
-    }),
+    openGraph: buildHomePageOpenGraph(),
   })
   const { user } = useAuth()
   const isLoggedIn = Boolean(user)

@@ -125,10 +125,6 @@ function BrowseLocationSearchField({
     findPacContainerForInput(inputRef.current)
     onSearchChangeRef.current(event.target.value)
 
-    if (selectedPlace) {
-      onPlaceSelectedRef.current(null)
-    }
-
     if (placesStatus === 'ready') {
       setLoadError('')
     }

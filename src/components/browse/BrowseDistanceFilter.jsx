@@ -10,6 +10,7 @@ import {
   BROWSE_RADIUS_UK_WIDE,
   getBrowseRadiusSliderDisplayMiles,
   getBrowseRadiusSliderProgress,
+  getEditableBrowseLocationInputValue,
   isPrivateBrowserOrigin,
   isValidCoordinate,
   snapBrowseRadiusMiles,
@@ -63,6 +64,9 @@ function BrowseDistanceFilter({
 }) {
   const [showTownSearch, setShowTownSearch] = useState(false)
   const [editingLocation, setEditingLocation] = useState(false)
+  const [inputValue, setInputValue] = useState(() =>
+    getEditableBrowseLocationInputValue(locationPlace, locationSearch),
+  )
   const [previewMiles, setPreviewMiles] = useState(() =>
     getBrowseRadiusSliderDisplayMiles(radiusMiles),
   )
@@ -79,12 +83,19 @@ function BrowseDistanceFilter({
     setPreviewMiles(getBrowseRadiusSliderDisplayMiles(radiusMiles))
   }, [radiusMiles])
 
-  useEffect(() => {
-    if (hasExplicitOrigin) {
-      setShowTownSearch(false)
-      setEditingLocation(false)
+  function beginTownSearch() {
+    setInputValue(getEditableBrowseLocationInputValue(locationPlace, locationSearch))
+    setShowTownSearch(true)
+  }
+
+  function handleLocationInputChange(nextValue) {
+    setInputValue(nextValue)
+    const hasCommittedSelection =
+      hasExplicitOrigin || Boolean(locationPlace) || Boolean(locationSearch?.trim())
+    if (hasCommittedSelection) {
+      onLocationSearchChange?.('')
     }
-  }, [hasExplicitOrigin, locationPlace?.latitude, locationPlace?.longitude])
+  }
 
   function commitSliderMiles(rawValue) {
     const next = snapBrowseRadiusMiles(rawValue) ?? BROWSE_RADIUS_SLIDER_PREVIEW_MILES
@@ -94,6 +105,8 @@ function BrowseDistanceFilter({
   }
 
   function handlePlaceSelected(place) {
+    if (!place) return
+    setInputValue(place.displayLabel || '')
     setShowTownSearch(false)
     setEditingLocation(false)
     onLocationPlaceSelected?.(place)
@@ -150,9 +163,9 @@ function BrowseDistanceFilter({
                 </span>
                 <BrowseLocationSearchField
                   inputId={`${inputId}-location`}
-                  value={locationSearch}
+                  value={inputValue}
                   selectedPlace={locationPlace}
-                  onSearchChange={onLocationSearchChange}
+                  onSearchChange={handleLocationInputChange}
                   onPlaceSelected={handlePlaceSelected}
                   geolocationMessage=""
                   placeholder="Enter a town or postcode"
@@ -163,7 +176,7 @@ function BrowseDistanceFilter({
               <button
                 type="button"
                 className="listing-browse__button listing-browse__button--secondary browse-distance-filter__choice browse-distance-filter__choice--town"
-                onClick={() => setShowTownSearch(true)}
+                onClick={beginTownSearch}
               >
                 <span className="browse-distance-filter__choice-icon">
                   <SearchIcon />

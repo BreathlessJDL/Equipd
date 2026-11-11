@@ -11,6 +11,7 @@ import {
   listBrandLogoAssetPaths,
 } from '../lib/brandCatalogue'
 import { buildBrandsIndexBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
+import { getEquipdDefaultSocialImageUrl } from '../lib/socialPreview'
 import './BrandsPage.css'
 
 export default function BrandsPage() {
@@ -28,12 +29,12 @@ export default function BrandsPage() {
       'og:description':
         'Browse Equipd equipment value guides by brand. Explore used values, original RRPs, production years and current marketplace listings.',
       'og:url': 'https://www.equipd.co.uk/brands',
-      'og:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+      'og:image': getEquipdDefaultSocialImageUrl(),
       'twitter:card': 'summary_large_image',
       'twitter:title': 'Used Gym Equipment Values by Brand | Equipd',
       'twitter:description':
         'Browse Equipd equipment value guides by brand. Explore used values, original RRPs, production years and current marketplace listings.',
-      'twitter:image': 'https://www.equipd.co.uk/sell-gym-equipment/sell-gym-equipment-og.png',
+      'twitter:image': getEquipdDefaultSocialImageUrl(),
     },
   })
 

@@ -145,7 +145,7 @@ const og = buildSocialOpenGraph({
   url: 'https://www.equipd.co.uk/',
   fallbackImage: true,
 })
-assert(og['og:image'].includes('sell-gym-equipment-og.png'), 'fallback OG image')
+assert(og['og:image'].includes('homepage/equipd-homepage-og.png'), 'fallback OG image')
 
 // --- Breadcrumbs ---
 const listingCrumbs = buildListingBreadcrumbSchema(activeListing, {

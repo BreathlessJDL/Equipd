@@ -19,10 +19,11 @@ import {
 import { buildEquipmentBreadcrumbSchema } from './breadcrumbStructuredData.js'
 import { LISTING_CATEGORY_OPTIONS } from './listingOptions.js'
 import { supportsProductConsoleOptions } from './equipmentCardio.js'
+import { EQUIPD_DEFAULT_SOCIAL_IMAGE_PATH } from './socialPreview.js'
 
 export { EQUIPD_SITE_ORIGIN }
 
-export const EQUIPD_DEFAULT_OG_IMAGE_PATH = '/sell-gym-equipment/sell-gym-equipment-og.png'
+export const EQUIPD_DEFAULT_OG_IMAGE_PATH = EQUIPD_DEFAULT_SOCIAL_IMAGE_PATH
 const APPROVED_IMAGE_STATUS = 'approved'
 const APPROVED_PRODUCT_STATUS = 'approved'
 

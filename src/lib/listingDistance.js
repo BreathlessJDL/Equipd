@@ -16,6 +16,12 @@ export function isPrivateBrowserOrigin(place, locationSearch = '') {
   return isBrowserLocationLabel(locationSearch || place?.displayLabel)
 }
 
+/** Seed the town/postcode field without copying "Current location" into the input. */
+export function getEditableBrowseLocationInputValue(place, locationSearch = '') {
+  if (isPrivateBrowserOrigin(place, locationSearch)) return ''
+  return String(place?.displayLabel || locationSearch || '').trim()
+}
+
 export function buildNamedLocationPlace(latitude, longitude, label, {
   source = BROWSE_LOCATION_SOURCE_PLACE,
 } = {}) {

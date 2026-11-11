@@ -14,11 +14,24 @@ import {
 } from './landingListingSeo.js'
 import { DEFAULT_PAGE_DESCRIPTION, DEFAULT_PAGE_TITLE } from './pageTitles.js'
 import { BROWSE_PATH } from './sellGymEquipmentPage.js'
-import { buildSocialOpenGraph } from './socialPreview.js'
+import {
+  EQUIPD_DEFAULT_SOCIAL_IMAGE_ALT,
+  EQUIPD_DEFAULT_SOCIAL_IMAGE_PATH,
+  buildSocialOpenGraph,
+} from './socialPreview.js'
 
 export const HOME_PAGE_PATH = '/'
 export const HOME_RECENT_LISTINGS_EMPTY =
   'No live listings are available right now. Check back soon or browse used gym equipment.'
+
+export const HOME_SOCIAL_TITLE = 'Buy & Sell Used Gym Equipment'
+export const HOME_SOCIAL_DESCRIPTION = 'Home & Commercial Equipment Across the UK'
+export const HOME_SOCIAL_IMAGE = Object.freeze({
+  src: EQUIPD_DEFAULT_SOCIAL_IMAGE_PATH,
+  width: 1200,
+  height: 630,
+  alt: EQUIPD_DEFAULT_SOCIAL_IMAGE_ALT,
+})
 
 export function selectHomeRecentListings(
   listings = [],
@@ -29,10 +42,14 @@ export function selectHomeRecentListings(
 
 export function buildHomePageOpenGraph() {
   return buildSocialOpenGraph({
-    title: DEFAULT_PAGE_TITLE,
-    description: DEFAULT_PAGE_DESCRIPTION,
+    title: HOME_SOCIAL_TITLE,
+    description: HOME_SOCIAL_DESCRIPTION,
     url: `${EQUIPD_SITE_ORIGIN}/`,
-    fallbackImage: true,
+    image: HOME_SOCIAL_IMAGE.src,
+    imageWidth: HOME_SOCIAL_IMAGE.width,
+    imageHeight: HOME_SOCIAL_IMAGE.height,
+    imageAlt: HOME_SOCIAL_IMAGE.alt,
+    fallbackImage: false,
   })
 }
 

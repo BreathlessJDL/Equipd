@@ -263,6 +263,10 @@ export function useBrowseFilters(
 
   const handleLocationPlaceSelected = useCallback(
     (place) => {
+      if (!place) {
+        handleLocationSearchChange('')
+        return
+      }
       setGeolocationMessage('')
       if (place?.latitude != null && place?.longitude != null) {
         setLocationPromptOpen(false)
@@ -272,16 +276,17 @@ export function useBrowseFilters(
       }
       syncDraft((current) => ({
         ...current,
-        locationPlace: place
-          ? { ...place, source: place.source || BROWSE_LOCATION_SOURCE_PLACE }
-          : null,
-        locationSearch: place?.displayLabel ?? current.locationSearch,
-        buyerLatitude: place?.latitude ?? null,
-        buyerLongitude: place?.longitude ?? null,
+        locationPlace: {
+          ...place,
+          source: place.source || BROWSE_LOCATION_SOURCE_PLACE,
+        },
+        locationSearch: place.displayLabel ?? current.locationSearch,
+        buyerLatitude: place.latitude ?? null,
+        buyerLongitude: place.longitude ?? null,
         radiusMilesValue: parseBrowseRadiusMiles(current.radiusMiles),
       }))
     },
-    [syncDraft],
+    [handleLocationSearchChange, syncDraft],
   )
 
   const handleRadiusChange = useCallback(

@@ -5,8 +5,12 @@
 
 import { EQUIPD_SITE_ORIGIN } from './brandCatalogueCore.js'
 
-/** Best existing large public OG asset (1200×630 sell card). */
-export const EQUIPD_DEFAULT_SOCIAL_IMAGE_PATH = '/sell-gym-equipment/sell-gym-equipment-og.png'
+/** Neutral marketplace OG card (1200×630). Page-specific cards override this. */
+export const EQUIPD_DEFAULT_SOCIAL_IMAGE_PATH = '/homepage/equipd-homepage-og.png'
+export const EQUIPD_DEFAULT_SOCIAL_IMAGE_WIDTH = 1200
+export const EQUIPD_DEFAULT_SOCIAL_IMAGE_HEIGHT = 630
+export const EQUIPD_DEFAULT_SOCIAL_IMAGE_ALT =
+  'Buy and sell used gym equipment on Equipd, the UK marketplace for home and commercial kit'
 
 /** Logo-only fallback when a large card is inappropriate. */
 export const EQUIPD_LOGO_SOCIAL_IMAGE_PATH = '/email/equipd-full-logo.png'
@@ -31,10 +35,14 @@ export function buildSocialOpenGraph({
   description,
   url,
   image = null,
+  imageWidth = null,
+  imageHeight = null,
+  imageAlt = null,
   type = 'website',
   siteName = 'Equipd',
   fallbackImage = true,
 } = {}) {
+  const usedFallback = !absoluteSocialUrl(image) && Boolean(fallbackImage)
   const resolvedImage = absoluteSocialUrl(image)
     || (fallbackImage ? getEquipdDefaultSocialImageUrl() : null)
 
@@ -52,6 +60,12 @@ export function buildSocialOpenGraph({
   if (resolvedImage) {
     openGraph['og:image'] = resolvedImage
     openGraph['twitter:image'] = resolvedImage
+    const width = imageWidth || (usedFallback ? EQUIPD_DEFAULT_SOCIAL_IMAGE_WIDTH : null)
+    const height = imageHeight || (usedFallback ? EQUIPD_DEFAULT_SOCIAL_IMAGE_HEIGHT : null)
+    const alt = imageAlt || (usedFallback ? EQUIPD_DEFAULT_SOCIAL_IMAGE_ALT : null)
+    if (width) openGraph['og:image:width'] = String(width)
+    if (height) openGraph['og:image:height'] = String(height)
+    if (alt) openGraph['og:image:alt'] = alt
   }
 
   return openGraph

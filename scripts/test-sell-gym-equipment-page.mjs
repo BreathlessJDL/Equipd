@@ -175,7 +175,7 @@ assert(webPageSchema.url.endsWith('/sell-gym-equipment'), 'WebPage url')
 assert(webPageSchema.primaryImageOfPage?.url, 'WebPage primary image')
 assert(webPageSchema.publisher?.['@id']?.includes('#organization'), 'WebPage publisher Organization ref')
 assert(webPageSchema.inLanguage === 'en-GB', 'WebPage language')
-assert(webPageSchema.headline === 'Sell Your Gym Equipment with Equipd', 'WebPage schema headline unchanged')
+assert(webPageSchema.headline === SELL_GYM_EQUIPMENT_H1, 'WebPage schema headline matches the visible hero H1')
 
 const breadcrumbSchema = buildSellGymEquipmentBreadcrumbSchema()
 assert(breadcrumbSchema['@type'] === 'BreadcrumbList', 'BreadcrumbList schema')
@@ -383,8 +383,16 @@ assert(appShellCss.includes('app-shell__main--sell'), 'sell shell main variant e
 assert(appShellCss.includes('app-shell__main--home'), 'home shell main variant exists')
 const appShellJsx = readFileSync(join(process.cwd(), 'src', 'components', 'layout', 'AppShell.jsx'), 'utf8')
 assert(
-  appShellJsx.includes('usesBrowseShellFooter || isSellGymEquipmentRoutePage'),
+  appShellJsx.includes('isMarketingLandingRoutePage'),
+  'sell route is grouped with other marketing landings in AppShell',
+)
+assert(
+  appShellJsx.includes("usesBrowseShellFooter || isMarketingLandingRoutePage ? ' app-shell__main--home'"),
   'sell route reuses homepage full-bleed main shell',
+)
+assert(
+  appShellJsx.includes("isMarketingLandingRoutePage ? ' app-shell__main--sell'"),
+  'sell route still receives the sell main-shell class',
 )
 assert(!existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'hero-equipment.webp')), 'obsolete treadmill hero webp removed')
 assert(!existsSync(join(process.cwd(), 'public', 'sell-gym-equipment', 'hero-equipment.png')), 'obsolete treadmill hero png removed')

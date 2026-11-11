@@ -198,7 +198,7 @@ const strengthDoc = buildEquipmentPageSeoDocument({
   hasConsoleOptions: false,
 })
 assert(!strengthDoc.description.includes('console options'), 'strength prerender desc')
-assert(strengthDoc.openGraph['og:image'].includes('sell-gym-equipment-og.png'), 'fallback social image')
+assert(strengthDoc.openGraph['og:image'].includes('homepage/equipd-homepage-og.png'), 'fallback social image')
 
 const template = `<!doctype html>
 <html lang="en">

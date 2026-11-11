@@ -4,6 +4,10 @@ import { fetchCategories } from '../../lib/listings'
 import { buildBrowseSearchPath } from '../../lib/browseSearchNavigation'
 import { trackEquipmentSearch } from '../../lib/buyerConversionAnalytics'
 import { isBrowseShellRoute, isMarketingLandingRoute, isMessagesThreadRoute } from '../../lib/siteHeaderRoutes'
+import {
+  clearVisualViewportCssVars,
+  subscribeVisualViewport,
+} from '../../lib/visualViewport'
 import { useActivityHeartbeat } from '../../hooks/useActivityHeartbeat'
 import SiteStructuredData from '../seo/SiteStructuredData'
 import GlobalSiteHeader from './GlobalSiteHeader'
@@ -38,6 +42,19 @@ function AppShell() {
   useEffect(() => {
     setPageHeaderConfig(null)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!hideSiteFooter) {
+      clearVisualViewportCssVars()
+      return undefined
+    }
+
+    const unsubscribe = subscribeVisualViewport()
+    return () => {
+      unsubscribe()
+      clearVisualViewportCssVars()
+    }
+  }, [hideSiteFooter])
 
   useEffect(() => {
     let active = true

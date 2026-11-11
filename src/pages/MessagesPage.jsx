@@ -16,6 +16,7 @@ import '../components/icons/EquipdTypeIcon.css'
 import { EQUIPD_ICON_VARIANT } from '../lib/equipdIconVariants'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/UiState'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { subscribeVisualViewport } from '../lib/visualViewport'
 import { notifyUnreadMessagesChanged } from '../hooks/useUnreadMessageCount'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -130,6 +131,16 @@ function MessagesPage() {
 
     isNearBottomRef.current = distanceFromBottom <= THREAD_NEAR_BOTTOM_THRESHOLD_PX
   }, [])
+
+  useEffect(() => {
+    if (!isThreadOpen) return undefined
+
+    return subscribeVisualViewport(() => {
+      if (isNearBottomRef.current) {
+        scrollThreadToBottom('auto')
+      }
+    })
+  }, [isThreadOpen, scrollThreadToBottom])
 
   useEffect(() => {
     if (!user?.id) return undefined

@@ -85,7 +85,7 @@
 .messages-page__composer-row.message-thread-composer__controls {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.5rem;
   min-width: 0;
 }
@@ -144,7 +144,7 @@
 
 .message-thread-composer__send.messages-page__send {
   flex: 0 0 auto;
-  align-self: center;
+  align-self: flex-end;
   display: inline-flex;
   align-items: center;
   justify-content: center;

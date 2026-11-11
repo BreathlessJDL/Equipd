@@ -99,8 +99,9 @@
 
 @media (max-width: 767px) {
   .app-shell:has(.messages-page--thread-open) {
-    height: 100dvh;
-    max-height: 100dvh;
+    height: var(--equipd-visual-viewport-height, 100dvh);
+    max-height: var(--equipd-visual-viewport-height, 100dvh);
+    transform: translateY(var(--equipd-visual-viewport-offset, 0px));
     overflow: hidden;
     display: flex;
     flex-direction: column;
