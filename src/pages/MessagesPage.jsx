@@ -26,7 +26,9 @@ import {
 } from '../lib/messageAttachments'
 import {
   MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
-  isPhoneExchangeBlockReason,
+  MARKETPLACE_MESSAGE_PAYMENT_CONTACT_NOTE,
+  MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE,
+  isPostPaymentContactBlockReason,
   validateMarketplaceMessageWithContext,
 } from '../lib/marketplaceMessageValidation'
 import {
@@ -55,6 +57,8 @@ import { fetchOffersForListing, hasPendingOffer } from '../lib/offers'
 import { trackContactSeller } from '../lib/buyerConversionAnalytics'
 
 const THREAD_NEAR_BOTTOM_THRESHOLD_PX = 80
+const CONTACT_EXCHANGE_POLL_MS = 5000
+const CONTACT_EXCHANGE_UNLOCKED_POLL_MS = 30000
 
 function revokePendingImagePreviews(images = []) {
   for (const image of images) {
@@ -105,7 +109,7 @@ function MessagesPage() {
   const [listError, setListError] = useState('')
   const [threadError, setThreadError] = useState('')
   const [sendError, setSendError] = useState('')
-  const [phoneExchangeAllowed, setPhoneExchangeAllowed] = useState(false)
+  const [contactExchangeAllowed, setContactExchangeAllowed] = useState(false)
   const threadBodyRef = useRef(null)
   const messagesEndRef = useRef(null)
   const isNearBottomRef = useRef(true)
@@ -211,7 +215,7 @@ function MessagesPage() {
     const phoneResult = await fetchConversationPhoneExchangeAllowed(activeConversationId)
     setSelectedConversation(conversationResult.data)
     setMessages(messagesResult.data ?? [])
-    setPhoneExchangeAllowed(Boolean(phoneResult.allowed))
+    setContactExchangeAllowed(Boolean(phoneResult.allowed))
     setConversations((current) =>
       [...current]
         .map((conversation) =>
@@ -233,7 +237,7 @@ function MessagesPage() {
     setSelectionError('')
     setAttachmentLightbox(null)
     setOfferModalOpen(false)
-    setPhoneExchangeAllowed(false)
+    setContactExchangeAllowed(false)
   }, [threadRouteKey])
 
   useLayoutEffect(() => {
@@ -329,7 +333,7 @@ function MessagesPage() {
 
       setSelectedConversation(conversationWithReadState)
       setMessages(messagesResult.data ?? [])
-      setPhoneExchangeAllowed(Boolean(phoneResult.allowed))
+      setContactExchangeAllowed(Boolean(phoneResult.allowed))
       setConversations((current) =>
         current.map((conversation) =>
           conversation.id === conversationId
@@ -350,6 +354,51 @@ function MessagesPage() {
       active = false
     }
   }, [conversationId, draftListingId, user?.id])
+
+  useEffect(() => {
+    if (!conversationId || !user?.id) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    async function refreshContactExchange() {
+      const result = await fetchConversationPhoneExchangeAllowed(conversationId)
+      if (cancelled) return
+      const allowed = Boolean(result.allowed)
+      setContactExchangeAllowed(allowed)
+      if (allowed) {
+        setSendError((current) =>
+          current === MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE ? '' : current,
+        )
+      }
+    }
+
+    const intervalMs = contactExchangeAllowed
+      ? CONTACT_EXCHANGE_UNLOCKED_POLL_MS
+      : CONTACT_EXCHANGE_POLL_MS
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return
+      refreshContactExchange()
+    }, intervalMs)
+
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') {
+        refreshContactExchange()
+      }
+    }
+
+    window.addEventListener('focus', refreshContactExchange)
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', refreshContactExchange)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [conversationId, user?.id, contactExchangeAllowed])
 
   useEffect(() => {
     if (!draftListingId || !user?.id) {
@@ -547,10 +596,10 @@ function MessagesPage() {
     if (!hasImages) {
       const validation = validateMarketplaceMessageWithContext(messageBody, messages, {
         senderId: user.id,
-        allowPhoneNumbers: phoneExchangeAllowed,
+        allowPhoneNumbers: contactExchangeAllowed,
       })
       const deferPhoneToServer =
-        !validation.allowed && isPhoneExchangeBlockReason(validation.reason)
+        !validation.allowed && isPostPaymentContactBlockReason(validation.reason)
 
       if (!validation.allowed && !deferPhoneToServer) {
         setSendError(validation.error ?? MARKETPLACE_MESSAGE_BLOCK_MESSAGE)
@@ -564,7 +613,7 @@ function MessagesPage() {
         conversationId: activeConversationId,
         senderId: user.id,
         body: messageBody,
-        allowPhoneNumbers: phoneExchangeAllowed || deferPhoneToServer,
+        allowPhoneNumbers: contactExchangeAllowed || deferPhoneToServer,
       })
 
       setSending(false)
@@ -582,10 +631,10 @@ function MessagesPage() {
     if (trimmedBody) {
       const validation = validateMarketplaceMessageWithContext(messageBody, messages, {
         senderId: user.id,
-        allowPhoneNumbers: phoneExchangeAllowed,
+        allowPhoneNumbers: contactExchangeAllowed,
       })
       deferPhoneToServer =
-        !validation.allowed && isPhoneExchangeBlockReason(validation.reason)
+        !validation.allowed && isPostPaymentContactBlockReason(validation.reason)
 
       if (!validation.allowed && !deferPhoneToServer) {
         setSendError(validation.error ?? MARKETPLACE_MESSAGE_BLOCK_MESSAGE)
@@ -620,7 +669,7 @@ function MessagesPage() {
       body: messageBody,
       attachments: uploadedAttachments,
       recentMessages: recentTextMessages,
-      allowPhoneNumbers: phoneExchangeAllowed || deferPhoneToServer,
+      allowPhoneNumbers: contactExchangeAllowed || deferPhoneToServer,
     })
 
     if (error) {
@@ -867,6 +916,12 @@ function MessagesPage() {
                     }
                   }}
                 />
+
+                {contactExchangeAllowed ? (
+                  <p className="messages-page__payment-contact-note" role="status">
+                    {MARKETPLACE_MESSAGE_PAYMENT_CONTACT_NOTE}
+                  </p>
+                ) : null}
 
                 <MessageThreadComposer
                   messageBody={messageBody}

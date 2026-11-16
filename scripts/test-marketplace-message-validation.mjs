@@ -290,20 +290,20 @@ const stillBlockedOffPlatform = validateMarketplaceMessage('WhatsApp me on 07712
 })
 assert(!stillBlockedOffPlatform.allowed, 'WhatsApp must stay blocked after payment')
 
-const stillBlockedEmail = validateMarketplaceMessage('email me at test@gmail.com', {
+const paidEmailAllowed = validateMarketplaceMessage('email me at test@gmail.com', {
   allowPhoneNumbers: true,
 })
-assert(!stillBlockedEmail.allowed, 'Email must stay blocked after payment')
+assert(paidEmailAllowed.allowed, 'Paid-order conversations should allow email addresses')
 
 const stillBlockedCash = validateMarketplaceMessage('pay cash on collection', {
   allowPhoneNumbers: true,
 })
 assert(!stillBlockedCash.allowed, 'Off-platform payment must stay blocked after payment')
 
-const stillBlockedAddress = validateMarketplaceMessage('182 rooks nest road', {
+const paidAddressAllowed = validateMarketplaceMessage('182 rooks nest road', {
   allowPhoneNumbers: true,
 })
-assert(!stillBlockedAddress.allowed, 'Addresses must stay blocked after payment')
+assert(paidAddressAllowed.allowed, 'Paid-order conversations should allow collection addresses')
 
 const unpaidPhone = validateMarketplaceMessage('07712345678')
 assert(!unpaidPhone.allowed, 'Phone numbers stay blocked before payment')
@@ -316,7 +316,7 @@ const forgedClientFlagSequence = validateMarketplaceMessageWithContext(
 )
 assert(!forgedClientFlagSequence.allowed, 'Client cannot unlock phones without the paid-order flag')
 
-logPass('Post-payment phone exchange allowed without unlocking other contact or payment rules')
+logPass('Post-payment contact exchange allows phone, email and address without unlocking off-platform payment')
 logPass('Pre-payment phone numbers remain blocked with a clear warning')
 
 const optionalEmpty = validateOptionalMarketplaceMessage('  ')

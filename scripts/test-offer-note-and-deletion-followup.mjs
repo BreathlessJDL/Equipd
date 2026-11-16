@@ -11,6 +11,7 @@ import { readFile } from 'node:fs/promises'
 import {
   MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
   MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE,
+  isPostPaymentContactBlockReason,
   validateMarketplaceMessage,
   validateOptionalMarketplaceMessage,
 } from '../src/lib/marketplaceMessageValidation.js'
@@ -39,7 +40,7 @@ const [
 function expectOfferNoteBlocked(text, label = text) {
   const result = validateOptionalMarketplaceMessage(text)
   assert.equal(result.allowed, false, `Expected offer note blocked: ${label}`)
-  const expected = result.reason === 'phone' || result.reason === 'phone_request'
+  const expected = isPostPaymentContactBlockReason(result.reason)
     ? MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE
     : MARKETPLACE_MESSAGE_BLOCK_MESSAGE
   if (result.reason !== 'empty') {

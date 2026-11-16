@@ -854,6 +854,10 @@ export async function fetchRecentSenderTextMessages({
   return { data: (data ?? []).reverse(), error: null }
 }
 
+export async function fetchConversationContactExchangeAllowed(conversationId) {
+  return fetchConversationPhoneExchangeAllowed(conversationId)
+}
+
 export async function fetchConversationPhoneExchangeAllowed(conversationId) {
   if (!supabase) {
     return { allowed: false, error: new Error('Supabase is not configured.') }

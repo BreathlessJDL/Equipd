@@ -2,7 +2,10 @@ export const MARKETPLACE_MESSAGE_BLOCK_MESSAGE =
   "For everyone's safety, please keep communication and payments on Equipd. Collection details are shared securely after payment."
 
 export const MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE =
-  'Please keep phone numbers on Equipd until payment is confirmed. Once this order is paid, you can share a contact number in this conversation. Collection and delivery details stay in Order Details after payment.'
+  'Please keep contact details on Equipd until payment is confirmed. Once this order is paid, you can share phone numbers, emails and collection or delivery details in this conversation.'
+
+export const MARKETPLACE_MESSAGE_PAYMENT_CONTACT_NOTE =
+  'Payment confirmed. You can now exchange contact details to arrange collection or delivery.'
 
 export const MARKETPLACE_MESSAGE_SAFETY_NOTE =
   'Stay safe on Equipd. Keep payments on Equipd. Equipd will never contact you through a standard user conversation asking you to scan a QR code, make a bank transfer, or pay a fee to verify your account.'
@@ -115,19 +118,38 @@ const BLOCK_RULES = [
 ]
 
 const PHONE_EXCHANGE_RULE_TYPES = new Set(['phone', 'phone_request'])
+const POST_PAYMENT_CONTACT_RULE_TYPES = new Set([
+  'phone',
+  'phone_request',
+  'email',
+  'uk_postcode',
+  'street_address',
+  'collection_location',
+  'contact_request',
+])
 
 export function isPhoneExchangeBlockReason(reason) {
-  return PHONE_EXCHANGE_RULE_TYPES.has(reason)
+  return isPostPaymentContactBlockReason(reason)
 }
 
-function findBlockedMatch(value, { allowPriceNegotiation = true, allowPhoneNumbers = false } = {}) {
+export function isPostPaymentContactBlockReason(reason) {
+  return POST_PAYMENT_CONTACT_RULE_TYPES.has(reason)
+}
+
+function resolveAllowPostPaymentContact(options = {}) {
+  return Boolean(options.allowPostPaymentContact ?? options.allowPhoneNumbers)
+}
+
+function findBlockedMatch(value, options = {}) {
+  const allowPriceNegotiation = options.allowPriceNegotiation !== false
+  const allowPostPaymentContact = resolveAllowPostPaymentContact(options)
   const text = value?.trim() ?? ''
   const priceContext = allowPriceNegotiation && hasPriceNegotiationContext(text)
   const hasStreetTerms = containsStreetAddressKeyword(text)
   const suspiciousAddressIntent = hasSuspiciousAddressIntent(text)
 
   for (const rule of BLOCK_RULES) {
-    if (allowPhoneNumbers && PHONE_EXCHANGE_RULE_TYPES.has(rule.type)) continue
+    if (allowPostPaymentContact && POST_PAYMENT_CONTACT_RULE_TYPES.has(rule.type)) continue
 
     if (priceContext && !hasStreetTerms && !suspiciousAddressIntent) {
       if (rule.type === 'street_address' || rule.type === 'uk_postcode') continue
@@ -137,6 +159,14 @@ function findBlockedMatch(value, { allowPriceNegotiation = true, allowPhoneNumbe
     const match = text.match(rule.pattern)
 
     if (match) {
+      if (
+        allowPostPaymentContact &&
+        rule.type === 'url' &&
+        isUrlMatchInsideEmail(text, match[0])
+      ) {
+        continue
+      }
+
       return {
         type: rule.type,
         matchedPattern: match[0],
@@ -147,13 +177,18 @@ function findBlockedMatch(value, { allowPriceNegotiation = true, allowPhoneNumbe
   return null
 }
 
+function isUrlMatchInsideEmail(text, matched) {
+  const emails = text.match(new RegExp(EMAIL_PATTERN.source, 'gi')) ?? []
+  return emails.some((email) => email.toLowerCase().includes(matched.toLowerCase()))
+}
+
 function buildBlockedResult(blocked, context = 'single') {
   return {
     allowed: false,
     ok: false,
     reason: blocked.type,
     matchedPattern: blocked.matchedPattern,
-    error: isPhoneExchangeBlockReason(blocked.type)
+    error: isPostPaymentContactBlockReason(blocked.type)
       ? MARKETPLACE_MESSAGE_PHONE_BLOCK_MESSAGE
       : MARKETPLACE_MESSAGE_BLOCK_MESSAGE,
     context,
@@ -282,7 +317,8 @@ function buildContextCombinations(recentBodies, currentBody) {
   return combinations
 }
 
-function validateMessageSequence(recentBodies, currentBody, { allowPhoneNumbers = false } = {}) {
+function validateMessageSequence(recentBodies, currentBody, options = {}) {
+  const allowPhoneNumbers = resolveAllowPostPaymentContact(options)
   const combinations = buildContextCombinations(recentBodies, currentBody)
 
   for (const combined of combinations) {
@@ -295,7 +331,7 @@ function validateMessageSequence(recentBodies, currentBody, { allowPhoneNumbers 
     }
   }
 
-  if (isMeasurementText(currentBody)) {
+  if (isMeasurementText(currentBody) || allowPhoneNumbers) {
     return null
   }
 
@@ -347,7 +383,8 @@ function validateMessageSequence(recentBodies, currentBody, { allowPhoneNumbers 
   return null
 }
 
-export function validateMarketplaceMessage(body, { allowPhoneNumbers = false } = {}) {
+export function validateMarketplaceMessage(body, options = {}) {
+  const allowPhoneNumbers = resolveAllowPostPaymentContact(options)
   const trimmed = body?.trim() ?? ''
 
   if (!trimmed) {
@@ -400,14 +437,15 @@ export function validateMarketplaceMessage(body, { allowPhoneNumbers = false } =
 export function validateMarketplaceMessageWithContext(
   body,
   recentMessages = [],
-  {
+  options = {},
+) {
+  const {
     senderId = null,
     maxMessages = MESSAGE_CONTEXT_MAX_RECENT_MESSAGES,
     withinMinutes = MESSAGE_CONTEXT_WINDOW_MINUTES,
     now = new Date(),
-    allowPhoneNumbers = false,
-  } = {},
-) {
+  } = options
+  const allowPhoneNumbers = resolveAllowPostPaymentContact(options)
   const singleResult = validateMarketplaceMessage(body, { allowPhoneNumbers })
 
   if (!singleResult.allowed) {

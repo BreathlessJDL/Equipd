@@ -374,6 +374,15 @@
   min-width: 0;
 }
 
+.messages-page__payment-contact-note {
+  margin: 0;
+  padding: 0.4rem max(var(--space-md), env(safe-area-inset-right, 0px)) 0.15rem
+    max(var(--space-md), env(safe-area-inset-left, 0px));
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
 .messages-page__thread {
   display: flex;
   flex-direction: column;
