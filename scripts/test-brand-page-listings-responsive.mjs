@@ -25,8 +25,8 @@ assert.doesNotMatch(page, /slice\(0,\s*6\)/)
 assert.match(page, /Used \$\{brand\.displayName\} equipment for sale/)
 assert.match(
   page,
-  /<BrandPageHero[\s\S]*\{marketplaceSection\}[\s\S]*\{wantedSection\}/,
-  'listings render immediately after the shared hero, before wanted and discovery',
+  /<BrandPageHero[\s\S]*<BrandMarketplaceSection[\s\S]*wanted equipment[\s\S]*<BrandPageValuationSearch/,
+  'listings render immediately after the shared hero, before wanted and valuation search',
 )
 assert.doesNotMatch(
   page,

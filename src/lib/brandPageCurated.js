@@ -3,11 +3,14 @@
  * Deterministic — no random ordering.
  */
 
+import { getBrandSlug } from './brandCatalogueCore.js'
 import { buildFaqPageSchema } from './faqPageStructuredData.js'
 import { getBrandBuyerSeoConfig } from './brandBuyerSeo.js'
 
 const POPULAR_LIMIT = 6
 const FEATURED_SERIES_LIMIT = 5
+export const BRAND_VALUATION_SHORTCUT_LIMIT = 4
+export const BRAND_VALUATIONS_ANCHOR_ID = 'brand-equipment-valuations'
 
 /** Map raw equipment_type strings to short card tags. */
 const TYPE_TAG_ALIASES = [
@@ -54,6 +57,12 @@ function scorePopularProduct(product, listingTitleBlob) {
 /**
  * Deterministic popular product pick for the curated brand section.
  */
+export function filterCatalogByBrandSlug(products = [], brandSlug) {
+  const slug = String(brandSlug || '').trim().toLowerCase()
+  if (!slug) return []
+  return products.filter((product) => getBrandSlug(product?.brand) === slug)
+}
+
 export function selectPopularBrandProducts(products = [], {
   limit = POPULAR_LIMIT,
   listings = [],

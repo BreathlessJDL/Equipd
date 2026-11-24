@@ -1,10 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import BrandPageHero from '../components/brands/BrandPageHero'
+import BrandPageValuationSearch from '../components/brands/BrandPageValuationSearch'
 import BrandLogo from '../components/BrandLogo'
-import BrandModelCard from '../components/BrandModelCard'
-import BrandValueResearchCard from '../components/BrandValueResearchCard'
-import EquipmentValueGuideCard from '../components/EquipmentValueGuideCard'
 import JsonLd from '../components/JsonLd'
 import ListingCard from '../components/ListingCard'
 import ListingAnalyticsList from '../components/analytics/ListingAnalyticsList'
@@ -25,23 +23,28 @@ import {
 import {
   getBrandBuyerSeoConfig,
   isBuyerIntentBrand,
-  selectConfiguredBrandModelGroups,
 } from '../lib/brandBuyerSeo'
 import {
+  BRAND_VALUATION_SHORTCUT_LIMIT,
+  BRAND_VALUATIONS_ANCHOR_ID,
   buildBrandFaqItems,
   buildBrandFaqPageSchema,
   buildBrandHeroStats,
-  enrichBrandSeriesWithTags,
-  selectFeaturedBrandSeries,
   selectPopularBrandProducts,
-  FEATURED_SERIES_LIMIT,
 } from '../lib/brandPageCurated'
 import { buildBrandPageBreadcrumbSchema } from '../lib/breadcrumbStructuredData'
 import { BRAND_LISTINGS_FETCH_LIMIT } from '../lib/oneRowListingCapacity'
 import { getEquipdDefaultSocialImageUrl } from '../lib/socialPreview'
 import './BrandPage.css'
 
-const PAGE_SIZE = 24
+function scrollToBrandValuations() {
+  requestAnimationFrame(() => {
+    document.getElementById(BRAND_VALUATIONS_ANCHOR_ID)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  })
+}
 
 function BrandMarketplaceSection({
   brand,
@@ -130,35 +133,23 @@ function BrandMarketplaceSection({
 
 export default function BrandPage() {
   const { brandSlug } = useParams()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const searchInputId = useId()
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [categoryFilter, setCategoryFilter] = useState('')
-  const [seriesFilter, setSeriesFilter] = useState('')
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [showAllModels, setShowAllModels] = useState(false)
-  const [showAllSeries, setShowAllSeries] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState(0)
-  const [valuesSearch, setValuesSearch] = useState('')
-  const valuesSearchId = useId()
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true)
       setError(null)
-      setCategoryFilter('')
-      setSeriesFilter('')
       setSearch('')
-      setPage(1)
-      setShowAllModels(false)
-      setShowAllSeries(false)
       setOpenFaqIndex(0)
-      setValuesSearch('')
       const result = await fetchBrandPageData(brandSlug, {
         listingLimit: BRAND_LISTINGS_FETCH_LIMIT,
       })
@@ -167,18 +158,14 @@ export default function BrandPage() {
         setError(result.error.message || 'Unable to load brand.')
       }
       setPayload(result)
-      const seriesFromUrl = String(searchParams.get('series') || '').trim()
-      if (seriesFromUrl && result?.series?.length) {
-        const known = result.series.some((entry) => entry.name === seriesFromUrl)
-        if (known) {
-          setSeriesFilter(seriesFromUrl)
-          setShowAllModels(true)
-        }
-      }
-      if (String(searchParams.get('catalogue') || '').trim() === '1') {
-        setShowAllModels(true)
-      }
+      const shouldScrollToValuations = Boolean(
+        String(searchParams.get('series') || '').trim()
+        || String(searchParams.get('catalogue') || '').trim() === '1',
+      )
       setLoading(false)
+      if (shouldScrollToValuations) {
+        scrollToBrandValuations()
+      }
     }
     load()
     return () => { cancelled = true }
@@ -194,11 +181,6 @@ export default function BrandPage() {
     [brand],
   )
   const buyerIntent = Boolean(buyerConfig && isBuyerIntentBrand(brand?.slug))
-  const series = useMemo(
-    () => enrichBrandSeriesWithTags(payload?.series || [], allProducts),
-    [payload?.series, allProducts],
-  )
-
   usePageMeta({
     title: brand
       ? buildBrandPageMetaTitle(brand.displayName, { slug: brand.slug })
@@ -225,44 +207,12 @@ export default function BrandPage() {
   })
 
   const popularProducts = useMemo(
-    () => selectPopularBrandProducts(allProducts, { listings }),
+    () => selectPopularBrandProducts(allProducts, {
+      listings,
+      limit: BRAND_VALUATION_SHORTCUT_LIMIT,
+    }),
     [allProducts, listings],
   )
-  const configuredModelGroups = useMemo(
-    () => selectConfiguredBrandModelGroups(buyerConfig, allProducts),
-    [buyerConfig, allProducts],
-  )
-  const valueResearchProducts = useMemo(() => {
-    if (!buyerIntent) return []
-    const configured = configuredModelGroups.flatMap((group) => group.items.map((item) => item.product))
-    return configured.length ? configured : selectPopularBrandProducts(allProducts, { listings })
-  }, [buyerIntent, configuredModelGroups, allProducts, listings])
-
-  const filteredValueResearchProducts = useMemo(() => {
-    const query = valuesSearch.trim().toLowerCase()
-    if (!query) return valueResearchProducts
-    return valueResearchProducts.filter((product) => {
-      const haystack = [
-        product.displayName,
-        product.canonicalProductKey,
-        product.canonical_product_key,
-        product.series,
-        product.equipmentType,
-        product.yearLabel,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-      return haystack.includes(query)
-    })
-  }, [valueResearchProducts, valuesSearch])
-
-  const featuredSeries = useMemo(
-    () => selectFeaturedBrandSeries(series),
-    [series],
-  )
-  const displayedSeries = showAllSeries ? series : featuredSeries
-  const remainingSeriesCount = Math.max(0, series.length - featuredSeries.length)
   const searchSuggestions = useMemo(() => {
     const query = search.trim().toLowerCase()
     if (query.length < 2) return []
@@ -289,63 +239,25 @@ export default function BrandPage() {
     [brand],
   )
 
-  const filteredProducts = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return allProducts.filter((product) => {
-      if (categoryFilter && product.equipmentType !== categoryFilter) return false
-      if (seriesFilter && product.series !== seriesFilter) return false
-      if (!query) return true
-      const haystack = [product.displayName, product.series, product.equipmentType]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-      return haystack.includes(query)
-    })
-  }, [allProducts, categoryFilter, seriesFilter, search])
-
-  const catalogueOpen = showAllModels
-    || Boolean(seriesFilter)
-    || Boolean(categoryFilter)
-    || search.trim().length >= 2
-
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE))
-  const safePage = Math.min(page, totalPages)
-  const pageProducts = filteredProducts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
-
   const jsonLd = useMemo(() => {
     if (!brand) return null
-    const collection = buildBrandPageJsonLd(brand, allProducts)
+    const collection = buildBrandPageJsonLd(brand, allProducts, { listings })
     const faqSchema = buildBrandFaqPageSchema(brand, faqItems)
     return [collection, faqSchema].filter(Boolean)
-  }, [brand, allProducts, faqItems])
+  }, [brand, allProducts, faqItems, listings])
 
   const breadcrumbSchema = useMemo(
     () => (brand ? buildBrandPageBreadcrumbSchema(brand) : null),
     [brand],
   )
 
-  function resetFilters() {
-    setCategoryFilter('')
-    setSeriesFilter('')
-    setSearch('')
-    setPage(1)
-  }
-
-  function openCatalogue({ seriesName = null } = {}) {
-    if (seriesName) {
-      setSeriesFilter(seriesName)
-      setCategoryFilter('')
-    }
-    setShowAllModels(true)
-    setPage(1)
-    requestAnimationFrame(() => {
-      document.getElementById('all-models')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
-
   function handleSearchSubmit(event) {
     event.preventDefault()
-    openCatalogue()
+    if (searchSuggestions[0]?.href) {
+      navigate(searchSuggestions[0].href)
+      return
+    }
+    scrollToBrandValuations()
   }
 
   if (loading) {
@@ -384,234 +296,6 @@ export default function BrandPage() {
       + 'links you to live marketplace listings when sellers have the same brand listed.'
     ),
   ]
-
-  const seriesSection = featuredSeries.length ? (
-    <section className="brand-page__section" aria-labelledby="brand-series-title">
-      <div className="brand-page__section-head">
-        <h2 id="brand-series-title" className="brand-page__section-title">
-          Browse by series
-        </h2>
-        {remainingSeriesCount > 0 ? (
-          <button
-            type="button"
-            className="brand-page__section-link"
-            onClick={() => setShowAllSeries((current) => !current)}
-          >
-            {showAllSeries ? 'Show fewer series' : 'View all series →'}
-          </button>
-        ) : null}
-      </div>
-      <div className="brand-page__series-row">
-        {displayedSeries.map((entry, index) => (
-          <article key={entry.name} className="brand-page__series-card">
-            <div className="brand-page__series-media">
-              {entry.imageUrl ? (
-                <img
-                  src={entry.imageUrl}
-                  alt=""
-                  className="brand-page__series-image"
-                  loading={index < 3 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-              ) : (
-                <span className="brand-page__series-placeholder" aria-hidden="true">
-                  No image
-                </span>
-              )}
-            </div>
-            <div className="brand-page__series-body">
-              <h3 className="brand-page__series-name">{entry.name}</h3>
-              <p className="brand-page__series-count">
-                {entry.productCount} {entry.productCount === 1 ? 'model' : 'models'}
-              </p>
-              <Link
-                to={`${getBrandPagePath(brand.slug)}?series=${encodeURIComponent(entry.name)}`}
-                className="brand-page__series-cta"
-                onClick={(event) => {
-                  event.preventDefault()
-                  openCatalogue({ seriesName: entry.name })
-                }}
-              >
-                Explore series →
-              </Link>
-            </div>
-          </article>
-        ))}
-      </div>
-      {!showAllSeries && series.length > FEATURED_SERIES_LIMIT ? (
-        <p className="brand-page__series-more">
-          Showing {FEATURED_SERIES_LIMIT} of {series.length} series.
-        </p>
-      ) : null}
-    </section>
-  ) : null
-
-  const popularSection = popularProducts.length && !buyerIntent ? (
-    <section className="brand-page__section" aria-labelledby="brand-popular-title">
-      <div className="brand-page__section-head">
-        <h2 id="brand-popular-title" className="brand-page__section-title">
-          {`Popular ${brand.displayName} equipment`}
-        </h2>
-        <Link
-          to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
-          className="brand-page__section-link"
-          onClick={(event) => {
-            event.preventDefault()
-            openCatalogue()
-          }}
-        >
-          View all models →
-        </Link>
-      </div>
-      <div className="brand-page__value-grid">
-        {popularProducts.map((product, index) => (
-          <EquipmentValueGuideCard
-            key={product.id}
-            product={product}
-            priority={index < 3}
-          />
-        ))}
-      </div>
-    </section>
-  ) : null
-
-  const valuesResearchSection = buyerIntent && valueResearchProducts.length ? (
-    <section className="brand-page__section brand-page__section--values-rail" aria-labelledby="brand-popular-title">
-      <div className="brand-page__section-head brand-page__section-head--stack">
-        <div className="brand-page__section-head-copy">
-          <h2 id="brand-popular-title" className="brand-page__section-title">
-            {buyerConfig?.valuesHeading || `Research ${brand.displayName} equipment values`}
-          </h2>
-          <p className="brand-page__section-lede">
-            {buyerConfig?.valuesLede || (
-              `Open a model value guide to research original RRP, production information and `
-              + `estimated used values for ${brand.displayName} equipment.`
-            )}
-          </p>
-        </div>
-      </div>
-
-      <div className="brand-page__values-search">
-        <label className="visually-hidden" htmlFor={valuesSearchId}>
-          {`Search ${brand.displayName} models`}
-        </label>
-        <div className="brand-page__values-search-field">
-          <input
-            id={valuesSearchId}
-            type="search"
-            className="brand-page__values-search-input"
-            placeholder={`Search ${brand.displayName} models…`}
-            value={valuesSearch}
-            onChange={(event) => setValuesSearch(event.target.value)}
-            autoComplete="off"
-            enterKeyHint="search"
-          />
-          {valuesSearch.trim() ? (
-            <button
-              type="button"
-              className="brand-page__values-search-clear"
-              onClick={() => setValuesSearch('')}
-            >
-              Clear
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      {filteredValueResearchProducts.length > 0 ? (
-        <div
-          className="brand-page__rail brand-page__rail--values"
-          role="list"
-          aria-label={`${brand.displayName} model value guides`}
-        >
-          {filteredValueResearchProducts.map((product, index) => (
-            <div
-              key={product.id || product.canonicalProductKey}
-              className="brand-page__rail-item"
-              role="listitem"
-            >
-              <BrandValueResearchCard
-                product={product}
-                priority={index < 3}
-                variant="rail"
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="brand-page__values-empty" role="status">
-          {`No matching ${brand.displayName} models found.`}
-        </p>
-      )}
-
-      <p className="brand-page__rail-footer">
-        <Link
-          to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
-          className="brand-page__section-link"
-          onClick={(event) => {
-            event.preventDefault()
-            openCatalogue()
-          }}
-        >
-          View all models →
-        </Link>
-      </p>
-    </section>
-  ) : null
-
-  const modelsSection = buyerIntent && configuredModelGroups.length ? (
-    <section className="brand-page__section brand-page__section--models-rail" aria-labelledby="brand-models-title">
-      <div className="brand-page__section-head brand-page__section-head--stack">
-        <div className="brand-page__section-head-copy">
-          <h2 id="brand-models-title" className="brand-page__section-title">
-            {buyerConfig.modelsHeading || `Explore ${brand.displayName} equipment`}
-          </h2>
-          {buyerConfig.modelsLede ? (
-            <p className="brand-page__section-lede">{buyerConfig.modelsLede}</p>
-          ) : null}
-        </div>
-      </div>
-      {configuredModelGroups.map((group) => (
-        <div key={group.id} className="brand-page__model-group brand-page__model-group--rail">
-          {group.title ? (
-            <h3 className="brand-page__model-group-title">{group.title}</h3>
-          ) : null}
-          <div
-            className="brand-page__rail brand-page__rail--models"
-            role="list"
-            aria-label={group.title || `${brand.displayName} equipment`}
-          >
-            {group.items.map(({ product, blurb }, index) => (
-              <div
-                key={product.id || product.canonicalProductKey}
-                className="brand-page__rail-item"
-                role="listitem"
-              >
-                <BrandModelCard
-                  product={product}
-                  blurb={blurb}
-                  priority={index < 3}
-                  variant="rail"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-      <p className="brand-page__rail-footer">
-        <Link
-          to={`${getBrandPagePath(brand.slug)}?catalogue=1`}
-          className="brand-page__section-link"
-          onClick={(event) => {
-            event.preventDefault()
-            openCatalogue()
-          }}
-        >
-          View all models →
-        </Link>
-      </p>
-    </section>
-  ) : null
 
   const buyingGuideSection = buyerConfig?.buyingGuide ? (
     <section className="brand-page__section" aria-labelledby="brand-buying-title">
@@ -654,22 +338,6 @@ export default function BrandPage() {
     </section>
   ) : null
 
-  const marketplaceSection = (
-    <BrandMarketplaceSection
-      brand={brand}
-      listings={listings}
-      buyerConfig={buyerConfig}
-    />
-  )
-
-  const wantedSection = (
-    <section className="brand-page__section brand-page__section--wanted" aria-label={`${brand.displayName} wanted equipment`}>
-      <div className="brand-page__wanted-wrap">
-        <BrandWantedRequestCard brandName={brand.displayName} />
-      </div>
-    </section>
-  )
-
   return (
     <div className="brand-page">
       <JsonLd data={jsonLd} />
@@ -699,33 +367,39 @@ export default function BrandPage() {
           showSuggestionValues={!buyerIntent}
           onSearchChange={(event) => {
             setSearch(event.target.value)
-            setPage(1)
-            if (event.target.value.trim().length >= 2) setShowAllModels(true)
           }}
           onSearchFocus={() => setSearchFocused(true)}
           onSearchBlur={() => {
             window.setTimeout(() => setSearchFocused(false), 120)
           }}
           onSearchSubmit={handleSearchSubmit}
-          onExploreValues={openCatalogue}
+          onExploreValues={scrollToBrandValuations}
         />
 
-        {marketplaceSection}
-        {wantedSection}
+        <BrandMarketplaceSection
+          brand={brand}
+          listings={listings}
+          buyerConfig={buyerConfig}
+        />
+
+        <section className="brand-page__section brand-page__section--wanted" aria-label={`${brand.displayName} wanted equipment`}>
+          <div className="brand-page__wanted-wrap">
+            <BrandWantedRequestCard brandName={brand.displayName} />
+          </div>
+        </section>
+
+        <BrandPageValuationSearch
+          brand={brand}
+          modelCount={brand.productCount || allProducts.length}
+          popularProducts={popularProducts}
+        />
 
         {buyerIntent ? (
           <>
-            {modelsSection}
             {buyingGuideSection}
             {categoryLinksSection}
-            {valuesResearchSection}
           </>
-        ) : (
-          <>
-            {seriesSection}
-            {popularSection}
-          </>
-        )}
+        ) : null}
 
         <section className="brand-page__section brand-page__section--about" aria-labelledby="brand-about-title">
           <div className="brand-page__about-grid">
@@ -770,127 +444,6 @@ export default function BrandPage() {
             </div>
           </div>
         </section>
-
-        {catalogueOpen ? (
-          <section
-            className="brand-page__section brand-page__section--catalogue"
-            aria-labelledby="all-models-title"
-            id="all-models"
-          >
-            <div className="brand-page__section-head">
-              <div>
-                <h2 id="all-models-title" className="brand-page__section-title">
-                  All {brand.displayName} models
-                </h2>
-                <p className="brand-page__section-lede">
-                  Search and filter the full value-guide catalogue.
-                </p>
-              </div>
-              {(categoryFilter || seriesFilter || search) ? (
-                <button type="button" className="brand-page__clear" onClick={resetFilters}>
-                  Clear filters
-                </button>
-              ) : null}
-            </div>
-
-            <div className="brand-page__catalogue-filters">
-              {categories.length ? (
-                <label className="brand-page__type-select">
-                  <span className="visually-hidden">Equipment type</span>
-                  <select
-                    value={categoryFilter}
-                    onChange={(event) => {
-                      setCategoryFilter(event.target.value)
-                      setPage(1)
-                    }}
-                  >
-                    <option value="">All equipment types</option>
-                    {categories.map((category) => (
-                      <option key={category.name} value={category.name}>
-                        {category.name} ({category.productCount})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
-              {series.length ? (
-                <label className="brand-page__type-select">
-                  <span className="visually-hidden">Series</span>
-                  <select
-                    value={seriesFilter}
-                    onChange={(event) => {
-                      setSeriesFilter(event.target.value)
-                      setPage(1)
-                    }}
-                  >
-                    <option value="">All series</option>
-                    {series.map((entry) => (
-                      <option key={entry.name} value={entry.name}>
-                        {entry.name} ({entry.productCount})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
-            </div>
-
-            <p className="brand-page__catalogue-count">
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'model' : 'models'}
-              {seriesFilter ? ` in ${seriesFilter}` : ''}
-              {categoryFilter ? ` · ${categoryFilter}` : ''}
-              {search ? ` matching “${search}”` : ''}
-            </p>
-
-            {pageProducts.length ? (
-              <div className="brand-page__value-grid">
-                {pageProducts.map((product, index) => (
-                  <EquipmentValueGuideCard
-                    key={product.id}
-                    product={product}
-                    priority={index < 2}
-                    showEquipmentType
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="brand-page__status">
-                No equipment models match this filter.
-                {' '}
-                <button type="button" className="brand-page__clear" onClick={resetFilters}>
-                  Reset filters
-                </button>
-              </p>
-            )}
-
-            {totalPages > 1 ? (
-              <nav className="brand-page__pagination" aria-label="Model catalogue pages">
-                {Array.from({ length: totalPages }, (_, index) => {
-                  const pageNumber = index + 1
-                  return (
-                    <button
-                      key={pageNumber}
-                      type="button"
-                      className={`brand-page__page-link ${pageNumber === safePage ? 'is-active' : ''}`}
-                      aria-current={pageNumber === safePage ? 'page' : undefined}
-                      onClick={() => setPage(pageNumber)}
-                    >
-                      {pageNumber}
-                    </button>
-                  )
-                })}
-              </nav>
-            ) : null}
-          </section>
-        ) : null}
-
-        {/* Always expose full crawlable value-guide links regardless of client filters. */}
-        <ul className="brand-page__crawl-links">
-          {allProducts.map((product) => (
-            <li key={`crawl-${product.id}`}>
-              <Link to={product.href}>{product.displayName} value guide</Link>
-            </li>
-          ))}
-        </ul>
 
         {payload.relatedBrands?.length ? (
           <section className="brand-page__section" aria-labelledby="related-brands-title">

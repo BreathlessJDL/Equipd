@@ -7,6 +7,7 @@ import { formatEquipmentProductSearchSuggestion } from '../lib/equipmentProductS
 import { resolveEquipmentProductImageUrl } from '../lib/equipmentProductImages'
 import { supabase } from '../lib/supabase'
 import { getValuationSearchIndex, getValuationSearchIndexLoadState } from '../lib/valuationCatalogCache'
+import { filterCatalogByBrandSlug } from '../lib/brandPageCurated'
 import './CanonicalEquipmentAutocomplete.css'
 
 const DEFAULT_LIMIT = 10
@@ -55,6 +56,7 @@ export default function CanonicalEquipmentAutocomplete({
   inputClassName = '',
   showImages = true,
   disabled = false,
+  brandSlug = null,
   // Set when this component replaces a lightweight placeholder input the user
   // has already interacted with, so the dropdown behaves as if just focused.
   openOnMount = false,
@@ -121,6 +123,11 @@ export default function CanonicalEquipmentAutocomplete({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const scopedCatalog = useMemo(
+    () => (brandSlug ? filterCatalogByBrandSlug(catalog, brandSlug) : catalog),
+    [brandSlug, catalog],
+  )
+
   const searchState = useMemo(() => {
     const trimmed = String(debouncedQuery || '').trim()
     if (trimmed.length < MIN_CHARS) {
@@ -139,7 +146,7 @@ export default function CanonicalEquipmentAutocomplete({
         ready: false,
       }
     }
-    const resolved = resolveValuationSearchMatches(catalog, trimmed)
+    const resolved = resolveValuationSearchMatches(scopedCatalog, trimmed)
     const matches = (resolved.scoredMatches.length
       ? resolved.scoredMatches.map((entry) => entry.product)
       : resolved.matches).slice(0, resultLimit)
@@ -149,7 +156,7 @@ export default function CanonicalEquipmentAutocomplete({
       showNoMatch: resolved.showNoMatch,
       ready: true,
     }
-  }, [catalog, catalogFetched, catalogLoading, debouncedQuery, resultLimit])
+  }, [scopedCatalog, catalogFetched, catalogLoading, debouncedQuery, resultLimit])
 
   const trimmedValue = String(value || '').trim()
   const showDropdown = open

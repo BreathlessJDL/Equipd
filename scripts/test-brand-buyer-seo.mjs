@@ -272,15 +272,27 @@ assert(doc.description.includes('RowErg'), 'prerender meta')
 assert(doc.bodyHtml.includes('<h1>Used Concept2 Equipment for Sale</h1>'), 'prerender H1 matches client')
 assert(
   doc.bodyHtml.indexOf('seo-brand-listings-heading')
-    < doc.bodyHtml.indexOf('seo-brand-models-heading'),
-  'listings section before models in prerender',
+    < doc.bodyHtml.indexOf('seo-brand-products-heading'),
+  'listings section before valuations in prerender',
 )
 assert(doc.bodyHtml.includes('/listings/concept-2-model-d-pm5'), 'listing href in prerender')
-assert(doc.bodyHtml.includes('/equipment/concept2-rowers-rowerg-model-d'), 'model link in prerender')
+assert(!doc.bodyHtml.includes('seo-brand-models-heading'), 'prerender does not restore the model catalogue')
+assert(
+  !doc.bodyHtml.includes('/equipment/concept2-rowers-rowerg-model-d'),
+  'prerender does not dump configured model links',
+)
+assert(
+  doc.jsonLd.some((entry) => (
+    entry['@type'] === 'CollectionPage'
+    && entry.mainEntity?.['@type'] === 'ItemList'
+    && entry.mainEntity.itemListElement.some((item) => String(item.url || '').includes('/listings/concept-2-model-d-pm5'))
+  )),
+  'CollectionPage ItemList matches visible listings',
+)
 assert(doc.bodyHtml.includes('/used-commercial-rowing-machines'), 'category link in prerender')
 assert(doc.bodyHtml.includes('What to check when buying used Concept2'), 'buying guide in prerender')
 assert(doc.bodyHtml.includes('Condition &amp; wear') || doc.bodyHtml.includes('Condition & wear'), 'buying checkpoints in prerender')
-assert(doc.bodyHtml.includes('Research Concept2 equipment values'), 'values research heading')
+assert(doc.bodyHtml.includes('How much is your Concept2 worth?'), 'values research heading')
 assert(!doc.bodyHtml.includes('Typical value today'), 'no typical-value label in prerender')
 assert(
   doc.jsonLd.some((entry) => entry['@type'] === 'CollectionPage'
@@ -327,7 +339,7 @@ assert(
   'Life Fitness title is buyer-intent',
 )
 assert(lfDoc.bodyHtml.includes('Looking for used Life Fitness equipment?'), 'LF empty marketplace')
-assert(lfDoc.bodyHtml.includes('Research Life Fitness equipment values'), 'LF values research')
+assert(lfDoc.bodyHtml.includes('How much is your Life Fitness worth?'), 'LF values research')
 assert(!lfDoc.bodyHtml.includes('Typical value today'), 'LF no typical-value headline')
 
 const wattDoc = buildBrandPageSeoDocument({
@@ -348,7 +360,7 @@ const wattDoc = buildBrandPageSeoDocument({
 })
 assert(wattDoc.bodyHtml.includes('<h1>Used Wattbikes for Sale</h1>'), 'Wattbike prerender H1')
 assert(wattDoc.bodyHtml.includes('/used-commercial-indoor-cycles'), 'Wattbike category link')
-assert(wattDoc.bodyHtml.includes('/equipment/wattbike-exercise-bike-atom-atom'), 'Wattbike model link')
+assert(!wattDoc.bodyHtml.includes('/equipment/wattbike-exercise-bike-atom-atom'), 'Wattbike prerender has no catalogue dump')
 
 const jsonLd = buildBrandPageJsonLd(brand, products)
 assert(jsonLd.name === 'Used Concept2 Equipment for Sale', 'JSON-LD collection name')

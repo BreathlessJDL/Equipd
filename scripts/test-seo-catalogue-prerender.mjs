@@ -87,8 +87,19 @@ const brandDoc = buildBrandPageSeoDocument({
 })
 assert(brandDoc.canonicalPath === '/brands/life-fitness', 'brand canonical')
 assert(brandDoc.bodyHtml.includes('Used Life Fitness Equipment for Sale'), 'brand identity')
-assert(brandDoc.bodyHtml.includes('life-fitness-integrity-treadmill'), 'brand product link')
-assert(brandDoc.bodyHtml.includes('Research Life Fitness equipment values'), 'values research heading')
+assert(
+  !brandDoc.bodyHtml.includes('life-fitness-integrity-treadmill'),
+  'brand prerender no longer dumps the equipment catalogue',
+)
+assert(brandDoc.bodyHtml.includes('How much is your Life Fitness worth?'), 'values research heading')
+assert(brandDoc.bodyHtml.includes('brand-equipment-valuations'), 'valuation section id')
+assert(
+  !brandDoc.jsonLd.some((entry) => (
+    entry['@type'] === 'CollectionPage'
+    && entry.mainEntity?.itemListElement?.some((item) => String(item.url || '').includes('/equipment/'))
+  )),
+  'CollectionPage ItemList does not list hidden equipment pages',
+)
 assert(brandDoc.title.includes('Used Life Fitness Equipment for Sale'), 'brand meta title')
 assert(brandDoc.bodyHtml.includes('Common questions'), 'brand faq section')
 assert(brandDoc.bodyHtml.includes('seo-brand-listings-heading'), 'marketplace section in prerender')

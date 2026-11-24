@@ -25,7 +25,6 @@ import {
   getBrandBuyerSeoConfig,
   isBuyerIntentBrand,
   mapBrandListingsForSeo,
-  selectConfiguredBrandModelGroups,
 } from './brandBuyerSeo.js'
 import {
   buildEquipmentCanonicalPath,
@@ -45,7 +44,10 @@ import {
   normalizeFaqItems,
   renderFaqPageScriptTag,
 } from './faqPageStructuredData.js'
-import { buildBrandFaqItems as buildBrandFaqItemsForSeo } from './brandPageCurated.js'
+import {
+  BRAND_VALUATIONS_ANCHOR_ID,
+  buildBrandFaqItems as buildBrandFaqItemsForSeo,
+} from './brandPageCurated.js'
 import { renderProductScriptTag } from './productPageStructuredData.js'
 import { injectSiteStructuredDataIntoHtml } from './siteStructuredData.js'
 
@@ -249,8 +251,6 @@ export function buildBrandsIndexSeoDocument({ brands = [] } = {}) {
 export function buildBrandPageSeoDocument({
   brand,
   products = [],
-  categories = [],
-  series = [],
   listings = [],
 } = {}) {
   if (!brand?.slug) return null
@@ -262,11 +262,6 @@ export function buildBrandPageSeoDocument({
   const h1 = buildBrandPageTitle(brand.displayName, { slug: brand.slug })
   const intro = brand.intro || buildBrandIntro(brand.displayName, { slug: brand.slug })
   const path = getBrandPagePath(brand.slug)
-  const productLinks = products.map((product) => ({
-    href: product.href || buildEquipmentProductPagePath(product.canonicalProductKey || product.canonical_product_key),
-    label: `${product.displayName || product.canonical_product_name} value guide`,
-  })).filter((link) => link.href && link.label)
-
   const faqItems = buildBrandFaqItemsForSeo(brand.displayName, { slug: brand.slug })
   const faqSchema = buildFaqPageSchemaNode(faqItems, {
     canonicalUrl: brand.absoluteUrl || getBrandAbsoluteUrl(brand.slug),
@@ -298,23 +293,6 @@ export function buildBrandPageSeoDocument({
     </p>
   </section>`
 
-  const configuredModelGroups = selectConfiguredBrandModelGroups(buyer, products)
-  const modelBits = configuredModelGroups.length
-    ? `<section aria-labelledby="seo-brand-models-heading">
-    <h2 id="seo-brand-models-heading">${escapeHtml(buyer.modelsHeading || `${brand.displayName} models`)}</h2>
-    ${buyer.modelsLede ? `<p>${escapeHtml(buyer.modelsLede)}</p>` : ''}
-    ${configuredModelGroups.map((group) => {
-      const list = `<ul>${group.items.map(({ product, blurb }) => {
-        const href = product.href || buildEquipmentProductPagePath(product.canonicalProductKey || product.canonical_product_key)
-        const name = product.displayName || product.canonical_product_name
-        return `<li><a href="${escapeHtml(href)}">${escapeHtml(name)}</a>${blurb ? ` — ${escapeHtml(blurb)}` : ''}</li>`
-      }).join('')}</ul>`
-      if (!group.title) return list
-      return `<h3>${escapeHtml(group.title)}</h3>${list}`
-    }).join('')}
-  </section>`
-    : ''
-
   const buyingGuideBits = buyer?.buyingGuide
     ? `<section aria-labelledby="seo-brand-buying-heading">
     <h2 id="seo-brand-buying-heading">${escapeHtml(buyer.buyingGuide.title)}</h2>
@@ -335,57 +313,45 @@ export function buildBrandPageSeoDocument({
   </section>`
     : ''
 
-  const categoryBits = categories.length
-    ? `<section aria-labelledby="seo-brand-categories-heading">
-    <h2 id="seo-brand-categories-heading">Browse by equipment type</h2>
-    <ul>${categories.map((category) => (
-      `<li>${escapeHtml(category.label || category.name || category.equipmentType)} (${escapeHtml(category.count ?? category.productCount)})</li>`
-    )).join('')}</ul>
-  </section>`
-    : ''
-
-  const seriesBits = series.length
-    ? `<section aria-labelledby="seo-brand-series-heading">
-    <h2 id="seo-brand-series-heading">Browse by series</h2>
-    <ul>${series.map((entry) => {
-      const name = entry.name || entry.label
-      if (!name) return ''
-      const href = `${path}?series=${encodeURIComponent(name)}`
-      return `<li><a href="${escapeHtml(href)}">${escapeHtml(name)}</a> (${escapeHtml(entry.productCount ?? entry.count ?? '')})</li>`
-    }).join('')}</ul>
-  </section>`
-    : ''
-
-  const valuesHeading = buyerIntent
-    ? (buyer?.valuesHeading || `Research ${brand.displayName} equipment values`)
-    : `Explore ${brand.displayName} equipment values`
+  const valuesHeading = `How much is your ${brand.displayName} worth?`
+  const valuesLede = `Search your ${brand.displayName} model to discover its estimated second-hand value, original retail price and production year.`
+  const modelCount = Number(brand.productCount || products.length || 0)
+  const modelCountLabel = modelCount === 1
+    ? `1 ${brand.displayName} model covered`
+    : `${modelCount} ${brand.displayName} models covered`
 
   const valuesBits = `
-  <section aria-labelledby="seo-brand-products-heading">
+  <section aria-labelledby="seo-brand-products-heading" id="brand-equipment-valuations">
     <h2 id="seo-brand-products-heading">${escapeHtml(valuesHeading)}</h2>
-    ${buyer?.valuesLede ? `<p>${escapeHtml(buyer.valuesLede)}</p>` : ''}
-    ${renderLinkList(productLinks, { labelledBy: 'seo-brand-products-heading' })}
+    <p>${escapeHtml(valuesLede)}</p>
+    ${modelCount > 0 ? `<p>${escapeHtml(modelCountLabel)}</p>` : ''}
+    <p>
+      <a href="${escapeHtml(`${path}#${BRAND_VALUATIONS_ANCHOR_ID}`)}">Search ${escapeHtml(brand.displayName)} valuations</a>
+      · <a href="/valuation">Value your equipment</a>
+    </p>
   </section>`
 
-  const aboutBits = buyer?.about
-    ? `<section aria-labelledby="seo-brand-about-heading">
-    <h2 id="seo-brand-about-heading">${escapeHtml(buyer.about.title)}</h2>
-    ${buyer.about.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+  const aboutTitle = buyer?.about?.title || `About ${brand.displayName}`
+  const aboutParagraphs = buyer?.about?.paragraphs?.length
+    ? buyer.about.paragraphs
+    : [
+      intro,
+      (
+        `Equipd estimates used values for ${brand.displayName} equipment from original RRP `
+        + 'baselines, production years, condition and console options where mapped — then '
+        + 'links you to live marketplace listings when sellers have the same brand listed.'
+      ),
+    ]
+  const aboutBits = `<section aria-labelledby="seo-brand-about-heading">
+    <h2 id="seo-brand-about-heading">${escapeHtml(aboutTitle)}</h2>
+    ${aboutParagraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
   </section>`
-    : ''
 
-  const bodyCore = buyerIntent
-    ? `${listingBits}
-  ${modelBits}
-  ${buyingGuideBits}
-  ${categoryLinkBits}
+  const bodyCore = `${listingBits}
   ${valuesBits}
+  ${buyerIntent ? `${buyingGuideBits}
+  ${categoryLinkBits}` : ''}
   ${aboutBits}
-  ${renderFaqSection(faqItems)}`
-    : `${seriesBits}
-  ${categoryBits}
-  ${valuesBits}
-  ${listingBits}
   ${renderFaqSection(faqItems)}`
 
   const body = `
@@ -404,7 +370,6 @@ export function buildBrandPageSeoDocument({
   <p>
     <a href="${escapeHtml(brand.browseListingsHref || `/browse?brand=${encodeURIComponent(brand.displayName)}`)}">View current ${escapeHtml(brand.displayName)} marketplace listings</a>
     · <a href="/valuation">Value your equipment</a>
-    · <a href="${escapeHtml(`${path}?catalogue=1`)}">All ${escapeHtml(brand.displayName)} models</a>
     · <a href="/brands">All brand value guides</a>
   </p>
 </article>`.trim()
@@ -421,7 +386,7 @@ export function buildBrandPageSeoDocument({
       fallbackImage: true,
     }),
     jsonLd: [
-      buildBrandPageJsonLd(brand, products),
+      buildBrandPageJsonLd(brand, products, { listings }),
       buildBrandPageBreadcrumbSchema(brand),
       faqSchema,
     ].filter(Boolean),

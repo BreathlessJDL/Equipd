@@ -8,7 +8,7 @@ import {
   buildCanonicalProductDisplayNameFromProduct,
   cleanCanonicalProductDisplayName,
 } from './canonicalProductDisplayName.js'
-import { getBrandBuyerSeoConfig } from './brandBuyerSeo.js'
+import { getBrandBuyerSeoConfig, mapBrandListingsForSeo } from './brandBuyerSeo.js'
 
 /** Preferred production canonical origin for SEO, sitemap, and absolute public URLs. */
 export const EQUIPD_SITE_ORIGIN = 'https://www.equipd.co.uk'
@@ -656,26 +656,33 @@ export function buildBrandCollectionJsonLd(brands = []) {
   }
 }
 
-export function buildBrandPageJsonLd(brand, products = []) {
+export function buildBrandPageJsonLd(brand, _products = [], { listings } = {}) {
   if (!brand) return null
   const buyer = getBrandBuyerSeoConfig(brand.slug)
-  return {
+  const listingItems = mapBrandListingsForSeo(listings || []).map((listing, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: listing.title,
+    url: `${EQUIPD_SITE_ORIGIN}${listing.href}`,
+  }))
+
+  const schema = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: buyer?.collectionPageName || `${brand.displayName} Equipment Values`,
     url: brand.absoluteUrl,
     description: brand.intro || buyer?.lede || undefined,
-    mainEntity: {
-      '@type': 'ItemList',
-      numberOfItems: products.length,
-      itemListElement: products.slice(0, 100).map((product, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: product.displayName,
-        url: `${EQUIPD_SITE_ORIGIN}${product.href}`,
-      })),
-    },
   }
+
+  if (listingItems.length) {
+    schema.mainEntity = {
+      '@type': 'ItemList',
+      numberOfItems: listingItems.length,
+      itemListElement: listingItems,
+    }
+  }
+
+  return schema
 }
 
 export function aggregateBrandCategories(products = []) {

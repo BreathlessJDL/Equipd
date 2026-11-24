@@ -701,14 +701,6 @@
   color: #b42318;
 }
 
-.brand-page__crawl-links {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-}
-
 /* ── Related brands ─────────────────────────────────────── */
 
 .brand-page__related {
