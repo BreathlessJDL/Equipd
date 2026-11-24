@@ -15,6 +15,7 @@ function resolveLogoMeta(brand, brandSlug) {
     const fallback = getBrandLogoMeta(brand.slug || brandSlug)
     return {
       displayName: brand.displayName || fallback?.displayName || '',
+      slug: brand.slug || fallback?.slug || brandSlug || null,
       logoPath: brand.logoPath ?? fallback?.logoPath ?? null,
       logoAlt: brand.logoAlt || fallback?.logoAlt || (brand.displayName ? `${brand.displayName} logo` : 'Brand logo'),
       logoScale: brand.logoScale ?? fallback?.logoScale ?? 1,
@@ -46,6 +47,7 @@ export default function BrandLogo({
   const classes = [
     'brand-logo',
     `brand-logo--${size}`,
+    meta.slug ? `brand-logo--${meta.slug}` : '',
     showImage ? '' : 'brand-logo--fallback',
     className,
   ].filter(Boolean).join(' ')

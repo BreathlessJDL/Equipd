@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import BrandPageHero from '../components/brands/BrandPageHero'
 import BrandPageValuationSearch from '../components/brands/BrandPageValuationSearch'
 import BrandLogo from '../components/BrandLogo'
@@ -133,14 +133,10 @@ function BrandMarketplaceSection({
 
 export default function BrandPage() {
   const { brandSlug } = useParams()
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const searchInputId = useId()
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState(0)
 
   useEffect(() => {
@@ -148,7 +144,6 @@ export default function BrandPage() {
     async function load() {
       setLoading(true)
       setError(null)
-      setSearch('')
       setOpenFaqIndex(0)
       const result = await fetchBrandPageData(brandSlug, {
         listingLimit: BRAND_LISTINGS_FETCH_LIMIT,
@@ -213,19 +208,6 @@ export default function BrandPage() {
     }),
     [allProducts, listings],
   )
-  const searchSuggestions = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (query.length < 2) return []
-    return allProducts
-      .filter((product) => {
-        const haystack = [product.displayName, product.series, product.equipmentType]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-        return haystack.includes(query)
-      })
-      .slice(0, 8)
-  }, [allProducts, search])
   const stats = useMemo(
     () => buildBrandHeroStats({
       productCount: brand?.productCount,
@@ -250,15 +232,6 @@ export default function BrandPage() {
     () => (brand ? buildBrandPageBreadcrumbSchema(brand) : null),
     [brand],
   )
-
-  function handleSearchSubmit(event) {
-    event.preventDefault()
-    if (searchSuggestions[0]?.href) {
-      navigate(searchSuggestions[0].href)
-      return
-    }
-    scrollToBrandValuations()
-  }
 
   if (loading) {
     return (
@@ -356,23 +329,6 @@ export default function BrandPage() {
           seoTitle={pageTitle}
           lede={heroLede}
           stats={stats}
-          searchInputId={searchInputId}
-          search={search}
-          searchPlaceholder={
-            buyerConfig?.searchPlaceholder
-            || `Search ${brand.displayName} equipment and models...`
-          }
-          searchSuggestions={searchSuggestions}
-          searchFocused={searchFocused}
-          showSuggestionValues={!buyerIntent}
-          onSearchChange={(event) => {
-            setSearch(event.target.value)
-          }}
-          onSearchFocus={() => setSearchFocused(true)}
-          onSearchBlur={() => {
-            window.setTimeout(() => setSearchFocused(false), 120)
-          }}
-          onSearchSubmit={handleSearchSubmit}
           onExploreValues={scrollToBrandValuations}
         />
 

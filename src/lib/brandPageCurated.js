@@ -219,16 +219,19 @@ export function buildBrandHeroStats({
       key: 'listings',
       value: listings,
       label: listings === 1 ? 'active listing' : 'active listings',
+      shortLabel: listings === 1 ? 'Active listing' : 'Active listings',
     },
     {
       key: 'models',
       value: models,
       label: models === 1 ? 'equipment model covered' : 'equipment models covered',
+      shortLabel: models === 1 ? 'Equipment model' : 'Equipment models',
     },
     {
       key: 'types',
       value: types,
       label: types === 1 ? 'equipment type covered' : 'equipment types covered',
+      shortLabel: types === 1 ? 'Equipment type' : 'Equipment types',
     },
   ]
 }

@@ -62,7 +62,7 @@ export const BRAND_REGISTRY = Object.freeze([
     shortDescription: 'Used equipment values and product information',
     logoPath: '/brand-logos/technogym.png',
     logoAlt: 'Technogym logo',
-    logoScale: 1.36,
+    logoScale: 1,
   },
   {
     key: 'matrixfitness',
