@@ -133,12 +133,16 @@ const heroStats = buildBrandHeroStats({
   categoryCount: 2,
 })
 assert(heroStats.length === 3, 'hero always shows listings, models and types')
-assert(heroStats[0].value === 0 && heroStats[0].label === 'active listings', 'zero listings stay visible')
+assert(heroStats[0].value === 0 && heroStats[0].label === 'Active listings', 'zero listings stay visible')
 assert(heroStats[0].shortLabel === 'Active listings', 'mobile listing label')
-assert(heroStats[1].label === 'equipment model covered', 'singular model label')
+assert(heroStats[1].label === 'Equipment model', 'singular model label omits covered')
 assert(heroStats[1].shortLabel === 'Equipment model', 'mobile singular model label omits covered')
-assert(heroStats[2].label === 'equipment types covered', 'plural type label')
+assert(heroStats[2].label === 'Equipment types', 'plural type label omits covered')
 assert(heroStats[2].shortLabel === 'Equipment types', 'mobile type label omits covered')
+assert(
+  heroStats.every((stat) => !/covered/i.test(`${stat.label} ${stat.shortLabel}`)),
+  'hero stats never use covered',
+)
 assert(
   buildBrandHeroVisibleTitle('Technogym') === 'Find used Technogym equipment for sale.',
   'hero title is brand-dynamic',
